@@ -1,0 +1,17 @@
+F:\PrivateWork\structo\project\Structo.Infrastructure\bin\Debug\net9.0\Structo.Infrastructure.deps.json
+F:\PrivateWork\structo\project\Structo.Infrastructure\bin\Debug\net9.0\Structo.Infrastructure.runtimeconfig.json
+F:\PrivateWork\structo\project\Structo.Infrastructure\bin\Debug\net9.0\Structo.Infrastructure.dll
+F:\PrivateWork\structo\project\Structo.Infrastructure\bin\Debug\net9.0\Structo.Infrastructure.pdb
+F:\PrivateWork\structo\project\Structo.Infrastructure\bin\Debug\net9.0\Structo.Core.dll
+F:\PrivateWork\structo\project\Structo.Infrastructure\bin\Debug\net9.0\Structo.Core.pdb
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.csproj.AssemblyReference.cache
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.AssemblyInfoInputs.cache
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.AssemblyInfo.cs
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.csproj.CoreCompileInputs.cache
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo..E0DB59F6.Up2Date
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.dll
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\refint\Structo.Infrastructure.dll
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.pdb
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.genruntimeconfig.cache
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\ref\Structo.Infrastructure.dll

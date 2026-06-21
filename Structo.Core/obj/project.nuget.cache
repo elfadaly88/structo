@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "eyqIb9q9GpA=",
+  "success": true,
+  "projectFilePath": "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ElFadaly\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,12 @@
+F:\PrivateWork\structo\project\Structo.Core\bin\Debug\net9.0\Structo.Core.deps.json
+F:\PrivateWork\structo\project\Structo.Core\bin\Debug\net9.0\Structo.Core.dll
+F:\PrivateWork\structo\project\Structo.Core\bin\Debug\net9.0\Structo.Core.pdb
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.GeneratedMSBuildEditorConfig.editorconfig
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.AssemblyInfoInputs.cache
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.AssemblyInfo.cs
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.csproj.CoreCompileInputs.cache
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.dll
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\refint\Structo.Core.dll
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.pdb
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\ref\Structo.Core.dll
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.csproj.AssemblyReference.cache
