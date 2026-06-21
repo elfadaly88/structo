@@ -12,6 +12,14 @@ public class PettyCash : ITenantEntity
     
     public decimal Amount { get; set; }
     public string Reason { get; set; } = string.Empty;
+    public string Status { get; set; } = "Pending"; // Pending, Issued, Rejected, SettlePending, Settled
+    public string Category { get; set; } = string.Empty; // Cement, Plumbing, Scaffolding, etc.
+    public string Urgency { get; set; } = "Medium"; // Low, Medium, High
+    public string Comments { get; set; } = string.Empty; // Rejection/auditing notes
+    public decimal SpentAmount { get; set; }
+    public decimal ReturnAmount { get; set; }
+    public string ReceiptPhotoUrl { get; set; } = string.Empty;
+    
     public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
     public bool IsSettled { get; set; }
 

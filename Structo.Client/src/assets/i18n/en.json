@@ -99,7 +99,10 @@
     "GLOBAL_OVERVIEW": "Global Overview",
     "PROJECTS": "Projects",
     "TENANT_ENV": "Tenant Environment",
-    "LOGGED_IN_AS": "Logged in as"
+    "LOGGED_IN_AS": "Logged in as",
+    "FINANCIALS": "Financial Reports",
+    "PETTY_CASH": "Petty Cash Approvals",
+    "MY_PROJECTS": "My Projects"
   },
   "PROJECTS": {
     "PAGE_TITLE": "Projects",
@@ -133,8 +136,16 @@
       "ACTIVE": "Active",
       "DELAYED": "Delayed",
       "COMPLETED": "Completed"
+    },
+    "FIELD_CATEGORY": "Project Category",
+    "FIELD_PUBLIC": "List in SaaS Marketplace",
+    "CATEGORIES": {
+      "Residential": "Residential",
+      "Commercial": "Commercial",
+      "Industrial": "Industrial"
     }
   },
+
   "DETAILS": {
     "WORKSPACE": "Project Workspace",
     "LOADING_PROJECT": "Loading project...",
@@ -146,6 +157,11 @@
     "SCOPE_DESC": "Scope Description",
     "TAB_PETTY_CASH": "Petty Cash Requests",
     "TAB_LEDGER": "Financial Ledger",
+    "TAB_GALLERY": "Project Gallery",
+    "UPLOAD_IMAGE": "Upload Image",
+    "UPLOADING": "Uploading...",
+    "UPLOAD_SUCCESS": "Image uploaded successfully!",
+    "UPLOAD_FAILED": "Upload failed",
     "VOUCHERS_TITLE": "Petty Cash Vouchers",
     "RECORDS": "records",
     "LEDGER_TITLE": "General Ledger",
@@ -210,5 +226,31 @@
       "SiteEngineer": "Site Engineer",
       "DesignEngineer": "Design Engineer"
     }
+  },
+  "MARKETPLACE": {
+    "SECTION_TITLE": "SaaS Corporate Directory",
+    "SECTION_SUBTITLE": "Search, filter, and inspect verified general contractors, engineering firms, and tenant portfolios on Structo.",
+    "FILTER_REGION": "Region",
+    "FILTER_CATEGORY": "Project Category",
+    "FILTER_RATING": "Minimum Rating",
+    "SEARCH_PLACEHOLDER": "Enter region...",
+    "RATING_LABEL": "Rating",
+    "VIEW_PORTFOLIO": "View Portfolio",
+    "MODAL_PORTFOLIO_TITLE": "Corporate Profile",
+    "MODAL_PORTFOLIO_SUBTITLE": "Verify company stats and view project image galleries.",
+    "NO_COMPANIES": "No companies match the selected filters.",
+    "STATS_PROJECTS": "Public Projects",
+    "PROJECT_GALLERY": "Project Gallery",
+    "NO_PHOTOS": "No site photos uploaded for this project yet."
+  },
+  "PROFILE": {
+    "TAB_PROFILE": "Company Profile",
+    "FIELD_LOGO": "Logo URL",
+    "FIELD_BANNER": "Banner URL",
+    "FIELD_REGION": "Corporate Region",
+    "FIELD_COMP_DESC": "About Our Company",
+    "BTN_UPDATE": "Save Profile Settings",
+    "SAVING": "Updating profile...",
+    "SUCCESS": "Corporate profile updated successfully."
   }
 }

@@ -15,7 +15,7 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "SuperAdmin,TenantOwner,Manager")]
+[Authorize]
 public class ProjectsController(StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
@@ -42,6 +42,7 @@ public class ProjectsController(StructoDbContext context) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "SuperAdmin,TenantOwner,Manager")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> Create([FromBody] ProjectCreateDto dto)
     {
         var project = new Project

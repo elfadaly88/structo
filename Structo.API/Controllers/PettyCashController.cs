@@ -16,7 +16,7 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
-[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant")]
+[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
 public class PettyCashController(StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;

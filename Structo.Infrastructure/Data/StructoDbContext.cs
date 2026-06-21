@@ -102,6 +102,8 @@ public class StructoDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Reason).HasMaxLength(500);
             entity.Property(e => e.Amount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.SpentAmount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.ReturnAmount).HasColumnType("numeric(18,2)");
 
             entity.HasOne(e => e.Tenant)
                   .WithMany()

@@ -37,6 +37,7 @@ public class AuthController(StructoDbContext context, IConfiguration configurati
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
             new Claim(ClaimTypes.Name, user.Email),
+            new Claim("name", $"{user.FirstName} {user.LastName}"),
             new Claim("tenantId", user.TenantId?.ToString() ?? string.Empty)
         };
 
@@ -58,7 +59,8 @@ public class AuthController(StructoDbContext context, IConfiguration configurati
                 Token = tokenHandler.WriteToken(token),
                 UserId = user.Id,
                 Role = user.Role.ToString(),
-                TenantId = user.TenantId
+                TenantId = user.TenantId,
+                Name = $"{user.FirstName} {user.LastName}"
             },
             Message = "Login successful"
         });

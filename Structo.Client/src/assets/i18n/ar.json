@@ -99,7 +99,10 @@
     "GLOBAL_OVERVIEW": "نظرة عامة عالمية",
     "PROJECTS": "المشاريع",
     "TENANT_ENV": "بيئة المستأجر",
-    "LOGGED_IN_AS": "مسجل الدخول باسم"
+    "LOGGED_IN_AS": "مسجل الدخول باسم",
+    "FINANCIALS": "التقارير المالية",
+    "PETTY_CASH": "الموافقات على النثرية",
+    "MY_PROJECTS": "مشاريعي"
   },
   "PROJECTS": {
     "PAGE_TITLE": "المشاريع",
@@ -133,8 +136,16 @@
       "ACTIVE": "نشط",
       "DELAYED": "متأخر",
       "COMPLETED": "مكتمل"
+    },
+    "FIELD_CATEGORY": "تصنيف المشروع",
+    "FIELD_PUBLIC": "عرض في معرض المشاريع العام",
+    "CATEGORIES": {
+      "Residential": "سكني",
+      "Commercial": "تجاري / إداري",
+      "Industrial": "صناعي"
     }
   },
+
   "DETAILS": {
     "WORKSPACE": "بيئة عمل المشروع",
     "LOADING_PROJECT": "جاري تحميل المشروع...",
@@ -146,6 +157,11 @@
     "SCOPE_DESC": "وصف نطاق العمل",
     "TAB_PETTY_CASH": "طلبات المبالغ النثرية",
     "TAB_LEDGER": "الدفتر المالي",
+    "TAB_GALLERY": "معرض الصور",
+    "UPLOAD_IMAGE": "تحميل صورة",
+    "UPLOADING": "جاري التحميل...",
+    "UPLOAD_SUCCESS": "تم تحميل الصورة بنجاح!",
+    "UPLOAD_FAILED": "فشل تحميل الصورة",
     "VOUCHERS_TITLE": "إيصالات المبالغ النثرية",
     "RECORDS": "سجلات",
     "LEDGER_TITLE": "الدفتر العام",
@@ -210,5 +226,31 @@
       "SiteEngineer": "مهندس موقع",
       "DesignEngineer": "مهندس تصميم"
     }
+  },
+  "MARKETPLACE": {
+    "SECTION_TITLE": "دليل شركات ومقاولي المنصة",
+    "SECTION_SUBTITLE": "ابحث، صَفِّ، وتصفح الملفات التعريفية المتميزة لشركات المقاولات والمكاتب الهندسية المشتركة في ستراكتو.",
+    "FILTER_REGION": "المنطقة / المحافظة",
+    "FILTER_CATEGORY": "تصنيف المشروع",
+    "FILTER_RATING": "الحد الندى للتقييم",
+    "SEARCH_PLACEHOLDER": "اكتب اسم المنطقة (مثال: القاهرة)...",
+    "RATING_LABEL": "التقييم",
+    "VIEW_PORTFOLIO": "عرض الملف التعريفي",
+    "MODAL_PORTFOLIO_TITLE": "الملف التعريفي للشركة",
+    "MODAL_PORTFOLIO_SUBTITLE": "تحقق من إحصائيات الشركة وتصفح معرض صور المشاريع العامة الخاصة بها.",
+    "NO_COMPANIES": "لا توجد شركات تطابق خيارات التصفية المحددة.",
+    "STATS_PROJECTS": "المشاريع العامة",
+    "PROJECT_GALLERY": "معرض صور المشاريع",
+    "NO_PHOTOS": "لم يتم تحميل أي صور لهذا المشروع بعد."
+  },
+  "PROFILE": {
+    "TAB_PROFILE": "الملف التعريفي",
+    "FIELD_LOGO": "رابط الشعار (Logo URL)",
+    "FIELD_BANNER": "رابط الغلاف (Banner URL)",
+    "FIELD_REGION": "المنطقة / المقر الرئيسي",
+    "FIELD_COMP_DESC": "نبذة عن الشركة",
+    "BTN_UPDATE": "حفظ إعدادات الملف التعريفي",
+    "SAVING": "جاري حفظ التغييرات...",
+    "SUCCESS": "تم تحديث الملف التعريفي للشركة بنجاح."
   }
 }

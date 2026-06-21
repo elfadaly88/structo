@@ -121,7 +121,11 @@ using (var scope = app.Services.CreateScope())
     {
         context.Database.Migrate();
     }
-    catch { /* Ignore if it cannot migrate yet */ }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration failed: {ex.Message}");
+        Console.WriteLine(ex.StackTrace);
+    }
 
     try
     {

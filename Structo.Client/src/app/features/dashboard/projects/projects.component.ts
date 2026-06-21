@@ -5,12 +5,17 @@ import { Router } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { ProjectDto, ProjectCreateDto } from '../../../core/models/project.models';
 import { TenantUserService, UserDto, UserCreateDto } from '../../../core/services/tenant-user.service';
+import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/services/tenant-profile.service';
+import { ImageUploadService } from '../../../core/services/image-upload.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 
 export interface ProjectViewDto extends ProjectDto {
   client: string;
   budget: number;
   status: 'Active' | 'Delayed' | 'Completed';
+  category: string;
+  isPublicPortfolio: boolean;
 }
 
 @Component({
@@ -18,20 +23,32 @@ export interface ProjectViewDto extends ProjectDto {
   standalone: true,
   imports: [ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/60 pb-5">
         <div>
           <h1 class="text-3xl font-extrabold tracking-tight text-white font-cairo">
-            {{ activeTab() === 'projects' ? ('PROJECTS.PAGE_TITLE' | translate) : ('USERS.TAB_USERS' | translate) }}
+            @if (activeTab() === 'projects') {
+              {{ 'PROJECTS.PAGE_TITLE' | translate }}
+            } @else if (activeTab() === 'users') {
+              {{ 'USERS.TAB_USERS' | translate }}
+            } @else {
+              {{ 'PROFILE.TAB_PROFILE' | translate }}
+            }
           </h1>
           <p class="text-sm text-slate-400 mt-1">
-            {{ activeTab() === 'projects' ? ('PROJECTS.PAGE_SUBTITLE' | translate) : ('USERS.MODAL_SUBTITLE' | translate) }}
+            @if (activeTab() === 'projects') {
+              {{ 'PROJECTS.PAGE_SUBTITLE' | translate }}
+            } @else if (activeTab() === 'users') {
+              {{ 'USERS.MODAL_SUBTITLE' | translate }}
+            } @else {
+              {{ 'MARKETPLACE.SECTION_SUBTITLE' | translate }}
+            }
           </p>
         </div>
 
         <div class="flex gap-3">
-          @if (activeTab() === 'projects') {
+          @if (activeTab() === 'projects' && currentUserRole() === 'TenantOwner') {
             <button
               id="btn-new-project"
               (click)="openProjectModal()"
@@ -41,7 +58,7 @@ export interface ProjectViewDto extends ProjectDto {
               </svg>
               {{ 'PROJECTS.NEW_PROJECT' | translate }}
             </button>
-          } @else {
+          } @else if (activeTab() === 'users') {
             <button
               id="btn-new-user"
               (click)="openUserModal()"
@@ -56,30 +73,42 @@ export interface ProjectViewDto extends ProjectDto {
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="border-b border-slate-800">
-        <nav class="flex gap-8">
-          <button 
-            (click)="activeTab.set('projects')" 
-            class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
-            [class.border-indigo-500]="activeTab() === 'projects'"
-            [class.text-indigo-400]="activeTab() === 'projects'"
-            [class.border-transparent]="activeTab() !== 'projects'"
-            [class.text-slate-400]="activeTab() !== 'projects'"
-            [class.hover:text-slate-200]="activeTab() !== 'projects'">
-            {{ 'PROJECTS.PAGE_TITLE' | translate }}
-          </button>
-          <button 
-            (click)="activeTab.set('users')" 
-            class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
-            [class.border-indigo-500]="activeTab() === 'users'"
-            [class.text-indigo-400]="activeTab() === 'users'"
-            [class.border-transparent]="activeTab() !== 'users'"
-            [class.text-slate-400]="activeTab() !== 'users'"
-            [class.hover:text-slate-200]="activeTab() !== 'users'">
-            {{ 'USERS.TAB_USERS' | translate }}
-          </button>
-        </nav>
-      </div>
+      @if (currentUserRole() === 'TenantOwner') {
+        <div class="border-b border-slate-800">
+          <nav class="flex gap-8">
+            <button 
+              (click)="navigateToTab('projects')" 
+              class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
+              [class.border-indigo-500]="activeTab() === 'projects'"
+              [class.text-indigo-400]="activeTab() === 'projects'"
+              [class.border-transparent]="activeTab() !== 'projects'"
+              [class.text-slate-400]="activeTab() !== 'projects'"
+              [class.hover:text-slate-200]="activeTab() !== 'projects'">
+              {{ 'PROJECTS.PAGE_TITLE' | translate }}
+            </button>
+            <button 
+              (click)="navigateToTab('users')" 
+              class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
+              [class.border-indigo-500]="activeTab() === 'users'"
+              [class.text-indigo-400]="activeTab() === 'users'"
+              [class.border-transparent]="activeTab() !== 'users'"
+              [class.text-slate-400]="activeTab() !== 'users'"
+              [class.hover:text-slate-200]="activeTab() !== 'users'">
+              {{ 'USERS.TAB_USERS' | translate }}
+            </button>
+            <button 
+              (click)="navigateToTab('profile')" 
+              class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
+              [class.border-indigo-500]="activeTab() === 'profile'"
+              [class.text-indigo-400]="activeTab() === 'profile'"
+              [class.border-transparent]="activeTab() !== 'profile'"
+              [class.text-slate-400]="activeTab() !== 'profile'"
+              [class.hover:text-slate-200]="activeTab() !== 'profile'">
+              {{ 'PROFILE.TAB_PROFILE' | translate }}
+            </button>
+          </nav>
+        </div>
+      }
 
       <!-- SECTION 1: PROJECTS HUB -->
       @if (activeTab() === 'projects') {
@@ -130,6 +159,7 @@ export interface ProjectViewDto extends ProjectDto {
                     <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</th>
                     <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }}</th>
+                    <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.FIELD_CATEGORY' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_START_DATE' | translate }}</th>
                   </tr>
                 </thead>
@@ -139,8 +169,13 @@ export interface ProjectViewDto extends ProjectDto {
                       (click)="viewDetails(proj.id)"
                       class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300 cursor-pointer">
                       <td class="px-6 py-4">
-                        <div class="font-bold text-white hover:text-indigo-400 transition-colors duration-200">
-                          {{ proj.name }}
+                        <div class="flex items-center gap-2">
+                          <div class="font-bold text-white hover:text-indigo-400 transition-colors duration-200">
+                            {{ proj.name }}
+                          </div>
+                          @if (proj.isPublicPortfolio) {
+                            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Public</span>
+                          }
                         </div>
                         <span class="block text-xs font-normal text-slate-500 mt-0.5 max-w-xs truncate">
                           {{ proj.description || ('PROJECTS.NO_DESCRIPTION' | translate) }}
@@ -165,11 +200,16 @@ export interface ProjectViewDto extends ProjectDto {
                           </span>
                         }
                       </td>
+                      <td class="px-6 py-4 text-center">
+                        <span class="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 text-xs border border-slate-700 font-cairo">
+                          {{ 'PROJECTS.CATEGORIES.' + proj.category | translate }}
+                        </span>
+                      </td>
                       <td class="px-6 py-4 text-slate-400">{{ proj.startDate | date:'yyyy-MM-dd' }}</td>
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="5" class="px-6 py-16 text-center text-slate-500 text-sm">
+                      <td colspan="6" class="px-6 py-16 text-center text-slate-500 text-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-700 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
                         </svg>
@@ -186,7 +226,7 @@ export interface ProjectViewDto extends ProjectDto {
       }
 
       <!-- SECTION 2: COMPANY USERS MANAGEMENT -->
-      @if (activeTab() === 'users') {
+      @if (activeTab() === 'users' && currentUserRole() === 'TenantOwner') {
         <!-- Users Stats Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
@@ -202,26 +242,6 @@ export interface ProjectViewDto extends ProjectDto {
             <h3 class="text-3xl font-extrabold text-emerald-400 mt-1">{{ engineerCount() }}</h3>
           </div>
         </div>
-
-        <!-- Users Loading State -->
-        @if (isLoadingUsers()) {
-          <div class="flex justify-center items-center py-20">
-            <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        }
-
-        <!-- Users Error State -->
-        @if (userError()) {
-          <div class="rounded-xl bg-red-500/10 border border-red-500/30 p-5 text-sm text-red-400 flex items-start gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>{{ userError() }}</span>
-          </div>
-        }
 
         <!-- Users Table View -->
         @if (!isLoadingUsers()) {
@@ -279,6 +299,150 @@ export interface ProjectViewDto extends ProjectDto {
           </div>
         }
       }
+
+      <!-- SECTION 3: CORPORATE PROFILE EDITOR -->
+      @if (activeTab() === 'profile' && currentUserRole() === 'TenantOwner') {
+        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 md:p-8 shadow-2xl max-w-3xl">
+          @if (profileSuccessMessage()) {
+            <div class="mb-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-sm text-emerald-400 font-cairo">
+              ✓ {{ profileSuccessMessage() }}
+            </div>
+          }
+
+          <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
+                <input
+                  id="prof-name"
+                  type="text"
+                  formControlName="name"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                  placeholder="Company Name">
+              </div>
+
+              <div>
+                <label for="prof-region" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_REGION' | translate }}</label>
+                <input
+                  id="prof-region"
+                  type="text"
+                  formControlName="region"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                  placeholder="e.g. Cairo, Giza, Alexandria">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <!-- Logo Upload Group -->
+              <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo">{{ 'PROFILE.FIELD_LOGO' | translate }}</label>
+                <div class="flex items-center gap-4">
+                  <div class="h-16 w-16 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center overflow-hidden shrink-0">
+                    @if (profileForm.get('logoUrl')?.value) {
+                      <img [src]="profileForm.get('logoUrl')?.value" alt="Logo preview" class="h-full w-full object-cover">
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    }
+                  </div>
+                  <div class="flex-1 space-y-1.5">
+                    <button
+                      type="button"
+                      (click)="logoFileInput.click()"
+                      class="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold rounded-xl text-slate-200 transition-all duration-150 hover:bg-slate-800 cursor-pointer font-cairo">
+                      @if (isUploadingLogo()) {
+                        {{ 'DETAILS.UPLOADING' | translate }}
+                      } @else {
+                        {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
+                      }
+                    </button>
+                    <input
+                      #logoFileInput
+                      type="file"
+                      class="hidden"
+                      (change)="onLogoFileSelected($event)"
+                      accept="image/*">
+                    <input
+                      type="hidden"
+                      formControlName="logoUrl">
+                    @if (profileForm.get('logoUrl')?.value) {
+                      <p class="text-[10px] text-slate-500 font-mono truncate max-w-[200px]">
+                        {{ profileForm.get('logoUrl')?.value }}
+                      </p>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Banner Upload Group -->
+              <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo">{{ 'PROFILE.FIELD_BANNER' | translate }}</label>
+                <div class="flex items-center gap-4">
+                  <div class="h-16 w-28 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center overflow-hidden shrink-0">
+                    @if (profileForm.get('bannerUrl')?.value) {
+                      <img [src]="profileForm.get('bannerUrl')?.value" alt="Banner preview" class="h-full w-full object-cover">
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    }
+                  </div>
+                  <div class="flex-1 space-y-1.5">
+                    <button
+                      type="button"
+                      (click)="bannerFileInput.click()"
+                      class="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold rounded-xl text-slate-200 transition-all duration-150 hover:bg-slate-800 cursor-pointer font-cairo">
+                      @if (isUploadingBanner()) {
+                        {{ 'DETAILS.UPLOADING' | translate }}
+                      } @else {
+                        {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
+                      }
+                    </button>
+                    <input
+                      #bannerFileInput
+                      type="file"
+                      class="hidden"
+                      (change)="onBannerFileSelected($event)"
+                      accept="image/*">
+                    <input
+                      type="hidden"
+                      formControlName="bannerUrl">
+                    @if (profileForm.get('bannerUrl')?.value) {
+                      <p class="text-[10px] text-slate-500 font-mono truncate max-w-[200px]">
+                        {{ profileForm.get('bannerUrl')?.value }}
+                      </p>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_COMP_DESC' | translate }}</label>
+              <textarea
+                id="prof-desc"
+                formControlName="companyDescription"
+                rows="5"
+                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                placeholder="Write a brief overview of your business..."></textarea>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button
+                type="submit"
+                [disabled]="profileForm.invalid || isSavingProfile()"
+                class="px-6 py-3 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
+                @if (isSavingProfile()) {
+                  {{ 'PROFILE.SAVING' | translate }}
+                } @else {
+                  {{ 'PROFILE.BTN_UPDATE' | translate }}
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
     </div>
 
     <!-- MODAL 1: CREATE PROJECT -->
@@ -303,7 +467,6 @@ export interface ProjectViewDto extends ProjectDto {
             </button>
           </div>
 
-          <!-- Errors block -->
           @if (projectValidationErrors().length > 0) {
             <div class="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
               <span class="font-bold block mb-1 font-cairo">{{ 'PROJECTS.VALIDATION_TITLE' | translate }}</span>
@@ -320,11 +483,8 @@ export interface ProjectViewDto extends ProjectDto {
                 id="proj-name"
                 type="text"
                 formControlName="name"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
+                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
                 placeholder="e.g. New Administrative Capital Tower">
-              @if (isProjectFieldInvalid('name')) {
-                <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'PROJECTS.FIELD_NAME_REQ' | translate }}</span>
-              }
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -334,11 +494,8 @@ export interface ProjectViewDto extends ProjectDto {
                   id="proj-client"
                   type="text"
                   formControlName="client"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
                   placeholder="e.g. Orascom">
-                @if (isProjectFieldInvalid('client')) {
-                  <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'PROJECTS.FIELD_NAME_REQ' | translate }}</span>
-                }
               </div>
 
               <div>
@@ -347,11 +504,8 @@ export interface ProjectViewDto extends ProjectDto {
                   id="proj-budget"
                   type="number"
                   formControlName="budget"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
                   placeholder="e.g. 15000000">
-                @if (isProjectFieldInvalid('budget')) {
-                  <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'PROJECTS.FIELD_NAME_REQ' | translate }}</span>
-                }
               </div>
             </div>
 
@@ -386,6 +540,29 @@ export interface ProjectViewDto extends ProjectDto {
                   <option value="Completed">{{ 'PROJECTS.STATUS.COMPLETED' | translate }}</option>
                 </select>
               </div>
+
+              <div>
+                <label for="proj-cat" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_CATEGORY' | translate }} <span class="text-red-400">*</span></label>
+                <select
+                  id="proj-cat"
+                  formControlName="category"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                  <option value="Residential">{{ 'PROJECTS.CATEGORIES.Residential' | translate }}</option>
+                  <option value="Commercial">{{ 'PROJECTS.CATEGORIES.Commercial' | translate }}</option>
+                  <option value="Industrial">{{ 'PROJECTS.CATEGORIES.Industrial' | translate }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 py-2">
+              <input
+                id="proj-pub"
+                type="checkbox"
+                formControlName="isPublicPortfolio"
+                class="h-4 w-4 rounded border-slate-700 text-indigo-600 bg-slate-950 focus:ring-0">
+              <label for="proj-pub" class="text-sm text-slate-300 font-cairo font-semibold cursor-pointer select-none">
+                {{ 'PROJECTS.FIELD_PUBLIC' | translate }}
+              </label>
             </div>
 
             <div>
@@ -394,7 +571,7 @@ export interface ProjectViewDto extends ProjectDto {
                 id="proj-desc"
                 formControlName="description"
                 rows="3"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600 resize-none"
+                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
                 placeholder="Scope details..."></textarea>
             </div>
 
@@ -409,17 +586,7 @@ export interface ProjectViewDto extends ProjectDto {
                 type="submit"
                 [disabled]="projectForm.invalid || isSavingProject()"
                 class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-                @if (isSavingProject()) {
-                  <span class="flex items-center gap-2">
-                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {{ 'PROJECTS.SAVING' | translate }}
-                  </span>
-                } @else {
-                  {{ 'PROJECTS.BTN_CREATE' | translate }}
-                }
+                {{ 'PROJECTS.BTN_CREATE' | translate }}
               </button>
             </div>
           </form>
@@ -430,10 +597,8 @@ export interface ProjectViewDto extends ProjectDto {
     <!-- MODAL 2: REGISTER COMPANY USER -->
     @if (isUserModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <!-- Backdrop -->
         <div (click)="closeUserModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
-        <!-- Modal container -->
         <div class="relative bg-slate-900 border border-slate-700/60 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl shadow-black/50 z-10">
           <div class="flex items-start justify-between mb-6">
             <div>
@@ -449,7 +614,6 @@ export interface ProjectViewDto extends ProjectDto {
             </button>
           </div>
 
-          <!-- Errors block -->
           @if (userValidationErrors().length > 0) {
             <div class="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
               <span class="font-bold block mb-1 font-cairo">{{ 'PROJECTS.VALIDATION_TITLE' | translate }}</span>
@@ -459,7 +623,7 @@ export interface ProjectViewDto extends ProjectDto {
             </div>
           }
 
-          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" class="space-y-4">
+          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" autocomplete="off" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label for="usr-first" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_FIRST_NAME' | translate }} <span class="text-red-400">*</span></label>
@@ -467,11 +631,9 @@ export interface ProjectViewDto extends ProjectDto {
                   id="usr-first"
                   type="text"
                   formControlName="firstName"
+                  autocomplete="off"
                   class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
                   placeholder="e.g. Ahmed">
-                @if (isUserFieldInvalid('firstName')) {
-                  <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'USERS.FIELD_FIRST_NAME_REQ' | translate }}</span>
-                }
               </div>
 
               <div>
@@ -480,11 +642,9 @@ export interface ProjectViewDto extends ProjectDto {
                   id="usr-last"
                   type="text"
                   formControlName="lastName"
+                  autocomplete="off"
                   class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
                   placeholder="e.g. Ali">
-                @if (isUserFieldInvalid('lastName')) {
-                  <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'USERS.FIELD_LAST_NAME_REQ' | translate }}</span>
-                }
               </div>
             </div>
 
@@ -494,11 +654,9 @@ export interface ProjectViewDto extends ProjectDto {
                 id="usr-email"
                 type="email"
                 formControlName="email"
+                autocomplete="off"
                 class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
                 placeholder="e.g. ahmed.ali@company.com">
-              @if (isUserFieldInvalid('email')) {
-                <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'USERS.FIELD_EMAIL_REQ' | translate }}</span>
-              }
             </div>
 
             <div>
@@ -507,11 +665,9 @@ export interface ProjectViewDto extends ProjectDto {
                 id="usr-pass"
                 type="password"
                 formControlName="password"
+                autocomplete="new-password"
                 class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
                 placeholder="Min 6 characters">
-              @if (isUserFieldInvalid('password')) {
-                <span class="text-xs text-red-400 mt-1 block font-cairo">{{ 'USERS.FIELD_PASSWORD_REQ' | translate }}</span>
-              }
             </div>
 
             <div>
@@ -538,17 +694,7 @@ export interface ProjectViewDto extends ProjectDto {
                 type="submit"
                 [disabled]="userForm.invalid || isSavingUser()"
                 class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-                @if (isSavingUser()) {
-                  <span class="flex items-center gap-2">
-                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {{ 'USERS.ADDING' | translate }}
-                  </span>
-                } @else {
-                  {{ 'USERS.BTN_CREATE' | translate }}
-                }
+                {{ 'USERS.BTN_CREATE' | translate }}
               </button>
             </div>
           </form>
@@ -565,10 +711,19 @@ export interface ProjectViewDto extends ProjectDto {
 export class ProjectsComponent implements OnInit {
   private readonly projectService = inject(ProjectService);
   private readonly userService = inject(TenantUserService);
+  private readonly profileService = inject(TenantProfileService);
+  private readonly uploadService = inject(ImageUploadService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
 
-  readonly activeTab = signal<'projects' | 'users'>('projects');
+  readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
+  
+  readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
+
+  // Upload Signals
+  readonly isUploadingLogo = signal(false);
+  readonly isUploadingBanner = signal(false);
 
   // Signals for Projects
   readonly projects = signal<ProjectViewDto[]>([]);
@@ -586,6 +741,10 @@ export class ProjectsComponent implements OnInit {
   readonly userValidationErrors = signal<string[]>([]);
   readonly userError = signal<string | null>(null);
 
+  // Signals for Profile
+  readonly isSavingProfile = signal(false);
+  readonly profileSuccessMessage = signal<string | null>(null);
+
   // Computed counters
   readonly activeProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
   readonly completedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Completed').length);
@@ -601,6 +760,8 @@ export class ProjectsComponent implements OnInit {
     startDate: [new Date().toISOString().substring(0, 10), Validators.required],
     endDate: [null],
     status: ['Active', Validators.required],
+    category: ['Residential', Validators.required],
+    isPublicPortfolio: [false],
     description: ['']
   });
 
@@ -612,9 +773,38 @@ export class ProjectsComponent implements OnInit {
     role: ['Manager', Validators.required]
   });
 
+  readonly profileForm: FormGroup = this.fb.group({
+    name: ['', Validators.required],
+    logoUrl: [''],
+    bannerUrl: [''],
+    region: [''],
+    companyDescription: ['']
+  });
+
   ngOnInit(): void {
+    const url = this.router.url;
+    if (url.includes('/dashboard/users')) {
+      this.activeTab.set('users');
+    } else if (url.includes('/dashboard/profile')) {
+      this.activeTab.set('profile');
+    } else {
+      this.activeTab.set('projects');
+    }
+
     this.fetchProjects();
-    this.fetchUsers();
+    if (this.currentUserRole() === 'TenantOwner') {
+      this.fetchUsers();
+      this.fetchProfile();
+    }
+  }
+
+  navigateToTab(tab: 'projects' | 'users' | 'profile'): void {
+    this.activeTab.set(tab);
+    if (tab === 'projects') {
+      this.router.navigate(['/dashboard/projects']);
+    } else {
+      this.router.navigate([`/dashboard/${tab}`]);
+    }
   }
 
   fetchProjects(): void {
@@ -628,6 +818,8 @@ export class ProjectsComponent implements OnInit {
             let client = index % 2 === 0 ? 'El-Mokawloon El-Arab' : 'Orascom Construction';
             let budget = index % 2 === 0 ? 5400000 : 8900000;
             let status: 'Active' | 'Delayed' | 'Completed' = p.isActive ? (index % 3 === 0 ? 'Delayed' : 'Active') : 'Completed';
+            let category = 'Residential';
+            let isPublicPortfolio = false;
             let description = p.description;
 
             try {
@@ -636,21 +828,30 @@ export class ProjectsComponent implements OnInit {
                 if (parsed.client) client = parsed.client;
                 if (parsed.budget !== undefined) budget = parsed.budget;
                 if (parsed.status) status = parsed.status;
+                if (parsed.category) category = parsed.category;
+                if (parsed.isPublicPortfolio !== undefined) isPublicPortfolio = parsed.isPublicPortfolio;
                 if (parsed.description !== undefined) description = parsed.description;
               }
-            } catch (e) {
-              // fallback
-            }
+            } catch (e) {}
 
             return {
               ...p,
               client,
               budget,
               status,
+              category,
+              isPublicPortfolio,
               description
             };
           });
-          this.projects.set(mapped as ProjectViewDto[]);
+
+          let filtered = mapped;
+          const user = this.authService.currentUser();
+          if (user && ['Manager', 'SiteEngineer', 'DesignEngineer'].includes(user.role)) {
+            filtered = mapped.filter(p => p.managerId === user.userId);
+          }
+
+          this.projects.set(filtered as ProjectViewDto[]);
         } else {
           this.projectError.set(response.message || 'Failed to load projects.');
         }
@@ -660,9 +861,8 @@ export class ProjectsComponent implements OnInit {
         this.projectError.set(
           err.status === 401
             ? 'Session expired. Please log in again.'
-            : err.error?.message || 'Error connecting to backend. Ensure the API is running.'
+            : err.error?.message || 'Error connecting to backend.'
         );
-        console.error('Error fetching projects', err);
       }
     });
   }
@@ -684,14 +884,87 @@ export class ProjectsComponent implements OnInit {
         this.userError.set(
           err.status === 401
             ? 'Session expired. Please log in again.'
-            : err.error?.message || 'Error connecting to backend. Ensure the API is running.'
+            : err.error?.message || 'Error connecting to backend.'
         );
-        console.error('Error fetching users', err);
       }
     });
   }
 
-  // Projects Modal Controls
+  fetchProfile(): void {
+    this.profileService.getProfile().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.profileForm.patchValue({
+            name: res.data.name,
+            logoUrl: res.data.logoUrl,
+            bannerUrl: res.data.bannerUrl,
+            region: res.data.region,
+            companyDescription: res.data.companyDescription
+          });
+        }
+      }
+    });
+  }
+
+  onProfileSubmit(): void {
+    if (this.profileForm.invalid) {
+      return;
+    }
+
+    this.isSavingProfile.set(true);
+    this.profileSuccessMessage.set(null);
+
+    const dto: TenantProfileUpdateDto = this.profileForm.value;
+
+    this.profileService.updateProfile(dto).subscribe({
+      next: (res) => {
+        this.isSavingProfile.set(false);
+        if (res.success) {
+          this.profileSuccessMessage.set('PROFILE.SUCCESS');
+          this.fetchProfile();
+          setTimeout(() => this.profileSuccessMessage.set(null), 5000);
+        }
+      },
+      error: () => {
+        this.isSavingProfile.set(false);
+      }
+    });
+  }
+
+  onLogoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.isUploadingLogo.set(true);
+      this.uploadService.uploadTenantLogo(file).subscribe({
+        next: (res) => {
+          this.isUploadingLogo.set(false);
+          if (res.success && res.data) {
+            this.profileForm.patchValue({ logoUrl: res.data.url });
+          }
+        },
+        error: () => this.isUploadingLogo.set(false)
+      });
+    }
+  }
+
+  onBannerFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.isUploadingBanner.set(true);
+      this.uploadService.uploadTenantBanner(file).subscribe({
+        next: (res) => {
+          this.isUploadingBanner.set(false);
+          if (res.success && res.data) {
+            this.profileForm.patchValue({ bannerUrl: res.data.url });
+          }
+        },
+        error: () => this.isUploadingBanner.set(false)
+      });
+    }
+  }
+
   isProjectFieldInvalid(fieldName: string): boolean {
     const field = this.projectForm.get(fieldName);
     return !!field && field.invalid && (field.dirty || field.touched);
@@ -705,6 +978,8 @@ export class ProjectsComponent implements OnInit {
       startDate: new Date().toISOString().substring(0, 10),
       endDate: null,
       status: 'Active',
+      category: 'Residential',
+      isPublicPortfolio: false,
       description: ''
     });
     this.projectValidationErrors.set([]);
@@ -716,6 +991,9 @@ export class ProjectsComponent implements OnInit {
   }
 
   onProjectSubmit(): void {
+    if (this.currentUserRole() !== 'TenantOwner') {
+      return;
+    }
     if (this.projectForm.invalid) {
       this.projectForm.markAllAsTouched();
       return;
@@ -729,6 +1007,8 @@ export class ProjectsComponent implements OnInit {
       client: formVal.client,
       budget: Number(formVal.budget),
       status: formVal.status,
+      category: formVal.category,
+      isPublicPortfolio: !!formVal.isPublicPortfolio,
       description: formVal.description || ''
     };
 
@@ -759,7 +1039,6 @@ export class ProjectsComponent implements OnInit {
     });
   }
 
-  // Users Modal Controls
   isUserFieldInvalid(fieldName: string): boolean {
     const field = this.userForm.get(fieldName);
     return !!field && field.invalid && (field.dirty || field.touched);
@@ -773,6 +1052,8 @@ export class ProjectsComponent implements OnInit {
       password: '',
       role: 'Manager'
     });
+    this.userForm.markAsPristine();
+    this.userForm.markAsUntouched();
     this.userValidationErrors.set([]);
     this.isUserModalOpen.set(true);
   }
@@ -782,6 +1063,9 @@ export class ProjectsComponent implements OnInit {
   }
 
   onUserSubmit(): void {
+    if (this.currentUserRole() !== 'TenantOwner') {
+      return;
+    }
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       return;

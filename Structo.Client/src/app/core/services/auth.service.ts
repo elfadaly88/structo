@@ -46,8 +46,20 @@ export class AuthService {
       const decoded = JSON.parse(atob(payload));
       // .NET claims mappings (XML schemas) or standard name claims
       return decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 
-             decoded['name'] || 
-             decoded['sub'] || 
+             decoded['email'] || 
+             'User';
+    } catch (e) {
+      return 'User';
+    }
+  }
+
+  private getNameFromToken(token: string): string {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded['name'] || 
+             decoded['unique_name'] || 
+             decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] || 
              'User';
     } catch (e) {
       return 'User';
@@ -57,7 +69,8 @@ export class AuthService {
   private setSession(authData: AuthResponse): void {
     const { token, ...userData } = authData;
     const email = this.getEmailFromToken(token);
-    const session: UserSession = { ...userData, email };
+    const name = userData.name || this.getNameFromToken(token);
+    const session: UserSession = { ...userData, email, name };
     
     localStorage.setItem(this.tokenKey, token);
     localStorage.setItem(this.userKey, JSON.stringify(session));
@@ -71,6 +84,9 @@ export class AuthService {
     if (token && userJson) {
       try {
         const session = JSON.parse(userJson) as UserSession;
+        if (!session.name && token) {
+          session.name = this.getNameFromToken(token);
+        }
         this.currentUser.set(session);
       } catch (e) {
         this.logout();

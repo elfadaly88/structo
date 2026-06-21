@@ -16,7 +16,7 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
-[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer")]
+[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer,DesignEngineer")]
 public class SitePhotosController(StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;

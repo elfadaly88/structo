@@ -15,3 +15,4 @@ F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\refint\St
 F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.pdb
 F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.genruntimeconfig.cache
 F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\ref\Structo.Infrastructure.dll
+F:\PrivateWork\structo\project\Structo.Infrastructure\obj\Debug\net9.0\Structo.Infrastructure.sourcelink.json

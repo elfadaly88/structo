@@ -10,3 +10,4 @@ F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\refint\Structo.Core
 F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.pdb
 F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\ref\Structo.Core.dll
 F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.csproj.AssemblyReference.cache
+F:\PrivateWork\structo\project\Structo.Core\obj\Debug\net9.0\Structo.Core.sourcelink.json

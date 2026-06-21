@@ -1,0 +1,64 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiResponse } from '../models/auth.models';
+
+export interface TenantDto {
+  id: string;
+  name: string;
+  subscriptionPlan: string;
+  maxActiveProjects: number;
+  logoUrl: string;
+  bannerUrl: string;
+  region: string;
+  companyDescription: string;
+  rating: number;
+  createdAt: string;
+}
+
+export interface PublicProjectDto {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string | null;
+  category: string;
+  sitePhotos: string[];
+}
+
+export interface PublicTenantPortfolioDto {
+  id: string;
+  name: string;
+  logoUrl: string;
+  bannerUrl: string;
+  region: string;
+  companyDescription: string;
+  rating: number;
+  projects: PublicProjectDto[];
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PublicDirectoryService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = 'http://localhost:5000/api/public';
+
+  getTenants(filters?: { region?: string; category?: string; minRating?: number }): Observable<ApiResponse<TenantDto[]>> {
+    let params = new HttpParams();
+    if (filters?.region) {
+      params = params.set('region', filters.region);
+    }
+    if (filters?.category) {
+      params = params.set('category', filters.category);
+    }
+    if (filters?.minRating !== undefined) {
+      params = params.set('minRating', filters.minRating.toString());
+    }
+    return this.http.get<ApiResponse<TenantDto[]>>(`${this.apiUrl}/tenants`, { params });
+  }
+
+  getTenantPortfolio(id: string): Observable<ApiResponse<PublicTenantPortfolioDto>> {
+    return this.http.get<ApiResponse<PublicTenantPortfolioDto>>(`${this.apiUrl}/tenants/${id}/portfolio`);
+  }
+}

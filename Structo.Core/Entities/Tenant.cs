@@ -10,6 +10,11 @@ public class Tenant
     public string Name { get; set; } = string.Empty;
     public SubscriptionPlan SubscriptionPlan { get; set; } = SubscriptionPlan.Free;
     public int MaxActiveProjects { get; set; }
+    public string LogoUrl { get; set; } = string.Empty;
+    public string BannerUrl { get; set; } = string.Empty;
+    public string Region { get; set; } = string.Empty;
+    public string CompanyDescription { get; set; } = string.Empty;
+    public double Rating { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties

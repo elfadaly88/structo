@@ -47,19 +47,33 @@ export const routes: Routes = [
       },
       {
         path: 'overview',
-        loadComponent: () => import('./features/dashboard/overview/overview.component').then(m => m.OverviewComponent)
+        loadComponent: () => import('./features/dashboard/overview/overview.component').then(m => m.OverviewComponent),
+        data: { roles: ['SuperAdmin'] }
       },
       {
         path: 'projects',
-        loadComponent: () => import('./features/dashboard/projects/projects.component').then(m => m.ProjectsComponent)
+        loadComponent: () => import('./features/dashboard/projects/projects.component').then(m => m.ProjectsComponent),
+        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'projects/:id',
-        loadComponent: () => import('./features/dashboard/projects/project-details.component').then(m => m.ProjectDetailsComponent)
+        loadComponent: () => import('./features/dashboard/projects/project-details.component').then(m => m.ProjectDetailsComponent),
+        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./features/dashboard/projects/projects.component').then(m => m.ProjectsComponent),
+        data: { roles: ['TenantOwner'] }
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/dashboard/projects/projects.component').then(m => m.ProjectsComponent),
+        data: { roles: ['TenantOwner'] }
       },
       {
         path: 'tenants',
-        loadComponent: () => import('./features/dashboard/tenants/tenants.component').then(m => m.TenantsComponent)
+        loadComponent: () => import('./features/dashboard/tenants/tenants.component').then(m => m.TenantsComponent),
+        data: { roles: ['SuperAdmin'] }
       }
     ]
   },

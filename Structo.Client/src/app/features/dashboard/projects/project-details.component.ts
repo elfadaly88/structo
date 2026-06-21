@@ -1,13 +1,16 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../core/services/project.service';
 import { PettyCashService } from '../../../core/services/petty-cash.service';
 import { FinancialService } from '../../../core/services/financial.service';
 import { ProjectDto } from '../../../core/models/project.models';
 import { PettyCashMobileDto, PettyCashSettleDto } from '../../../core/models/petty-cash.models';
 import { FinancialTransactionMobileDto } from '../../../core/models/financial.models';
+import { ImageUploadService, SitePhotoDto } from '../../../core/services/image-upload.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
@@ -15,7 +18,7 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, DatePipe, DecimalPipe, TranslatePipe],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
 
       <!-- Header / Back button -->
       <div class="flex items-center gap-4">
@@ -53,23 +56,25 @@ import { TranslatePipe } from '@ngx-translate/core';
 
       <!-- KPI Stats Grid -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 font-sans">
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
-          <h3 class="text-2xl font-extrabold text-emerald-400 mt-1">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-        </div>
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
-          <h3 class="text-2xl font-extrabold text-rose-400 mt-1">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-        </div>
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
-          @if (netBalance() >= 0) {
-            <h3 class="text-2xl font-extrabold text-emerald-400 mt-1">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-          } @else {
-            <h3 class="text-2xl font-extrabold text-rose-400 mt-1">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-          }
-        </div>
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
+        @if (!isEngineer()) {
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
+            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
+            <h3 class="text-2xl font-extrabold text-emerald-400 mt-1">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+          </div>
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
+            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
+            <h3 class="text-2xl font-extrabold text-rose-400 mt-1">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+          </div>
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
+            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
+            @if (netBalance() >= 0) {
+              <h3 class="text-2xl font-extrabold text-emerald-400 mt-1">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            } @else {
+              <h3 class="text-2xl font-extrabold text-rose-400 mt-1">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            }
+          </div>
+        }
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5" [class.col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
           <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
           <h3 class="text-2xl font-extrabold text-amber-400 mt-1">{{ totalUnsettledPettyCash() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
         </div>
@@ -100,7 +105,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         <button
           id="tab-petty-cash"
           (click)="activeTab.set('petty-cash')"
-          class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer"
+          class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo"
           [class.border-indigo-500]="activeTab() === 'petty-cash'"
           [class.text-indigo-400]="activeTab() === 'petty-cash'"
           [class.border-transparent]="activeTab() !== 'petty-cash'"
@@ -110,24 +115,110 @@ import { TranslatePipe } from '@ngx-translate/core';
             <span class="ml-2 rtl:mr-2 rtl:ml-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400">{{ unsettledCount() }}</span>
           }
         </button>
-        <button
-          id="tab-transactions"
-          (click)="activeTab.set('transactions')"
-          class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer"
-          [class.border-indigo-500]="activeTab() === 'transactions'"
-          [class.text-indigo-400]="activeTab() === 'transactions'"
-          [class.border-transparent]="activeTab() !== 'transactions'"
-          [class.text-slate-400]="activeTab() !== 'transactions'">
-          {{ 'DETAILS.TAB_LEDGER' | translate }}
-        </button>
+        @if (!isEngineer()) {
+          <button
+            id="tab-transactions"
+            (click)="activeTab.set('transactions')"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo"
+            [class.border-indigo-500]="activeTab() === 'transactions'"
+            [class.text-indigo-400]="activeTab() === 'transactions'"
+            [class.border-transparent]="activeTab() !== 'transactions'"
+            [class.text-slate-400]="activeTab() !== 'transactions'">
+            {{ 'DETAILS.TAB_LEDGER' | translate }}
+          </button>
+        }
+        @if (!isAccountant()) {
+          <button
+            id="tab-gallery"
+            (click)="activeTab.set('gallery')"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo"
+            [class.border-indigo-500]="activeTab() === 'gallery'"
+            [class.text-indigo-400]="activeTab() === 'gallery'"
+            [class.border-transparent]="activeTab() !== 'gallery'"
+            [class.text-slate-400]="activeTab() !== 'gallery'">
+            {{ 'DETAILS.TAB_GALLERY' | translate }}
+          </button>
+        }
       </div>
+
+      <!-- Tab Content: Project Gallery -->
+      @if (activeTab() === 'gallery') {
+        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+            <div>
+              <h3 class="text-base font-bold text-white font-cairo">{{ 'MARKETPLACE.PROJECT_GALLERY' | translate }}</h3>
+              <p class="text-xs text-slate-500 mt-1 font-cairo">Upload and manage site photos for public portfolio listings.</p>
+            </div>
+            <div>
+              <button
+                type="button"
+                (click)="galleryFileInput.click()"
+                [disabled]="isUploadingGallery()"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
+                @if (isUploadingGallery()) {
+                  <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {{ 'DETAILS.UPLOADING' | translate }}
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
+                }
+              </button>
+              <input
+                #galleryFileInput
+                type="file"
+                class="hidden"
+                (change)="onGalleryFileSelected($event)"
+                accept="image/*">
+            </div>
+          </div>
+
+          @if (isLoadingGallery()) {
+            <div class="flex justify-center py-16">
+              <svg class="animate-spin h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              @for (photo of galleryPhotos(); track photo.id) {
+                <div class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                  <img [src]="photo.photoUrl" alt="Gallery image" class="w-full h-full object-cover">
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end">
+                    <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'yyyy-MM-dd HH:mm' }}</p>
+                    <p class="text-[10px] text-slate-400 truncate mt-0.5">By: {{ photo.uploadedBy || 'Owner' }}</p>
+                  </div>
+                </div>
+              } @empty {
+                <div class="col-span-2 sm:col-span-3 lg:col-span-4 py-16 text-center text-slate-500 text-sm font-cairo">
+                  {{ 'MARKETPLACE.NO_PHOTOS' | translate }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
 
       <!-- Tab Content: Petty Cash -->
       @if (activeTab() === 'petty-cash') {
         <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.VOUCHERS_TITLE' | translate }}</h3>
-            <span class="text-xs text-slate-500 font-semibold">{{ pettyCashes().length }} {{ 'DETAILS.RECORDS' | translate }}</span>
+            <div class="flex items-center gap-3">
+              @if (isEngineer()) {
+                <button
+                  (click)="openRequestModal()"
+                  class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
+                  + Request Petty Cash
+                </button>
+              }
+              <span class="text-xs text-slate-500 font-semibold">{{ pettyCashes().length }} {{ 'DETAILS.RECORDS' | translate }}</span>
+            </div>
           </div>
 
           @if (isLoadingPettyCash()) {
@@ -145,7 +236,7 @@ import { TranslatePipe } from '@ngx-translate/core';
                     <th class="px-6 py-4">{{ 'DETAILS.TH_ISSUED_TO' | translate }}</th>
                     <th class="px-6 py-4">{{ 'DETAILS.TH_REASON' | translate }}</th>
                     <th class="px-6 py-4">{{ 'DETAILS.TH_DATE' | translate }}</th>
-                    <th class="px-6 py-4 text-right rtl:text-left">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
+                    <th class="px-6 py-4">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
                     <th class="px-6 py-4 text-center">{{ 'DETAILS.TH_STATUS' | translate }}</th>
                     <th class="px-6 py-4 text-center">{{ 'DETAILS.TH_ACTION' | translate }}</th>
                   </tr>
@@ -156,7 +247,7 @@ import { TranslatePipe } from '@ngx-translate/core';
                       <td class="px-6 py-4 font-semibold text-white">{{ item.issuedTo || 'Staff' }}</td>
                       <td class="px-6 py-4 text-slate-400 max-w-xs truncate">{{ item.reason }}</td>
                       <td class="px-6 py-4 text-slate-400">{{ item.issuedAt | date:'yyyy-MM-dd HH:mm' }}</td>
-                      <td class="px-6 py-4 text-right rtl:text-left font-mono font-bold text-amber-400">{{ item.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
+                      <td class="px-6 py-4 font-mono font-bold text-amber-400">{{ item.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
                       <td class="px-6 py-4 text-center">
                         @if (item.isSettled) {
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400">
@@ -217,7 +308,7 @@ import { TranslatePipe } from '@ngx-translate/core';
                     <th class="px-6 py-4">{{ 'DETAILS.TH_DATE' | translate }}</th>
                     <th class="px-6 py-4">{{ 'PROJECTS.FIELD_DESC' | translate }}</th>
                     <th class="px-6 py-4">{{ 'DETAILS.TH_STATUS' | translate }}</th>
-                    <th class="px-6 py-4 text-right rtl:text-left">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
+                    <th class="px-6 py-4">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60 text-sm">
@@ -236,7 +327,7 @@ import { TranslatePipe } from '@ngx-translate/core';
                           </span>
                         }
                       </td>
-                      <td class="px-6 py-4 text-right rtl:text-left font-mono font-bold"
+                      <td class="px-6 py-4 font-mono font-bold"
                           [class.text-emerald-400]="t.type === 'Income'"
                           [class.text-rose-400]="t.type !== 'Income'">
                         {{ t.type === 'Income' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
@@ -369,6 +460,101 @@ import { TranslatePipe } from '@ngx-translate/core';
         </div>
       </div>
     }
+
+    <!-- Request Petty Cash Modal -->
+    @if (isRequestModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div (click)="closeRequestModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div class="relative bg-slate-900 border border-slate-700/60 rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl shadow-black/50 z-10">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <h3 class="text-xl font-bold text-white">Request Petty Cash</h3>
+              <p class="text-xs text-slate-400 mt-1">Submit a new petty cash request for project expenses.</p>
+            </div>
+            <button
+              (click)="closeRequestModal()"
+              class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors duration-150 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Request Errors -->
+          @if (requestErrors().length > 0) {
+            <div class="mb-4 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
+              <span class="font-bold block mb-1">Request Failed</span>
+              @for (err of requestErrors(); track err) {
+                <div>• {{ err }}</div>
+              }
+            </div>
+          }
+
+          <form [formGroup]="requestForm" (ngSubmit)="onRequestSubmit()" class="space-y-4">
+            <div>
+              <label for="req-amount" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                Amount <span class="text-red-400">*</span>
+              </label>
+              <input
+                id="req-amount"
+                type="number"
+                formControlName="amount"
+                step="0.01"
+                min="0.01"
+                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                placeholder="0.00">
+              @if (isRequestFieldInvalid('amount')) {
+                <span class="text-xs text-red-400 mt-1 block">
+                  Please enter a valid amount greater than zero.
+                </span>
+              }
+            </div>
+
+            <div>
+              <label for="req-reason" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                Reason / Scope <span class="text-red-400">*</span>
+              </label>
+              <textarea
+                id="req-reason"
+                formControlName="reason"
+                rows="3"
+                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                placeholder="e.g. Scaffolding rental or site supplies purchase."></textarea>
+              @if (isRequestFieldInvalid('reason')) {
+                <span class="text-xs text-red-400 mt-1 block">
+                  Please specify a reason of at least 5 characters.
+                </span>
+              }
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                (click)="closeRequestModal()"
+                class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                [disabled]="requestForm.invalid || isRequesting()"
+                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer">
+                @if (isRequesting()) {
+                  <span class="flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </span>
+                } @else {
+                  Submit Request
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `
 })
 export class ProjectDetailsComponent implements OnInit {
@@ -376,7 +562,15 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly projectService = inject(ProjectService);
   private readonly pettyCashService = inject(PettyCashService);
   private readonly financialService = inject(FinancialService);
+  private readonly uploadService = inject(ImageUploadService);
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
+  readonly isTenantOwner = computed(() => this.currentUserRole() === 'TenantOwner');
+  readonly isAccountant = computed(() => this.currentUserRole() === 'Accountant');
+  readonly isEngineer = computed(() => ['Manager', 'SiteEngineer', 'DesignEngineer'].includes(this.currentUserRole()));
 
   readonly projectId = this.route.snapshot.paramMap.get('id') || '';
   readonly project = signal<ProjectDto | null>(null);
@@ -418,7 +612,13 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingPettyCash = signal(false);
   readonly isLoadingTransactions = signal(false);
 
-  readonly activeTab = signal<'petty-cash' | 'transactions'>('petty-cash');
+  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery'>('petty-cash');
+  
+  // Gallery signals
+  readonly galleryPhotos = signal<SitePhotoDto[]>([]);
+  readonly isLoadingGallery = signal(false);
+  readonly isUploadingGallery = signal(false);
+
   readonly isSettleModalOpen = signal(false);
   readonly isSettling = signal(false);
   readonly settleErrors = signal<string[]>([]);
@@ -427,6 +627,15 @@ export class ProjectDetailsComponent implements OnInit {
   readonly settleForm: FormGroup = this.fb.group({
     spentAmount: [null, [Validators.required, Validators.min(0.01)]],
     receiptDescription: ['', [Validators.required, Validators.minLength(5)]]
+  });
+
+  readonly isRequestModalOpen = signal(false);
+  readonly isRequesting = signal(false);
+  readonly requestErrors = signal<string[]>([]);
+
+  readonly requestForm: FormGroup = this.fb.group({
+    amount: [null, [Validators.required, Validators.min(0.01)]],
+    reason: ['', [Validators.required, Validators.minLength(5)]]
   });
 
   // Computed financial KPIs from transaction data
@@ -456,9 +665,50 @@ export class ProjectDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.projectId) {
+      if (this.isEngineer()) {
+        this.activeTab.set('petty-cash');
+      } else if (this.isAccountant()) {
+        this.activeTab.set('transactions');
+      } else {
+        this.activeTab.set('petty-cash');
+      }
+
       this.fetchProjectDetails();
       this.fetchPettyCash();
-      this.fetchTransactions();
+      if (!this.isEngineer()) {
+        this.fetchTransactions();
+      }
+      this.fetchGalleryPhotos();
+    }
+  }
+
+  fetchGalleryPhotos(): void {
+    this.isLoadingGallery.set(true);
+    this.uploadService.getProjectPhotos(this.projectId).subscribe({
+      next: (response) => {
+        this.isLoadingGallery.set(false);
+        if (response.success && response.data) {
+          this.galleryPhotos.set(response.data.items);
+        }
+      },
+      error: () => this.isLoadingGallery.set(false)
+    });
+  }
+
+  onGalleryFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.isUploadingGallery.set(true);
+      this.uploadService.uploadProjectGallery(this.projectId, file).subscribe({
+        next: (res) => {
+          this.isUploadingGallery.set(false);
+          if (res.success) {
+            this.fetchGalleryPhotos();
+          }
+        },
+        error: () => this.isUploadingGallery.set(false)
+      });
     }
   }
 
@@ -468,7 +718,13 @@ export class ProjectDetailsComponent implements OnInit {
       next: (response) => {
         this.isLoadingProject.set(false);
         if (response.success && response.data) {
-          this.project.set(response.data);
+          const proj = response.data;
+          const user = this.authService.currentUser();
+          if (user && ['Manager', 'SiteEngineer', 'DesignEngineer'].includes(user.role) && proj.managerId !== user.userId) {
+            this.router.navigate(['/dashboard/projects']);
+            return;
+          }
+          this.project.set(proj);
         }
       },
       error: () => this.isLoadingProject.set(false)
@@ -531,7 +787,7 @@ export class ProjectDetailsComponent implements OnInit {
     this.settleErrors.set([]);
   }
 
-  onSettleSubmit(): void {
+  async onSettleSubmit(): Promise<void> {
     if (this.settleForm.invalid || !this.activePettyCash()) {
       this.settleForm.markAllAsTouched();
       return;
@@ -548,23 +804,80 @@ export class ProjectDetailsComponent implements OnInit {
 
     const pettyCashId = this.activePettyCash()!.id;
 
-    this.pettyCashService.settlePettyCash(this.projectId, pettyCashId, dto).subscribe({
-      next: (response) => {
-        this.isSettling.set(false);
-        if (response.success) {
-          this.closeSettleModal();
-          // Refresh both data sources — KPI cards update automatically via computed signals
-          this.fetchPettyCash();
-          this.fetchTransactions();
-        } else {
-          this.settleErrors.set(response.errors || [response.message || 'Failed to settle request.']);
-        }
-      },
-      error: (err) => {
-        this.isSettling.set(false);
-        const errors = err.error?.errors || [err.error?.message || err.message || 'Error occurred.'];
-        this.settleErrors.set(Array.isArray(errors) ? errors : [errors]);
+    try {
+      const response = await firstValueFrom(
+        this.pettyCashService.settlePettyCash(this.projectId, pettyCashId, dto)
+      );
+      this.isSettling.set(false);
+      if (response.success) {
+        this.closeSettleModal();
+        this.fetchPettyCash();
+        this.fetchTransactions();
+      } else {
+        this.settleErrors.set(response.errors || [response.message || 'Failed to settle request.']);
       }
+    } catch (err: any) {
+      this.isSettling.set(false);
+      const errors = err.error?.errors || [err.error?.message || err.message || 'Error occurred.'];
+      this.settleErrors.set(Array.isArray(errors) ? errors : [errors]);
+    }
+  }
+
+  isRequestFieldInvalid(fieldName: string): boolean {
+    const field = this.requestForm.get(fieldName);
+    return !!field && field.invalid && (field.dirty || field.touched);
+  }
+
+  openRequestModal(): void {
+    this.requestErrors.set([]);
+    this.requestForm.reset({
+      amount: null,
+      reason: ''
     });
+    this.isRequestModalOpen.set(true);
+  }
+
+  closeRequestModal(): void {
+    this.isRequestModalOpen.set(false);
+    this.requestErrors.set([]);
+  }
+
+  async onRequestSubmit(): Promise<void> {
+    if (this.requestForm.invalid) {
+      this.requestForm.markAllAsTouched();
+      return;
+    }
+
+    this.isRequesting.set(true);
+    this.requestErrors.set([]);
+
+    const formVal = this.requestForm.value;
+    const user = this.authService.currentUser();
+    if (!user) return;
+
+    const dto = {
+      issuedToUserId: user.userId,
+      amount: formVal.amount,
+      reason: formVal.reason
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.pettyCashService.requestPettyCash(this.projectId, dto)
+      );
+      this.isRequesting.set(false);
+      if (response.success) {
+        this.closeRequestModal();
+        this.fetchPettyCash();
+      } else {
+        this.requestErrors.set(response.errors || [response.message || 'Failed to request petty cash.']);
+      }
+    } catch (err: any) {
+      this.isRequesting.set(false);
+      const errors = err.error?.errors || [err.error?.message || err.message || 'Error occurred.'];
+      this.requestErrors.set(Array.isArray(errors) ? errors : [errors]);
+    }
   }
 }
+
+

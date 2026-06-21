@@ -16,6 +16,7 @@ export interface AuthResponse {
   userId: string;
   role: string;
   tenantId: string | null;
+  name: string;
 }
 
 export interface UserSession {
@@ -23,5 +24,6 @@ export interface UserSession {
   role: string;
   tenantId: string | null;
   email: string;
+  name: string;
 }
 

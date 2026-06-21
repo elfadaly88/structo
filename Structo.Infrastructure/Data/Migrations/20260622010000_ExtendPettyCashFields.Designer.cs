@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Structo.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Structo.Infrastructure.Data;
 namespace Structo.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(StructoDbContext))]
-    partial class StructoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622010000_ExtendPettyCashFields")]
+    partial class ExtendPettyCashFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,6 +90,32 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("SpentAmount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("ReturnAmount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("ReceiptPhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

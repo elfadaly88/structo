@@ -135,3 +135,4 @@ F:\PrivateWork\structo\project\Structo.API\bin\Debug\net9.0\System.IdentityModel
 F:\PrivateWork\structo\project\Structo.API\bin\Debug\net9.0\FluentValidation.dll
 F:\PrivateWork\structo\project\Structo.API\bin\Debug\net9.0\FluentValidation.AspNetCore.dll
 F:\PrivateWork\structo\project\Structo.API\bin\Debug\net9.0\FluentValidation.DependencyInjectionExtensions.dll
+F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\Structo.API.sourcelink.json

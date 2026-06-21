@@ -47,8 +47,13 @@ public class TenantsController(StructoDbContext context) : ControllerBase
             {
                 Id = t.Id,
                 Name = t.Name,
-                SubscriptionPlan = t.SubscriptionPlan,
+                SubscriptionPlan = t.SubscriptionPlan.ToString(),
                 MaxActiveProjects = t.MaxActiveProjects,
+                LogoUrl = t.LogoUrl,
+                BannerUrl = t.BannerUrl,
+                Region = t.Region,
+                CompanyDescription = t.CompanyDescription,
+                Rating = t.Rating,
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();

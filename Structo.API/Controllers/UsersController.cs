@@ -15,7 +15,7 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "TenantOwner,SuperAdmin")]
+[Authorize]
 public class UsersController(StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
@@ -40,6 +40,7 @@ public class UsersController(StructoDbContext context) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "TenantOwner,SuperAdmin")]
     public async Task<ActionResult<ApiResponse<UserDto>>> Create([FromBody] UserCreateDto dto)
     {
         // Check if email already exists (ignoring tenant filter to be globally unique)
