@@ -2,13 +2,14 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { ApiResponse, LoginRequest, AuthResponse, UserSession } from '../models/auth.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5000/api/auth';
+private readonly apiUrl = (environment as any).apiUrl + '/auth';
   private readonly tokenKey = 'structo_auth_token';
   private readonly userKey = 'structo_user_info';
 
