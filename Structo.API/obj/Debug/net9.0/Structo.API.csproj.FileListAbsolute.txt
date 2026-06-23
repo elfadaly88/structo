@@ -268,10 +268,10 @@ E:\private\structo\structo\Structo.API\obj\Debug\net9.0\staticwebassets.build.js
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\staticwebassets.build.json.cache
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\staticwebassets.development.json
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-E:\private\structo\structo\Structo.API\obj\Debug\net9.0\swae.build.ex.cache
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\Structo..86306E36.Up2Date
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\Structo.API.dll
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\refint\Structo.API.dll
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\Structo.API.pdb
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\Structo.API.genruntimeconfig.cache
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\ref\Structo.API.dll
+E:\private\structo\structo\Structo.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
