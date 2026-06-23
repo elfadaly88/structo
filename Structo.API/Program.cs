@@ -76,15 +76,33 @@ builder.Services.AddSwaggerGen(c =>
 
 // Configure Entity Framework and PostgreSQL
 builder.Services.AddDbContext<StructoDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
+{
+    // 1. محاولة قراءة رابط الداتابيز المباشر من Railway أولاً
+    var databaseUrl = builder.Configuration["DATABASE_URL"];
+    string connectionString;
+
+    if (!string.IsNullOrEmpty(databaseUrl))
+    {
+        // إذا وجد الرابط، نقوم بتحويله إلى صيغة يفهمها Npgsql بالكامل
+        var databaseUri = new Uri(databaseUrl);
+        var userInfo = databaseUri.UserInfo.Split(':');
+
+        connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};Maximum Pool Size=20;SSL Mode=Require;Trust Server Certificate=true;";
+    }
+    else
+    {
+        // 2. لو مش على السيرفر (Local Development)، يقرأ الـ Connection String الطبيعية
+        connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=postgres";
+    }
+
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+        npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(10),
             errorCodesToAdd: null
-        )
-    ));
-
+        ));
+});
 // Add HTTP Context Accessor and Tenant Accessor
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
