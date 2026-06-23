@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj": {}
+    "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj": {}
   },
   "projects": {
-    "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj": {
+    "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj",
+        "projectUniqueName": "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj",
         "projectName": "Structo.Core",
-        "projectPath": "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj",
-        "packagesPath": "C:\\Users\\ElFadaly\\.nuget\\packages\\",
-        "outputPath": "F:\\PrivateWork\\structo\\project\\Structo.Core\\obj\\",
+        "projectPath": "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj",
+        "packagesPath": "C:\\Users\\mostafa.sayed\\.nuget\\packages\\",
+        "outputPath": "E:\\private\\structo\\structo\\Structo.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\ElFadaly\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\mostafa.sayed\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,10 +26,12 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
+            "framework": "net9.0",
             "targetAlias": "net9.0",
             "projectReferences": {}
           }
@@ -44,10 +46,11 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.300"
       },
       "frameworks": {
         "net9.0": {
+          "framework": "net9.0",
           "targetAlias": "net9.0",
           "dependencies": {
             "FluentValidation": {
@@ -71,7 +74,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300-preview.0.26177.108/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

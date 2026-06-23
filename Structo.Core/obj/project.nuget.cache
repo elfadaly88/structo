@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "eyqIb9q9GpA=",
+  "dgSpecHash": "T3L1wCPJvkg=",
   "success": true,
-  "projectFilePath": "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj",
+  "projectFilePath": "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\ElFadaly\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512"
+    "C:\\Users\\mostafa.sayed\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512"
   ],
   "logs": []
 }
