@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +27,8 @@ public class UploadResultDto
 public class ImageUploadController(StructoDbContext context, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("tenant-logo")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo([FromForm] IFormFile file)
+    // تم حذف [FromForm] من هنا
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo(IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -72,7 +73,8 @@ public class ImageUploadController(StructoDbContext context, IConfiguration conf
     }
 
     [HttpPost("tenant-banner")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner([FromForm] IFormFile file)
+    // تم حذف [FromForm] من هنا
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner(IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -117,7 +119,8 @@ public class ImageUploadController(StructoDbContext context, IConfiguration conf
     }
 
     [HttpPost("project-gallery/{projectId}")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, [FromForm] IFormFile file)
+    // تم حذف [FromForm] من أمام IFormFile وتُركت الـ [FromRoute] للـ Parameter الأول
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -180,20 +183,18 @@ public class ImageUploadController(StructoDbContext context, IConfiguration conf
         var apiKey = configuration["Cloudinary:ApiKey"];
         var apiSecret = configuration["Cloudinary:ApiSecret"];
 
-        // Check if Cloudinary configuration is active
         if (!string.IsNullOrEmpty(cloudName) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
         {
             using var client = new HttpClient();
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-            
-            // Signature generation: stringToSign format is "timestamp={timestamp}{apiSecret}"
+
             var stringToSign = $"timestamp={timestamp}{apiSecret}";
             using var sha1 = System.Security.Cryptography.SHA1.Create();
             var hashBytes = sha1.ComputeHash(System.Text.Encoding.UTF8.GetBytes(stringToSign));
             var signature = Convert.ToHexString(hashBytes).ToLower();
 
             using var content = new MultipartFormDataContent();
-            
+
             using var fileStream = file.OpenReadStream();
             var streamContent = new StreamContent(fileStream);
             streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
@@ -219,7 +220,6 @@ public class ImageUploadController(StructoDbContext context, IConfiguration conf
             throw new Exception($"Cloudinary API responded with error: {response.StatusCode} - {errContent}");
         }
 
-        // Local development fallback: save to wwwroot/uploads and return absolute URL
         var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         Directory.CreateDirectory(uploadFolder);
 
@@ -231,7 +231,6 @@ public class ImageUploadController(StructoDbContext context, IConfiguration conf
             await file.CopyToAsync(stream);
         }
 
-        // Return absolute URL (localhost backend) so it resolves correctly on the frontend port
         return $"http://localhost:5000/uploads/{fileName}";
     }
 }
