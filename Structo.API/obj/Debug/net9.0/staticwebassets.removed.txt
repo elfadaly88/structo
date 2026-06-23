@@ -1,0 +1,15 @@
+E:\private\structo\structo\Structo.API\wwwroot\browser\styles-JEVWY5QQ.css
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-E-FJJml8.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-BkEU1e8k.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\main-AODFZMD3.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-DMxdvLsG.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\favicon.ico
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-CzpKvzQU.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-BgaS0SSL.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-BRCnoiDS.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\assets\i18n\ar.json
+E:\private\structo\structo\Structo.API\wwwroot\browser\index.html
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-D2H1-ccx.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-CnXKKvq-.js
+E:\private\structo\structo\Structo.API\wwwroot\browser\assets\i18n\en.json
+E:\private\structo\structo\Structo.API\wwwroot\browser\chunk-DYkN1vlD.js
