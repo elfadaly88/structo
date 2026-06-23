@@ -76,7 +76,14 @@ builder.Services.AddSwaggerGen(c =>
 
 // Configure Entity Framework and PostgreSQL
 builder.Services.AddDbContext<StructoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorCodesToAdd: null
+        )
+    ));
 
 // Add HTTP Context Accessor and Tenant Accessor
 builder.Services.AddHttpContextAccessor();
