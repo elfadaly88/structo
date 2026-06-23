@@ -77,21 +77,27 @@ builder.Services.AddSwaggerGen(c =>
 // Configure Entity Framework and PostgreSQL
 builder.Services.AddDbContext<StructoDbContext>(options =>
 {
-    // 1. محاولة قراءة رابط الداتابيز المباشر من Railway أولاً
     var databaseUrl = builder.Configuration["DATABASE_URL"];
-    string connectionString;
+    string connectionString = string.Empty;
 
-    if (!string.IsNullOrEmpty(databaseUrl))
+    // تأكد إن الرابط مش فاضي وبيبدأ بـ postgresql فعلياً
+    if (!string.IsNullOrEmpty(databaseUrl) && databaseUrl.StartsWith("postgresql://"))
     {
-        // إذا وجد الرابط، نقوم بتحويله إلى صيغة يفهمها Npgsql بالكامل
-        var databaseUri = new Uri(databaseUrl);
-        var userInfo = databaseUri.UserInfo.Split(':');
-
-        connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};Maximum Pool Size=20;SSL Mode=Require;Trust Server Certificate=true;";
+        try
+        {
+            var databaseUri = new Uri(databaseUrl);
+            var userInfo = databaseUri.UserInfo.Split(':');
+            connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};Maximum Pool Size=20;SSL Mode=Require;Trust Server Certificate=true;";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}");
+        }
     }
-    else
+
+    // لو التحويل فشل أو المتغير مش موجود، ارجع للـ Default المضمون
+    if (string.IsNullOrEmpty(connectionString))
     {
-        // 2. لو مش على السيرفر (Local Development)، يقرأ الـ Connection String الطبيعية
         connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
             ?? "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=postgres";
     }
@@ -99,7 +105,7 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
         npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
+            maxRetryDelay: TimeSpan.FromSeconds(5),
             errorCodesToAdd: null
         ));
 });
