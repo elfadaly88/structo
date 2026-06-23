@@ -228,8 +228,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
 
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");
-    c.RoutePrefix = string.Empty;
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");    
 });//}
 
 app.UseHttpsRedirection();
@@ -240,5 +239,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.MapFallbackToFile("index.html");
 app.Run();
