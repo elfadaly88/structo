@@ -80,7 +80,6 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
     var databaseUrl = builder.Configuration["DATABASE_URL"];
     string connectionString = string.Empty;
 
-    // تأكد إن الرابط مش فاضي وبيبدأ بـ postgresql فعلياً
     if (!string.IsNullOrEmpty(databaseUrl) && databaseUrl.StartsWith("postgresql://"))
     {
         try
@@ -89,13 +88,9 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
             var userInfo = databaseUri.UserInfo.Split(':');
             connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};Maximum Pool Size=20;SSL Mode=Require;Trust Server Certificate=true;";
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}");
-        }
+        catch (Exception ex) { Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}"); }
     }
 
-    // لو التحويل فشل أو المتغير مش موجود، ارجع للـ Default المضمون
     if (string.IsNullOrEmpty(connectionString))
     {
         connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -103,11 +98,10 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
     }
 
     options.UseNpgsql(connectionString, npgsqlOptions =>
-        npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(5),
-            errorCodesToAdd: null
-        ));
+        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null))
+
+        // 👇 السطر السحري الجديد لمنع المشكلة جوه .NET 9 👇
+        .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 // Add HTTP Context Accessor and Tenant Accessor
 builder.Services.AddHttpContextAccessor();
