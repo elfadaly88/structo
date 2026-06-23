@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -29,8 +29,9 @@ builder.Services.AddControllers(options =>
     {
         options.SuppressModelStateInvalidFilter = true; // Supress default 400 ProblemDetails
     });
-builder.Services.AddCors(options => {
-    options.AddPolicy("AllowAngular", policy => 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
         policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader());
 });
 // Register FluentValidation
@@ -117,7 +118,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
-    try 
+    try
     {
         context.Database.Migrate();
     }
@@ -161,7 +162,7 @@ using (var scope = app.Services.CreateScope())
                 TenantId = t1.Id
             };
             context.Users.Add(owner1);
-            
+
             // Optional: Seed a project for testing
             context.Projects.Add(new Project { TenantId = t1.Id, Name = "Tenant 1 Alpha Project", Description = "T1 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();
@@ -184,7 +185,7 @@ using (var scope = app.Services.CreateScope())
                 TenantId = t2.Id
             };
             context.Users.Add(owner2);
-            
+
             // Optional: Seed a project for testing
             context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();
@@ -196,11 +197,15 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");
+    c.RoutePrefix = string.Empty;
+});//}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
