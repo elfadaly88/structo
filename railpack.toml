@@ -1,0 +1,5 @@
+[build]
+command = "dotnet publish Structo.sln -c Release -o out"
+
+[deploy]
+command = "dotnet out/Structo.API.dll"
