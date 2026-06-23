@@ -8,8 +8,8 @@ COPY Structo.API/Structo.API.csproj ./Structo.API/
 COPY Structo.Core/Structo.Core.csproj ./Structo.Core/
 COPY Structo.Infrastructure/Structo.Infrastructure.csproj ./Structo.Infrastructure/
 
-# عمل Restore نظيف تماماً جوه بيئة لينكس (ده بيمسح مسارات كاش الويندوز)
-RUN dotnet restore Structo.sln
+# عمل Publish مع إجبار السيرفر على عمل Restore جديد تماماً داخل لينكس
+RUN dotnet publish Structo.API/Structo.API.csproj -c Release -o /app/publish
 
 # نسخ باقي ملفات السورس كود كلها
 COPY . .
