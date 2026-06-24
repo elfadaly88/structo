@@ -10,9 +10,11 @@ import { environment } from '../../../environments/environment';
 })
 export class ProjectService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = (environment as any).apiUrl + '/projects';
+  //private readonly apiUrl = (environment as any).apiUrl + '/projects';
   //private readonly apiUrl = 'http://localhost:5000/api/projects';
-
+private get apiUrl(): string {
+    return (environment as any).apiUrl + '/projects';
+  }
   getProjects(): Observable<ApiResponse<ProjectDto[]>> {
     return this.http.get<ApiResponse<ProjectDto[]>>(this.apiUrl);
   }

@@ -9,7 +9,10 @@ import { environment } from '../../../environments/environment';
 })
 export class PettyCashService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = (environment as any).apiUrl + '/projects';
+  //private readonly baseUrl = (environment as any).apiUrl + '/projects';
+  private get baseUrl(): string {
+    return (environment as any).apiUrl + '/projects';
+  }
   //private readonly baseUrl = 'http://localhost:5000/api/projects';
 
   getProjectPettyCash(

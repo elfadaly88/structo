@@ -28,7 +28,11 @@ export interface PaginatedList<T> {
 })
 export class ImageUploadService {
   private readonly http = inject(HttpClient);
-private readonly apiUrl = (environment as any).apiUrl + '/ImageUpload';
+//private readonly apiUrl = (environment as any).apiUrl + '/ImageUpload';
+ private get apiUrl(): string {
+    return (environment as any).apiUrl + '/ImageUpload';
+  }
+
   //private readonly apiUrl = 'http://localhost:5000/api/ImageUpload';
 
   uploadTenantLogo(file: File): Observable<ApiResponse<UploadResult>> {

@@ -25,8 +25,12 @@ export interface UserCreateDto {
   providedIn: 'root'
 })
 export class TenantUserService {
+  
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = (environment as any).apiUrl + '/users';  
+  //private readonly apiUrl = (environment as any).apiUrl + '/users';  
+   private get apiUrl(): string {
+    return (environment as any).apiUrl + '/users';
+  }
   //private readonly apiUrl = 'http://localhost:5000/api/users';
 
   getUsers(): Observable<ApiResponse<UserDto[]>> {

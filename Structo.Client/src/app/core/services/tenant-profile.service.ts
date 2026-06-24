@@ -18,7 +18,10 @@ export interface TenantProfileUpdateDto {
 })
 export class TenantProfileService {
   private readonly http = inject(HttpClient);
-    private readonly apiUrl = (environment as any).apiUrl + '/tenant-profile';  
+    //private readonly apiUrl = (environment as any).apiUrl + '/tenant-profile';  
+    private get apiUrl(): string {
+    return (environment as any).apiUrl + '/tenant-profile';
+  }
   //private readonly apiUrl = 'http://l ocalhost:5000/api/tenant-profile';
 
   getProfile(): Observable<ApiResponse<TenantDto>> {
