@@ -3,13 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
 import { ProjectDto, ProjectCreateDto } from '../models/project.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProjectService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5000/api/projects';
+  private readonly apiUrl = (environment as any).apiUrl + '/projects';
+  //private readonly apiUrl = 'http://localhost:5000/api/projects';
 
   getProjects(): Observable<ApiResponse<ProjectDto[]>> {
     return this.http.get<ApiResponse<ProjectDto[]>>(this.apiUrl);

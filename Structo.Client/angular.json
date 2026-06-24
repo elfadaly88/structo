@@ -52,7 +52,8 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "outputPath": "../Structo.API/wwwroot"            
           },
           "configurations": {
             "production": {

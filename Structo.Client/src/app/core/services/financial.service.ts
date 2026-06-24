@@ -4,13 +4,16 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
 import { FinancialTransactionMobileDto, FinancialTransactionCreateDto } from '../models/financial.models';
 import { PaginatedList } from '../models/petty-cash.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FinancialService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5000/api/projects';
+  //private readonly baseUrl = 'http://localhost:5000/api/projects';
+  private readonly baseUrl = (environment as any).apiUrl + '/projects';
+  
 
   getProjectTransactions(
     projectId: string,

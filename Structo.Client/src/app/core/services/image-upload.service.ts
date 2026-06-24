@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
+import { environment } from '../../../environments/environment';
 
 export interface UploadResult {
   url: string;
@@ -27,7 +28,8 @@ export interface PaginatedList<T> {
 })
 export class ImageUploadService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5000/api/ImageUpload';
+private readonly apiUrl = (environment as any).apiUrl + '/ImageUpload';
+  //private readonly apiUrl = 'http://localhost:5000/api/ImageUpload';
 
   uploadTenantLogo(file: File): Observable<ApiResponse<UploadResult>> {
     const formData = new FormData();

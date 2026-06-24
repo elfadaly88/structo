@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
+import { environment } from '../../../environments/environment.development';
 
 export interface UserDto {
   id: string;
@@ -25,7 +26,8 @@ export interface UserCreateDto {
 })
 export class TenantUserService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5000/api/users';
+  private readonly apiUrl = (environment as any).apiUrl + '/users';  
+  //private readonly apiUrl = 'http://localhost:5000/api/users';
 
   getUsers(): Observable<ApiResponse<UserDto[]>> {
     return this.http.get<ApiResponse<UserDto[]>>(this.apiUrl);

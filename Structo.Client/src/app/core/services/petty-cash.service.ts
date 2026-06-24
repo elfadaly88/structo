@@ -3,13 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
 import { PettyCashMobileDto, PaginatedList, PettyCashCreateDto, PettyCashSettleDto } from '../models/petty-cash.models';
-
+import { environment } from '../../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
 export class PettyCashService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5000/api/projects';
+  private readonly baseUrl = (environment as any).apiUrl + '/projects';
+  //private readonly baseUrl = 'http://localhost:5000/api/projects';
 
   getProjectPettyCash(
     projectId: string,
