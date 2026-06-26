@@ -55,7 +55,7 @@ export class ImageUploadService {
 
   getProjectPhotos(projectId: string, pageNumber: number = 1, pageSize: number = 24): Observable<ApiResponse<PaginatedList<SitePhotoDto>>> {
     return this.http.get<ApiResponse<PaginatedList<SitePhotoDto>>>(
-      `http://localhost:5000/api/projects/${projectId}/SitePhotos/mobile?pageNumber=${pageNumber}&pageSize=${pageSize}`
+      `${this.apiUrl.replace('/ImageUpload', '')}/projects/${projectId}/SitePhotos/mobile?pageNumber=${pageNumber}&pageSize=${pageSize}`
     );
   }
 }
