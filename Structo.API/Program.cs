@@ -32,7 +32,9 @@ builder.Services.AddControllers(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
-        policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader());
+        policy.WithOrigins("http://localhost:4200", "https://structo-production.up.railway.app") // ضيف لين السيرفر بتاعك هنا
+              .AllowAnyMethod()
+              .AllowAnyHeader());
 });
 // Register FluentValidation
 
@@ -112,7 +114,6 @@ builder.Services.AddScoped<IPettyCashService, PettyCashService>();
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
 var key = Encoding.ASCII.GetBytes(secretKey);
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -131,7 +132,11 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+
+        // 🔥 ضيف السطرين السحريين دول هنا جوه الاوبجكت 👇
+        NameClaimType = "name",
+        RoleClaimType = "role"
     };
 });
 

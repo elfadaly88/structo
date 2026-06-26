@@ -158,21 +158,21 @@ export class DashboardLayoutComponent {
         ];
       case 'TenantOwner':
         return [
+          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.icons.financials },
           { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.icons.projects },
           { label: 'USERS.TAB_USERS', route: '/dashboard/users', icon: this.icons.users },
-          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/projects', icon: this.icons.financials },
-          { label: 'DASHBOARD.PETTY_CASH', route: '/dashboard/projects', icon: this.icons.pettyCash },
           { label: 'PROFILE.TAB_PROFILE', route: '/dashboard/profile', icon: this.icons.profile }
         ];
       case 'Accountant':
         return [
-          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/projects', icon: this.icons.financials },
-          { label: 'DASHBOARD.PETTY_CASH', route: '/dashboard/projects', icon: this.icons.pettyCash }
+          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.icons.financials },
+          { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.icons.projects }
         ];
       case 'Manager':
       case 'SiteEngineer':
       case 'DesignEngineer':
         return [
+          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.icons.financials },
           { label: 'DASHBOARD.MY_PROJECTS', route: '/dashboard/projects', icon: this.icons.projects }
         ];
       default:

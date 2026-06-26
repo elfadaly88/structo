@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
+import { environment } from '../../../environments/environment';
 
 export interface UploadResult {
   url: string;
@@ -27,7 +28,12 @@ export interface PaginatedList<T> {
 })
 export class ImageUploadService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5000/api/ImageUpload';
+//private readonly apiUrl = (environment as any).apiUrl + '/ImageUpload';
+ private get apiUrl(): string {
+    return (environment as any).apiUrl + '/ImageUpload';
+  }
+
+  //private readonly apiUrl = 'http://localhost:5000/api/ImageUpload';
 
   uploadTenantLogo(file: File): Observable<ApiResponse<UploadResult>> {
     const formData = new FormData();
@@ -49,7 +55,7 @@ export class ImageUploadService {
 
   getProjectPhotos(projectId: string, pageNumber: number = 1, pageSize: number = 24): Observable<ApiResponse<PaginatedList<SitePhotoDto>>> {
     return this.http.get<ApiResponse<PaginatedList<SitePhotoDto>>>(
-      `http://localhost:5000/api/projects/${projectId}/SitePhotos/mobile?pageNumber=${pageNumber}&pageSize=${pageSize}`
+      `${this.apiUrl.replace('/ImageUpload', '')}/projects/${projectId}/SitePhotos/mobile?pageNumber=${pageNumber}&pageSize=${pageSize}`
     );
   }
 }

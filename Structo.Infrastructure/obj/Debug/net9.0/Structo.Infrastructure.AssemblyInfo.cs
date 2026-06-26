@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Structo.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< HEAD
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+12abdc7f190e203b88148b31a943636122b58db6")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+20a13b70eb8561653468d9ea57905c1ead490f13")]
+>>>>>>> d2f5bb51f4a491cf57442c5a8d92c4b0da8dbf04
 [assembly: System.Reflection.AssemblyProductAttribute("Structo.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Structo.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

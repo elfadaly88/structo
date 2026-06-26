@@ -22,7 +22,7 @@ export class DashboardRedirectComponent implements OnInit {
     if (role === 'SuperAdmin') {
       this.router.navigate(['/dashboard/overview'], { replaceUrl: true });
     } else {
-      this.router.navigate(['/dashboard/projects'], { replaceUrl: true });
+      this.router.navigate(['/dashboard/financials'], { replaceUrl: true });
     }
   }
 }
@@ -58,6 +58,11 @@ export const routes: Routes = [
       {
         path: 'projects/:id',
         loadComponent: () => import('./features/dashboard/projects/project-details.component').then(m => m.ProjectDetailsComponent),
+        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+      },
+      {
+        path: 'financials',
+        loadComponent: () => import('./features/dashboard/financials/financials.component').then(m => m.FinancialsComponent),
         data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
