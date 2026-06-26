@@ -1,1 +1,5 @@
+
 .vs/
+## .NET Core / .NET 9 Build Outputs
+[Bb]in/
+[Oo]bj/
