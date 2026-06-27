@@ -9,6 +9,12 @@ public class TenantContextAccessor(IHttpContextAccessor httpContextAccessor) : I
 {
     public Guid? GetCurrentTenantId()
     {
+        var isSuperAdmin = httpContextAccessor.HttpContext?.User?.IsInRole("SuperAdmin") ?? false;
+        if (isSuperAdmin)
+        {
+            return null; // Global bypass for SuperAdmins
+        }
+
         var tenantClaim = httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == "tenantId");
         if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantId))
         {

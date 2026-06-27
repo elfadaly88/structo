@@ -24,7 +24,24 @@ public class ProjectsController(StructoDbContext context) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiResponse<List<ProjectDto>>>> GetAll([FromQuery] Guid? tenantId = null)
     {
-        var projects = await context.Projects
+        var query = context.Projects.AsQueryable();
+        var userRole = User.FindFirstValue(ClaimTypes.Role);
+        var userTenantClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value;
+
+        if (userRole != "SuperAdmin")
+        {
+            if (string.IsNullOrEmpty(userTenantClaim) || !Guid.TryParse(userTenantClaim, out var userTenantId))
+            {
+                return Unauthorized(new ApiResponse<List<ProjectDto>> { Success = false, Message = "Tenant ID claim missing or invalid." });
+            }
+            query = query.Where(p => p.TenantId == userTenantId);
+        }
+        else if (tenantId.HasValue)
+        {
+            query = query.Where(p => p.TenantId == tenantId.Value);
+        }
+
+        var projects = await query
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new ProjectDto
             {
@@ -45,8 +62,29 @@ public class ProjectsController(StructoDbContext context) : ControllerBase
     [Authorize(Roles = "SuperAdmin,TenantOwner,Manager")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> Create([FromBody] ProjectCreateDto dto)
     {
+        var userRole = User.FindFirstValue(ClaimTypes.Role);
+        var userTenantClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value;
+        Guid tenantId;
+
+        if (userRole == "SuperAdmin")
+        {
+            if (!dto.TenantId.HasValue || dto.TenantId.Value == Guid.Empty)
+            {
+                return BadRequest(new ApiResponse<ProjectDto> { Success = false, Message = "Tenant ID is required for SuperAdmin." });
+            }
+            tenantId = dto.TenantId.Value;
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(userTenantClaim) || !Guid.TryParse(userTenantClaim, out tenantId))
+            {
+                return Unauthorized(new ApiResponse<ProjectDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
+            }
+        }
+
         var project = new Project
         {
+            TenantId = tenantId,
             Name = dto.Name,
             Description = dto.Description,
             StartDate = dto.StartDate,

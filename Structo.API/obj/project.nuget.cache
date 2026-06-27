@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "2TYzcNHmDhs=",
+  "dgSpecHash": "Odq595d+bMI=",
   "success": true,
-  "projectFilePath": "F:\\PrivateWork\\structo\\project\\Structo.api\\Structo.API.csproj",
+  "projectFilePath": "F:\\PrivateWork\\structo\\project\\Structo.API\\Structo.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ElFadaly\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\ElFadaly\\.nuget\\packages\\fluentvalidation\\11.11.0\\fluentvalidation.11.11.0.nupkg.sha512",

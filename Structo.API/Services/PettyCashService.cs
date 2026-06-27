@@ -28,6 +28,12 @@ public class PettyCashService(StructoDbContext context) : IPettyCashService
 
         // Mark as settled
         pettyCash.IsSettled = true;
+        pettyCash.Status = "Settled";
+        pettyCash.SpentAmount = dto.SpentAmount;
+        pettyCash.ReturnAmount = pettyCash.Amount - dto.SpentAmount;
+        pettyCash.ReceiptPhotoUrl = dto.ReceiptPhotoUrl ?? string.Empty;
+        pettyCash.SettlementPaymentMethod = dto.SettlementPaymentMethod;
+        pettyCash.ExpenseDate = dto.ExpenseDate;
 
         // Generate Financial Transaction
         if (dto.SpentAmount > 0)
@@ -35,10 +41,14 @@ public class PettyCashService(StructoDbContext context) : IPettyCashService
             var expense = new FinancialTransaction
             {
                 ProjectId = projectId,
+                TenantId = pettyCash.TenantId,
                 Type = TransactionType.Expense,
                 Amount = dto.SpentAmount,
                 Description = $"Petty Cash Settlement - {dto.ReceiptDescription}",
-                TransactionDate = DateTime.UtcNow
+                PaymentMethod = dto.SettlementPaymentMethod,
+                TransactionDate = dto.ExpenseDate,
+                PaymentDate = dto.ExpenseDate,
+                ReceiptPhotoUrl = dto.ReceiptPhotoUrl
             };
             
             context.FinancialTransactions.Add(expense);

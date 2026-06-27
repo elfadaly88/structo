@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -231,6 +231,6 @@ public class ImageUploadController(StructoDbContext context, IConfiguration conf
             await file.CopyToAsync(stream);
         }
 
-        return $"http://localhost:5000/uploads/{fileName}";
+        return $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
     }
 }
