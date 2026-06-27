@@ -9,7 +9,9 @@ import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/serv
 import { ImageUploadService } from '../../../core/services/image-upload.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
-
+import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
+import { take } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 export interface ProjectViewDto extends ProjectDto {
   client: string;
   budget: number;
@@ -302,145 +304,98 @@ export interface ProjectViewDto extends ProjectDto {
 
       <!-- SECTION 3: CORPORATE PROFILE EDITOR -->
       @if (activeTab() === 'profile' && currentUserRole() === 'TenantOwner') {
-        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 md:p-8 shadow-2xl max-w-3xl">
-          @if (profileSuccessMessage()) {
-            <div class="mb-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-sm text-emerald-400 font-cairo">
-              ✓ {{ profileSuccessMessage() }}
-            </div>
-          }
+        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl shadow-2xl max-w-3xl overflow-hidden">
 
-          <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
-                <input
-                  id="prof-name"
-                  type="text"
-                  formControlName="name"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="Company Name">
+          <!-- Banner Preview Header -->
+          <div class="w-full h-36 sm:h-44 bg-slate-800 relative overflow-hidden group">
+            @if (profileForm.get('bannerUrl')?.value) {
+              <img [src]="profileForm.get('bannerUrl')?.value" alt="Banner" class="w-full h-full object-cover">
+            } @else {
+              <div class="w-full h-full bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950 flex items-center justify-center">
+                <svg class="w-10 h-10 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               </div>
-
-              <div>
-                <label for="prof-region" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_REGION' | translate }}</label>
-                <input
-                  id="prof-region"
-                  type="text"
-                  formControlName="region"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="e.g. Cairo, Giza, Alexandria">
+            }
+            <!-- Banner Upload Overlay -->
+            <button type="button" (click)="bannerFileInput.click()" class="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+              <span class="flex items-center gap-2 text-white text-xs font-bold font-cairo bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700 backdrop-blur-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                تغيير البانر
+              </span>
+            </button>
+            <input #bannerFileInput type="file" class="hidden" (change)="onBannerFileSelected($event)" accept="image/*">
+            <input type="hidden" [formControl]="$any(profileForm.get('bannerUrl'))">
+            <!-- Banner Uploading Overlay -->
+            @if (isUploadingBanner()) {
+              <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                <svg class="animate-spin h-8 w-8 text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span class="text-xs text-indigo-300 font-cairo font-bold">جاري الرفع...</span>
               </div>
-            </div>
+            }
+          </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <!-- Logo Upload Group -->
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo">{{ 'PROFILE.FIELD_LOGO' | translate }}</label>
-                <div class="flex items-center gap-4">
-                  <div class="h-16 w-16 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center overflow-hidden shrink-0">
-                    @if (profileForm.get('logoUrl')?.value) {
-                      <img [src]="profileForm.get('logoUrl')?.value" alt="Logo preview" class="h-full w-full object-cover">
-                    } @else {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    }
-                  </div>
-                  <div class="flex-1 space-y-1.5">
-                    <button
-                      type="button"
-                      (click)="logoFileInput.click()"
-                      class="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold rounded-xl text-slate-200 transition-all duration-150 hover:bg-slate-800 cursor-pointer font-cairo">
-                      @if (isUploadingLogo()) {
-                        {{ 'DETAILS.UPLOADING' | translate }}
-                      } @else {
-                        {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
-                      }
-                    </button>
-                    <input
-                      #logoFileInput
-                      type="file"
-                      class="hidden"
-                      (change)="onLogoFileSelected($event)"
-                      accept="image/*">
-                    <input
-                      type="hidden"
-                      formControlName="logoUrl">
-                    @if (profileForm.get('logoUrl')?.value) {
-                      <p class="text-[10px] text-slate-500 font-mono truncate max-w-[200px]">
-                        {{ profileForm.get('logoUrl')?.value }}
-                      </p>
-                    }
-                  </div>
-                </div>
-              </div>
-
-              <!-- Banner Upload Group -->
-              <div class="space-y-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo">{{ 'PROFILE.FIELD_BANNER' | translate }}</label>
-                <div class="flex items-center gap-4">
-                  <div class="h-16 w-28 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center overflow-hidden shrink-0">
-                    @if (profileForm.get('bannerUrl')?.value) {
-                      <img [src]="profileForm.get('bannerUrl')?.value" alt="Banner preview" class="h-full w-full object-cover">
-                    } @else {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    }
-                  </div>
-                  <div class="flex-1 space-y-1.5">
-                    <button
-                      type="button"
-                      (click)="bannerFileInput.click()"
-                      class="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold rounded-xl text-slate-200 transition-all duration-150 hover:bg-slate-800 cursor-pointer font-cairo">
-                      @if (isUploadingBanner()) {
-                        {{ 'DETAILS.UPLOADING' | translate }}
-                      } @else {
-                        {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
-                      }
-                    </button>
-                    <input
-                      #bannerFileInput
-                      type="file"
-                      class="hidden"
-                      (change)="onBannerFileSelected($event)"
-                      accept="image/*">
-                    <input
-                      type="hidden"
-                      formControlName="bannerUrl">
-                    @if (profileForm.get('bannerUrl')?.value) {
-                      <p class="text-[10px] text-slate-500 font-mono truncate max-w-[200px]">
-                        {{ profileForm.get('bannerUrl')?.value }}
-                      </p>
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_COMP_DESC' | translate }}</label>
-              <textarea
-                id="prof-desc"
-                formControlName="companyDescription"
-                rows="5"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
-                placeholder="Write a brief overview of your business..."></textarea>
-            </div>
-
-            <div class="flex justify-end pt-2">
-              <button
-                type="submit"
-                [disabled]="profileForm.invalid || isSavingProfile()"
-                class="px-6 py-3 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
-                @if (isSavingProfile()) {
-                  {{ 'PROFILE.SAVING' | translate }}
+          <!-- Logo + Form Body -->
+          <div class="p-6 md:p-8 -mt-12 relative z-10">
+            <!-- Logo Circle -->
+            <div class="flex items-end gap-4 mb-6">
+              <div class="w-24 h-24 rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden relative group shadow-xl shrink-0">
+                @if (profileForm.get('logoUrl')?.value) {
+                  <img [src]="profileForm.get('logoUrl')?.value" alt="Logo" class="w-full h-full object-cover">
                 } @else {
-                  {{ 'PROFILE.BTN_UPDATE' | translate }}
+                  <span class="text-3xl font-extrabold text-slate-600 select-none">{{ (profileForm.get('name')?.value || 'S').charAt(0).toUpperCase() }}</span>
                 }
-              </button>
+                <!-- Logo Upload Overlay -->
+                <button type="button" (click)="logoFileInput.click()" class="absolute inset-0 rounded-full bg-slate-950/0 group-hover:bg-slate-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                  <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </button>
+                <input #logoFileInput type="file" class="hidden" (change)="onLogoFileSelected($event)" accept="image/*">
+                <input type="hidden" [formControl]="$any(profileForm.get('logoUrl'))">
+                <!-- Logo Uploading Overlay -->
+                @if (isUploadingLogo()) {
+                  <div class="absolute inset-0 rounded-full bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                    <svg class="animate-spin h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  </div>
+                }
+              </div>
+              <div class="pb-1">
+                <h3 class="text-lg font-bold text-white font-cairo">{{ profileForm.get('name')?.value || 'Company Profile' }}</h3>
+                <p class="text-xs text-slate-500 font-cairo">{{ profileForm.get('region')?.value || 'Region not set' }}</p>
+              </div>
             </div>
-          </form>
+
+            @if (profileSuccessMessage()) {
+              <div class="mb-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-sm text-emerald-400 font-cairo">
+                ✓ {{ profileSuccessMessage() }}
+              </div>
+            }
+
+            <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
+                  <input id="prof-name" type="text" formControlName="name" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="Company Name">
+                </div>
+                <div>
+                  <label for="prof-region" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_REGION' | translate }}</label>
+                  <input id="prof-region" type="text" formControlName="region" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="e.g. Cairo, Giza, Alexandria">
+                </div>
+              </div>
+
+              <div>
+                <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_COMP_DESC' | translate }}</label>
+                <textarea id="prof-desc" formControlName="companyDescription" rows="5" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none" placeholder="Write a brief overview of your business..."></textarea>
+              </div>
+
+              <div class="flex justify-end pt-2">
+                <button type="submit" [disabled]="profileForm.invalid || isSavingProfile()" class="px-6 py-3 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
+                  @if (isSavingProfile()) {
+                    {{ 'PROFILE.SAVING' | translate }}
+                  } @else {
+                    {{ 'PROFILE.BTN_UPDATE' | translate }}
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       }
     </div>
@@ -716,9 +671,10 @@ export class ProjectsComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
-
+  private readonly confirmService = inject(ConfirmModalService);
+  private readonly http = inject(HttpClient);
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
-  
+
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
 
   // Upload Signals
@@ -832,7 +788,7 @@ export class ProjectsComponent implements OnInit {
                 if (parsed.isPublicPortfolio !== undefined) isPublicPortfolio = parsed.isPublicPortfolio;
                 if (parsed.description !== undefined) description = parsed.description;
               }
-            } catch (e) {}
+            } catch (e) { }
 
             return {
               ...p,
@@ -891,13 +847,22 @@ export class ProjectsComponent implements OnInit {
   }
 
   fetchProfile(): void {
-    this.profileService.getProfile().subscribe({
+    this.profileService.getProfile().pipe(take(1)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
+          const getCleanUrl = (url: string | null | undefined) => {
+            if (!url) return url;
+            if (url.startsWith('PRESIGNED_SPLIT')) {
+              const parts = url.split('|');
+              return parts.length > 2 ? parts[2] : url;
+            }
+            return url;
+          };
+
           this.profileForm.patchValue({
             name: res.data.name,
-            logoUrl: res.data.logoUrl,
-            bannerUrl: res.data.bannerUrl,
+            logoUrl: getCleanUrl(res.data.logoUrl),
+            bannerUrl: getCleanUrl(res.data.bannerUrl),
             region: res.data.region,
             companyDescription: res.data.companyDescription
           });
@@ -916,7 +881,7 @@ export class ProjectsComponent implements OnInit {
 
     const dto: TenantProfileUpdateDto = this.profileForm.value;
 
-    this.profileService.updateProfile(dto).subscribe({
+    this.profileService.updateProfile(dto).pipe(take(1)).subscribe({
       next: (res) => {
         this.isSavingProfile.set(false);
         if (res.success) {
@@ -935,8 +900,17 @@ export class ProjectsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        this.confirmService.alert({
+          title: 'حجم الملف كبير جداً',
+          message: 'حجم الملف كبير جداً! الحد الأقصى للصور 2 ميجا وللمقايسات 5 ميجا.',
+          type: 'error'
+        });
+        input.value = '';
+        return;
+      }
       this.isUploadingLogo.set(true);
-      this.uploadService.uploadTenantLogo(file).subscribe({
+      this.uploadService.uploadTenantLogo(file).pipe(take(1)).subscribe({
         next: (res) => {
           this.isUploadingLogo.set(false);
           if (res.success && res.data) {
@@ -952,8 +926,17 @@ export class ProjectsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        this.confirmService.alert({
+          title: 'حجم الملف كبير جداً',
+          message: 'حجم الملف كبير جداً! الحد الأقصى للصور 2 ميجا وللمقايسات 5 ميجا.',
+          type: 'error'
+        });
+        input.value = '';
+        return;
+      }
       this.isUploadingBanner.set(true);
-      this.uploadService.uploadTenantBanner(file).subscribe({
+      this.uploadService.uploadTenantBanner(file).pipe(take(1)).subscribe({
         next: (res) => {
           this.isUploadingBanner.set(false);
           if (res.success && res.data) {

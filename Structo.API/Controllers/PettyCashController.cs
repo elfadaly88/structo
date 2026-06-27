@@ -242,6 +242,11 @@ public class PettyCashController(StructoDbContext context) : ControllerBase
         }
         // ─────────────────────────────────────────────────────────────────────
 
+        if (!string.IsNullOrEmpty(pettyCash.ReceiptPhotoUrl))
+        {
+            _ = ImageUploadController.DeleteFileAsync(pettyCash.ReceiptPhotoUrl);
+        }
+
         context.PettyCashes.Remove(pettyCash);
         await context.SaveChangesAsync();
 

@@ -15,6 +15,7 @@ export interface TenantDto {
   companyDescription: string;
   rating: number;
   createdAt: string;
+  status: string;
 }
 
 export interface PublicProjectDto {
@@ -43,11 +44,7 @@ export interface PublicTenantPortfolioDto {
 })
 export class PublicDirectoryService {
   private readonly http = inject(HttpClient);
-  //private readonly apiUrl = (environment as any).apiUrl + '/public';
-  //private readonly apiUrl = 'http://localhost:5000/api/public';
-  private get apiUrl(): string {
-    return (environment as any).apiUrl + '/public';
-  }
+  private readonly apiUrl = `${environment.apiUrl}/public`;
 
   getTenants(filters?: { region?: string; category?: string; minRating?: number }): Observable<ApiResponse<TenantDto[]>> {
     let params = new HttpParams();

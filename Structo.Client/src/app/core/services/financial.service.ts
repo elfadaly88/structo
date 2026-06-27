@@ -11,10 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class FinancialService {
   private readonly http = inject(HttpClient);
-  //private readonly baseUrl = 'http://localhost:5000/api/projects';  
-  private get baseUrl(): string {
-    return (environment as any).apiUrl + '/projects';
-  }
+  private readonly baseUrl = `${environment.apiUrl}/projects`;
 
   getProjectTransactions(
     projectId: string,
@@ -37,6 +34,45 @@ export class FinancialService {
   ): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(
       `${this.baseUrl}/${projectId}/financialtransactions`,
+      dto
+    );
+  }
+
+  /** Update a financial transaction. Only TenantOwner / Accountant will be authorized. */
+  updateTransaction(
+    projectId: string,
+    id: string,
+    dto: Partial<FinancialTransactionCreateDto>
+  ): Observable<ApiResponse<boolean>> {
+    return this.http.put<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/financialtransactions/${id}`,
+      dto
+    );
+  }
+
+  /**
+   * Delete a financial transaction.
+   * The API will automatically roll back the cash pool if this was a Capital Injection.
+   * Only TenantOwner / Accountant will be authorized.
+   */
+  deleteTransaction(
+    projectId: string,
+    id: string
+  ): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/financialtransactions/${id}`
+    );
+  }
+
+  getCashPools(projectId: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(
+      `${this.baseUrl}/${projectId}/financialtransactions/cash-pools`
+    );
+  }
+
+  injectCapital(projectId: string, dto: any): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/financialtransactions/inject-capital`,
       dto
     );
   }

@@ -161,4 +161,84 @@ public class ProjectsController(StructoDbContext context) : ControllerBase
             CurrentUserRole = CurrentUserRole
         });
     }
+
+    [HttpPost("{id}/budget-revision")]
+    [Authorize(Roles = "TenantOwner,Accountant")]
+    public async Task<ActionResult<ApiResponse<bool>>> ReviseBudget(
+        [FromRoute] Guid id,
+        [FromBody] ProjectBudgetRevisionDto dto)
+    {
+        var project = await context.Projects.FirstOrDefaultAsync(p => p.Id == id);
+        if (project == null)
+            return NotFound(new ApiResponse<bool> { Success = false, Message = "Project not found." });
+
+        decimal oldBudget = 0;
+        if (!string.IsNullOrEmpty(project.Description) && project.Description.StartsWith('{'))
+        {
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonObject>(project.Description);
+                if (json != null && json.TryGetPropertyValue("budget", out var budgetNode) && budgetNode != null)
+                {
+                    decimal.TryParse(budgetNode.ToString(), out oldBudget);
+                }
+            }
+            catch {}
+        }
+
+        // Update Project Description JSON payload
+        var obj = new System.Text.Json.Nodes.JsonObject();
+        string client = string.Empty;
+        string innerDesc = string.Empty;
+
+        if (!string.IsNullOrEmpty(project.Description) && project.Description.StartsWith('{'))
+        {
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonObject>(project.Description);
+                if (json != null)
+                {
+                    if (json.TryGetPropertyValue("client", out var cNode) && cNode != null) client = cNode.ToString();
+                    if (json.TryGetPropertyValue("description", out var dNode) && dNode != null) innerDesc = dNode.ToString();
+                }
+            }
+            catch {}
+        }
+        else
+        {
+            innerDesc = project.Description;
+        }
+
+        obj["client"] = client;
+        obj["budget"] = dto.NewBudget;
+        obj["description"] = innerDesc;
+
+        project.Description = obj.ToJsonString();
+
+        // Create log record
+        var log = new ProjectBudgetLog
+        {
+            ProjectId = id,
+            OldBudget = oldBudget,
+            NewBudget = dto.NewBudget,
+            ReasonForChange = dto.ReasonForChange,
+            BoqFileUrl = dto.BoqFileUrl
+        };
+
+        context.ProjectBudgetLogs.Add(log);
+        await context.SaveChangesAsync();
+
+        return Ok(new ApiResponse<bool> { Data = true, Message = "Project budget revised and logged successfully.", CurrentUserRole = CurrentUserRole });
+    }
+
+    [HttpGet("{id}/budget-history")]
+    public async Task<ActionResult<ApiResponse<List<ProjectBudgetLog>>>> GetBudgetHistory([FromRoute] Guid id)
+    {
+        var logs = await context.ProjectBudgetLogs
+            .Where(l => l.ProjectId == id)
+            .OrderByDescending(l => l.ChangedAt)
+            .ToListAsync();
+
+        return Ok(new ApiResponse<List<ProjectBudgetLog>> { Data = logs, CurrentUserRole = CurrentUserRole });
+    }
 }

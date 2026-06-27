@@ -1,18 +1,22 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "E:\\private\\structo\\structo\\",
+  "WorkspaceRootPath": "F:\\PrivateWork\\structo\\project\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|f:\\privatework\\structo\\project\\structo.api\\controllers\\imageuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\imageuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|f:\\privatework\\structo\\project\\structo.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|f:\\privatework\\structo\\project\\structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|f:\\privatework\\structo\\project\\structo.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\imageuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\imageuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,19 +26,36 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "F:\\PrivateWork\\structo\\project\\Structo.API\\appsettings.json",
+              "RelativeDocumentMoniker": "Structo.API\\appsettings.json",
+              "ToolTip": "F:\\PrivateWork\\structo\\project\\Structo.API\\appsettings.json",
+              "RelativeToolTip": "Structo.API\\appsettings.json",
+              "ViewState": "AgIAAAkAAAAAAAAAAAArwBkAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-27T21:50:06.365Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "UsersController.cs",
-              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\UsersController.cs",
+              "DocumentMoniker": "F:\\PrivateWork\\structo\\project\\Structo.API\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "Structo.API\\Controllers\\UsersController.cs",
-              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\UsersController.cs",
+              "ToolTip": "F:\\PrivateWork\\structo\\project\\Structo.API\\Controllers\\UsersController.cs",
               "RelativeToolTip": "Structo.API\\Controllers\\UsersController.cs",
               "ViewState": "AgIAADsAAAAAAAAAAAAwwGIAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -42,23 +63,24 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "ImageUploadController.cs",
-              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\ImageUploadController.cs",
+              "DocumentMoniker": "F:\\PrivateWork\\structo\\project\\Structo.API\\Controllers\\ImageUploadController.cs",
               "RelativeDocumentMoniker": "Structo.API\\Controllers\\ImageUploadController.cs",
-              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\ImageUploadController.cs",
+              "ToolTip": "F:\\PrivateWork\\structo\\project\\Structo.API\\Controllers\\ImageUploadController.cs",
               "RelativeToolTip": "Structo.API\\Controllers\\ImageUploadController.cs",
-              "ViewState": "AgIAAL4AAAAAAAAAAAAswM4AAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAAN0AAAAAAAAAAAAswOcAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-23T10:30:22.052Z"
+              "WhenOpened": "2026-06-23T10:30:22.052Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
-              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Program.cs",
+              "DocumentMoniker": "F:\\PrivateWork\\structo\\project\\Structo.API\\Program.cs",
               "RelativeDocumentMoniker": "Structo.API\\Program.cs",
-              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Program.cs",
+              "ToolTip": "F:\\PrivateWork\\structo\\project\\Structo.API\\Program.cs",
               "RelativeToolTip": "Structo.API\\Program.cs",
               "ViewState": "AgIAAAsAAAAAAAAAAAAvwBYAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",

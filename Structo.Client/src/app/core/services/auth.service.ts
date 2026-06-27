@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
-private readonly apiUrl = (environment as any).apiUrl + '/auth';
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly tokenKey = 'structo_auth_token';
   private readonly userKey = 'structo_user_info';
 

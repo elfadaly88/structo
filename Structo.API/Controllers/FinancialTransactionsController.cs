@@ -167,8 +167,14 @@ public class FinancialTransactionsController(StructoDbContext context) : Control
             transaction.PaymentDate = dto.PaymentDate.Value;
         if (dto.PaymentMethod.HasValue)
             transaction.PaymentMethod = dto.PaymentMethod;
-        if (dto.ReceiptPhotoUrl != null)
+        if (dto.ReceiptPhotoUrl != null && transaction.ReceiptPhotoUrl != dto.ReceiptPhotoUrl)
+        {
+            if (!string.IsNullOrEmpty(transaction.ReceiptPhotoUrl))
+            {
+                _ = ImageUploadController.DeleteFileAsync(transaction.ReceiptPhotoUrl);
+            }
             transaction.ReceiptPhotoUrl = dto.ReceiptPhotoUrl;
+        }
 
         await context.SaveChangesAsync();
 
@@ -226,6 +232,11 @@ public class FinancialTransactionsController(StructoDbContext context) : Control
             }
         }
         // ─────────────────────────────────────────────────────────────────────
+
+        if (!string.IsNullOrEmpty(transaction.ReceiptPhotoUrl))
+        {
+            _ = ImageUploadController.DeleteFileAsync(transaction.ReceiptPhotoUrl);
+        }
 
         context.FinancialTransactions.Remove(transaction);
         await context.SaveChangesAsync();

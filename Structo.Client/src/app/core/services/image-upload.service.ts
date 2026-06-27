@@ -28,12 +28,7 @@ export interface PaginatedList<T> {
 })
 export class ImageUploadService {
   private readonly http = inject(HttpClient);
-//private readonly apiUrl = (environment as any).apiUrl + '/ImageUpload';
- private get apiUrl(): string {
-    return (environment as any).apiUrl + '/ImageUpload';
-  }
-
-  //private readonly apiUrl = 'http://localhost:5000/api/ImageUpload';
+  private readonly apiUrl = `${environment.apiUrl}/ImageUpload`;
 
   uploadTenantLogo(file: File): Observable<ApiResponse<UploadResult>> {
     const formData = new FormData();
@@ -55,7 +50,13 @@ export class ImageUploadService {
 
   getProjectPhotos(projectId: string, pageNumber: number = 1, pageSize: number = 24): Observable<ApiResponse<PaginatedList<SitePhotoDto>>> {
     return this.http.get<ApiResponse<PaginatedList<SitePhotoDto>>>(
-      `${this.apiUrl.replace('/ImageUpload', '')}/projects/${projectId}/SitePhotos/mobile?pageNumber=${pageNumber}&pageSize=${pageSize}`
+      `${environment.apiUrl}/projects/${projectId}/SitePhotos/mobile?pageNumber=${pageNumber}&pageSize=${pageSize}`
     );
+  }
+
+  uploadProjectDocument(projectId: string, file: File): Observable<ApiResponse<UploadResult>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-document/${projectId}`, formData);
   }
 }

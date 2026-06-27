@@ -24,3 +24,10 @@ export interface ProjectClientViewDto {
   progressPercentage: number;
   recentPhotoUrls: string[];
 }
+
+export interface ProjectCashPoolDto {
+  id: string;
+  sourceType: string;
+  totalInjected: number;
+  availableBalance: number;
+}

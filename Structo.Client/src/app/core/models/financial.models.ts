@@ -4,6 +4,9 @@ export interface FinancialTransactionMobileDto {
   type: string; // 'Income' or 'Expense'
   description: string;
   transactionDate: string;
+  paymentDate?: string;
+  paymentMethod?: string;
+  receiptPhotoUrl?: string;
 }
 
 export interface FinancialTransactionCreateDto {

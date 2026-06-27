@@ -15,6 +15,7 @@ public class Tenant
     public string Region { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
     public double Rating { get; set; }
+    public TenantStatus Status { get; set; } = TenantStatus.Active;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties

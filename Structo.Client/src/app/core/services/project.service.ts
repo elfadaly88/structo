@@ -10,11 +10,7 @@ import { environment } from '../../../environments/environment';
 })
 export class ProjectService {
   private readonly http = inject(HttpClient);
-  //private readonly apiUrl = (environment as any).apiUrl + '/projects';
-  //private readonly apiUrl = 'http://localhost:5000/api/projects';
-private get apiUrl(): string {
-    return (environment as any).apiUrl + '/projects';
-  }
+  private readonly apiUrl = `${environment.apiUrl}/projects`;
   getProjects(): Observable<ApiResponse<ProjectDto[]>> {
     return this.http.get<ApiResponse<ProjectDto[]>>(this.apiUrl);
   }
@@ -25,5 +21,13 @@ private get apiUrl(): string {
 
   createProject(dto: ProjectCreateDto): Observable<ApiResponse<ProjectDto>> {
     return this.http.post<ApiResponse<ProjectDto>>(this.apiUrl, dto);
+  }
+
+  reviseBudget(projectId: string, dto: { newBudget: number; reasonForChange: string; boqFileUrl?: string }): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/budget-revision`, dto);
+  }
+
+  getProjectBudgetHistory(projectId: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/${projectId}/budget-history`);
   }
 }

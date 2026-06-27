@@ -4,16 +4,13 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
 import { PettyCashMobileDto, PaginatedList, PettyCashCreateDto, PettyCashSettleDto } from '../models/petty-cash.models';
 import { environment } from '../../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class PettyCashService {
   private readonly http = inject(HttpClient);
-  //private readonly baseUrl = (environment as any).apiUrl + '/projects';
-  private get baseUrl(): string {
-    return (environment as any).apiUrl + '/projects';
-  }
-  //private readonly baseUrl = 'http://localhost:5000/api/projects';
+  private readonly baseUrl = `${environment.apiUrl}/projects`;
 
   getProjectPettyCash(
     projectId: string,
@@ -37,6 +34,20 @@ export class PettyCashService {
     );
   }
 
+  approvePettyCash(projectId: string, id: string, dto: { sourcePoolId: string }): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/pettycash/${id}/approve`,
+      dto
+    );
+  }
+
+  rejectPettyCash(projectId: string, id: string, comments: string): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/pettycash/${id}/reject`,
+      { comments }
+    );
+  }
+
   settlePettyCash(
     projectId: string,
     id: string,
@@ -45,6 +56,32 @@ export class PettyCashService {
     return this.http.post<ApiResponse<boolean>>(
       `${this.baseUrl}/${projectId}/pettycash/${id}/settle`,
       dto
+    );
+  }
+
+  /** Update a Pending petty cash record. Only TenantOwner / Accountant will be authorized. */
+  updatePettyCash(
+    projectId: string,
+    id: string,
+    dto: { amount: number; reason: string; category: string }
+  ): Observable<ApiResponse<boolean>> {
+    return this.http.put<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/pettycash/${id}`,
+      dto
+    );
+  }
+
+  /**
+   * Delete a petty cash record.
+   * The API automatically refunds the pool balance if the voucher was in "Issued" status.
+   * Only TenantOwner / Accountant will be authorized.
+   */
+  deletePettyCash(
+    projectId: string,
+    id: string
+  ): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/pettycash/${id}`
     );
   }
 }

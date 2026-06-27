@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "Odq595d+bMI=",
+  "dgSpecHash": "OZLvnCHdqoA=",
   "success": true,
   "projectFilePath": "F:\\PrivateWork\\structo\\project\\Structo.API\\Structo.API.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\ElFadaly\\.nuget\\packages\\awssdk.core\\3.7.400\\awssdk.core.3.7.400.nupkg.sha512",
+    "C:\\Users\\ElFadaly\\.nuget\\packages\\awssdk.s3\\3.7.400\\awssdk.s3.3.7.400.nupkg.sha512",
     "C:\\Users\\ElFadaly\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\ElFadaly\\.nuget\\packages\\fluentvalidation\\11.11.0\\fluentvalidation.11.11.0.nupkg.sha512",
     "C:\\Users\\ElFadaly\\.nuget\\packages\\fluentvalidation.aspnetcore\\11.3.1\\fluentvalidation.aspnetcore.11.3.1.nupkg.sha512",

@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, computed, Renderer2 } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
@@ -303,6 +303,8 @@ export class LandingPageComponent implements OnInit {
   private readonly router = inject(Router);
   protected readonly langService = inject(LanguageService);
   private readonly directoryService = inject(PublicDirectoryService);
+  private readonly renderer = inject(Renderer2);
+  private readonly document = inject(DOCUMENT);
 
   readonly companies = signal<TenantDto[]>([]);
   readonly selectedCompany = signal<PublicTenantPortfolioDto | null>(null);
@@ -345,6 +347,7 @@ export class LandingPageComponent implements OnInit {
         if (res.success && res.data) {
           this.selectedCompany.set(res.data);
           this.isModalOpen.set(true);
+          this.renderer.addClass(this.document.body, 'overflow-hidden');
         }
       }
     });
@@ -353,6 +356,7 @@ export class LandingPageComponent implements OnInit {
   closeModal(): void {
     this.isModalOpen.set(false);
     this.selectedCompany.set(null);
+    this.renderer.removeClass(this.document.body, 'overflow-hidden');
   }
 
   navigateToLogin() {

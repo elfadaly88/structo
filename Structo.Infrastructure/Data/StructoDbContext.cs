@@ -26,6 +26,8 @@ public class StructoDbContext : DbContext
     public DbSet<FinancialTransaction> FinancialTransactions => Set<FinancialTransaction>();
     public DbSet<PettyCash> PettyCashes => Set<PettyCash>();
     public DbSet<SitePhoto> SitePhotos => Set<SitePhoto>();
+    public DbSet<ProjectCashPool> ProjectCashPools => Set<ProjectCashPool>();
+    public DbSet<ProjectBudgetLog> ProjectBudgetLogs => Set<ProjectBudgetLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +38,7 @@ public class StructoDbContext : DbContext
         modelBuilder.Entity<FinancialTransaction>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<PettyCash>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
 
         modelBuilder.Entity<Tenant>(entity =>
         {
@@ -43,6 +46,7 @@ public class StructoDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(150);
             entity.Property(e => e.MaxActiveProjects).IsRequired();
             entity.Property(e => e.SubscriptionPlan).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -119,6 +123,11 @@ public class StructoDbContext : DbContext
                   .WithMany(u => u.PettyCashes)
                   .HasForeignKey(e => e.IssuedToUserId)
                   .OnDelete(DeleteBehavior.Restrict); 
+
+            entity.HasOne(e => e.SourcePool)
+                  .WithMany()
+                  .HasForeignKey(e => e.SourcePoolId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<SitePhoto>(entity =>
@@ -141,6 +150,36 @@ public class StructoDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.UploadedByUserId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProjectCashPool>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SourceType).HasConversion<string>().HasMaxLength(30);
+
+            entity.HasOne(e => e.Tenant)
+                  .WithMany()
+                  .HasForeignKey(e => e.TenantId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany()
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProjectBudgetLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OldBudget).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.NewBudget).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.ReasonForChange).HasMaxLength(500);
+            entity.Property(e => e.BoqFileUrl).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany()
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

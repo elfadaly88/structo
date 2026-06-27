@@ -17,6 +17,10 @@ public class FinancialTransaction : ITenantEntity
     
     public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
 
+    public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+    public PaymentMethod? PaymentMethod { get; set; }
+    public string? ReceiptPhotoUrl { get; set; }
+
     // Navigation properties
     public Tenant? Tenant { get; set; }
     public Project? Project { get; set; }

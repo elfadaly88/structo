@@ -10,4 +10,10 @@ public class PettyCashMobileDto
     public DateTime IssuedAt { get; set; }
     public bool IsSettled { get; set; }
     public string IssuedTo { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Comments { get; set; } = string.Empty;
+    public string ReceiptPhotoUrl { get; set; } = string.Empty;
+    public string SettlementPaymentMethod { get; set; } = string.Empty;
+    public DateTime? ExpenseDate { get; set; }
 }

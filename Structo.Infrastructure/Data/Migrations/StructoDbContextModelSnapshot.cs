@@ -36,8 +36,17 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("PaymentMethod")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ReceiptPhotoUrl")
+                        .HasColumnType("text");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -68,10 +77,21 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsSettled")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpenseDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("IssuedToUserId")
@@ -85,14 +105,40 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ReceiptPhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("ReturnAmount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("SettlementPaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("SourcePoolId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("SpentAmount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IssuedToUserId");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("SourcePoolId");
 
                     b.HasIndex("TenantId");
 
@@ -142,6 +188,76 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("Structo.Core.Entities.ProjectCashPool", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AvailableBalance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalInjected")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("ProjectCashPools");
+                });
+
+            modelBuilder.Entity("Structo.Core.Entities.ProjectBudgetLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BoqFileUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("NewBudget")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("OldBudget")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReasonForChange")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectBudgetLogs");
+                });
+
             modelBuilder.Entity("Structo.Core.Entities.SitePhoto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -187,8 +303,20 @@ namespace Structo.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BannerUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CompanyDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LogoUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("MaxActiveProjects")
                         .HasColumnType("integer");
@@ -198,29 +326,22 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<string>("SubscriptionPlan")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<string>("LogoUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BannerUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<double>("Rating")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Region")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("CompanyDescription")
+                    b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
-                    b.Property<double>("Rating")
-                        .HasColumnType("double precision");
+                    b.Property<string>("SubscriptionPlan")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.HasKey("Id");
 
@@ -304,6 +425,11 @@ namespace Structo.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Structo.Core.Entities.ProjectCashPool", "SourcePool")
+                        .WithMany()
+                        .HasForeignKey("SourcePoolId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Structo.Core.Entities.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
@@ -313,6 +439,8 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Navigation("IssuedToUser");
 
                     b.Navigation("Project");
+
+                    b.Navigation("SourcePool");
 
                     b.Navigation("Tenant");
                 });
@@ -333,6 +461,36 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Navigation("Manager");
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Structo.Core.Entities.ProjectCashPool", b =>
+                {
+                    b.HasOne("Structo.Core.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Structo.Core.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Structo.Core.Entities.ProjectBudgetLog", b =>
+                {
+                    b.HasOne("Structo.Core.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.SitePhoto", b =>
