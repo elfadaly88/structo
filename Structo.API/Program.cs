@@ -192,6 +192,9 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
     try
     {
+        // 👇 السطر السحري اللي كان ناقصك عشان يلحق يكريت جدول الـ DataProtectionKeys أوتوماتيك 👇
+        context.Database.EnsureCreated();
+
         context.Database.Migrate();
     }
     catch (Exception ex)
