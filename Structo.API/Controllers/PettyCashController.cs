@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.PettyCash;
+using Structo.Core.DTOs.Transactions;
 using Structo.Core.Exceptions;
 using Structo.Core.Interfaces;
 using System;
