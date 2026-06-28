@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.PettyCash;
-using Structo.Core.DTOs.Transactions;
-using Structo.Core.Entities;
-using Structo.Core.Enums;
+using Structo.Core.Exceptions;
 using Structo.Core.Interfaces;
-using Structo.Infrastructure.Data;
 using System;
 using System.Linq;
 using System.Security.Claims;
@@ -18,7 +14,7 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
-public class PettyCashController(StructoDbContext context) : ControllerBase
+public class PettyCashController(IPettyCashService pettyCashService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
@@ -26,112 +22,69 @@ public class PettyCashController(StructoDbContext context) : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] PettyCashCreateDto dto)
     {
         var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
-        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+        Guid? tenantId = tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var parsedId) ? parsedId : null;
+
+        var (success, message) = await pettyCashService.CreatePettyCashAsync(projectId, dto, tenantId, CurrentUserRole);
+
+        if (!success)
         {
-            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant ID claim missing or invalid." });
+            if (message.Contains("claim missing"))
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
         }
 
-        var pettyCash = new PettyCash
-        {
-            ProjectId = projectId,
-            TenantId = tenantId,
-            IssuedToUserId = dto.IssuedToUserId,
-            Amount = dto.Amount,
-            Reason = dto.Reason,
-            Category = dto.Category ?? string.Empty,
-            Status = "Pending",
-            IssuedAt = DateTime.UtcNow,
-            IsSettled = false,
-            SourcePoolId = dto.SourcePoolId
-        };
-
-        if (User.IsInRole("TenantOwner") && dto.SourcePoolId.HasValue)
-        {
-            var pool = await context.ProjectCashPools.FirstOrDefaultAsync(p => p.Id == dto.SourcePoolId.Value && p.ProjectId == projectId);
-            if (pool == null)
-                return BadRequest(new ApiResponse<bool> { Success = false, Message = "Selected cash pool not found." });
-
-            if (pettyCash.Amount > pool.AvailableBalance)
-            {
-                return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Insufficient funds in selected pool. Available is {pool.AvailableBalance} EGP." });
-            }
-            pettyCash.Status = "Issued";
-            pool.AvailableBalance -= pettyCash.Amount;
-        }
-
-        context.PettyCashes.Add(pettyCash);
-        await context.SaveChangesAsync();
-
-        return Ok(new ApiResponse<bool> { Data = true, Message = "Petty cash request submitted successfully", CurrentUserRole = CurrentUserRole });
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
     }
 
     [HttpPost("{id}/approve")]
     [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Approve([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashApproveDto dto)
     {
-        var pettyCash = await context.PettyCashes.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
-        if (pettyCash == null)
+        var (success, message) = await pettyCashService.ApprovePettyCashAsync(projectId, id, dto);
+
+        if (!success)
         {
-            return NotFound(new ApiResponse<bool> { Success = false, Message = "Petty cash record not found." });
+            if (message.Contains("not found"))
+                return NotFound(new ApiResponse<bool> { Success = false, Message = message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
         }
 
-        if (pettyCash.Status != "Pending")
-        {
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = "Only pending petty cash requests can be approved." });
-        }
-
-        var pool = await context.ProjectCashPools.FirstOrDefaultAsync(p => p.Id == dto.SourcePoolId && p.ProjectId == projectId);
-        if (pool == null)
-        {
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = "Selected cash pool not found." });
-        }
-
-        if (pettyCash.Amount > pool.AvailableBalance)
-        {
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Insufficient funds. Available pool is {pool.AvailableBalance} EGP." });
-        }
-
-        pettyCash.Status = "Issued";
-        pettyCash.SourcePoolId = pool.Id;
-        pool.AvailableBalance -= pettyCash.Amount;
-        await context.SaveChangesAsync();
-
-        return Ok(new ApiResponse<bool> { Data = true, Message = "Petty cash approved and issued successfully.", CurrentUserRole = CurrentUserRole });
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
     }
 
     [HttpPost("{id}/reject")]
     [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Reject([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashRejectDto dto)
     {
-        var pettyCash = await context.PettyCashes.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
-        if (pettyCash == null)
+        var (success, message) = await pettyCashService.RejectPettyCashAsync(projectId, id, dto);
+
+        if (!success)
         {
-            return NotFound(new ApiResponse<bool> { Success = false, Message = "Petty cash record not found." });
+            if (message.Contains("not found"))
+                return NotFound(new ApiResponse<bool> { Success = false, Message = message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
         }
 
-        if (pettyCash.Status != "Pending")
-        {
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = "Only pending petty cash requests can be rejected." });
-        }
-
-        pettyCash.Status = "Rejected";
-        pettyCash.Comments = dto.Comments ?? string.Empty;
-        await context.SaveChangesAsync();
-
-        return Ok(new ApiResponse<bool> { Data = true, Message = "Petty cash request rejected.", CurrentUserRole = CurrentUserRole });
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
     }
 
     [HttpPost("{id}/settle")]
-    public async Task<ActionResult<ApiResponse<bool>>> Settle([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashSettleDto dto, [FromServices] IPettyCashService pettyCashService)
+    public async Task<ActionResult<ApiResponse<bool>>> Settle([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashSettleDto dto)
     {
-        var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto);
-
-        return Ok(new ApiResponse<bool>
+        try
         {
-            Data = result,
-            Message = "Petty cash successfully settled.",
-            CurrentUserRole = CurrentUserRole
-        });
+            var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto);
+            return Ok(new ApiResponse<bool>
+            {
+                Data = result,
+                Message = "Petty cash successfully settled.",
+                CurrentUserRole = CurrentUserRole
+            });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.Message });
+        }
     }
 
     [HttpGet("mobile")]
@@ -140,44 +93,10 @@ public class PettyCashController(StructoDbContext context) : ControllerBase
         [FromQuery] int pageNumber = 1, 
         [FromQuery] int pageSize = 10)
     {
-        var query = context.PettyCashes
-            .Include(p => p.IssuedToUser)
-            .Where(t => t.ProjectId == projectId)
-            .OrderByDescending(t => t.IssuedAt);
-
-        var totalCount = await query.CountAsync();
-
-        var items = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(t => new PettyCashMobileDto
-            {
-                Id = t.Id,
-                Amount = t.Amount,
-                Reason = t.Reason,
-                IssuedAt = t.IssuedAt,
-                IsSettled = t.IsSettled,
-                IssuedTo = t.IssuedToUser != null ? t.IssuedToUser.FirstName + " " + t.IssuedToUser.LastName : string.Empty,
-                Status = t.Status,
-                Category = t.Category,
-                Comments = t.Comments,
-                ReceiptPhotoUrl = t.ReceiptPhotoUrl,
-                SettlementPaymentMethod = t.SettlementPaymentMethod.HasValue ? t.SettlementPaymentMethod.Value.ToString() : string.Empty,
-                ExpenseDate = t.ExpenseDate
-            })
-            .ToListAsync();
-
-        var paginatedList = new PaginatedList<PettyCashMobileDto>
-        {
-            Items = items,
-            TotalCount = totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
+        var data = await pettyCashService.GetMobilePettyCashAsync(projectId, pageNumber, pageSize);
         return Ok(new ApiResponse<PaginatedList<PettyCashMobileDto>>
         {
-            Data = paginatedList,
+            Data = data,
             CurrentUserRole = CurrentUserRole
         });
     }
@@ -189,87 +108,33 @@ public class PettyCashController(StructoDbContext context) : ControllerBase
         [FromRoute] Guid id,
         [FromBody] PettyCashUpdateDto dto)
     {
-        var pettyCash = await context.PettyCashes
-            .FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
+        var (success, message) = await pettyCashService.UpdatePettyCashAsync(projectId, id, dto);
 
-        if (pettyCash == null)
-            return NotFound(new ApiResponse<bool> { Success = false, Message = "Petty cash record not found." });
+        if (!success)
+        {
+            if (message.Contains("not found"))
+                return NotFound(new ApiResponse<bool> { Success = false, Message = message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
+        }
 
-        if (pettyCash.IsSettled || pettyCash.Status == "Settled")
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = "This financial transaction is closed and audited. It cannot be modified or deleted." });
-
-        pettyCash.Amount = dto.Amount;
-        pettyCash.Reason = dto.Reason;
-        pettyCash.Category = dto.Category;
-        await context.SaveChangesAsync();
-
-        return Ok(new ApiResponse<bool> { Data = true, Message = "Petty cash updated successfully.", CurrentUserRole = CurrentUserRole });
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
     }
 
-    /// <summary>
-    /// Delete a petty cash record with automatic pool refund.
-    /// - If the record is Issued and has a SourcePoolId, the amount is refunded
-    ///   back to the pool's AvailableBalance to maintain ledger equilibrium.
-    /// Restricted to TenantOwner and Accountant.
-    /// </summary>
     [HttpDelete("{id}")]
     [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(
         [FromRoute] Guid projectId,
         [FromRoute] Guid id)
     {
-        var pettyCash = await context.PettyCashes
-            .FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
+        var (success, message) = await pettyCashService.DeletePettyCashAsync(projectId, id);
 
-        if (pettyCash == null)
-            return NotFound(new ApiResponse<bool> { Success = false, Message = "Petty cash record not found." });
-
-        if (pettyCash.IsSettled || pettyCash.Status == "Settled")
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = "This financial transaction is closed and audited. It cannot be modified or deleted." });
-
-        // ── Cash Advance Pool Refund ──────────────────────────────────────────
-        // If the voucher was already Issued (funds already deducted from pool),
-        // refund the full issued amount back to the originating pool.
-        if (pettyCash.Status == "Issued" && pettyCash.SourcePoolId.HasValue)
+        if (!success)
         {
-            var pool = await context.ProjectCashPools
-                .FirstOrDefaultAsync(p => p.Id == pettyCash.SourcePoolId.Value && p.ProjectId == projectId);
-
-            if (pool != null)
-            {
-                pool.AvailableBalance += pettyCash.Amount;
-            }
-        }
-        // ─────────────────────────────────────────────────────────────────────
-
-        if (!string.IsNullOrEmpty(pettyCash.ReceiptPhotoUrl))
-        {
-            _ = ImageUploadController.DeleteFileAsync(pettyCash.ReceiptPhotoUrl);
+            if (message.Contains("not found"))
+                return NotFound(new ApiResponse<bool> { Success = false, Message = message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
         }
 
-        context.PettyCashes.Remove(pettyCash);
-        await context.SaveChangesAsync();
-
-        return Ok(new ApiResponse<bool> { Data = true, Message = "Petty cash deleted and pool balance restored.", CurrentUserRole = CurrentUserRole });
-    }
-
-    private async Task<decimal> GetAvailablePoolAsync(Guid tenantId)
-    {
-        var income = await context.FinancialTransactions
-            .IgnoreQueryFilters()
-            .Where(t => t.TenantId == tenantId && t.Type == TransactionType.Income)
-            .SumAsync(t => t.Amount);
-
-        var expense = await context.FinancialTransactions
-            .IgnoreQueryFilters()
-            .Where(t => t.TenantId == tenantId && t.Type == TransactionType.Expense)
-            .SumAsync(t => t.Amount);
-
-        var lockedPettyCash = await context.PettyCashes
-            .IgnoreQueryFilters()
-            .Where(p => p.TenantId == tenantId && p.Status == "Issued" && !p.IsSettled)
-            .SumAsync(p => p.Amount);
-
-        return income - expense - lockedPettyCash;
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
     }
 }

@@ -92,6 +92,7 @@ public class StructoDbContext : DbContext
             entity.Property(e => e.Amount).HasColumnType("numeric(18,2)"); 
             
             entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.SourceType).HasConversion<string>().HasMaxLength(30);
 
             entity.HasOne(e => e.Tenant)
                   .WithMany()

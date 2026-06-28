@@ -93,7 +93,7 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
         }
         catch (Exception ex) { Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}"); }
     }
-
+    
     if (string.IsNullOrEmpty(connectionString))
     {
         connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -109,7 +109,6 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
 // Add HTTP Context Accessor and Tenant Accessor
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
-builder.Services.AddScoped<IPettyCashService, PettyCashService>();
 builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
 
 // AWS S3/R2 Configuration
@@ -145,6 +144,9 @@ builder.Services.AddScoped<Structo.Core.Interfaces.ITokenProvider, Structo.Infra
 builder.Services.AddScoped<Structo.Core.Interfaces.IAuthService, Structo.Core.Services.AuthService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IUserService, Structo.Core.Services.UserService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IProjectService, Structo.Core.Services.ProjectService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialTransactionService, Structo.Core.Services.FinancialTransactionService>();
+// Note: IPettyCashService is already registered on line 112, but we need to ensure it uses the Core implementation.
+builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

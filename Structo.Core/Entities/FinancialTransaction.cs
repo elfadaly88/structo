@@ -20,6 +20,9 @@ public class FinancialTransaction : ITenantEntity
     public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
     public PaymentMethod? PaymentMethod { get; set; }
     public string? ReceiptPhotoUrl { get; set; }
+    
+    public bool IsSystemGenerated { get; set; }
+    public CashPoolSourceType? SourceType { get; set; }
 
     // Navigation properties
     public Tenant? Tenant { get; set; }
