@@ -19,6 +19,12 @@ public class UploadResultDto
     public string Url { get; set; } = string.Empty;
 }
 
+public class GenerateUploadUrlDto
+{
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+}
+
 [ApiController]
 [Route("api/ImageUpload")]
 [Authorize]
@@ -28,12 +34,12 @@ public class ImageUploadController(
     ITenantContextAccessor tenantAccessor) : ControllerBase
 {
     [HttpPost("tenant-logo")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo(IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo([FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file was uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
 
-        if (!ValidateFileSize(file, out var errorMsg))
+        if (!ValidateFileRequest(request, out var errorMsg))
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
@@ -46,11 +52,10 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/profile/logo{extension}";
             
-            using var stream = file.OpenReadStream();
-            string secureUrl = await storageService.UploadFileAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
 
             var urls = secureUrl.Split('|');
             string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
@@ -77,12 +82,12 @@ public class ImageUploadController(
     }
 
     [HttpPost("tenant-banner")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner(IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner([FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file was uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
 
-        if (!ValidateFileSize(file, out var errorMsg))
+        if (!ValidateFileRequest(request, out var errorMsg))
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
@@ -95,11 +100,10 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/profile/banner{extension}";
             
-            using var stream = file.OpenReadStream();
-            string secureUrl = await storageService.UploadFileAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
 
             var urls = secureUrl.Split('|');
             string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
@@ -126,12 +130,12 @@ public class ImageUploadController(
     }
 
     [HttpPost("project-gallery/{projectId}")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, [FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file was uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
 
-        if (!ValidateFileSize(file, out var errorMsg))
+        if (!ValidateFileRequest(request, out var errorMsg))
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
@@ -144,11 +148,10 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{extension}";
             
-            using var stream = file.OpenReadStream();
-            string secureUrl = await storageService.UploadFileAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
 
             var urls = secureUrl.Split('|');
             string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
@@ -183,12 +186,12 @@ public class ImageUploadController(
     }
 
     [HttpPost("project-document/{projectId}")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectDocument([FromRoute] Guid projectId, IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectDocument([FromRoute] Guid projectId, [FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file was uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
 
-        if (!ValidateFileSize(file, out var errorMsg))
+        if (!ValidateFileRequest(request, out var errorMsg))
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
@@ -201,11 +204,10 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/projects/{projectId}/files/{Guid.NewGuid()}{extension}";
             
-            using var stream = file.OpenReadStream();
-            string secureUrl = await storageService.UploadFileAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
 
             return Ok(new ApiResponse<UploadResultDto>
             {
@@ -229,18 +231,15 @@ public class ImageUploadController(
         return await storageService.DeleteFileAsync(fileUrl);
     }
 
-    private bool ValidateFileSize(IFormFile file, out string errorMessage)
+    private bool ValidateFileRequest(GenerateUploadUrlDto request, out string errorMessage)
     {
-        var extension = Path.GetExtension(file.FileName).ToLower();
-        var isImage = file.ContentType.StartsWith("image/");
+        var extension = Path.GetExtension(request.FileName).ToLower();
+        var isImage = request.ContentType.StartsWith("image/");
 
-        long maxSize = isImage ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
-        if (file.Length > maxSize)
+        if (string.IsNullOrEmpty(extension))
         {
-            errorMessage = isImage
-                ? "File size exceeds the allowed limit of 2MB for images."  
-                : "File size exceeds the allowed limit of 5MB for documents.";
-            return false;
+             errorMessage = "Invalid file extension.";
+             return false;
         }
 
         errorMessage = string.Empty;

@@ -15,20 +15,10 @@ public class CloudflareR2StorageService(
 {
     private readonly CloudflareR2Settings _settings = r2Settings.Value;
 
-    public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string? customKey = null)
+    public Task<string> UploadFileAsync(string fileName, string contentType, string? customKey = null)
     {
         var extension = Path.GetExtension(fileName).ToLower();
         var key = customKey?.TrimStart('/') ?? $"images/{Guid.NewGuid()}{extension}";
-
-        var request = new PutObjectRequest
-        {
-            BucketName = _settings.BucketName,
-            Key = key,
-            InputStream = fileStream,
-            ContentType = contentType
-        };
-
-        await s3Client.PutObjectAsync(request);
 
         string dbUrl = $"{_settings.PublicBaseUrl}/{key}";
 
@@ -38,12 +28,13 @@ public class CloudflareR2StorageService(
             BucketName = _settings.BucketName,
             Key = key,
             Expires = DateTime.UtcNow.AddHours(1),
-            Verb = HttpVerb.PUT 
+            Verb = HttpVerb.PUT,
+            ContentType = contentType
         };
         string presignedUrl = s3Client.GetPreSignedURL(presignRequest);
 
         // Required strict UI contract: PRESIGNED_SPLIT|{presignedUrl}|{publicBaseUrl}/{key}
-        return $"PRESIGNED_SPLIT|{presignedUrl}|{dbUrl}";
+        return Task.FromResult($"PRESIGNED_SPLIT|{presignedUrl}|{dbUrl}");
     }
 
     public async Task<bool> DeleteFileAsync(string fileUrl)

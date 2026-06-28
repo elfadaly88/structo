@@ -31,21 +31,24 @@ export class ImageUploadService {
   private readonly apiUrl = `${environment.apiUrl}/ImageUpload`;
 
   uploadTenantLogo(file: File): Observable<ApiResponse<UploadResult>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/tenant-logo`, formData);
+    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/tenant-logo`, {
+      fileName: file.name,
+      contentType: file.type
+    });
   }
 
   uploadTenantBanner(file: File): Observable<ApiResponse<UploadResult>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/tenant-banner`, formData);
+    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/tenant-banner`, {
+      fileName: file.name,
+      contentType: file.type
+    });
   }
 
   uploadProjectGallery(projectId: string, file: File): Observable<ApiResponse<UploadResult>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-gallery/${projectId}`, formData);
+    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-gallery/${projectId}`, {
+      fileName: file.name,
+      contentType: file.type
+    });
   }
 
   getProjectPhotos(projectId: string, pageNumber: number = 1, pageSize: number = 24): Observable<ApiResponse<PaginatedList<SitePhotoDto>>> {
@@ -55,8 +58,17 @@ export class ImageUploadService {
   }
 
   uploadProjectDocument(projectId: string, file: File): Observable<ApiResponse<UploadResult>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-document/${projectId}`, formData);
+    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-document/${projectId}`, {
+      fileName: file.name,
+      contentType: file.type
+    });
+  }
+
+  uploadToPresignedUrl(url: string, file: File, contentType: string): Observable<any> {
+    return this.http.put(url, file, {
+      headers: {
+        'Content-Type': contentType
+      }
+    });
   }
 }

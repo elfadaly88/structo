@@ -912,9 +912,28 @@ export class ProjectsComponent implements OnInit {
       this.isUploadingLogo.set(true);
       this.uploadService.uploadTenantLogo(file).pipe(take(1)).subscribe({
         next: (res) => {
-          this.isUploadingLogo.set(false);
-          if (res.success && res.data) {
-            this.profileForm.patchValue({ logoUrl: res.data.url });
+          if (res.success && res.data && res.data.url) {
+            const urlParts = res.data.url.split('|');
+            if (urlParts.length === 3 && urlParts[0] === 'PRESIGNED_SPLIT') {
+              const presignedUrl = urlParts[1];
+              const dbUrl = urlParts[2];
+              
+              this.uploadService.uploadToPresignedUrl(presignedUrl, file, file.type).subscribe({
+                next: () => {
+                  this.isUploadingLogo.set(false);
+                  this.profileForm.patchValue({ logoUrl: dbUrl });
+                },
+                error: () => {
+                  this.isUploadingLogo.set(false);
+                  this.confirmService.alert({ title: 'خطأ', message: 'فشل رفع الملف.', type: 'error' });
+                }
+              });
+            } else {
+              this.isUploadingLogo.set(false);
+              this.profileForm.patchValue({ logoUrl: res.data.url });
+            }
+          } else {
+            this.isUploadingLogo.set(false);
           }
         },
         error: () => this.isUploadingLogo.set(false)
@@ -938,9 +957,28 @@ export class ProjectsComponent implements OnInit {
       this.isUploadingBanner.set(true);
       this.uploadService.uploadTenantBanner(file).pipe(take(1)).subscribe({
         next: (res) => {
-          this.isUploadingBanner.set(false);
-          if (res.success && res.data) {
-            this.profileForm.patchValue({ bannerUrl: res.data.url });
+          if (res.success && res.data && res.data.url) {
+            const urlParts = res.data.url.split('|');
+            if (urlParts.length === 3 && urlParts[0] === 'PRESIGNED_SPLIT') {
+              const presignedUrl = urlParts[1];
+              const dbUrl = urlParts[2];
+              
+              this.uploadService.uploadToPresignedUrl(presignedUrl, file, file.type).subscribe({
+                next: () => {
+                  this.isUploadingBanner.set(false);
+                  this.profileForm.patchValue({ bannerUrl: dbUrl });
+                },
+                error: () => {
+                  this.isUploadingBanner.set(false);
+                  this.confirmService.alert({ title: 'خطأ', message: 'فشل رفع الملف.', type: 'error' });
+                }
+              });
+            } else {
+              this.isUploadingBanner.set(false);
+              this.profileForm.patchValue({ bannerUrl: res.data.url });
+            }
+          } else {
+            this.isUploadingBanner.set(false);
           }
         },
         error: () => this.isUploadingBanner.set(false)
