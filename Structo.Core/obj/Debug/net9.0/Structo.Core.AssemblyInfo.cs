@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Structo.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d432f7ab842e54821e4db9d31e61d98c1de925eb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+822be5a1454d70b8b107b48c9b74043f33a37479")]
 [assembly: System.Reflection.AssemblyProductAttribute("Structo.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Structo.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
