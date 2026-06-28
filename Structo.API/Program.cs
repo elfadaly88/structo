@@ -97,7 +97,7 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
     if (string.IsNullOrEmpty(connectionString))
     {
         connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=NewStrongPassword123";
     }
 
     options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -109,6 +109,7 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
 // Add HTTP Context Accessor and Tenant Accessor
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
+builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<StructoDbContext>());
 builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
 
 // AWS S3/R2 Configuration
@@ -291,6 +292,6 @@ namespace Structo.API
 { 
     public partial class Program 
     { 
-        public static IServiceProvider AppServices { get; set; } 
+        public static IServiceProvider AppServices { get; set; } = default!;
     } 
 }

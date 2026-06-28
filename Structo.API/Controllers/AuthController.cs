@@ -45,7 +45,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 
             return Ok(new ApiResponse<Guid>
             {
-                Data = tenantId.Value,
+                Data = tenantId ?? Guid.Empty,
                 Success = true,
                 Message = message
             });
