@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Structo.Core.Entities;
 using Structo.Core.Interfaces;
-
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 namespace Structo.Infrastructure.Data;
 
-public class StructoDbContext : DbContext
+public class StructoDbContext : DbContext, IDataProtectionKeyContext
 {
     private readonly ITenantContextAccessor? _tenantContextAccessor;
+
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     public StructoDbContext(DbContextOptions<StructoDbContext> options, ITenantContextAccessor? tenantContextAccessor = null) 
         : base(options)
@@ -171,6 +173,8 @@ public class StructoDbContext : DbContext
                   .HasForeignKey(e => e.ProjectId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+        modelBuilder.Entity<ProjectBudgetLog>()
+            .HasQueryFilter(p => CurrentTenantId == null || p.Project!.TenantId == CurrentTenantId);
 
         modelBuilder.Entity<ProjectBudgetLog>(entity =>
         {

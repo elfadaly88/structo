@@ -13,7 +13,7 @@ using Structo.API.Middleware;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Structo.Core.Validators;
-
+using Microsoft.AspNetCore.DataProtection;
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +37,8 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowAnyHeader());
 });
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<StructoDbContext>();
 // Register FluentValidation
 
 
