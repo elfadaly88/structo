@@ -112,6 +112,40 @@ builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
 builder.Services.AddScoped<IPettyCashService, PettyCashService>();
 builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
 
+// AWS S3/R2 Configuration
+builder.Services.AddHttpClient("R2Client").ConfigurePrimaryHttpMessageHandler(() =>
+{
+    return new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
+        SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+    };
+});
+
+builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
+{
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+
+    var config = new Amazon.S3.AmazonS3Config
+    {
+        ServiceURL = settings.ServiceUrl,
+        ForcePathStyle = true,
+        AuthenticationRegion = "auto",
+        HttpClientFactory = new Structo.Infrastructure.Storage.R2HttpClientFactory(httpClientFactory.CreateClient("R2Client"))
+    };
+    var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
+    return new Amazon.S3.AmazonS3Client(credentials, config);
+});
+
+builder.Services.AddScoped<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.CloudflareR2StorageService>();
+
+// Phase 2: Auth and User Management Services
+builder.Services.AddScoped<Structo.Core.Interfaces.ITokenProvider, Structo.Infrastructure.Auth.JwtTokenProvider>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IAuthService, Structo.Core.Services.AuthService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IUserService, Structo.Core.Services.UserService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IProjectService, Structo.Core.Services.ProjectService>();
+
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
@@ -248,4 +282,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+Structo.API.Program.AppServices = app.Services;
 app.Run();
+
+namespace Structo.API 
+{ 
+    public partial class Program 
+    { 
+        public static IServiceProvider AppServices { get; set; } 
+    } 
+}

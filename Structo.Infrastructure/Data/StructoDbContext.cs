@@ -70,6 +70,9 @@ public class StructoDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Budget).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.ClientName).HasMaxLength(150);
+            entity.Property(e => e.Category).HasMaxLength(100);
 
             entity.HasOne(e => e.Tenant)
                   .WithMany(t => t.Projects)

@@ -153,7 +153,6 @@ F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\staticwebassets.buil
 F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\staticwebassets.build.json.cache
 F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\staticwebassets.development.json
 F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\Structo..86306E36.Up2Date
 F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\Structo.API.dll
 F:\PrivateWork\structo\project\Structo.API\obj\Debug\net9.0\refint\Structo.API.dll
