@@ -34,7 +34,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        modelBuilder.Entity<DataProtectionKey>().ToTable("DataProtectionKeys");        
         modelBuilder.Entity<User>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<Project>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<FinancialTransaction>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
