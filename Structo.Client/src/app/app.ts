@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LanguageService } from './core/services/language.service';
 import { ConfirmModalComponent } from './core/components/confirm-modal.component';
+import { ToastContainerComponent } from './core/components/toast-container.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ConfirmModalComponent],
+  imports: [RouterOutlet, ConfirmModalComponent, ToastContainerComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

@@ -2,8 +2,10 @@
 
 import { Injectable, inject, signal, computed, OnDestroy, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import { environment } from '../../../environments/environment';
 
 declare global {
@@ -30,6 +32,8 @@ export interface NotificationItem {
 export class NotificationService implements OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
   private hubConnection: signalR.HubConnection | null = null;
 
@@ -115,6 +119,36 @@ export class NotificationService implements OnDestroy {
     this.hubConnection.on('ReceiveNotification', (notification: NotificationItem) => {
       // Prepend new notification and cap at 50
       this.notifications.update(ns => [notification, ...ns].slice(0, 50));
+
+      // Determine toast type based on notification category
+      let toastType: 'success' | 'info' | 'warning' | 'error' = 'info';
+      if (notification.type === 'PettyCash') {
+        toastType = 'success';
+      } else if (notification.type === 'System') {
+        toastType = 'warning';
+      }
+
+      // Map icons to enrich toast presentation
+      const emojiMap: Record<string, string> = {
+        Registration: '🏢',
+        PettyCash:    '💰',
+        Project:      '📋',
+        System:       '🔔'
+      };
+      const emoji = emojiMap[notification.type] ?? '🔔';
+
+      // Display animated float toast alert
+      this.toastService.show(
+        `${emoji} ${notification.title}`,
+        notification.message,
+        toastType,
+        () => {
+          this.markAsRead(notification.id);
+          if (notification.deepLink) {
+            this.router.navigateByUrl(notification.deepLink);
+          }
+        }
+      );
     });
 
     this.hubConnection.start().catch(err =>
