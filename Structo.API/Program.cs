@@ -40,7 +40,13 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowCredentials()); // Required for SignalR WebSocket auth
 });
-builder.Services.AddSignalR();
+//builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15); // يبعت بينج كل 15 ثانية عشان يصحصح الـ Proxy
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // وقت انتظار العميل
+});
 builder.Services.AddDataProtection()
     .PersistKeysToDbContext<StructoDbContext>();
 // Register FluentValidation

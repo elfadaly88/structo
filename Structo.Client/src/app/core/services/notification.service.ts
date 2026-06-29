@@ -3,7 +3,7 @@
 import { Injectable, inject, signal, computed, OnDestroy, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import * as signalR from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, HttpTransportType } from '@microsoft/signalr';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
 import { environment } from '../../../environments/environment';
@@ -35,7 +35,7 @@ export class NotificationService implements OnDestroy {
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
-  private hubConnection: signalR.HubConnection | null = null;
+  private hubConnection: HubConnection | null = null;
 
   initializeOneSignal(userId: string, email: string): void {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -105,15 +105,15 @@ export class NotificationService implements OnDestroy {
     if (this.hubConnection) return;
 
     const token = this.authService.getToken();
-    const hubUrl = `${environment.apiUrl.replace('/api', '')}/hubs/notifications`;
+    const apiUrl = environment.apiUrl.replace('/api', '');
 
-    this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        accessTokenFactory: () => token ?? '',
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+    this.hubConnection = new HubConnectionBuilder()
+      .withUrl(`${apiUrl}/hubs/notifications`, {
+        skipNegotiation: false,
+        transport: HttpTransportType.WebSockets,
+        accessTokenFactory: () => token ?? ''
       })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Warning)
+      .withAutomaticReconnect([0, 2000, 5000, 10000])
       .build();
 
     this.hubConnection.on('ReceiveNotification', (notification: NotificationItem) => {
