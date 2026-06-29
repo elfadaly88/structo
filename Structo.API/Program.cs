@@ -14,6 +14,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Structo.Core.Validators;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.StaticFiles;
 using Structo.API.Hubs;
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 var builder = WebApplication.CreateBuilder(args);
@@ -304,7 +305,13 @@ app.UseSwaggerUI(c =>
 });//}
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".js"] = "application/javascript";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
 
 app.UseCors("AllowAngular");
 app.UseAuthentication();
