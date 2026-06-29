@@ -117,6 +117,7 @@ export class NotificationService implements OnDestroy {
       .build();
 
     this.hubConnection.on('ReceiveNotification', (notification: NotificationItem) => {
+      console.log('[SignalR] ReceiveNotification triggered:', notification);
       // Prepend new notification and cap at 50
       this.notifications.update(ns => [notification, ...ns].slice(0, 50));
 
