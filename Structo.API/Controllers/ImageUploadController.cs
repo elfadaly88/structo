@@ -137,7 +137,7 @@ public class ImageUploadController(
 
         if (!ValidateFileRequest(request, out var errorMsg))
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
-
+            
         var tenantId = tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
             return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
@@ -156,7 +156,7 @@ public class ImageUploadController(
             var urls = secureUrl.Split('|');
             string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
 
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             Guid.TryParse(userIdString, out var userId);
 
             var photo = new SitePhoto

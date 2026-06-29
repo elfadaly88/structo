@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Structo.Core.Entities;
 using Structo.Core.Interfaces;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Structo.Core.Enums;
 namespace Structo.Infrastructure.Data;
 
 public class StructoDbContext : DbContext, IDataProtectionKeyContext
@@ -30,6 +31,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<SitePhoto> SitePhotos => Set<SitePhoto>();
     public DbSet<ProjectCashPool> ProjectCashPools => Set<ProjectCashPool>();
     public DbSet<ProjectBudgetLog> ProjectBudgetLogs => Set<ProjectBudgetLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,11 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<PettyCash>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        // Notifications: SuperAdmin sees all (null TenantId = global), tenant users see only their own
+        modelBuilder.Entity<Notification>().HasQueryFilter(e =>
+            CurrentTenantId == null ||
+            e.TenantId == null ||
+            e.TenantId == CurrentTenantId);
 
         modelBuilder.Entity<Tenant>(entity =>
         {
@@ -188,6 +195,16 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany()
                   .HasForeignKey(e => e.ProjectId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.DeepLink).HasMaxLength(500);
+            entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.TargetRole).HasConversion<string>().HasMaxLength(30);
         });
     }
 

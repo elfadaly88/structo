@@ -14,6 +14,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Structo.Core.Validators;
 using Microsoft.AspNetCore.DataProtection;
+using Structo.API.Hubs;
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,10 +34,12 @@ builder.Services.AddControllers(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
-        policy.WithOrigins("http://localhost:4200", "https://structo-production.up.railway.app") // ضيف لين السيرفر بتاعك هنا
+        policy.WithOrigins("http://localhost:4200", "https://structo-production.up.railway.app")
               .AllowAnyMethod()
-              .AllowAnyHeader());
+              .AllowAnyHeader()
+              .AllowCredentials()); // Required for SignalR WebSocket auth
 });
+builder.Services.AddSignalR();
 builder.Services.AddDataProtection()
     .PersistKeysToDbContext<StructoDbContext>();
 // Register FluentValidation
@@ -151,6 +154,10 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialTransactionService,
 // Note: IPettyCashService is already registered on line 112, but we need to ensure it uses the Core implementation.
 builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
 
+// Notification System (SignalR + OneSignal + DB)
+builder.Services.AddHttpClient("OneSignal");
+builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo.API.Services.NotificationService>();
+
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
@@ -179,6 +186,21 @@ builder.Services.AddAuthentication(options =>
         // 🔥 ضيف السطرين السحريين دول هنا جوه الاوبجكت 👇
         NameClaimType = "name",
         RoleClaimType = "role"
+    };
+
+    // Allow SignalR to authenticate via query-string token (WebSocket workaround)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            var accessToken = ctx.Request.Query["access_token"];
+            var path = ctx.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                ctx.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -289,6 +311,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapFallbackToFile("index.html");
 Structo.API.Program.AppServices = app.Services;
 app.Run();

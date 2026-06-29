@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
+import { NotificationBellComponent } from '../../core/components/notification-bell.component';
 
 interface NavItem {
   label: string;
@@ -13,7 +14,7 @@ interface NavItem {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, NotificationBellComponent],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col">
 
@@ -44,6 +45,9 @@ interface NavItem {
             class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
             {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
           </button>
+
+          <!-- Notification Bell -->
+          <app-notification-bell></app-notification-bell>
 
           <div class="hidden md:flex flex-col text-right rtl:text-left">
             <span class="text-xs font-semibold text-slate-500">{{ 'DASHBOARD.LOGGED_IN_AS' | translate }}</span>
