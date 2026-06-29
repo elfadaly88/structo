@@ -12,6 +12,7 @@
           "BCrypt.Net-Next": "4.0.3",
           "FluentValidation.AspNetCore": "11.3.1",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.0",
+          "Microsoft.AspNetCore.SignalR.Client": "9.0.0",
           "Microsoft.EntityFrameworkCore.Design": "9.0.0",
           "Structo.Core": "1.0.0",
           "Structo.Infrastructure": "1.0.0",
@@ -104,6 +105,37 @@
         },
         "runtime": {
           "lib/net9.0/Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52903"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Http.Connections.Client/9.0.0": {
+        "dependencies": {
+          "System.Net.ServerSentEvents": "9.0.0"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.AspNetCore.Http.Connections.Client.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52903"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.SignalR.Client/9.0.0": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Http.Connections.Client": "9.0.0",
+          "Microsoft.AspNetCore.SignalR.Client.Core": "9.0.0"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.AspNetCore.SignalR.Client.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52903"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.SignalR.Client.Core/9.0.0": {
+        "runtime": {
+          "lib/net9.0/Microsoft.AspNetCore.SignalR.Client.Core.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.24.52903"
           }
@@ -670,6 +702,14 @@
           }
         }
       },
+      "System.Net.ServerSentEvents/9.0.0": {
+        "runtime": {
+          "lib/net9.0/System.Net.ServerSentEvents.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
+          }
+        }
+      },
       "Structo.Core/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
@@ -768,6 +808,27 @@
       "sha512": "sha512-P2cZiOeu9ovruTHJimojQ7DWG8GRgY31uUpM39grU4iNW2Wd+yheNMj3AViWtyK61U3yMN3KVwUr051Zn8qRFA==",
       "path": "microsoft.aspnetcore.dataprotection.entityframeworkcore/9.0.0",
       "hashPath": "microsoft.aspnetcore.dataprotection.entityframeworkcore.9.0.0.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.Http.Connections.Client/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-wuryRcgeSw022Hj0RObHh+P2K+Kk1ZjTrECnlHfMdY4PPqqGNYUnGV+MYZ5Q4jEdShpne0y4W6eBozxoG9wtRw==",
+      "path": "microsoft.aspnetcore.http.connections.client/9.0.0",
+      "hashPath": "microsoft.aspnetcore.http.connections.client.9.0.0.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.SignalR.Client/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yBkwPRFPVkSVJqk83DhnTC99iyJ14iSUjcFfbzbYB1pYB1VxbaqdEo7p0xFB/IcMo+ARD0lcZzXPHi+01e+bcg==",
+      "path": "microsoft.aspnetcore.signalr.client/9.0.0",
+      "hashPath": "microsoft.aspnetcore.signalr.client.9.0.0.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.SignalR.Client.Core/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RRy3TkkS4C29s6rKvTwCyJKAvZ7ZPyBg1Lv4HVl1s9G4ZcPy0Gs+hXkAlVcvlo8+jdwd6JORuyaoKkPZloKUSQ==",
+      "path": "microsoft.aspnetcore.signalr.client.core/9.0.0",
+      "hashPath": "microsoft.aspnetcore.signalr.client.core.9.0.0.nupkg.sha512"
     },
     "Microsoft.Bcl.AsyncInterfaces/7.0.0": {
       "type": "package",
@@ -1006,6 +1067,13 @@
       "sha512": "sha512-GVQmbjr2N8awFWPTWyThLxgKnFINObG1P+oX7vFrBY8um3V7V7Dh3wnxaGxNH6v6lSTeVQrY+SaUUBX9H3TPcw==",
       "path": "system.identitymodel.tokens.jwt/8.2.1",
       "hashPath": "system.identitymodel.tokens.jwt.8.2.1.nupkg.sha512"
+    },
+    "System.Net.ServerSentEvents/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VTWjeyx9nPb4+hkjGcAaDw1nOckypMtvABmxSWm6PPYwrXoIiVG3jwtNlAGhaGVjDkBrERABox67wYTAcHxg7Q==",
+      "path": "system.net.serversentevents/9.0.0",
+      "hashPath": "system.net.serversentevents.9.0.0.nupkg.sha512"
     },
     "Structo.Core/1.0.0": {
       "type": "project",
