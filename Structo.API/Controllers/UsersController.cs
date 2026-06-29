@@ -97,7 +97,7 @@ public class UsersController(IUserService userService, StructoDbContext context,
         await context.SaveChangesAsync();
 
         // Trigger Notification Engine (WORKFLOW C)
-        _ = Task.Run(() => notificationEngine.RaiseAccountActivationNotificationAsync(id));
+        await notificationEngine.RaiseAccountActivationNotificationAsync(id);
 
         return Ok(new ApiResponse<bool>
         {

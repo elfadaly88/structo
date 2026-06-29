@@ -84,7 +84,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         await context.SaveChangesAsync();
 
         // Notify SuperAdmin about the new registration via NotificationEngine (WORKFLOW B)
-        _ = Task.Run(() => notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName));
+        await notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName);
 
         return (true, tenant.Id, "Registration successful! Your account is pending SuperAdmin approval.");
     }

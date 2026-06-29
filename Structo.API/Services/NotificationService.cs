@@ -49,8 +49,7 @@ public class NotificationService : INotificationService
 
     public async Task SendAsync(SendNotificationDto dto)
     {
-        // 1. Persist to DB (bypass global query filter — IgnoreQueryFilters not needed here
-        //    because we directly use StructoDbContext and Notification has no query filter yet)
+        // 1. Persist to DB
         var notification = new Notification
         {
             TenantId   = dto.TenantId,
@@ -67,11 +66,14 @@ public class NotificationService : INotificationService
 
         var notificationDto = MapToDto(notification);
 
-        // 2. SignalR real-time broadcast
-        await BroadcastSignalRAsync(dto, notificationDto);
+        // 2. Resolve external IDs for OneSignal safely on request thread
+        var externalIds = await ResolveOneSignalRecipientsAsync(dto);
 
-        // 3. OneSignal push (fire-and-forget, never block the caller on failures)
-        _ = Task.Run(() => SendOneSignalAsync(dto));
+        // 3. Trigger SignalR and OneSignal HTTP post concurrently
+        var signalRTask = BroadcastSignalRAsync(dto, notificationDto);
+        var oneSignalTask = SendOneSignalHttpAsync(dto.Title, dto.Message, dto.DeepLink, externalIds);
+
+        await Task.WhenAll(signalRTask, oneSignalTask);
     }
 
     public async Task<List<NotificationDto>> GetMyNotificationsAsync(Guid userId, Guid? tenantId)
@@ -161,7 +163,43 @@ public class NotificationService : INotificationService
         }
     }
 
-    private async Task SendOneSignalAsync(SendNotificationDto dto)
+    private async Task<List<string>> ResolveOneSignalRecipientsAsync(SendNotificationDto dto)
+    {
+        var externalIds = new List<string>();
+
+        if (dto.ReceiverId.HasValue)
+        {
+            externalIds.Add(dto.ReceiverId.Value.ToString());
+        }
+        else if (dto.TargetRole.HasValue)
+        {
+            var query = _db.Users.IgnoreQueryFilters().AsNoTracking();
+            if (dto.TenantId.HasValue)
+            {
+                query = query.Where(u => u.TenantId == dto.TenantId.Value);
+            }
+            else
+            {
+                query = query.Where(u => u.TenantId == null);
+            }
+
+            query = query.Where(u => u.Role == dto.TargetRole.Value);
+            var matched = await query.Select(u => u.Id.ToString()).ToListAsync();
+            externalIds.AddRange(matched);
+        }
+        else if (dto.TenantId.HasValue)
+        {
+            var matched = await _db.Users.IgnoreQueryFilters().AsNoTracking()
+                .Where(u => u.TenantId == dto.TenantId.Value)
+                .Select(u => u.Id.ToString())
+                .ToListAsync();
+            externalIds.AddRange(matched);
+        }
+
+        return externalIds;
+    }
+
+    private async Task SendOneSignalHttpAsync(string title, string message, string deepLink, List<string> externalIds)
     {
         if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey))
             return;
@@ -172,49 +210,17 @@ public class NotificationService : INotificationService
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Key", _oneSignalRestApiKey);
 
-            // Dynamically resolve target external IDs (user IDs) based on recipient type
-            var externalIds = new List<string>();
-
-            if (dto.ReceiverId.HasValue)
-            {
-                externalIds.Add(dto.ReceiverId.Value.ToString());
-            }
-            else if (dto.TargetRole.HasValue)
-            {
-                var query = _db.Users.IgnoreQueryFilters().AsNoTracking();
-                if (dto.TenantId.HasValue)
-                {
-                    query = query.Where(u => u.TenantId == dto.TenantId.Value);
-                }
-                else
-                {
-                    query = query.Where(u => u.TenantId == null);
-                }
-
-                query = query.Where(u => u.Role == dto.TargetRole.Value);
-                var matched = await query.Select(u => u.Id.ToString()).ToListAsync();
-                externalIds.AddRange(matched);
-            }
-            else if (dto.TenantId.HasValue)
-            {
-                var matched = await _db.Users.IgnoreQueryFilters().AsNoTracking()
-                    .Where(u => u.TenantId == dto.TenantId.Value)
-                    .Select(u => u.Id.ToString())
-                    .ToListAsync();
-                externalIds.AddRange(matched);
-            }
-
             // Build payload dictionary
             var merged = new Dictionary<string, object?>
             {
                 ["app_id"]   = _oneSignalAppId,
-                ["headings"] = new { en = dto.Title },
-                ["contents"] = new { en = dto.Message },
+                ["headings"] = new { en = title },
+                ["contents"] = new { en = message },
                 ["target_channel"] = "push"
             };
 
-            if (!string.IsNullOrWhiteSpace(dto.DeepLink))
-                merged["url"] = dto.DeepLink;
+            if (!string.IsNullOrWhiteSpace(deepLink))
+                merged["url"] = deepLink;
 
             if (externalIds.Count > 0)
             {

@@ -50,11 +50,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         await context.SaveChangesAsync();
 
         // Trigger Notification Engine (WORKFLOW A)
-        _ = Task.Run(() => notificationEngine.RaiseFinancialRequestNotificationAsync(
+        await notificationEngine.RaiseFinancialRequestNotificationAsync(
             pettyCash.IssuedToUserId,
             pettyCash.Amount,
             pettyCash.Id,
-            pettyCash.TenantId));
+            pettyCash.TenantId);
 
         return (true, "Petty cash request submitted successfully");
     }
