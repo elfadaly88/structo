@@ -41,6 +41,18 @@ export class NotificationService implements OnDestroy {
   initializeOneSignal(userId: string, email: string): void {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal: any) => {
+      // Check if OneSignal is already initialized to bypass calling .init() again
+      if (OneSignal.initialized) {
+        await OneSignal.login(userId);
+        if (email.includes('superadmin') || (email && email.includes('@'))) {
+          await OneSignal.User.addEmail(email);
+          console.log(`[OneSignal] Identity synced (already initialized) for User: ${userId} with Email: ${email}`);
+        } else {
+          console.log(`[OneSignal] Identity synced (already initialized) for User: ${userId} (Email skipped or invalid: "${email}")`);
+        }
+        return;
+      }
+
       await OneSignal.init({
         appId: "6b5e2529-37fa-4153-abe1-dcf0bae7af2e",
         allowLocalhostAsSecure: true
@@ -141,9 +153,9 @@ export class NotificationService implements OnDestroy {
       // Map icons to enrich toast presentation
       const emojiMap: Record<string, string> = {
         Registration: '🏢',
-        PettyCash:    '💰',
-        Project:      '📋',
-        System:       '🔔'
+        PettyCash: '💰',
+        Project: '📋',
+        System: '🔔'
       };
       const emoji = emojiMap[notification.type] ?? '🔔';
 
