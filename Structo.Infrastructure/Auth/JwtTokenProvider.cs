@@ -22,6 +22,7 @@ public class JwtTokenProvider(IConfiguration configuration) : ITokenProvider
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim("role", user.Role.ToString()),
+            new Claim(ClaimTypes.Role, user.Role.ToString()), // Standard fallback role claim
             new Claim(ClaimTypes.Name, user.Email),
             new Claim("name", $"{user.FirstName} {user.LastName}"),
             new Claim("tenantId", user.TenantId?.ToString() ?? string.Empty)
