@@ -195,16 +195,17 @@ builder.Services.AddAuthentication(options =>
         RoleClaimType = "role"
     };
 
-    // Allow SignalR to authenticate via query-string token (WebSocket workaround)
     options.Events = new JwtBearerEvents
     {
-        OnMessageReceived = ctx =>
+        OnMessageReceived = context =>
         {
-            var accessToken = ctx.Request.Query["access_token"];
-            var path = ctx.HttpContext.Request.Path;
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.Request.Path;
+            
+            // Match our notification hub path prefix
             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
             {
-                ctx.Token = accessToken;
+                context.Token = accessToken;
             }
             return Task.CompletedTask;
         }
