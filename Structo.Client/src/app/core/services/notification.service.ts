@@ -1,8 +1,16 @@
+
+
 import { Injectable, inject, signal, computed, OnDestroy, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
+
+declare global {
+  interface Window {
+    OneSignalDeferred?: any[];
+  }
+}
 
 export interface NotificationItem {
   id: string;
@@ -24,6 +32,21 @@ export class NotificationService implements OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
   private hubConnection: signalR.HubConnection | null = null;
+
+  initializeOneSignal(userId: string, email: string): void {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OneSignal: any) => {
+      await OneSignal.init({
+        appId: "6b5e2529-37fa-4153-abe1-dcf0bae7af2e",
+        allowLocalhostAsSecure: true
+      });
+
+      // Sync External User ID and Email directly to the OneSignal Dashboard
+      await OneSignal.login(userId);
+      await OneSignal.User.addEmail(email);
+      console.log(`[OneSignal] Identity synced for User: ${userId} with Email: ${email}`);
+    });
+  }
 
   // ── Reactive state ────────────────────────────────────────────────────────
   readonly notifications = signal<NotificationItem[]>([]);

@@ -4,6 +4,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
 import { NotificationBellComponent } from '../../core/components/notification-bell.component';
+import { NotificationService } from '../../core/services/notification.service';
 
 interface NavItem {
   label: string;
@@ -137,8 +138,16 @@ export class DashboardLayoutComponent {
   readonly authService = inject(AuthService);
   protected readonly langService = inject(LanguageService);
   private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
 
   readonly isSidebarOpen = signal(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
+
+  constructor() {
+    const user = this.authService.currentUser();
+    if (user) {
+      this.notificationService.initializeOneSignal(user.userId, user.email);
+    }
+  }
 
   // SVG icons for sidebar items
   private readonly icons = {
