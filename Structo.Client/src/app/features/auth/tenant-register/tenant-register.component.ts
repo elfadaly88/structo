@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -81,7 +81,7 @@ interface ApiResponse<T> {
               </div>
               <h2 class="text-3xl font-extrabold text-white mb-4 font-cairo">Registration Successful!</h2>
               <p class="text-slate-400 leading-relaxed mb-8 font-cairo">
-                Your registration is complete. Our SuperAdmin is setting up your secure dashboard workspace. You will receive an activation email shortly once provisioned.
+                Registration successful! Your account is pending SuperAdmin approval.
               </p>
               <button routerLink="/" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg transition-all font-cairo">
                 Return to Landing Page
@@ -103,47 +103,65 @@ interface ApiResponse<T> {
 
             <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
               
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Company Name</label>
-                  <input type="text" formControlName="companyName" placeholder="Acme Corp" 
-                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
-                  @if (isFieldInvalid('companyName')) {
-                    <p class="text-xs text-rose-400 mt-1.5 font-medium">Company name is required.</p>
-                  }
-                </div>
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Business Domain</label>
-                  <input type="text" formControlName="businessDomain" placeholder="Real Estate, Logistics..." 
-                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
-                  @if (isFieldInvalid('businessDomain')) {
-                    <p class="text-xs text-rose-400 mt-1.5 font-medium">Domain is required.</p>
-                  }
-                </div>
-              </div>
-
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Owner Full Name</label>
-                <input type="text" formControlName="ownerName" placeholder="Jane Doe" 
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Tenant Name</label>
+                <input type="text" formControlName="tenantName" placeholder="Acme Corp" 
                   class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
-                @if (isFieldInvalid('ownerName')) {
-                  <p class="text-xs text-rose-400 mt-1.5 font-medium">Owner name is required.</p>
+                @if (isFieldInvalid('tenantName')) {
+                  <p class="text-xs text-rose-400 mt-1.5 font-medium">Tenant name is required.</p>
                 }
               </div>
 
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Admin First Name</label>
+                  <input type="text" formControlName="adminFirstName" placeholder="Jane" 
+                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
+                  @if (isFieldInvalid('adminFirstName')) {
+                    <p class="text-xs text-rose-400 mt-1.5 font-medium">First name is required.</p>
+                  }
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Admin Last Name</label>
+                  <input type="text" formControlName="adminLastName" placeholder="Doe" 
+                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
+                  @if (isFieldInvalid('adminLastName')) {
+                    <p class="text-xs text-rose-400 mt-1.5 font-medium">Last name is required.</p>
+                  }
+                </div>
+              </div>
+
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Admin Email</label>
-                <input type="email" formControlName="adminEmail" placeholder="admin@company.com" 
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Email</label>
+                <input type="email" formControlName="email" placeholder="admin@company.com" 
                   class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
-                @if (isFieldInvalid('adminEmail')) {
+                @if (isFieldInvalid('email')) {
                   <p class="text-xs text-rose-400 mt-1.5 font-medium">A valid email is required.</p>
                 }
               </div>
 
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Password</label>
-                <input type="password" formControlName="password" placeholder="••••••••" 
-                  class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
+                <div class="relative">
+                  <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" 
+                    class="w-full pl-4 pr-10 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
+                  <button
+                    type="button"
+                    (click)="togglePasswordVisibility()"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 focus:outline-none"
+                  >
+                    @if (showPassword()) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    }
+                  </button>
+                </div>
                 @if (isFieldInvalid('password')) {
                   <p class="text-xs text-rose-400 mt-1.5 font-medium">Password must be at least 6 characters.</p>
                 }
@@ -195,13 +213,18 @@ export class TenantRegisterComponent {
   
   readonly isLoading = signal(false);
   readonly isSuccess = signal(false);
+  readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
+  togglePasswordVisibility(): void {
+    this.showPassword.update(v => !v);
+  }
+
   readonly registerForm = this.fb.nonNullable.group({
-    companyName: ['', [Validators.required, Validators.maxLength(100)]],
-    businessDomain: ['', Validators.required],
-    ownerName: ['', [Validators.required, Validators.maxLength(100)]],
-    adminEmail: ['', [Validators.required, Validators.email]],
+    tenantName: ['', [Validators.required, Validators.maxLength(100)]],
+    adminFirstName: ['', [Validators.required, Validators.maxLength(50)]],
+    adminLastName: ['', [Validators.required, Validators.maxLength(50)]],
+    email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     subscriptionPlan: ['Free', Validators.required]
   });
@@ -221,7 +244,11 @@ export class TenantRegisterComponent {
     this.errorMessage.set(null);
 
     const payload = {
-      ...this.registerForm.value,
+      companyName: this.registerForm.value.tenantName,
+      businessDomain: 'Construction',
+      ownerName: `${this.registerForm.value.adminFirstName} ${this.registerForm.value.adminLastName}`.trim(),
+      adminEmail: this.registerForm.value.email,
+      password: this.registerForm.value.password,
       subscriptionPlan: String(this.registerForm.value.subscriptionPlan)
     };
 

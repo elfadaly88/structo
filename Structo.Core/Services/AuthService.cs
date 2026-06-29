@@ -21,6 +21,15 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider) : IAut
             return (false, null, "Invalid email or password");
         }
 
+        if (user.TenantId.HasValue)
+        {
+            var tenant = await context.Set<Tenant>().IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == user.TenantId.Value);
+            if (tenant == null || tenant.Status != TenantStatus.Active)
+            {
+                return (false, null, "Your account is pending approval or inactive.");
+            }
+        }
+
         var token = tokenProvider.GenerateToken(user);
 
         var responseDto = new LoginResponseDto

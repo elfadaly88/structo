@@ -74,17 +74,33 @@ import { TranslatePipe } from '@ngx-translate/core';
               <label for="password" class="block text-sm font-semibold text-slate-300">
                 {{ 'LOGIN.PASSWORD_LABEL' | translate }}
               </label>
-              <div class="mt-1">
+              <div class="mt-1 relative">
                 <input
                   id="password"
-                  type="password"
+                  [type]="showPassword() ? 'text' : 'password'"
                   formControlName="password"
                   autocomplete="current-password"
                   required
-                  class="appearance-none block w-full px-3 py-2.5 border border-slate-800 bg-slate-950/80 rounded-xl placeholder-slate-600 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
+                  class="appearance-none block w-full pl-3 pr-10 py-2.5 border border-slate-800 bg-slate-950/80 rounded-xl placeholder-slate-600 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
                   [class.border-red-500]="isFieldInvalid('password')"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 focus:outline-none"
+                >
+                  @if (showPassword()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  }
+                </button>
               </div>
               @if (isFieldInvalid('password')) {
                 <p class="mt-1 text-xs text-red-400">
@@ -131,6 +147,16 @@ import { TranslatePipe } from '@ngx-translate/core';
             </div>
           </form>
 
+          <!-- Public Registration Link -->
+          <div class="mt-6 text-center">
+            <p class="text-sm text-slate-400">
+              Don't have an account? 
+              <a routerLink="/register" class="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200">
+                Register your tenant/company here
+              </a>
+            </p>
+          </div>
+
           <!-- Mock account info tip -->
           <div class="mt-6 border-t border-slate-800/80 pt-6">
             <span class="text-xs font-semibold text-indigo-400/80 uppercase tracking-wider block mb-2">{{ 'LOGIN.DEV_INFO' | translate }}</span>
@@ -156,7 +182,12 @@ export class LoginComponent {
   });
 
   readonly isLoading = signal(false);
+  readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update(v => !v);
+  }
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.loginForm.get(fieldName);

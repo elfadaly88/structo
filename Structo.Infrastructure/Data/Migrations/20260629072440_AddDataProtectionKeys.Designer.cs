@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Structo.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Structo.Infrastructure.Data;
 namespace Structo.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(StructoDbContext))]
-    partial class StructoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629072440_AddDataProtectionKeys")]
+    partial class AddDataProtectionKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
