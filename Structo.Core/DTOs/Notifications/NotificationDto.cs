@@ -14,6 +14,7 @@ public class NotificationDto
     public NotificationType Type { get; set; }
     public string DeepLink { get; set; } = string.Empty;
     public bool IsRead { get; set; }
+    public UserRole? TargetRole { get; set; }
     public DateTime? ReadAt { get; set; }
     public DateTime CreatedAt { get; set; }
 }

@@ -16,7 +16,7 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class UsersController(IUserService userService, StructoDbContext context) : ControllerBase
+public class UsersController(IUserService userService, StructoDbContext context, INotificationEngine notificationEngine) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
@@ -95,6 +95,9 @@ public class UsersController(IUserService userService, StructoDbContext context)
         }
 
         await context.SaveChangesAsync();
+
+        // Trigger Notification Engine (WORKFLOW C)
+        _ = Task.Run(() => notificationEngine.RaiseAccountActivationNotificationAsync(id));
 
         return Ok(new ApiResponse<bool>
         {

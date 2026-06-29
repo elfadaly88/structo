@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Structo.Core.Services;
 
-public class PettyCashService(DbContext context, ICloudStorageService storageService) : IPettyCashService
+public class PettyCashService(DbContext context, ICloudStorageService storageService, INotificationEngine notificationEngine) : IPettyCashService
 {
     public async Task<(bool Success, string Message)> CreatePettyCashAsync(Guid projectId, PettyCashCreateDto dto, Guid? tenantId, string userRole)
     {
@@ -48,6 +48,13 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
 
         context.Set<PettyCash>().Add(pettyCash);
         await context.SaveChangesAsync();
+
+        // Trigger Notification Engine (WORKFLOW A)
+        _ = Task.Run(() => notificationEngine.RaiseFinancialRequestNotificationAsync(
+            pettyCash.IssuedToUserId,
+            pettyCash.Amount,
+            pettyCash.Id,
+            pettyCash.TenantId));
 
         return (true, "Petty cash request submitted successfully");
     }

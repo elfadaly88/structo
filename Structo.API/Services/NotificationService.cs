@@ -138,6 +138,13 @@ public class NotificationService : INotificationService
                 .Group(dto.ReceiverId.Value.ToString())
                 .SendAsync(method, payload);
         }
+        else if (dto.TenantId.HasValue && dto.TargetRole.HasValue)
+        {
+            // Target a specific role group within a tenant
+            await _hubContext.Clients
+                .Group($"{dto.TenantId.Value}_{dto.TargetRole.Value}")
+                .SendAsync(method, payload);
+        }
         else if (dto.TenantId.HasValue)
         {
             // Target all users of a tenant
@@ -165,30 +172,39 @@ public class NotificationService : INotificationService
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Key", _oneSignalRestApiKey);
 
-            // Build the recipients filter:
-            // We use external_id (userId) when targeting a specific user,
-            // otherwise fall back to subscribed segments.
-            object recipients;
+            // Dynamically resolve target external IDs (user IDs) based on recipient type
+            var externalIds = new List<string>();
+
             if (dto.ReceiverId.HasValue)
             {
-                recipients = new { include_aliases = new { external_id = new[] { dto.ReceiverId.Value.ToString() } } };
+                externalIds.Add(dto.ReceiverId.Value.ToString());
             }
-            else
+            else if (dto.TargetRole.HasValue)
             {
-                recipients = new { included_segments = new[] { "All" } };
+                var query = _db.Users.IgnoreQueryFilters().AsNoTracking();
+                if (dto.TenantId.HasValue)
+                {
+                    query = query.Where(u => u.TenantId == dto.TenantId.Value);
+                }
+                else
+                {
+                    query = query.Where(u => u.TenantId == null);
+                }
+
+                query = query.Where(u => u.Role == dto.TargetRole.Value);
+                var matched = await query.Select(u => u.Id.ToString()).ToListAsync();
+                externalIds.AddRange(matched);
+            }
+            else if (dto.TenantId.HasValue)
+            {
+                var matched = await _db.Users.IgnoreQueryFilters().AsNoTracking()
+                    .Where(u => u.TenantId == dto.TenantId.Value)
+                    .Select(u => u.Id.ToString())
+                    .ToListAsync();
+                externalIds.AddRange(matched);
             }
 
-            var body = new
-            {
-                app_id = _oneSignalAppId,
-                headings = new { en = dto.Title },
-                contents = new { en = dto.Message },
-                url = string.IsNullOrWhiteSpace(dto.DeepLink) ? null : dto.DeepLink,
-                target_channel = "push",
-                // Merge recipient fields into the top-level object
-            };
-
-            // Serialize with the recipients merged in
+            // Build payload dictionary
             var merged = new Dictionary<string, object?>
             {
                 ["app_id"]   = _oneSignalAppId,
@@ -200,10 +216,9 @@ public class NotificationService : INotificationService
             if (!string.IsNullOrWhiteSpace(dto.DeepLink))
                 merged["url"] = dto.DeepLink;
 
-            if (dto.ReceiverId.HasValue)
+            if (externalIds.Count > 0)
             {
-                merged["include_aliases"] = new { external_id = new[] { dto.ReceiverId.Value.ToString() } };
-                merged["target_channel"] = "push";
+                merged["include_aliases"] = new { external_id = externalIds.ToArray() };
             }
             else
             {
@@ -233,6 +248,7 @@ public class NotificationService : INotificationService
         Type       = n.Type,
         DeepLink   = n.DeepLink,
         IsRead     = n.IsRead,
+        TargetRole = n.TargetRole,
         ReadAt     = n.ReadAt,
         CreatedAt  = n.CreatedAt
     };

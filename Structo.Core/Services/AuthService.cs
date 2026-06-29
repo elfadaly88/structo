@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Structo.Core.Services;
 
-public class AuthService(DbContext context, ITokenProvider tokenProvider, INotificationService? notificationService = null) : IAuthService
+public class AuthService(DbContext context, ITokenProvider tokenProvider, INotificationEngine notificationEngine) : IAuthService
 {
     public async Task<(bool Success, LoginResponseDto? Data, string Message)> LoginAsync(LoginDto dto)
     {
@@ -83,27 +83,8 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         usersDbSet.Add(user);
         await context.SaveChangesAsync();
 
-        // Notify SuperAdmin about the new registration (fire-and-forget friendly)
-        if (notificationService is not null)
-        {
-            try
-            {
-                await notificationService.SendAsync(new SendNotificationDto
-                {
-                    TenantId   = null, // global — SuperAdmin scope
-                    ReceiverId = null, // broadcast to the SuperAdmin group
-                    TargetRole = UserRole.SuperAdmin,
-                    Title      = "🏢 New Tenant Registration",
-                    Message    = $"'{dto.CompanyName}' has submitted a registration request and is pending your approval.",
-                    Type       = NotificationType.Registration,
-                    DeepLink   = "/dashboard/tenants"
-                });
-            }
-            catch
-            {
-                // Notification failure must NEVER block registration
-            }
-        }
+        // Notify SuperAdmin about the new registration via NotificationEngine (WORKFLOW B)
+        _ = Task.Run(() => notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName));
 
         return (true, tenant.Id, "Registration successful! Your account is pending SuperAdmin approval.");
     }

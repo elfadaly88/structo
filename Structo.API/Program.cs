@@ -164,6 +164,7 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Co
 // Notification System (SignalR + OneSignal + DB)
 builder.Services.AddHttpClient("OneSignal");
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo.API.Services.NotificationService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.Core.Services.NotificationEngine>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

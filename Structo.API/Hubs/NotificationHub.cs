@@ -30,10 +30,14 @@ public class NotificationHub : Hub
         }
         else
         {
-            // Tenant users only join their specific tenant group and personal group
+            // Tenant users join their specific tenant group, role-scoped group, and personal group
             if (!string.IsNullOrEmpty(tenantId))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, tenantId);
+                if (!string.IsNullOrEmpty(role))
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"{tenantId}_{role}");
+                }
             }
             if (!string.IsNullOrEmpty(userId))
             {

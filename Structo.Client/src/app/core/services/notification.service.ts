@@ -24,6 +24,7 @@ export interface NotificationItem {
   type: string;
   deepLink: string;
   isRead: boolean;
+  targetRole: string | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -118,6 +119,14 @@ export class NotificationService implements OnDestroy {
 
     this.hubConnection.on('ReceiveNotification', (notification: NotificationItem) => {
       console.log('[SignalR] ReceiveNotification triggered:', notification);
+
+      // Ensure that client-side role isolation is maintained
+      const currentUser = this.authService.currentUser();
+      if (notification.targetRole && (!currentUser || currentUser.role !== notification.targetRole)) {
+        console.log('[SignalR] Ignoring notification targeting role:', notification.targetRole);
+        return;
+      }
+
       // Prepend new notification and cap at 50
       this.notifications.update(ns => [notification, ...ns].slice(0, 50));
 
