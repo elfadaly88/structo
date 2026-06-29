@@ -43,8 +43,12 @@ export class NotificationService implements OnDestroy {
 
       // Sync External User ID and Email directly to the OneSignal Dashboard
       await OneSignal.login(userId);
-      await OneSignal.User.addEmail(email);
-      console.log(`[OneSignal] Identity synced for User: ${userId} with Email: ${email}`);
+      if (email && email.includes('@')) {
+        await OneSignal.User.addEmail(email);
+        console.log(`[OneSignal] Identity synced for User: ${userId} with Email: ${email}`);
+      } else {
+        console.log(`[OneSignal] Identity synced for User: ${userId} (Email skipped or invalid: "${email}")`);
+      }
     });
   }
 

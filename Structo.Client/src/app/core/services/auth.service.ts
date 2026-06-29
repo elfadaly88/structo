@@ -45,12 +45,13 @@ export class AuthService {
     try {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      // .NET claims mappings (XML schemas) or standard name claims
-      return decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 
+      // Check unique_name, name claim URI, or email
+      return decoded['unique_name'] || 
+             decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 
              decoded['email'] || 
-             'User';
+             '';
     } catch (e) {
-      return 'User';
+      return '';
     }
   }
 

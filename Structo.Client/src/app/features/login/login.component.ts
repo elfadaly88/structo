@@ -18,7 +18,7 @@ import { TranslatePipe } from '@ngx-translate/core';
       <div class="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <!-- Logo -->
         <div class="flex justify-center">
-          <img src="logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-12 w-auto">
+          <img src="structo_logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-12 w-auto">
         </div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
           {{ 'LOGIN.TITLE' | translate }}
@@ -215,8 +215,8 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(
-          err.error?.message || 
-          err.message || 
+          err.error?.message ||
+          err.message ||
           'Unable to connect to the backend server. Please verify it is running on port 5000.'
         );
       }
