@@ -327,4 +327,3 @@ E:\private\structo\structo\Structo.API\obj\Debug\net9.0\compressed\60b9nicdr3-{0
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\compressed\733p47rct8-{0}-iqi08skuzd-iqi08skuzd.gz
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\compressed\lr2ic3h079-{0}-nfci36u7z1-nfci36u7z1.gz
 E:\private\structo\structo\Structo.API\obj\Debug\net9.0\compressed\xhscxelmlx-{0}-wmq0a6th67-wmq0a6th67.gz
-E:\private\structo\structo\Structo.API\obj\Debug\net9.0\compressed\umacco9mw5-{0}-tvy3j3n584-tvy3j3n584.gz
