@@ -59,15 +59,21 @@ public class CloudflareR2StorageService(
 
         try
         {
-            logger.LogInformation("Attempting R2 Upload via native HttpClient. Bucket: {Bucket}, Key: {Key}", _settings.BucketName, key);
+            logger.LogInformation("Attempting Tuned R2 Upload via native HttpClient. Bucket: {Bucket}, Key: {Key}", _settings.BucketName, key);
 
             var handler = new HttpClientHandler
             {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
+                SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
             };
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
 
             using var request = new HttpRequestMessage(HttpMethod.Put, presignedUrl);
+            
+            // CRITICAL FOR CLOUDFLARE SNI HANDSHAKE: Force Host header and HTTP/1.1
+            var targetHost = new Uri(presignedUrl).Host;
+            request.Headers.Host = targetHost;
+            request.Version = System.Net.HttpVersion.Version11; // Ensure stable HTTP/1.1 transfer
             
             if (fileStream.CanSeek)
             {
@@ -77,7 +83,7 @@ public class CloudflareR2StorageService(
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
 
             var response = await client.SendAsync(request);
-            logger.LogInformation("Native HttpClient R2 Upload Status: {StatusCode}", response.StatusCode);
+            logger.LogInformation("Tuned HttpClient R2 Upload Status: {StatusCode}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
