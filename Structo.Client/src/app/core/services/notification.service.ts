@@ -37,34 +37,47 @@ export class NotificationService implements OnDestroy {
   private readonly router = inject(Router);
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
   private hubConnection: HubConnection | null = null;
+  private static oneSignalInitialized = false;
 
   initializeOneSignal(userId: string, email: string): void {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal: any) => {
-      // Check if OneSignal is already initialized to bypass calling .init() again
-      if (OneSignal.initialized) {
-        await OneSignal.login(userId);
-        if (email.includes('superadmin') || (email && email.includes('@'))) {
-          await OneSignal.User.addEmail(email);
-          console.log(`[OneSignal] Identity synced (already initialized) for User: ${userId} with Email: ${email}`);
-        } else {
-          console.log(`[OneSignal] Identity synced (already initialized) for User: ${userId} (Email skipped or invalid: "${email}")`);
+      const syncIdentity = async () => {
+        try {
+          await OneSignal.login(userId);
+          if (email && email.includes('@')) {
+            await OneSignal.User.addEmail(email);
+            console.log(`[OneSignal] Identity synced for User: ${userId} with Email: ${email}`);
+          } else {
+            console.log(`[OneSignal] Identity synced for User: ${userId} (Email skipped or invalid: "${email}")`);
+          }
+        } catch (e) {
+          console.warn('[OneSignal] Identity sync failed:', e);
         }
+      };
+
+      // Check if OneSignal is already initialized via our static flag or the native property
+      if (NotificationService.oneSignalInitialized || OneSignal.initialized) {
+        NotificationService.oneSignalInitialized = true;
+        await syncIdentity();
         return;
       }
 
-      await OneSignal.init({
-        appId: "6b5e2529-37fa-4153-abe1-dcf0bae7af2e",
-        allowLocalhostAsSecure: true
-      });
-
-      // Sync External User ID and Email directly to the OneSignal Dashboard
-      await OneSignal.login(userId);
-      if (email && email.includes('@')) {
-        await OneSignal.User.addEmail(email);
-        console.log(`[OneSignal] Identity synced for User: ${userId} with Email: ${email}`);
-      } else {
-        console.log(`[OneSignal] Identity synced for User: ${userId} (Email skipped or invalid: "${email}")`);
+      try {
+        await OneSignal.init({
+          appId: "6b5e2529-37fa-4153-abe1-dcf0bae7af2e",
+          allowLocalhostAsSecure: true
+        });
+        NotificationService.oneSignalInitialized = true;
+        await syncIdentity();
+      } catch (err: any) {
+        const errMsg = String(err || '');
+        if (errMsg.includes('already initialized') || errMsg.includes('already_initialized')) {
+          NotificationService.oneSignalInitialized = true;
+          await syncIdentity();
+        } else {
+          console.error('[OneSignal] Init failed:', err);
+        }
       }
     });
   }
@@ -100,11 +113,18 @@ export class NotificationService implements OnDestroy {
   }
 
   markAllAsRead(): void {
+    // Capture unread IDs BEFORE updating the signal state
+    const unreadIds = this.notifications()
+      .filter(n => !n.isRead)
+      .map(n => n.id);
+
+    // Update local state signal
     this.notifications.update(ns => ns.map(n => ({ ...n, isRead: true })));
-    // Mark each unread item via the API
-    this.notifications().filter(n => !n.isRead).forEach(n =>
-      this.http.post(`${this.apiUrl}/${n.id}/mark-read`, {}).subscribe()
-    );
+
+    // Send HTTP mark-read calls for all captured unread notifications
+    unreadIds.forEach(id => {
+      this.http.post(`${this.apiUrl}/${id}/mark-read`, {}).subscribe();
+    });
   }
 
   clearAllNotifications(): void {
