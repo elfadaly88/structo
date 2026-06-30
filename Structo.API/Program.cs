@@ -125,28 +125,16 @@ builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<St
 builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
 
 // AWS S3/R2 Configuration
-builder.Services.AddHttpClient("R2Client").ConfigurePrimaryHttpMessageHandler(() =>
-{
-    return new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
-        SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-    };
-});
-
 builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
-    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-
     var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
     var config = new Amazon.S3.AmazonS3Config
     {
         ServiceURL = serviceUrl,
         UseHttp = false, // Force HTTPS
         ForcePathStyle = true, // Required for Cloudflare R2 compatibility
-        AuthenticationRegion = "auto",
-        HttpClientFactory = new Structo.Infrastructure.Storage.R2HttpClientFactory(httpClientFactory.CreateClient("R2Client"))
+        AuthenticationRegion = "auto"
     };
     var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
     return new Amazon.S3.AmazonS3Client(credentials, config);
