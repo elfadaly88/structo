@@ -5,6 +5,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
 import { PublicDirectoryService, TenantDto, PublicTenantPortfolioDto, PublicProjectDto } from '../../core/services/public-directory.service';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-landing-page',
@@ -29,11 +30,23 @@ import { FormsModule } from '@angular/forms';
             class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
             {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
           </button>
-          <a routerLink="/login" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo">{{ 'NAV.LOGIN' | translate }}</a>
-          <button (click)="navigateToLogin()" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-            <span class="relative z-10">{{ 'NAV.GET_STARTED' | translate }}</span>
-            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </button>
+          @if (authService.isAuthenticated()) {
+            <span class="text-sm text-slate-400 font-medium font-cairo">
+              Welcome back, <span class="text-white font-semibold">{{ authService.currentUser()?.name }}</span>
+            </span>
+            <a routerLink="/dashboard" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+              <span class="relative z-10">Dashboard</span>
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </a>
+          } @else {
+            <a routerLink="/login" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
+              {{ 'NAV.LOGIN' | translate }}
+            </a>
+            <button (click)="navigateToLogin()" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+              <span class="relative z-10">{{ 'NAV.GET_STARTED' | translate }}</span>
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </button>
+          }
         </div>
       </nav>
 
@@ -58,10 +71,17 @@ import { FormsModule } from '@angular/forms';
         </p>
 
         <div class="flex flex-col sm:flex-row gap-4 mb-16">
-          <button (click)="navigateToLogin()" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
-            {{ 'HERO.CTA_START' | translate }}
-            <span class="inline-block transform transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 ml-1 rtl:mr-1 rtl:ml-0">&rarr;</span>
-          </button>
+          @if (authService.isAuthenticated()) {
+            <a routerLink="/dashboard" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
+              Go to Dashboard
+              <span class="inline-block transform transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 ml-1 rtl:mr-1 rtl:ml-0">&rarr;</span>
+            </a>
+          } @else {
+            <button (click)="navigateToLogin()" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
+              {{ 'HERO.CTA_START' | translate }}
+              <span class="inline-block transform transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 ml-1 rtl:mr-1 rtl:ml-0">&rarr;</span>
+            </button>
+          }
           <a href="#marketplace" class="px-8 py-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 font-semibold text-slate-300 hover:text-white transition-all duration-300 font-cairo">
             {{ 'MARKETPLACE.VIEW_PORTFOLIO' | translate }}
           </a>
@@ -302,6 +322,7 @@ import { FormsModule } from '@angular/forms';
 export class LandingPageComponent implements OnInit {
   private readonly router = inject(Router);
   protected readonly langService = inject(LanguageService);
+  protected readonly authService = inject(AuthService);
   private readonly directoryService = inject(PublicDirectoryService);
   private readonly renderer = inject(Renderer2);
   private readonly document = inject(DOCUMENT);
