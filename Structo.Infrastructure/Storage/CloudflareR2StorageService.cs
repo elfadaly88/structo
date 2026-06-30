@@ -1,5 +1,6 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Structo.Core.Interfaces;
 using Structo.Core.Settings;
@@ -11,7 +12,8 @@ namespace Structo.Infrastructure.Storage;
 
 public class CloudflareR2StorageService(
     IAmazonS3 s3Client,
-    IOptions<CloudflareR2Settings> r2Settings) : ICloudStorageService
+    IOptions<CloudflareR2Settings> r2Settings,
+    ILogger<CloudflareR2StorageService> logger) : ICloudStorageService
 {
     private readonly CloudflareR2Settings _settings = r2Settings.Value;
 
@@ -52,9 +54,27 @@ public class CloudflareR2StorageService(
             ContentType = contentType
         };
 
-        await s3Client.PutObjectAsync(putRequest);
-
-        return dbUrl;
+        try
+        {
+            logger.LogInformation("Attempting R2 Upload. Bucket: {Bucket}, Key: {Key}", putRequest.BucketName, putRequest.Key);
+            var response = await s3Client.PutObjectAsync(putRequest);
+            logger.LogInformation("R2 Upload HTTP Status Response: {StatusCode}", response.HttpStatusCode);
+            
+            return dbUrl;
+        }
+        catch (AmazonS3Exception s3Ex)
+        {
+            logger.LogError("FATAL S3 ERROR: ErrorCode={Code}, Message={Msg}, HTTPStatus={Status}", 
+                s3Ex.ErrorCode, s3Ex.Message, s3Ex.StatusCode);
+            logger.LogError("S3 Full Exception: {Detail}", s3Ex.ToString());
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("GENERIC UPLOAD ERROR: {Message}, Inner={Inner}", ex.Message, ex.InnerException?.Message);
+            logger.LogError("Full Stack Trace: {Trace}", ex.ToString());
+            throw;
+        }
     }
 
     public async Task<bool> DeleteFileAsync(string fileUrl)
