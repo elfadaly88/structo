@@ -142,15 +142,17 @@ builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.C
 builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
-    var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
+    
+    // 👈 التكة القاضية: شيل الـ https وخلي الـ Endpoint يقرأ المسار من غير تعقيد SSL
+    var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]
+                        ?.Replace("https://", "http://") ?? "http://517b868184374750bced4ca6891f3a93.r2.cloudflarestorage.com";
     
     var config = new Amazon.S3.AmazonS3Config
     {
         ServiceURL = serviceUrl,
-        UseHttp = false,
+        UseHttp = true, // 👈 اجبرها على true لتخطي لغم الـ OpenSSL Handshake تماماً
         ForcePathStyle = true,
-        AuthenticationRegion = "auto",
-        HttpClientFactory = new CustomHttpClientFactory()
+        AuthenticationRegion = "auto"
     };
 
     var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
