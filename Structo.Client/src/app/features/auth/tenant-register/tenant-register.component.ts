@@ -101,11 +101,11 @@ interface ApiResponse<T> {
               </div>
             }
 
-            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5" autocomplete="off">
               
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Tenant Name</label>
-                <input type="text" formControlName="tenantName" placeholder="Acme Corp" 
+                <input type="text" formControlName="tenantName" placeholder="Acme Corp" autocomplete="off"
                   class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
                 @if (isFieldInvalid('tenantName')) {
                   <p class="text-xs text-rose-400 mt-1.5 font-medium">Tenant name is required.</p>
@@ -115,7 +115,7 @@ interface ApiResponse<T> {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Admin First Name</label>
-                  <input type="text" formControlName="adminFirstName" placeholder="Jane" 
+                  <input type="text" formControlName="adminFirstName" placeholder="Jane" autocomplete="off"
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
                   @if (isFieldInvalid('adminFirstName')) {
                     <p class="text-xs text-rose-400 mt-1.5 font-medium">First name is required.</p>
@@ -123,7 +123,7 @@ interface ApiResponse<T> {
                 </div>
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Admin Last Name</label>
-                  <input type="text" formControlName="adminLastName" placeholder="Doe" 
+                  <input type="text" formControlName="adminLastName" placeholder="Doe" autocomplete="off"
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
                   @if (isFieldInvalid('adminLastName')) {
                     <p class="text-xs text-rose-400 mt-1.5 font-medium">Last name is required.</p>
@@ -133,7 +133,7 @@ interface ApiResponse<T> {
 
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Email</label>
-                <input type="email" formControlName="email" placeholder="admin@company.com" 
+                <input type="email" formControlName="email" placeholder="admin@company.com" autocomplete="off"
                   class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
                 @if (isFieldInvalid('email')) {
                   <p class="text-xs text-rose-400 mt-1.5 font-medium">A valid email is required.</p>
@@ -143,7 +143,7 @@ interface ApiResponse<T> {
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Password</label>
                 <div class="relative">
-                  <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" 
+                  <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" autocomplete="new-password"
                     class="w-full pl-4 pr-10 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans">
                   <button
                     type="button"
