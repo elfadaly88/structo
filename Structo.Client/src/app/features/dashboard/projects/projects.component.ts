@@ -207,7 +207,7 @@ export interface ProjectViewDto extends ProjectDto {
                           {{ 'PROJECTS.CATEGORIES.' + proj.category | translate }}
                         </span>
                       </td>
-                      <td class="px-6 py-4 text-slate-400">{{ proj.startDate | date:'yyyy-MM-dd' }}</td>
+                      <td class="px-6 py-4 text-slate-400">{{ proj.startDate | date:'dd/MM/yyyy' }}</td>
                     </tr>
                   } @empty {
                     <tr>
@@ -282,7 +282,7 @@ export interface ProjectViewDto extends ProjectDto {
                           {{ 'USERS.ROLES.' + usr.role | translate }}
                         </span>
                       </td>
-                      <td class="px-6 py-4 text-slate-400">{{ usr.createdAt | date:'yyyy-MM-dd HH:mm' }}</td>
+                      <td class="px-6 py-4 text-slate-400">{{ usr.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
                     </tr>
                   } @empty {
                     <tr>

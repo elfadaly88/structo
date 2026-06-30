@@ -277,7 +277,7 @@ import { AuthService } from '../../core/services/auth.service';
                             {{ 'PROJECTS.CATEGORIES.' + proj.category | translate }}
                           </span>
                         </div>
-                        <span class="text-xs text-slate-500 font-mono">{{ proj.startDate | date:'yyyy-MM' }} @if (proj.endDate) { - {{ proj.endDate | date:'yyyy-MM' }} } @else { - Present }</span>
+                        <span class="text-xs text-slate-500 font-mono">{{ proj.startDate | date:'dd/MM/yyyy' }} @if (proj.endDate) { - {{ proj.endDate | date:'dd/MM/yyyy' }} } @else { - Present }</span>
                       </div>
 
                       <p class="text-slate-400 text-sm leading-relaxed">{{ proj.description || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>

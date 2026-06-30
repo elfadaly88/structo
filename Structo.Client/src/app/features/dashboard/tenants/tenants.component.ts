@@ -86,7 +86,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                       }
                     </td>
                     <td class="px-6 py-4 text-slate-300 font-medium">{{ tenant.maxActiveProjects }} Projects</td>
-                    <td class="px-6 py-4 text-slate-400">{{ tenant.createdAt | date }}</td>
+                    <td class="px-6 py-4 text-slate-400">{{ tenant.createdAt | date:'dd/MM/yyyy' }}</td>
                     <td class="px-6 py-4">
                       @if (tenant.status === 'Active') {
                         <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">Active</span>

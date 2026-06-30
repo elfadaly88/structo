@@ -37,6 +37,26 @@ public class CloudflareR2StorageService(
         return Task.FromResult($"PRESIGNED_SPLIT|{presignedUrl}|{dbUrl}");
     }
 
+    public async Task<string> UploadFileDirectAsync(Stream fileStream, string fileName, string contentType, string? customKey = null)
+    {
+        var extension = Path.GetExtension(fileName).ToLower();
+        var key = customKey?.TrimStart('/') ?? $"images/{Guid.NewGuid()}{extension}";
+
+        string dbUrl = $"{_settings.PublicBaseUrl}/{key}";
+
+        var putRequest = new PutObjectRequest
+        {
+            BucketName = _settings.BucketName,
+            Key = key,
+            InputStream = fileStream,
+            ContentType = contentType
+        };
+
+        await s3Client.PutObjectAsync(putRequest);
+
+        return dbUrl;
+    }
+
     public async Task<bool> DeleteFileAsync(string fileUrl)
     {
         if (string.IsNullOrEmpty(fileUrl)) return false;

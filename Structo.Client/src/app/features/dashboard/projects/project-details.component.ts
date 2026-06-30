@@ -182,15 +182,16 @@ import { FormsModule } from '@angular/forms';
                       <td class="p-2 sm:p-3 font-mono text-slate-400">{{ log.oldBudget | number:'1.2-2' }}</td>
                       <td class="p-2 sm:p-3 font-mono text-emerald-400 font-semibold">{{ log.newBudget | number:'1.2-2' }}</td>
                       <td class="p-2 sm:p-3 font-cairo max-w-xs truncate" [title]="log.reasonForChange">{{ log.reasonForChange }}</td>
-                      <td class="p-2 sm:p-3 text-slate-400 font-mono">{{ log.changedAt | date:'yyyy-MM-dd HH:mm' }}</td>
+                      <td class="p-2 sm:p-3 text-slate-400 font-mono">{{ log.changedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="p-2 sm:p-3 text-center">
                         @if (log.boqFileUrl) {
-                          <a [href]="log.boqFileUrl" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 font-cairo font-bold">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            Download / تحميل
-                          </a>
+                          <a [href]="log.boqFileUrl" target="_blank" 
+                              class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm">
+                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                             </svg>
+                             <span>Download / تحميل</span>
+                           </a>
                         } @else {
                           <span class="text-slate-500 text-[11px] font-cairo">لا يوجد / None</span>
                         }
@@ -294,7 +295,7 @@ import { FormsModule } from '@angular/forms';
                 <div class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
                   <img [src]="photo.photoUrl" alt="Gallery image" class="w-full h-full object-cover">
                   <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end">
-                    <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'yyyy-MM-dd HH:mm' }}</p>
+                    <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</p>
                     <p class="text-[10px] text-slate-400 truncate mt-0.5">By: {{ photo.uploadedBy || 'Owner' }}</p>
                   </div>
                 </div>
@@ -350,7 +351,7 @@ import { FormsModule } from '@angular/forms';
                     <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
                       <td class="px-6 py-4 font-semibold text-white">{{ item.issuedTo || 'Staff' }}</td>
                       <td class="px-6 py-4 text-slate-400 max-w-xs truncate">{{ item.reason }}</td>
-                      <td class="px-6 py-4 text-slate-400">{{ item.issuedAt | date:'yyyy-MM-dd HH:mm' }}</td>
+                      <td class="px-6 py-4 text-slate-400">{{ item.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="px-6 py-4 font-mono font-bold text-amber-400">{{ item.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
                       <td class="px-6 py-4 text-center">
                         @if (item.isSettled) {
@@ -373,10 +374,13 @@ import { FormsModule } from '@angular/forms';
                             </button>
                           } @else {
                             @if (item.receiptPhotoUrl) {
-                              <a [href]="item.receiptPhotoUrl" target="_blank" class="text-indigo-400 hover:text-indigo-300 transition-colors inline-block cursor-pointer" title="View Receipt">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              <a [href]="item.receiptPhotoUrl" target="_blank" 
+                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm" 
+                                 title="View Receipt">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
+                                <span>معاينة الإيصال</span>
                               </a>
                             }
                             @if (item.settlementPaymentMethod) {
@@ -386,7 +390,7 @@ import { FormsModule } from '@angular/forms';
                             }
                             @if (item.expenseDate) {
                               <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-400" title="Expense Date">
-                                {{ item.expenseDate | date:'MMM d, yyyy' }}
+                                {{ item.expenseDate | date:'dd/MM/yyyy' }}
                               </span>
                             }
                           }
@@ -468,9 +472,9 @@ import { FormsModule } from '@angular/forms';
                   @for (t of transactions(); track t.id) {
                     <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
                       <td class="px-6 py-4 text-slate-400">
-                        <div>{{ t.transactionDate | date:'yyyy-MM-dd HH:mm' }}</div>
+                        <div>{{ t.transactionDate | date:'dd/MM/yyyy HH:mm' }}</div>
                         @if (t.paymentDate) {
-                          <div class="text-[10px] text-slate-500 mt-1">Paid: {{ t.paymentDate | date:'yyyy-MM-dd' }}</div>
+                          <div class="text-[10px] text-slate-500 mt-1">Paid: {{ t.paymentDate | date:'dd/MM/yyyy' }}</div>
                         }
                       </td>
                       <td class="px-6 py-4">
@@ -501,10 +505,13 @@ import { FormsModule } from '@angular/forms';
                       </td>
                       <td class="px-6 py-4 text-center">
                         @if (t.receiptPhotoUrl) {
-                          <a [href]="t.receiptPhotoUrl" target="_blank" class="text-indigo-400 hover:text-indigo-300 transition-colors inline-block cursor-pointer">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <a [href]="t.receiptPhotoUrl" target="_blank" 
+                             class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm" 
+                             title="View Receipt">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
+                            <span>معاينة الإيصال</span>
                           </a>
                         } @else {
                           <span class="text-xs text-slate-600">-</span>

@@ -94,7 +94,7 @@ import { DatePipe } from '@angular/common';
                   <p class="text-sm font-semibold text-slate-100 leading-snug truncate">{{ notif.title }}</p>
                   <p class="text-xs text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{{ notif.message }}</p>
                   <p class="text-[10px] text-slate-600 mt-1.5 font-medium">
-                    {{ notif.createdAt | date:'MMM d, h:mm a' }}
+                    {{ notif.createdAt | date:'dd/MM/yyyy h:mm a' }}
                   </p>
                 </div>
 
