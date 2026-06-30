@@ -139,10 +139,12 @@ builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
 
+    var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
     var config = new Amazon.S3.AmazonS3Config
     {
-        ServiceURL = settings.ServiceUrl,
-        ForcePathStyle = true,
+        ServiceURL = serviceUrl,
+        UseHttp = false, // Force HTTPS
+        ForcePathStyle = true, // Required for Cloudflare R2 compatibility
         AuthenticationRegion = "auto",
         HttpClientFactory = new Structo.Infrastructure.Storage.R2HttpClientFactory(httpClientFactory.CreateClient("R2Client"))
     };
