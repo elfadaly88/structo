@@ -96,4 +96,18 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
             CurrentUserRole = CurrentUserRole
         });
     }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<bool>>> DeletePhoto([FromRoute] Guid projectId, [FromRoute] Guid id)
+    {
+        var photo = await context.SitePhotos.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
+        if (photo == null)
+            return NotFound(new ApiResponse<bool> { Success = false, Message = "Photo not found" });
+
+        context.SitePhotos.Remove(photo);
+        await context.SaveChangesAsync();
+
+        return Ok(new ApiResponse<bool> { Data = true, Message = "Photo deleted successfully", CurrentUserRole = CurrentUserRole });
+    }
 }
+

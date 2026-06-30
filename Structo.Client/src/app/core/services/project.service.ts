@@ -27,7 +27,12 @@ export class ProjectService {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/budget-revision`, dto);
   }
 
+  updateProject(projectId: string, dto: any): Observable<ApiResponse<ProjectDto>> {
+    return this.http.put<ApiResponse<ProjectDto>>(`${this.apiUrl}/${projectId}`, dto);
+  }
+
   getProjectBudgetHistory(projectId: string): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/${projectId}/budget-history`);
   }
 }
+

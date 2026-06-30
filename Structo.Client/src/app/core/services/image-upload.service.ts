@@ -59,4 +59,9 @@ export class ImageUploadService {
     formData.append('file', file);
     return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-document/${projectId}`, formData);
   }
+
+  deleteProjectPhoto(projectId: string, photoId: string): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${environment.apiUrl}/projects/${projectId}/SitePhotos/${photoId}`);
+  }
 }
+

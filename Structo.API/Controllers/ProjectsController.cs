@@ -96,4 +96,19 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
         var logs = await projectService.GetBudgetHistoryAsync(id);
         return Ok(new ApiResponse<List<ProjectBudgetLog>> { Data = logs, CurrentUserRole = CurrentUserRole });
     }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "SuperAdmin,TenantOwner,Manager")]
+    public async Task<ActionResult<ApiResponse<ProjectDto>>> Update([FromRoute] Guid id, [FromBody] ProjectCreateDto dto)
+    {
+        var (success, data, message) = await projectService.UpdateProjectAsync(id, dto, CurrentUserRole);
+
+        if (!success)
+        {
+            return BadRequest(new ApiResponse<ProjectDto> { Success = false, Message = message });
+        }
+
+        return Ok(new ApiResponse<ProjectDto> { Data = data, Message = message, CurrentUserRole = CurrentUserRole });
+    }
 }
+

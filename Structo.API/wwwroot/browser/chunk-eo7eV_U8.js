@@ -1,0 +1,1 @@
+import {D,l as qt,m as bo,X}from'./main-Z4LKM7AC.js';var p=class t{http=D(qt);apiUrl=`${bo.apiUrl}/tenant-profile`;getProfile(){return this.http.get(this.apiUrl)}updateProfile(e){return this.http.put(`${this.apiUrl}/update`,e)}static \u0275fac=function(a){return new(a||t)};static \u0275prov=X({token:t,factory:t.\u0275fac,providedIn:"root"})};export{p};

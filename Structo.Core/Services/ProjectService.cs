@@ -129,7 +129,74 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         return (true, resultDto, "Project created successfully");
     }
 
+    public async Task<(bool Success, ProjectDto? Data, string Message)> UpdateProjectAsync(Guid id, ProjectCreateDto dto, string userRole)
+    {
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id);
+        if (project == null) return (false, null, "Project not found.");
+
+        if (userRole != "SuperAdmin")
+        {
+            var currentTenantId = tenantContextAccessor.GetCurrentTenantId();
+            if (currentTenantId == null || project.TenantId != currentTenantId.Value)
+            {
+                return (false, null, "Unauthorized access to this project.");
+            }
+        }
+
+        project.Name = dto.Name;
+        project.StartDate = dto.StartDate;
+        project.EndDate = dto.EndDate;
+        project.ManagerId = dto.ManagerId;
+
+        // Parse description
+        string innerDesc = dto.Description;
+        decimal budget = project.Budget;
+        string client = project.ClientName ?? string.Empty;
+        bool isPublic = project.IsPublicPortfolio;
+        string category = project.Category ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(dto.Description) && dto.Description.StartsWith('{'))
+        {
+            try
+            {
+                var json = JsonSerializer.Deserialize<JsonObject>(dto.Description);
+                if (json != null)
+                {
+                    if (json.TryGetPropertyValue("client", out var cNode) && cNode != null) client = cNode.ToString();
+                    if (json.TryGetPropertyValue("description", out var dNode) && dNode != null) innerDesc = dNode.ToString();
+                    if (json.TryGetPropertyValue("budget", out var bNode) && bNode != null) decimal.TryParse(bNode.ToString(), out budget);
+                    if (json.TryGetPropertyValue("category", out var catNode) && catNode != null) category = catNode.ToString();
+                    if (json.TryGetPropertyValue("isPublicPortfolio", out var pubNode) && pubNode != null) bool.TryParse(pubNode.ToString(), out isPublic);
+                    else if (json.TryGetPropertyValue("isPublic", out var pubNode2) && pubNode2 != null) bool.TryParse(pubNode2.ToString(), out isPublic);
+                }
+            }
+            catch { }
+        }
+
+        project.Description = innerDesc;
+        project.Budget = budget;
+        project.ClientName = client;
+        project.IsPublicPortfolio = isPublic;
+        project.Category = category;
+
+        await context.SaveChangesAsync();
+
+        var resultDto = new ProjectDto
+        {
+            Id = project.Id,
+            Name = project.Name,
+            Description = BuildLegacyDescription(project),
+            StartDate = project.StartDate,
+            EndDate = project.EndDate,
+            IsActive = project.IsActive,
+            ManagerId = project.ManagerId
+        };
+
+        return (true, resultDto, "Project updated successfully");
+    }
+
     public async Task<ProjectDto?> GetProjectByIdAsync(Guid id)
+
     {
         var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return null;

@@ -14,6 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
 import { FormsModule } from '@angular/forms';
+import { TenantProfileService } from '../../../core/services/tenant-profile.service';
+
 
 @Component({
   selector: 'app-project-details',
@@ -244,6 +246,22 @@ import { FormsModule } from '@angular/forms';
             {{ 'DETAILS.TAB_GALLERY' | translate }}
           </button>
         }
+        @if (isTenantOwner()) {
+          <button
+            id="tab-admin-settings"
+            (click)="activeTab.set('admin-settings')"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo flex items-center gap-1.5"
+            [class.border-indigo-500]="activeTab() === 'admin-settings'"
+            [class.text-indigo-400]="activeTab() === 'admin-settings'"
+            [class.border-transparent]="activeTab() !== 'admin-settings'"
+            [class.text-slate-400]="activeTab() !== 'admin-settings'">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0" />
+            </svg>
+            <span>لوحة تحكم الأدمن</span>
+          </button>
+        }
       </div>
 
       <!-- Tab Content: Project Gallery -->
@@ -294,6 +312,18 @@ import { FormsModule } from '@angular/forms';
               @for (photo of galleryPhotos(); track photo.id) {
                 <div class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
                   <img [src]="photo.photoUrl" alt="Gallery image" class="w-full h-full object-cover">
+                  
+                  @if (isTenantOwner()) {
+                    <button
+                      type="button"
+                      (click)="onDeletePhoto(photo.id)"
+                      class="absolute top-2 right-2 rtl:left-2 rtl:right-auto p-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 cursor-pointer shadow-lg z-20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  }
+
                   <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end">
                     <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</p>
                     <p class="text-[10px] text-slate-400 truncate mt-0.5">By: {{ photo.uploadedBy || 'Owner' }}</p>
@@ -562,7 +592,150 @@ import { FormsModule } from '@angular/forms';
           }
         </div>
       }
+
+      <!-- Tab Content: Company Admin Settings -->
+      @if (activeTab() === 'admin-settings') {
+        <div class="space-y-6">
+          <!-- Company profile details edit form -->
+          <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-5">
+            <h3 class="text-lg font-bold text-white font-cairo">تعديل بيانات الشركة الأساسية / Edit Company Profile</h3>
+            
+            @if (profileSuccessMessage()) {
+              <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-sm text-emerald-400 font-cairo">
+                {{ profileSuccessMessage() }}
+              </div>
+            }
+
+            <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-5">
+              <!-- Banner upload -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">بانر الشركة / Company Banner</label>
+                <div class="w-full h-36 sm:h-44 bg-slate-800 rounded-xl relative overflow-hidden group border border-slate-700">
+                  @if (profileForm.get('bannerUrl')?.value) {
+                    <img [src]="profileForm.get('bannerUrl')?.value" alt="Banner" class="w-full h-full object-cover">
+                  } @else {
+                    <div class="w-full h-full bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950 flex items-center justify-center">
+                      <span class="text-xs text-slate-500">لا يوجد بانر / No Banner</span>
+                    </div>
+                  }
+                  <button
+                    type="button"
+                    (click)="bannerFileInput.click()"
+                    class="absolute inset-0 bg-slate-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                    <span class="flex items-center gap-2 text-white text-xs font-bold font-cairo bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700 backdrop-blur-sm">
+                      @if (isUploadingBanner()) {
+                        جاري الرفع...
+                      } @else {
+                        تغيير البانر / Change Banner
+                      }
+                    </span>
+                  </button>
+                  <input #bannerFileInput type="file" (change)="onBannerFileSelected($event)" accept="image/*" class="hidden">
+                </div>
+              </div>
+
+              <!-- Logo upload & profile name -->
+              <div class="flex items-end gap-4">
+                <div class="w-24 h-24 rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden relative group shadow-xl shrink-0">
+                  @if (profileForm.get('logoUrl')?.value) {
+                    <img [src]="profileForm.get('logoUrl')?.value" alt="Logo" class="w-full h-full object-cover">
+                  } @else {
+                    <span class="text-3xl font-extrabold text-slate-600 select-none">Logo</span>
+                  }
+                  <button
+                    type="button"
+                    (click)="logoFileInput.click()"
+                    class="absolute inset-0 rounded-full bg-slate-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                    <span class="text-white text-[10px] font-bold text-center">
+                      @if (isUploadingLogo()) {
+                        جاري...
+                      } @else {
+                        تغيير / Change
+                      }
+                    </span>
+                  </button>
+                  <input #logoFileInput type="file" (change)="onLogoFileSelected($event)" accept="image/*" class="hidden">
+                </div>
+
+                <div class="flex-1 space-y-4">
+                  <div>
+                    <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">اسم الشركة / Company Name *</label>
+                    <input
+                      id="prof-name"
+                      type="text"
+                      formControlName="name"
+                      class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                      placeholder="Company Name">
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="prof-region" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المنطقة / Region</label>
+                  <input
+                    id="prof-region"
+                    type="text"
+                    formControlName="region"
+                    class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                    placeholder="e.g. Cairo, Riyadh">
+                </div>
+                <div>
+                  <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">وصف الشركة / Company Description</label>
+                  <textarea
+                    id="prof-desc"
+                    formControlName="companyDescription"
+                    rows="3"
+                    class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                    placeholder="Write a brief overview..."></textarea>
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  [disabled]="profileForm.invalid || isSavingProfile()"
+                  class="px-6 py-2.5 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
+                  حفظ البيانات / Save Settings
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Project visibility switch -->
+          <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 class="text-lg font-bold text-white font-cairo">إعدادات خصوصية وعرض المشروع / Project Visibility Settings</h3>
+            <p class="text-xs text-slate-400 font-cairo">حدد ما إذا كان هذا المشروع سيظهر للعامة في معرض المشروعات والبروفايل العام لشركتك أم سيظل خاصاً.</p>
+
+            <form [formGroup]="projectSettingsForm" (ngSubmit)="onProjectSettingsSubmit()" class="space-y-4">
+              <div class="flex items-center justify-between p-4 bg-slate-950 rounded-xl border border-slate-800">
+                <div class="space-y-0.5">
+                  <label class="text-sm font-bold text-slate-200 font-cairo">عرض المشروع في المعرض العام / Show on Public Portfolio Gallery</label>
+                  <p class="text-xs text-slate-500 font-cairo">عند التفعيل، سيتم إتاحة صور وبيانات المشروع للزوار والشركات الخارجية.</p>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is-public-portfolio"
+                    formControlName="isPublicPortfolio"
+                    class="w-5 h-5 text-indigo-600 border-slate-700 bg-slate-950 rounded focus:ring-indigo-500 focus:ring-2 focus:ring-offset-slate-900 cursor-pointer">
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  [disabled]="isSavingProjectSettings()"
+                  class="px-6 py-2.5 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
+                  تحديث الخصوصية / Update Visibility
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
     </div>
+
 
     <!-- Settle Petty Cash Modal -->
     @if (isSettleModalOpen()) {
@@ -779,6 +952,12 @@ import { FormsModule } from '@angular/forms';
                   {{ 'DETAILS.INPUT_AMOUNT_ERR' | translate }}
                 </span>
               }
+              @if (requestForm.get('amount')?.hasError('insufficientBalance')) {
+                <span class="text-xs text-red-400 mt-1 block font-cairo">
+                  المبلغ المطلوب للعهدة أكبر من الرصيد المتاح في الصندوق المحدد! / The requested amount exceeds the available balance!
+                </span>
+              }
+
             </div>
 
             <div>
@@ -1110,6 +1289,7 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly confirmService = inject(ConfirmModalService);
+  private readonly profileService = inject(TenantProfileService);
 
   readonly isEditPettyCashModalOpen = signal(false);
   readonly isEditingPettyCash = signal(false);
@@ -1186,7 +1366,27 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingPettyCash = signal(false);
   readonly isLoadingTransactions = signal(false);
 
-  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery'>('petty-cash');
+  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings'>('petty-cash');
+
+  // Admin settings forms & signals
+  readonly isUploadingLogo = signal(false);
+  readonly isUploadingBanner = signal(false);
+  readonly isSavingProfile = signal(false);
+  readonly profileSuccessMessage = signal<string | null>(null);
+  readonly isSavingProjectSettings = signal(false);
+  
+  readonly profileForm: FormGroup = this.fb.group({
+    name: ['', Validators.required],
+    logoUrl: [''],
+    bannerUrl: [''],
+    region: [''],
+    companyDescription: ['']
+  });
+
+  readonly projectSettingsForm: FormGroup = this.fb.group({
+    isPublicPortfolio: [false]
+  });
+
 
   // Gallery signals
   readonly galleryPhotos = signal<SitePhotoDto[]>([]);
@@ -1218,7 +1418,48 @@ export class ProjectDetailsComponent implements OnInit {
     amount: [null, [Validators.required, Validators.min(0.01)]],
     reason: ['', [Validators.required, Validators.minLength(5)]],
     sourcePoolId: [null]
+  }, {
+    validators: (group: any) => this.insufficientBalanceValidator(group as FormGroup)
   });
+
+  insufficientBalanceValidator(formGroup: FormGroup) {
+    const amountControl = formGroup.get('amount');
+    const sourcePoolIdControl = formGroup.get('sourcePoolId');
+    if (!amountControl) return null;
+    
+    const amount = amountControl.value;
+    if (amount === null || amount === undefined) {
+      this.clearInsufficientBalanceError(amountControl);
+      return null;
+    }
+    
+    const sourcePoolId = sourcePoolIdControl?.value;
+    if (sourcePoolId) {
+      const pool = this.cashPools().find(p => p.id === sourcePoolId);
+      if (pool && amount > pool.availableBalance) {
+        amountControl.setErrors({ ...amountControl.errors, insufficientBalance: true });
+        return { insufficientBalance: true };
+      }
+    } else {
+      const totalAvailable = this.cashPools().reduce((sum, p) => sum + p.availableBalance, 0);
+      if (totalAvailable > 0 && amount > totalAvailable) {
+        amountControl.setErrors({ ...amountControl.errors, insufficientBalance: true });
+        return { insufficientBalance: true };
+      }
+    }
+    
+    this.clearInsufficientBalanceError(amountControl);
+    return null;
+  }
+
+  private clearInsufficientBalanceError(control: any) {
+    if (control.hasError('insufficientBalance')) {
+      const errors = { ...control.errors };
+      delete errors['insufficientBalance'];
+      control.setErrors(Object.keys(errors).length ? errors : null);
+    }
+  }
+
 
   readonly injectForm: FormGroup = this.fb.group({
     amount: [null, [Validators.required, Validators.min(0.01)]],
@@ -1278,6 +1519,9 @@ export class ProjectDetailsComponent implements OnInit {
         this.fetchCashPools();
       }
       this.fetchGalleryPhotos();
+      if (this.isTenantOwner()) {
+        this.fetchCompanyProfile();
+      }
     }
   }
 
@@ -1297,11 +1541,19 @@ export class ProjectDetailsComponent implements OnInit {
   onGalleryFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
+      if (this.galleryPhotos().length >= 5) {
+        this.confirmService.alert({
+          title: 'الحد الأقصى للصور / Max Photos Limit',
+          message: 'لا يمكن رفع أكثر من 5 صور لكل مشروع. برجاء مسح بعض الصور القديمة أولاً. / A project can have a maximum of 5 site photos. Please delete old ones first.',
+          type: 'info'
+        });
+        return;
+      }
       const file = input.files[0];
       if (file.size > 2 * 1024 * 1024) {
         this.confirmService.alert({
           title: 'حجم الملف كبير جداً',
-          message: 'حجم الملف كبير جداً! الحد الأقصى للصور 2 ميجا وللمقايسات 5 ميجا.',
+          message: 'حجم الملف كبير جداً! الحد الأقصى للصور 2 ميجا.',
           type: 'error'
         });
         return;
@@ -1319,6 +1571,171 @@ export class ProjectDetailsComponent implements OnInit {
     }
   }
 
+  onDeletePhoto(photoId: string): void {
+    this.confirmService.confirm({
+      title: 'حذف الصورة / Delete Photo',
+      message: 'هل أنت متأكد من حذف هذه الصورة؟ / Are you sure you want to delete this photo?',
+      confirmText: 'نعم، احذف / Yes, Delete',
+      cancelText: 'إلغاء / Cancel'
+    }).then((confirmed) => {
+      if (confirmed) {
+        this.uploadService.deleteProjectPhoto(this.projectId, photoId).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.fetchGalleryPhotos();
+            }
+          }
+        });
+      }
+    });
+  }
+
+  fetchCompanyProfile(): void {
+    this.profileService.getProfile().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          const cleanUrl = (url: string) => {
+            if (url && url.startsWith('PRESIGNED_SPLIT')) {
+              const parts = url.split('|');
+              return parts.length > 2 ? parts[2] : url;
+            }
+            return url;
+          };
+          this.profileForm.patchValue({
+            name: res.data.name,
+            logoUrl: cleanUrl(res.data.logoUrl),
+            bannerUrl: cleanUrl(res.data.bannerUrl),
+            region: res.data.region,
+            companyDescription: res.data.companyDescription
+          });
+        }
+      }
+    });
+  }
+
+  onProfileSubmit(): void {
+    if (this.profileForm.invalid) return;
+    this.isSavingProfile.set(true);
+    this.profileSuccessMessage.set(null);
+    
+    this.profileService.updateProfile(this.profileForm.value).subscribe({
+      next: (res) => {
+        this.isSavingProfile.set(false);
+        if (res.success) {
+          this.profileSuccessMessage.set('تم حفظ بيانات الشركة بنجاح / Profile updated successfully');
+          this.fetchCompanyProfile();
+          setTimeout(() => this.profileSuccessMessage.set(null), 5000);
+        }
+      },
+      error: () => this.isSavingProfile.set(false)
+    });
+  }
+
+  onLogoFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        this.confirmService.alert({
+          title: 'حجم الملف كبير جداً',
+          message: 'الحد الأقصى للصور 2 ميجابايت.',
+          type: 'error'
+        });
+        return;
+      }
+      this.isUploadingLogo.set(true);
+      this.uploadService.uploadTenantLogo(file).subscribe({
+        next: (res) => {
+          this.isUploadingLogo.set(false);
+          if (res.success && res.data) {
+            this.profileForm.patchValue({ logoUrl: res.data.url });
+          }
+        },
+        error: () => this.isUploadingLogo.set(false)
+      });
+    }
+  }
+
+  onBannerFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        this.confirmService.alert({
+          title: 'حجم الملف كبير جداً',
+          message: 'الحد الأقصى للصور 2 ميجابايت.',
+          type: 'error'
+        });
+        return;
+      }
+      this.isUploadingBanner.set(true);
+      this.uploadService.uploadTenantBanner(file).subscribe({
+        next: (res) => {
+          this.isUploadingBanner.set(false);
+          if (res.success && res.data) {
+            this.profileForm.patchValue({ bannerUrl: res.data.url });
+          }
+        },
+        error: () => this.isUploadingBanner.set(false)
+      });
+    }
+  }
+
+  onProjectSettingsSubmit(): void {
+    const isPublic = this.projectSettingsForm.value.isPublicPortfolio;
+    this.isSavingProjectSettings.set(true);
+    
+    const currentProj = this.project();
+    if (!currentProj) return;
+
+    let client = '';
+    let budget = 0;
+    let status = 'Active';
+    let category = 'Other';
+    let description = currentProj.description;
+
+    if (currentProj.description && currentProj.description.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(currentProj.description);
+        client = parsed.client || '';
+        budget = parsed.budget || 0;
+        status = parsed.status || 'Active';
+        category = parsed.category || 'Other';
+        description = parsed.description || '';
+      } catch (e) {}
+    }
+
+    const legacyDescObj = {
+      client,
+      budget,
+      status,
+      category,
+      isPublicPortfolio: isPublic,
+      description
+    };
+
+    const dto = {
+      name: currentProj.name,
+      description: JSON.stringify(legacyDescObj),
+      startDate: currentProj.startDate,
+      endDate: currentProj.endDate,
+      managerId: currentProj.managerId
+    };
+
+    this.projectService.updateProject(this.projectId, dto).subscribe({
+      next: (res) => {
+        this.isSavingProjectSettings.set(false);
+        if (res.success) {
+          this.fetchProjectDetails();
+          this.confirmService.alert({
+            title: 'تم التحديث / Updated',
+            message: 'تم تحديث حالة عرض المشروع بنجاح. / Project visibility settings updated successfully.',
+            type: 'success'
+          });
+        }
+      },
+      error: () => this.isSavingProjectSettings.set(false)
+    });
+  }
+
   fetchProjectDetails(): void {
     this.isLoadingProject.set(true);
     this.projectService.getProjectById(this.projectId).subscribe({
@@ -1332,11 +1749,22 @@ export class ProjectDetailsComponent implements OnInit {
             return;
           }
           this.project.set(proj);
+
+          // Extract isPublicPortfolio to patch form
+          let isPublicPortfolio = false;
+          if (proj.description && proj.description.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(proj.description);
+              isPublicPortfolio = !!parsed.isPublicPortfolio || !!parsed.isPublic;
+            } catch (e) {}
+          }
+          this.projectSettingsForm.patchValue({ isPublicPortfolio });
         }
       },
       error: () => this.isLoadingProject.set(false)
     });
   }
+
 
   fetchPettyCash(): void {
     this.isLoadingPettyCash.set(true);
