@@ -19,6 +19,12 @@ public class UploadResultDto
     public string Url { get; set; } = string.Empty;
 }
 
+public class GenerateUploadUrlDto
+{
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+}
+
 [ApiController]
 [Route("api/ImageUpload")]
 [Authorize]
@@ -28,10 +34,13 @@ public class ImageUploadController(
     ITenantContextAccessor tenantAccessor) : ControllerBase
 {
     [HttpPost("tenant-logo")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo(IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo([FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
+
+        if (!ValidateFileRequest(request, out var errorMsg))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
@@ -43,11 +52,13 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/profile/logo{extension}";
             
-            using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
+
+            var urls = secureUrl.Split('|');
+            string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
 
             if (!string.IsNullOrEmpty(tenant.LogoUrl) && tenant.LogoUrl != dbUrl)
             {
@@ -60,8 +71,8 @@ public class ImageUploadController(
             return Ok(new ApiResponse<UploadResultDto>
             {
                 Success = true,
-                Message = "Tenant logo uploaded successfully.",
-                Data = new UploadResultDto { Url = dbUrl }
+                Message = "Tenant logo generated successfully.",
+                Data = new UploadResultDto { Url = secureUrl }
             });
         }
         catch (Exception ex)
@@ -71,10 +82,13 @@ public class ImageUploadController(
     }
 
     [HttpPost("tenant-banner")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner(IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner([FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
+
+        if (!ValidateFileRequest(request, out var errorMsg))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
@@ -86,11 +100,13 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/profile/banner{extension}";
             
-            using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
+
+            var urls = secureUrl.Split('|');
+            string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
 
             if (!string.IsNullOrEmpty(tenant.BannerUrl) && tenant.BannerUrl != dbUrl)
             {
@@ -103,8 +119,8 @@ public class ImageUploadController(
             return Ok(new ApiResponse<UploadResultDto>
             {
                 Success = true,
-                Message = "Tenant banner uploaded successfully.",
-                Data = new UploadResultDto { Url = dbUrl }
+                Message = "Tenant banner generated successfully.",
+                Data = new UploadResultDto { Url = secureUrl }
             });
         }
         catch (Exception ex)
@@ -114,10 +130,13 @@ public class ImageUploadController(
     }
 
     [HttpPost("project-gallery/{projectId}")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, [FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
+
+        if (!ValidateFileRequest(request, out var errorMsg))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
             
         var tenantId = tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
@@ -129,11 +148,13 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{extension}";
             
-            using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
+
+            var urls = secureUrl.Split('|');
+            string dbUrl = urls.Length > 2 ? urls[2] : secureUrl;
 
             var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             Guid.TryParse(userIdString, out var userId);
@@ -154,8 +175,8 @@ public class ImageUploadController(
             return Ok(new ApiResponse<UploadResultDto>
             {
                 Success = true,
-                Message = "Project gallery image uploaded successfully.",
-                Data = new UploadResultDto { Url = dbUrl }
+                Message = "Project gallery image generated successfully.",
+                Data = new UploadResultDto { Url = secureUrl }
             });
         }
         catch (Exception ex)
@@ -165,10 +186,13 @@ public class ImageUploadController(
     }
 
     [HttpPost("project-document/{projectId}")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectDocument([FromRoute] Guid projectId, IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectDocument([FromRoute] Guid projectId, [FromBody] GenerateUploadUrlDto request)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
+        if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "Invalid upload request parameters." });
+
+        if (!ValidateFileRequest(request, out var errorMsg))
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = errorMsg });
 
         var tenantId = tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
@@ -180,17 +204,16 @@ public class ImageUploadController(
 
         try
         {
-            var extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(request.FileName).ToLower();
             string customKey = $"{tenantId}/projects/{projectId}/files/{Guid.NewGuid()}{extension}";
             
-            using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string secureUrl = await storageService.UploadFileAsync(request.FileName, request.ContentType, customKey);
 
             return Ok(new ApiResponse<UploadResultDto>
             {
                 Success = true,
-                Message = "Document uploaded successfully.",
-                Data = new UploadResultDto { Url = dbUrl }
+                Message = "Document generated successfully.",
+                Data = new UploadResultDto { Url = secureUrl }
             });
         }
         catch (Exception ex)
@@ -206,5 +229,18 @@ public class ImageUploadController(
         using var scope = Structo.API.Program.AppServices.CreateScope();
         var storageService = scope.ServiceProvider.GetRequiredService<ICloudStorageService>();
         return await storageService.DeleteFileAsync(fileUrl);
+    }
+
+    private bool ValidateFileRequest(GenerateUploadUrlDto request, out string errorMessage)
+    {
+        var extension = Path.GetExtension(request.FileName).ToLower();
+        if (string.IsNullOrEmpty(extension))
+        {
+             errorMessage = "Invalid file extension.";
+             return false;
+        }
+
+        errorMessage = string.Empty;
+        return true;
     }
 }
