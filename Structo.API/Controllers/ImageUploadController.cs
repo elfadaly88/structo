@@ -44,7 +44,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"images/logo-{tenantId}{extension}";
+            string customKey = $"{tenantId}/profile/logo{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -87,7 +87,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"images/banner-{tenantId}{extension}";
+            string customKey = $"{tenantId}/profile/banner{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -130,7 +130,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"images/projects-{projectId}-{Guid.NewGuid()}{extension}";
+            string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -181,7 +181,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"files/projects-{projectId}-{Guid.NewGuid()}{extension}";
+            string customKey = $"{tenantId}/projects/{projectId}/files/{Guid.NewGuid()}{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
