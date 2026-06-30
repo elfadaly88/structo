@@ -46,20 +46,46 @@ public class CloudflareR2StorageService(
 
         string dbUrl = $"{_settings.PublicBaseUrl}/{key}";
 
-        var putRequest = new PutObjectRequest
+        // Generate Presigned URL locally (no network requests, so no SSL validation issues)
+        var presignRequest = new GetPreSignedUrlRequest
         {
             BucketName = _settings.BucketName,
             Key = key,
-            InputStream = fileStream,
+            Expires = DateTime.UtcNow.AddHours(1),
+            Verb = HttpVerb.PUT,
             ContentType = contentType
         };
+        string presignedUrl = s3Client.GetPreSignedURL(presignRequest);
 
         try
         {
-            logger.LogInformation("Attempting R2 Upload. Bucket: {Bucket}, Key: {Key}", putRequest.BucketName, putRequest.Key);
-            var response = await s3Client.PutObjectAsync(putRequest);
-            logger.LogInformation("R2 Upload HTTP Status Response: {StatusCode}", response.HttpStatusCode);
+            logger.LogInformation("Attempting R2 Upload via native HttpClient. Bucket: {Bucket}, Key: {Key}", _settings.BucketName, key);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
+
+            using var request = new HttpRequestMessage(HttpMethod.Put, presignedUrl);
             
+            if (fileStream.CanSeek)
+            {
+                fileStream.Position = 0;
+            }
+            request.Content = new StreamContent(fileStream);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+
+            var response = await client.SendAsync(request);
+            logger.LogInformation("Native HttpClient R2 Upload Status: {StatusCode}", response.StatusCode);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                logger.LogError("R2 Put Rejected: {Error}", err);
+                throw new Exception($"R2 Put Rejected with status {response.StatusCode}: {err}");
+            }
+
             return dbUrl;
         }
         catch (AmazonS3Exception s3Ex)
