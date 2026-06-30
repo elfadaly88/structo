@@ -66,12 +66,7 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            var r2Settings = HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
-            return StatusCode(500, new ApiResponse<UploadResultDto> 
-            { 
-                Success = false, 
-                Message = $"Failed to upload logo. ServiceUrl={r2Settings.ServiceUrl}, BucketName={r2Settings.BucketName}, PublicBaseUrl={r2Settings.PublicBaseUrl}. Exception: {ex.ToString()}" 
-            });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload logo: {ex.Message}. Inner: {ex.InnerException?.Message}" });
         }
     }
 
