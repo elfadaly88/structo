@@ -66,7 +66,7 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload logo: {ex.Message}. Inner: {ex.InnerException?.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload logo: {ex.ToString()}" });
         }
     }
 
