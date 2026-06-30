@@ -125,10 +125,25 @@ builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<St
 builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
 
 // AWS S3/R2 Configuration
+// builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
+// {
+//     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
+//     var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
+//     var config = new Amazon.S3.AmazonS3Config
+//     {
+//         ServiceURL = serviceUrl,
+//         UseHttp = false, // Force HTTPS
+//         ForcePathStyle = true, // Required for Cloudflare R2 compatibility
+//         AuthenticationRegion = "auto"
+//     };
+//     var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
+//     return new Amazon.S3.AmazonS3Client(credentials, config);
+// });
 builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
     var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
+    
     var config = new Amazon.S3.AmazonS3Config
     {
         ServiceURL = serviceUrl,
@@ -136,6 +151,10 @@ builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
         ForcePathStyle = true, // Required for Cloudflare R2 compatibility
         AuthenticationRegion = "auto"
     };
+
+    // Use custom HttpClientFactory to trust certificates inside Linux Container
+    config.HttpClientFactory = new Structo.API.TrustAllS3HttpClientFactory();
+
     var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
     return new Amazon.S3.AmazonS3Client(credentials, config);
 });
@@ -327,4 +346,17 @@ namespace Structo.API
     { 
         public static IServiceProvider AppServices { get; set; } = default!;
     } 
+
+    public class TrustAllS3HttpClientFactory : Amazon.Runtime.HttpClientFactory
+    {
+        public override System.Net.Http.HttpClient CreateHttpClient(Amazon.Runtime.IClientConfig clientConfig)
+        {
+            var handler = new System.Net.Http.HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
+                SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+            };
+            return new System.Net.Http.HttpClient(handler);
+        }
+    }
 }
