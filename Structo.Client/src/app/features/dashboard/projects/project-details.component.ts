@@ -907,9 +907,15 @@ import { FormsModule } from '@angular/forms';
                 <input
                   type="date"
                   formControlName="paymentDate"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl 
+                  text-slate-200 text-sm 
+                  focus:outline-none 
+                  focus:ring-2 
+                  focus:ring-indigo-500/40 
+                  focus:border-indigo-500 
+                  transition-all 
+                  duration-200">
               </div>
-
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                   Payment Method <span class="text-red-400">*</span>
@@ -1147,7 +1153,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (desc && desc.startsWith('{')) {
       try {
         return JSON.parse(desc).client || '';
-      } catch (e) {}
+      } catch (e) { }
     }
     return '';
   });
@@ -1157,7 +1163,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (desc && desc.startsWith('{')) {
       try {
         return JSON.parse(desc).budget || 0;
-      } catch (e) {}
+      } catch (e) { }
     }
     return 0;
   });
@@ -1167,7 +1173,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (desc && desc.startsWith('{')) {
       try {
         return JSON.parse(desc).description || '';
-      } catch (e) {}
+      } catch (e) { }
     }
     return desc || '';
   });
@@ -1181,7 +1187,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingTransactions = signal(false);
 
   readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery'>('petty-cash');
-  
+
   // Gallery signals
   readonly galleryPhotos = signal<SitePhotoDto[]>([]);
   readonly isLoadingGallery = signal(false);
@@ -1454,7 +1460,7 @@ export class ProjectDetailsComponent implements OnInit {
       reason: '',
       sourcePoolId: null
     });
-    
+
     if (this.isTenantOwner()) {
       this.requestForm.get('sourcePoolId')?.setValidators(Validators.required);
     } else {
@@ -1642,7 +1648,7 @@ export class ProjectDetailsComponent implements OnInit {
     const warning = isSettled
       ? 'هل أنت متأكد من حذف هذه العهدة المسواة؟ سيتم إزالتها نهائياً.'
       : 'هل أنت متأكد من الحذف؟ سيتم إرجاع الرصيد المستقطع إلى محفظة تمويل المشروع تلقائياً.';
-    
+
     const isConfirmed = await this.confirmService.confirm({
       title: 'حذف العهدة النقدية',
       message: warning,
@@ -1691,7 +1697,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (this.editPettyCashForm.invalid || !this.selectedPettyCashToEdit) return;
     this.isEditingPettyCash.set(true);
     const formVal = this.editPettyCashForm.value;
-    
+
     this.pettyCashService.updatePettyCash(this.projectId, this.selectedPettyCashToEdit.id, formVal).subscribe({
       next: () => {
         this.isEditingPettyCash.set(false);
