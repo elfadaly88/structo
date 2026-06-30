@@ -116,7 +116,15 @@ export class NotificationService implements OnDestroy {
       targetLink = '/dashboard/financials';
     }
 
-    this.router.navigateByUrl(targetLink);
+    const currentUrl = this.router.url;
+    // If already on the target page, force a reload by navigating away and back
+    if (currentUrl.split('?')[0] === targetLink.split('?')[0]) {
+      this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+        this.router.navigateByUrl(targetLink);
+      });
+    } else {
+      this.router.navigateByUrl(targetLink);
+    }
   }
 
   markAsRead(id: string): void {
