@@ -105,6 +105,20 @@ export class NotificationService implements OnDestroy {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
+  navigateDeepLink(deepLink: string | null | undefined): void {
+    if (!deepLink) return;
+    let targetLink = deepLink;
+
+    // Rewrite legacy/mismatched deep links for backward compatibility
+    if (targetLink.includes('/dashboard/admin/approvals')) {
+      targetLink = '/dashboard/tenants';
+    } else if (targetLink.includes('/dashboard/financial-requests/details')) {
+      targetLink = '/dashboard/financials';
+    }
+
+    this.router.navigateByUrl(targetLink);
+  }
+
   markAsRead(id: string): void {
     this.notifications.update(ns =>
       ns.map(n => n.id === id ? { ...n, isRead: true } : n)
@@ -191,9 +205,7 @@ export class NotificationService implements OnDestroy {
         toastType,
         () => {
           this.markAsRead(notification.id);
-          if (notification.deepLink) {
-            this.router.navigateByUrl(notification.deepLink);
-          }
+          this.navigateDeepLink(notification.deepLink);
         }
       );
     });

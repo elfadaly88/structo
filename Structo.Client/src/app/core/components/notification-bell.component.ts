@@ -156,9 +156,7 @@ export class NotificationBellComponent {
 
   handleClick(notif: NotificationItem): void {
     this.notifService.markAsRead(notif.id);
-    if (notif.deepLink) {
-      this.router.navigateByUrl(notif.deepLink);
-    }
+    this.notifService.navigateDeepLink(notif.deepLink);
     this.isOpen.set(false);
   }
 

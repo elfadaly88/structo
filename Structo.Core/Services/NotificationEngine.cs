@@ -25,7 +25,7 @@ public class NotificationEngine(DbContext context, INotificationService notifica
             Title = "New Petty Cash Request",
             Message = $"Engineer {requesterName} requested {amount:N0} EGP.",
             Type = NotificationType.PettyCash,
-            DeepLink = $"/dashboard/financial-requests/details/{pettyCashId}"
+            DeepLink = "/dashboard/financials"
         });
 
         // Send to TenantOwner
@@ -36,7 +36,7 @@ public class NotificationEngine(DbContext context, INotificationService notifica
             Title = "New Petty Cash Request",
             Message = $"Engineer {requesterName} requested {amount:N0} EGP.",
             Type = NotificationType.PettyCash,
-            DeepLink = $"/dashboard/financial-requests/details/{pettyCashId}"
+            DeepLink = "/dashboard/financials"
         });
     }
 
@@ -50,7 +50,7 @@ public class NotificationEngine(DbContext context, INotificationService notifica
             Title = "New Account Pending Approval",
             Message = $"Company {companyName} has registered and requires validation.",
             Type = NotificationType.Registration,
-            DeepLink = "/dashboard/admin/approvals"
+            DeepLink = "/dashboard/tenants"
         });
     }
 
