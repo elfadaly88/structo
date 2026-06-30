@@ -44,7 +44,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"{tenantId}/profile/logo{extension}";
+            string customKey = $"images/logo-{tenantId}{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -66,7 +66,7 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload logo: {ex.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload logo: {ex.Message}. Inner: {ex.InnerException?.Message}" });
         }
     }
 
@@ -87,7 +87,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"{tenantId}/profile/banner{extension}";
+            string customKey = $"images/banner-{tenantId}{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -109,7 +109,7 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload banner: {ex.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload banner: {ex.Message}. Inner: {ex.InnerException?.Message}" });
         }
     }
 
@@ -130,7 +130,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{extension}";
+            string customKey = $"images/projects-{projectId}-{Guid.NewGuid()}{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -160,7 +160,7 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload image: {ex.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload image: {ex.Message}. Inner: {ex.InnerException?.Message}" });
         }
     }
 
@@ -181,7 +181,7 @@ public class ImageUploadController(
         try
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
-            string customKey = $"{tenantId}/projects/{projectId}/files/{Guid.NewGuid()}{extension}";
+            string customKey = $"files/projects-{projectId}-{Guid.NewGuid()}{extension}";
             
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
@@ -195,7 +195,7 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload document: {ex.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload document: {ex.Message}. Inner: {ex.InnerException?.Message}" });
         }
     }
 
