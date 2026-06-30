@@ -22,7 +22,7 @@ public class CloudflareR2StorageService(
         var extension = Path.GetExtension(fileName).ToLower();
         var key = customKey?.TrimStart('/') ?? $"images/{Guid.NewGuid()}{extension}";
 
-        string dbUrl = $"{_settings.PublicBaseUrl}/{key}";
+        string dbUrl = $"{_settings.PublicBaseUrl.TrimEnd('/')}/{key}";
 
         // Generate Presigned URL
         var presignRequest = new GetPreSignedUrlRequest
@@ -44,7 +44,7 @@ public class CloudflareR2StorageService(
         var extension = Path.GetExtension(fileName).ToLower();
         var key = customKey?.TrimStart('/') ?? $"images/{Guid.NewGuid()}{extension}";
 
-        string dbUrl = $"{_settings.PublicBaseUrl}/{key}";
+        string dbUrl = $"{_settings.PublicBaseUrl.TrimEnd('/')}/{key}";
 
         // Generate Presigned URL locally (no network requests, so no SSL validation issues)
         var presignRequest = new GetPreSignedUrlRequest
