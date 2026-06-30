@@ -107,6 +107,11 @@ export class NotificationService implements OnDestroy {
     );
   }
 
+  clearAllNotifications(): void {
+    this.notifications.set([]);
+    this.http.delete(`${this.apiUrl}/clear-all`).subscribe();
+  }
+
   // ── Private helpers ────────────────────────────────────────────────────────
 
   private loadNotifications(): void {

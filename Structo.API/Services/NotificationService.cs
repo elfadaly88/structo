@@ -258,4 +258,29 @@ public class NotificationService : INotificationService
         ReadAt     = n.ReadAt,
         CreatedAt  = n.CreatedAt
     };
+
+    public async Task ClearAllNotificationsAsync(Guid userId, Guid? tenantId)
+    {
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return;
+
+        var query = _db.Notifications.AsQueryable();
+
+        var toDelete = await query
+            .Where(n =>
+                n.ReceiverId == userId ||
+                (n.ReceiverId == null && n.TenantId == tenantId) ||
+                (n.ReceiverId == null && n.TenantId == null))
+            .ToListAsync();
+
+        var filteredToDelete = toDelete
+            .Where(n => !n.TargetRole.HasValue || n.TargetRole.Value == user.Role)
+            .ToList();
+
+        if (filteredToDelete.Count > 0)
+        {
+            _db.Notifications.RemoveRange(filteredToDelete);
+            await _db.SaveChangesAsync();
+        }
+    }
 }

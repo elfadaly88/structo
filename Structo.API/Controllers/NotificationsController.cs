@@ -53,4 +53,12 @@ public class NotificationsController(INotificationService notificationService) :
         await notificationService.SendAsync(dto);
         return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = "Notification sent." });
     }
+
+    /// <summary>Clears all notifications for the current authenticated user.</summary>
+    [HttpDelete("clear-all")]
+    public async Task<ActionResult<ApiResponse<bool>>> ClearAll()
+    {
+        await notificationService.ClearAllNotificationsAsync(CurrentUserId, CurrentTenantId);
+        return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = "All notifications cleared." });
+    }
 }

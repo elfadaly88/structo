@@ -105,6 +105,17 @@ import { DatePipe } from '@angular/common';
               </button>
             }
           </div>
+
+          <!-- Footer -->
+          @if (notifService.notifications().length > 0) {
+            <div class="flex items-center justify-center p-2 border-t border-slate-800 shrink-0 bg-slate-950/40">
+              <button
+                (click)="clearAll()"
+                class="w-full py-1.5 text-center text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg transition-all cursor-pointer">
+                Clear All / مسح الكل
+              </button>
+            </div>
+          }
         </div>
       }
     </div>
@@ -153,6 +164,10 @@ export class NotificationBellComponent {
 
   markAllAsRead(): void {
     this.notifService.markAllAsRead();
+  }
+
+  clearAll(): void {
+    this.notifService.clearAllNotifications();
   }
 
   getTypeEmoji(type: string): string {

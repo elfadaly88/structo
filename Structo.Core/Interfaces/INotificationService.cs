@@ -18,4 +18,7 @@ public interface INotificationService
 
     /// <summary>Marks a single notification as read and records the read timestamp.</summary>
     Task MarkAsReadAsync(Guid notificationId, Guid userId);
+
+    /// <summary>Clears/Deletes all notifications for the current authenticated user.</summary>
+    Task ClearAllNotificationsAsync(Guid userId, Guid? tenantId);
 }
