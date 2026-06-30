@@ -106,10 +106,32 @@ public class NotificationService : INotificationService
 
     public async Task MarkAsReadAsync(Guid notificationId, Guid userId)
     {
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return;
+
         var notification = await _db.Notifications
-            .FirstOrDefaultAsync(n => n.Id == notificationId && n.ReceiverId == userId);
+            .FirstOrDefaultAsync(n => n.Id == notificationId);
 
         if (notification is null) return;
+
+        bool isAuthorized = false;
+
+        if (notification.ReceiverId == userId)
+        {
+            isAuthorized = true;
+        }
+        else if (notification.ReceiverId == null)
+        {
+            bool tenantMatches = (notification.TenantId == null) || (notification.TenantId == user.TenantId);
+            bool roleMatches = (!notification.TargetRole.HasValue) || (notification.TargetRole.Value == user.Role);
+
+            if (tenantMatches && roleMatches)
+            {
+                isAuthorized = true;
+            }
+        }
+
+        if (!isAuthorized) return;
 
         notification.IsRead = true;
         notification.ReadAt = DateTime.UtcNow;
