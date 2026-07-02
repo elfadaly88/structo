@@ -147,6 +147,7 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
     public async Task<PaginatedList<PettyCashMobileDto>> GetMobilePettyCashAsync(Guid projectId, int pageNumber, int pageSize)
     {
         var query = context.Set<PettyCash>()
+            .Include(p => p.Project)
             .Include(p => p.IssuedToUser)
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.IssuedAt);
@@ -159,6 +160,8 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
             .Select(t => new PettyCashMobileDto
             {
                 Id = t.Id,
+                ProjectId = t.ProjectId,
+                ProjectName = t.Project != null ? t.Project.Name : string.Empty,
                 Amount = t.Amount,
                 Reason = t.Reason,
                 IssuedAt = t.IssuedAt,

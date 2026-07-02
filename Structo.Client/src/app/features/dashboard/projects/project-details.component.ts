@@ -1397,6 +1397,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isSettling = signal(false);
   readonly settleErrors = signal<string[]>([]);
   readonly activePettyCash = signal<PettyCashMobileDto | null>(null);
+  readonly selectedSettleReceipt = signal<File | null>(null);
 
   readonly settleForm: FormGroup = this.fb.group({
     spentAmount: [null, [Validators.required, Validators.min(0.01)]],
@@ -1810,6 +1811,7 @@ export class ProjectDetailsComponent implements OnInit {
   openSettleModal(item: PettyCashMobileDto): void {
     this.activePettyCash.set(item);
     this.settleErrors.set([]);
+    this.selectedSettleReceipt.set(null);
     this.settleForm.reset({
       spentAmount: item.amount,
       receiptDescription: '',
@@ -1834,6 +1836,7 @@ export class ProjectDetailsComponent implements OnInit {
     this.isSettleModalOpen.set(false);
     this.activePettyCash.set(null);
     this.settleErrors.set([]);
+    this.selectedSettleReceipt.set(null);
     this.confirmService.toggleBodyScroll(false);
   }
 
@@ -1847,12 +1850,43 @@ export class ProjectDetailsComponent implements OnInit {
     this.settleErrors.set([]);
 
     const formVal = this.settleForm.value;
+    let receiptPhotoUrl = formVal.receiptPhotoUrl || '';
+
+    const fileToUpload = this.selectedSettleReceipt();
+    if (fileToUpload) {
+      if (fileToUpload.size > 2 * 1024 * 1024) {
+        this.isSettling.set(false);
+        this.settleErrors.set(['حجم الملف كبير جداً! الحد الأقصى لإيصال الفاتورة 2 ميجا.']);
+        return;
+      }
+
+      this.isUploadingSettleReceipt.set(true);
+      try {
+        const uploadResult = await firstValueFrom(this.uploadService.uploadProjectGallery(this.projectId, fileToUpload));
+        if (uploadResult.success && uploadResult.data) {
+          receiptPhotoUrl = uploadResult.data.url;
+          this.settleForm.patchValue({ receiptPhotoUrl });
+        } else {
+          this.isUploadingSettleReceipt.set(false);
+          this.isSettling.set(false);
+          this.settleErrors.set([uploadResult.message || 'Failed to upload receipt image.']);
+          return;
+        }
+      } catch (err: any) {
+        this.isUploadingSettleReceipt.set(false);
+        this.isSettling.set(false);
+        this.settleErrors.set([err.error?.message || err.message || 'Failed to upload receipt image.']);
+        return;
+      }
+      this.isUploadingSettleReceipt.set(false);
+    }
+
     const dto: PettyCashSettleDto = {
       spentAmount: formVal.spentAmount,
       receiptDescription: formVal.receiptDescription,
       settlementPaymentMethod: formVal.settlementPaymentMethod,
       expenseDate: new Date(formVal.expenseDate),
-      receiptPhotoUrl: formVal.receiptPhotoUrl || ''
+      receiptPhotoUrl
     };
 
     const pettyCashId = this.activePettyCash()!.id;
@@ -2029,17 +2063,7 @@ export class ProjectDetailsComponent implements OnInit {
   onSettleReceiptSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      this.isUploadingSettleReceipt.set(true);
-      this.uploadService.uploadProjectGallery(this.projectId, file).subscribe({
-        next: (res) => {
-          this.isUploadingSettleReceipt.set(false);
-          if (res.success && res.data) {
-            this.settleForm.patchValue({ receiptPhotoUrl: res.data.url });
-          }
-        },
-        error: () => this.isUploadingSettleReceipt.set(false)
-      });
+      this.selectedSettleReceipt.set(input.files[0]);
     }
   }
 

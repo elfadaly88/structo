@@ -6,12 +6,13 @@ import { ProjectService } from '../../../core/services/project.service';
 import { ProjectDto, ProjectCreateDto } from '../../../core/models/project.models';
 import { TenantUserService, UserDto, UserCreateDto } from '../../../core/services/tenant-user.service';
 import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/services/tenant-profile.service';
+import { OfflineSyncService } from '../../../core/services/offline-sync.service';
+import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { ImageUploadService } from '../../../core/services/image-upload.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
 import { take } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 export interface ProjectViewDto extends ProjectDto {
   client: string;
   budget: number;
@@ -255,8 +256,11 @@ export interface ProjectViewDto extends ProjectDto {
                     <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_FIRST_NAME' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_LAST_NAME' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_EMAIL' | translate }}</th>
+                    <th class="px-6 py-4 font-cairo">Contact</th>
+                    <th class="px-6 py-4 font-cairo">WhatsApp</th>
                     <th class="px-6 py-4 text-center font-cairo">{{ 'USERS.TABLE_ROLE' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_CREATED_AT' | translate }}</th>
+                    <th class="px-6 py-4 text-center font-cairo">Action</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60 text-sm">
@@ -265,6 +269,8 @@ export interface ProjectViewDto extends ProjectDto {
                       <td class="px-6 py-4 font-bold text-white">{{ usr.firstName }}</td>
                       <td class="px-6 py-4 font-medium text-slate-300">{{ usr.lastName }}</td>
                       <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.email }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.contactPhone || '—' }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.whatsAppPhone || '—' }}</td>
                       <td class="px-6 py-4 text-center">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-cairo"
                           [class.bg-indigo-500/10]="usr.role === 'Manager'"
@@ -283,10 +289,22 @@ export interface ProjectViewDto extends ProjectDto {
                         </span>
                       </td>
                       <td class="px-6 py-4 text-slate-400">{{ usr.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-6 py-4 text-center">
+                        @if (usr.whatsAppPhone) {
+                          <button
+                            type="button"
+                            (click)="openWhatsAppForUser(usr)"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer font-cairo">
+                            إرسال عبر الواتساب
+                          </button>
+                        } @else {
+                          <span class="text-slate-600 text-xs">—</span>
+                        }
+                      </td>
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="5" class="px-6 py-16 text-center text-slate-500 text-sm">
+                      <td colspan="8" class="px-6 py-16 text-center text-slate-500 text-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-700 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
@@ -377,6 +395,17 @@ export interface ProjectViewDto extends ProjectDto {
                 <div>
                   <label for="prof-region" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_REGION' | translate }}</label>
                   <input id="prof-region" type="text" formControlName="region" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="e.g. Cairo, Giza, Alexandria">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="prof-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Contact Phone</label>
+                  <input id="prof-contact-phone" type="tel" formControlName="contactPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
+                </div>
+                <div>
+                  <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">WhatsApp Phone</label>
+                  <input id="prof-whatsapp-phone" type="tel" formControlName="whatsAppPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
                 </div>
               </div>
 
@@ -614,6 +643,32 @@ export interface ProjectViewDto extends ProjectDto {
                 placeholder="e.g. ahmed.ali@company.com">
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="usr-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Contact Phone</label>
+                <input
+                  id="usr-contact-phone"
+                  type="tel"
+                  formControlName="contactPhone"
+                  inputmode="numeric"
+                  maxlength="11"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
+                  placeholder="01xxxxxxxxx">
+              </div>
+
+              <div>
+                <label for="usr-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">WhatsApp Phone</label>
+                <input
+                  id="usr-whatsapp-phone"
+                  type="tel"
+                  formControlName="whatsAppPhone"
+                  inputmode="numeric"
+                  maxlength="11"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
+                  placeholder="01xxxxxxxxx">
+              </div>
+            </div>
+
             <div>
               <label for="usr-pass" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_PASSWORD' | translate }} <span class="text-red-400">*</span></label>
               <input
@@ -667,12 +722,13 @@ export class ProjectsComponent implements OnInit {
   private readonly projectService = inject(ProjectService);
   private readonly userService = inject(TenantUserService);
   private readonly profileService = inject(TenantProfileService);
+  private readonly offlineSync = inject(OfflineSyncService);
+  private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly uploadService = inject(ImageUploadService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly confirmService = inject(ConfirmModalService);
-  private readonly http = inject(HttpClient);
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
@@ -725,6 +781,8 @@ export class ProjectsComponent implements OnInit {
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
+    contactPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
+    whatsAppPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     role: ['Manager', Validators.required]
   });
@@ -734,6 +792,8 @@ export class ProjectsComponent implements OnInit {
     logoUrl: [''],
     bannerUrl: [''],
     region: [''],
+    contactPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
+    whatsAppPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
     companyDescription: ['']
   });
 
@@ -752,6 +812,9 @@ export class ProjectsComponent implements OnInit {
       this.fetchUsers();
       this.fetchProfile();
     }
+
+    this.offlineSync.registerHandler<TenantProfileUpdateDto>('tenant-profile-update', (dto) => this.profileService.updateProfile(dto));
+    this.offlineSync.registerHandler<UserCreateDto>('user-create', (dto) => this.userService.createUser(dto));
   }
 
   navigateToTab(tab: 'projects' | 'users' | 'profile'): void {
@@ -864,6 +927,8 @@ export class ProjectsComponent implements OnInit {
             logoUrl: getCleanUrl(res.data.logoUrl),
             bannerUrl: getCleanUrl(res.data.bannerUrl),
             region: res.data.region,
+            contactPhone: res.data.contactPhone,
+            whatsAppPhone: res.data.whatsAppPhone,
             companyDescription: res.data.companyDescription
           });
         }
@@ -881,12 +946,14 @@ export class ProjectsComponent implements OnInit {
 
     const dto: TenantProfileUpdateDto = this.profileForm.value;
 
-    this.profileService.updateProfile(dto).pipe(take(1)).subscribe({
+    this.offlineSync.submit('tenant-profile-update', dto, (value) => this.profileService.updateProfile(value)).pipe(take(1)).subscribe({
       next: (res) => {
         this.isSavingProfile.set(false);
         if (res.success) {
-          this.profileSuccessMessage.set('PROFILE.SUCCESS');
-          this.fetchProfile();
+          this.profileSuccessMessage.set(res.message || 'PROFILE.SUCCESS');
+          if (navigator.onLine) {
+            this.fetchProfile();
+          }
           setTimeout(() => this.profileSuccessMessage.set(null), 5000);
         }
       },
@@ -1038,6 +1105,8 @@ export class ProjectsComponent implements OnInit {
       firstName: '',
       lastName: '',
       email: '',
+      contactPhone: '',
+      whatsAppPhone: '',
       password: '',
       role: 'Manager'
     });
@@ -1065,12 +1134,14 @@ export class ProjectsComponent implements OnInit {
 
     const dto: UserCreateDto = this.userForm.value;
 
-    this.userService.createUser(dto).subscribe({
+    this.offlineSync.submit('user-create', dto, (value) => this.userService.createUser(value)).pipe(take(1)).subscribe({
       next: (response) => {
         this.isSavingUser.set(false);
-        if (response.success && response.data) {
+        if (response.success) {
           this.closeUserModal();
-          this.fetchUsers();
+          if (navigator.onLine) {
+            this.fetchUsers();
+          }
         } else {
           this.userValidationErrors.set(response.errors || [response.message || 'Failed to add user.']);
         }
@@ -1081,6 +1152,11 @@ export class ProjectsComponent implements OnInit {
         this.userValidationErrors.set(Array.isArray(errors) ? errors : [errors]);
       }
     });
+  }
+
+  openWhatsAppForUser(user: UserDto): void {
+    const message = `مرحباً ${user.firstName} ${user.lastName}، هذه رسالة من Structo.`;
+    this.whatsappLink.openChat(user.whatsAppPhone, message);
   }
 
   viewDetails(id: string): void {

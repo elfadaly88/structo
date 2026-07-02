@@ -14,6 +14,8 @@ public class Tenant
     public string BannerUrl { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
+    public string? ContactPhone { get; set; }
+    public string? WhatsAppPhone { get; set; }
     public double Rating { get; set; }
     public TenantStatus Status { get; set; } = TenantStatus.Active;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

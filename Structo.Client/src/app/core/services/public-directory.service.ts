@@ -13,6 +13,8 @@ export interface TenantDto {
   bannerUrl: string;
   region: string;
   companyDescription: string;
+  contactPhone: string | null;
+  whatsAppPhone: string | null;
   rating: number;
   createdAt: string;
   status: string;

@@ -18,6 +18,14 @@ public class UserCreateDto
     [MaxLength(150)]
     public string Email { get; set; } = string.Empty;
 
+    [MaxLength(11)]
+    [RegularExpression(@"^01\d{9}$", ErrorMessage = "Contact phone must match 01xxxxxxxxx")]
+    public string? ContactPhone { get; set; }
+
+    [MaxLength(11)]
+    [RegularExpression(@"^01\d{9}$", ErrorMessage = "WhatsApp phone must match 01xxxxxxxxx")]
+    public string? WhatsAppPhone { get; set; }
+
     [Required]
     [MinLength(6)]
     [MaxLength(100)]

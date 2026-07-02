@@ -38,19 +38,44 @@ export class NotificationService implements OnDestroy {
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
   private hubConnection: HubConnection | null = null;
   private static oneSignalInitialized = false;
+  private static oneSignalInitInFlight = false;
+  private static oneSignalSyncedUserId: string | null = null;
 
   initializeOneSignal(userId: string, email: string): void {
+    if (!userId) {
+      return;
+    }
+
+    if (NotificationService.oneSignalSyncedUserId === userId && NotificationService.oneSignalInitialized) {
+      return;
+    }
+
+    if (NotificationService.oneSignalInitInFlight) {
+      return;
+    }
+
+    NotificationService.oneSignalInitInFlight = true;
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal: any) => {
       const syncIdentity = async () => {
         try {
-          await OneSignal.login(userId);
-          if (email && email.includes('@')) {
+          if (typeof OneSignal?.login !== 'function' || !OneSignal?.User) {
+            console.warn('[OneSignal] SDK is not ready for identity sync.');
+            return;
+          }
+
+          if (OneSignal.User.externalId !== userId) {
+            await OneSignal.login(userId);
+          }
+
+          if (email && email.includes('@') && typeof OneSignal.User.addEmail === 'function') {
             await OneSignal.User.addEmail(email);
             console.log(`[OneSignal] Identity synced for User: ${userId} with Email: ${email}`);
           } else {
             console.log(`[OneSignal] Identity synced for User: ${userId} (Email skipped or invalid: "${email}")`);
           }
+
+          NotificationService.oneSignalSyncedUserId = userId;
         } catch (e) {
           console.warn('[OneSignal] Identity sync failed:', e);
         }
@@ -60,6 +85,7 @@ export class NotificationService implements OnDestroy {
       if (NotificationService.oneSignalInitialized || OneSignal.initialized) {
         NotificationService.oneSignalInitialized = true;
         await syncIdentity();
+        NotificationService.oneSignalInitInFlight = false;
         return;
       }
 
@@ -78,6 +104,8 @@ export class NotificationService implements OnDestroy {
         } else {
           console.error('[OneSignal] Init failed:', err);
         }
+      } finally {
+        NotificationService.oneSignalInitInFlight = false;
       }
     });
   }

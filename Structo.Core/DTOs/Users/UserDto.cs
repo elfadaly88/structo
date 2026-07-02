@@ -9,6 +9,8 @@ public class UserDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? ContactPhone { get; set; }
+    public string? WhatsAppPhone { get; set; }
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
 }

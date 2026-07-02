@@ -5,6 +5,8 @@ namespace Structo.Core.DTOs.Transactions;
 public class PettyCashMobileDto
 {
     public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public string ProjectName { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public string Reason { get; set; } = string.Empty;
     public DateTime IssuedAt { get; set; }

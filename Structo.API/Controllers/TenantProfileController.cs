@@ -37,6 +37,8 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
                 BannerUrl = t.BannerUrl,
                 Region = t.Region,
                 CompanyDescription = t.CompanyDescription,
+                ContactPhone = t.ContactPhone,
+                WhatsAppPhone = t.WhatsAppPhone,
                 Rating = t.Rating,
                 CreatedAt = t.CreatedAt
             })
@@ -67,6 +69,8 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
         tenant.BannerUrl = dto.BannerUrl ?? string.Empty;
         tenant.Region = dto.Region ?? string.Empty;
         tenant.CompanyDescription = dto.CompanyDescription ?? string.Empty;
+        tenant.ContactPhone = dto.ContactPhone;
+        tenant.WhatsAppPhone = dto.WhatsAppPhone;
 
         await context.SaveChangesAsync();
 
@@ -80,6 +84,8 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
             BannerUrl = tenant.BannerUrl,
             Region = tenant.Region,
             CompanyDescription = tenant.CompanyDescription,
+            ContactPhone = tenant.ContactPhone,
+            WhatsAppPhone = tenant.WhatsAppPhone,
             Rating = tenant.Rating,
             CreatedAt = tenant.CreatedAt
         };

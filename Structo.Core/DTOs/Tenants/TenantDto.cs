@@ -13,6 +13,8 @@ public class TenantDto
     public string BannerUrl { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
+    public string? ContactPhone { get; set; }
+    public string? WhatsAppPhone { get; set; }
     public double Rating { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Status { get; set; } = string.Empty;

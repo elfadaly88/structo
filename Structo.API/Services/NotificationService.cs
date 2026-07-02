@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Structo.API.Hubs;
 using Structo.Core.DTOs.Notifications;
 using Structo.Core.Entities;
 using Structo.Core.Enums;
+using Structo.Core.Exceptions;
 using Structo.Core.Interfaces;
 using Structo.Infrastructure.Data;
 using System;
@@ -27,6 +29,7 @@ public class NotificationService : INotificationService
     private readonly StructoDbContext _db;
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<NotificationService> _logger;
     private readonly string _oneSignalAppId;
     private readonly string _oneSignalRestApiKey;
 
@@ -34,11 +37,13 @@ public class NotificationService : INotificationService
         StructoDbContext db,
         IHubContext<NotificationHub> hubContext,
         IHttpClientFactory httpClientFactory,
+        ILogger<NotificationService> logger,
         IConfiguration configuration)
     {
         _db = db;
         _hubContext = hubContext;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
         _oneSignalAppId = configuration["OneSignal:AppId"] ?? string.Empty;
         _oneSignalRestApiKey = configuration["OneSignal:RestApiKey"] ?? string.Empty;
     }
@@ -49,6 +54,13 @@ public class NotificationService : INotificationService
 
     public async Task SendAsync(SendNotificationDto dto)
     {
+        // Recipient guard: never allow unscoped notifications.
+        // A valid request must target at least one scope: Receiver, Tenant, or Role.
+        if (!dto.ReceiverId.HasValue && !dto.TenantId.HasValue && !dto.TargetRole.HasValue)
+        {
+            throw new BusinessRuleException("Notification recipient scope is required. Provide ReceiverId, TenantId, or TargetRole.");
+        }
+
         // 1. Persist to DB
         var notification = new Notification
         {
@@ -224,7 +236,16 @@ public class NotificationService : INotificationService
     private async Task SendOneSignalHttpAsync(string title, string message, string deepLink, List<string> externalIds)
     {
         if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey))
+        {
+            _logger.LogWarning("OneSignal configuration is incomplete. Push notification skipped.");
             return;
+        }
+
+        if (externalIds.Count == 0)
+        {
+            _logger.LogWarning("OneSignal push skipped because no resolved recipients were found for this notification.");
+            return;
+        }
 
         try
         {
@@ -244,24 +265,22 @@ public class NotificationService : INotificationService
             if (!string.IsNullOrWhiteSpace(deepLink))
                 merged["url"] = deepLink;
 
-            if (externalIds.Count > 0)
-            {
-                merged["include_aliases"] = new { external_id = externalIds.ToArray() };
-            }
-            else
-            {
-                merged["included_segments"] = new[] { "All" };
-            }
+            merged["include_aliases"] = new { external_id = externalIds.ToArray() };
 
             var json = JsonSerializer.Serialize(merged);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            await client.PostAsync("https://onesignal.com/api/v1/notifications", content);
+            var response = await client.PostAsync("https://onesignal.com/api/v1/notifications", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("OneSignal push failed with status code {StatusCode}. Response: {ResponseBody}", response.StatusCode, body);
+            }
         }
         catch (Exception ex)
         {
             // Log but never throw — push failures should never affect the caller
-            Console.WriteLine($"[OneSignal] Push failed: {ex.Message}");
+            _logger.LogError(ex, "OneSignal push failed due to an exception.");
         }
     }
 

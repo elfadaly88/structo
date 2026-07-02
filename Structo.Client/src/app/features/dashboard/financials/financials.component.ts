@@ -137,7 +137,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 @for (request of pendingApprovals(); track request.id) {
                   <tr class="hover:bg-slate-950/20">
                     <td class="py-4 text-white font-semibold">{{ request.issuedTo }}</td>
-                    <td class="py-4 text-slate-300 font-medium">{{ getProjectName(request.projectId) }}</td>
+                    <td class="py-4 text-slate-300 font-medium">{{ getProjectName(request) }}</td>
                     <td class="py-4 text-amber-400 font-bold font-mono">{{ request.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
                     <td class="py-4 text-slate-400 max-w-xs truncate">{{ request.reason }}</td>
                     <td class="py-4 text-slate-400 font-mono">{{ request.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -190,7 +190,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               <tbody class="text-sm divide-y divide-slate-800/60 text-slate-300">
                 @for (request of myPettyCash(); track request.id) {
                   <tr class="hover:bg-slate-950/20">
-                    <td class="py-4 text-white font-medium">{{ getProjectName(request.projectId) }}</td>
+                    <td class="py-4 text-white font-medium">{{ getProjectName(request) }}</td>
                     <td class="py-4 text-amber-400 font-bold font-mono">{{ request.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
                     <td class="py-4 text-slate-400 max-w-xs truncate">{{ request.reason }}</td>
                     <td class="py-4 text-slate-400 font-mono">{{ request.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -881,9 +881,22 @@ export class FinancialsComponent {
     return role === 'TenantOwner' || role === 'Accountant';
   }
 
-  getProjectName(projectId: string): string {
-    const project = this.projects().find((p) => p.id === projectId);
-    return project?.name || 'Unknown Project';
+  getProjectName(requestOrProjectId: string | { projectId?: string; projectName?: string | null }): string {
+    if (typeof requestOrProjectId !== 'string') {
+      if (requestOrProjectId.projectName && requestOrProjectId.projectName.trim()) {
+        return requestOrProjectId.projectName;
+      }
+
+      if (requestOrProjectId.projectId) {
+        const project = this.projects().find((p) => p.id === requestOrProjectId.projectId);
+        return project?.name || 'Project';
+      }
+
+      return 'Project';
+    }
+
+    const project = this.projects().find((p) => p.id === requestOrProjectId);
+    return project?.name || 'Project';
   }
 
   openPettyCashModal(): void {

@@ -21,6 +21,8 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Email = u.Email,
+                ContactPhone = u.ContactPhone,
+                WhatsAppPhone = u.WhatsAppPhone,
                 Role = u.Role,
                 CreatedAt = u.CreatedAt
             })
@@ -44,6 +46,8 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Email = dto.Email,
+            ContactPhone = dto.ContactPhone,
+            WhatsAppPhone = dto.WhatsAppPhone,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
             TenantId = tenantId
@@ -58,6 +62,8 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
             FirstName = user.FirstName,
             LastName = user.LastName,
             Email = user.Email,
+            ContactPhone = user.ContactPhone,
+            WhatsAppPhone = user.WhatsAppPhone,
             Role = user.Role,
             CreatedAt = user.CreatedAt
         };
