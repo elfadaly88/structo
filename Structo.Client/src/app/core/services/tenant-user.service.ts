@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 
 export interface UserDto {
   id: string;
+  isActive: boolean;
   firstName: string;
   lastName: string;
   email: string;
@@ -39,5 +40,9 @@ export class TenantUserService {
 
   createUser(dto: UserCreateDto): Observable<ApiResponse<UserDto>> {
     return this.http.post<ApiResponse<UserDto>>(this.apiUrl, dto);
+  }
+
+  toggleUserStatus(userId: string): Observable<ApiResponse<boolean>> {
+    return this.http.put<ApiResponse<boolean>>(`${this.apiUrl}/${userId}/toggle-status`, {});
   }
 }

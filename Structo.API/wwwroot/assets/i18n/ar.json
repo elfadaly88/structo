@@ -90,8 +90,16 @@
     "FORGOT_PASSWORD": "هل نسيت كلمة المرور؟",
     "SIGN_IN": "تسجيل الدخول",
     "SIGNING_IN": "جاري تسجيل الدخول...",
+    "FAILED": "فشل تسجيل الدخول.",
+    "BACKEND_UNAVAILABLE": "تعذر الاتصال بالخادم الخلفي. يرجى التأكد من أنه يعمل على المنفذ 5000.",
     "DEV_INFO": "معلومات التطوير:",
     "DEV_INFO_TEXT": "استخدم بيانات الاعتماد المسجلة في قاعدة بياناتك، أو تأكد من تشغيل الخلفية على http://localhost:5000."
+  },
+  "AUTH": {
+    "INVALID_CREDENTIALS": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "ACCOUNT_DEACTIVATED": "تم تعطيل هذا الحساب بواسطة مسؤول الشركة.",
+    "ACCOUNT_PENDING_OR_INACTIVE": "حسابك قيد الموافقة أو غير نشط.",
+    "LOGIN_SUCCESS": "تم تسجيل الدخول بنجاح"
   },
   "DASHBOARD": {
     "SIDEBAR_NAV": "القائمة الرئيسية",
@@ -211,6 +219,16 @@
     "STAT_TOTAL": "إجمالي المستخدمين",
     "STAT_MANAGERS": "المدراء",
     "STAT_ENGINEERS": "المهندسين",
+    "STATUS_ACTIVE": "نشط",
+    "STATUS_SUSPENDED": "موقوف",
+    "STATUS_ACTIVATED": "تم تفعيل المستخدم بنجاح.",
+    "ACTION_SUSPEND": "إيقاف",
+    "ACTION_ACTIVATE": "تفعيل",
+    "CURRENT_USER": "الحساب الحالي",
+    "CANNOT_DISABLE_SELF": "لا يمكنك إيقاف حسابك الشخصي.",
+    "USER_NOT_FOUND": "المستخدم غير موجود.",
+    "STATUS_UPDATED_SUCCESS": "تم تحديث حالة المستخدم بنجاح.",
+    "STATUS_UPDATE_FAILED": "تعذر تحديث حالة المستخدم.",
     "TABLE_FIRST_NAME": "الاسم الأول",
     "TABLE_LAST_NAME": "اسم العائلة",
     "TABLE_EMAIL": "البريد الإلكتروني",

@@ -90,8 +90,16 @@
     "FORGOT_PASSWORD": "Forgot your password?",
     "SIGN_IN": "Sign in",
     "SIGNING_IN": "Signing in...",
+    "FAILED": "Login failed.",
+    "BACKEND_UNAVAILABLE": "Unable to connect to the backend server. Please verify it is running on port 5000.",
     "DEV_INFO": "Development Info:",
     "DEV_INFO_TEXT": "Use credentials registered in your database, or verify that your backend runs at http://localhost:5000."
+  },
+  "AUTH": {
+    "INVALID_CREDENTIALS": "Invalid email or password",
+    "ACCOUNT_DEACTIVATED": "This account has been deactivated by the company administrator.",
+    "ACCOUNT_PENDING_OR_INACTIVE": "Your account is pending approval or inactive.",
+    "LOGIN_SUCCESS": "Login successful"
   },
   "DASHBOARD": {
     "SIDEBAR_NAV": "Navigation",
@@ -211,6 +219,16 @@
     "STAT_TOTAL": "Total Users",
     "STAT_MANAGERS": "Managers",
     "STAT_ENGINEERS": "Engineers",
+    "STATUS_ACTIVE": "Active",
+    "STATUS_SUSPENDED": "Suspended",
+    "STATUS_ACTIVATED": "User activated successfully.",
+    "ACTION_SUSPEND": "Suspend",
+    "ACTION_ACTIVATE": "Activate",
+    "CURRENT_USER": "Current account",
+    "CANNOT_DISABLE_SELF": "You cannot suspend your own account.",
+    "USER_NOT_FOUND": "User not found.",
+    "STATUS_UPDATED_SUCCESS": "User status updated successfully.",
+    "STATUS_UPDATE_FAILED": "Unable to update user status.",
     "TABLE_FIRST_NAME": "First Name",
     "TABLE_LAST_NAME": "Last Name",
     "TABLE_EMAIL": "Email",

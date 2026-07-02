@@ -10,8 +10,9 @@ import { OfflineSyncService } from '../../../core/services/offline-sync.service'
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { ImageUploadService } from '../../../core/services/image-upload.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { take } from 'rxjs';
 export interface ProjectViewDto extends ProjectDto {
   client: string;
@@ -266,7 +267,61 @@ export interface ProjectViewDto extends ProjectDto {
                 <tbody class="divide-y divide-slate-800/60 text-sm">
                   @for (usr of users(); track usr.id) {
                     <tr class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300">
-                      <td class="px-6 py-4 font-bold text-white">{{ usr.firstName }}</td>
+                      <td class="px-6 py-4">
+                        <div class="flex items-center justify-between gap-3">
+                          <div class="min-w-0">
+                            <div class="font-bold text-white truncate">{{ usr.firstName }}</div>
+                            <div class="mt-1 inline-flex items-center gap-2 text-xs font-semibold"
+                              [class.text-emerald-400]="usr.isActive"
+                              [class.text-rose-400]="!usr.isActive">
+                              <span class="h-2.5 w-2.5 rounded-full shadow-[0_0_10px_currentColor]"
+                                [class.bg-emerald-400]="usr.isActive"
+                                [class.bg-rose-400]="!usr.isActive"></span>
+                              {{ usr.isActive ? ('USERS.STATUS_ACTIVE' | translate) : ('USERS.STATUS_SUSPENDED' | translate) }}
+                            </div>
+
+                            @if (usr.id === currentUserId()) {
+                              <span class="mt-2 inline-flex rounded-full border border-slate-700 bg-slate-900/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                {{ 'USERS.CURRENT_USER' | translate }}
+                              </span>
+                            }
+                          </div>
+
+                          <button
+                            type="button"
+                            (click)="toggleUserStatus(usr)"
+                            [disabled]="isUserToggleLoading(usr.id) || usr.id === currentUserId()"
+                            class="inline-flex items-center gap-2 rounded-full border px-2 py-1.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            [class.border-emerald-500/30]="usr.isActive"
+                            [class.bg-emerald-500/10]="usr.isActive"
+                            [class.text-emerald-400]="usr.isActive"
+                            [class.hover:bg-emerald-500/20]="usr.isActive"
+                            [class.border-rose-500/30]="!usr.isActive"
+                            [class.bg-rose-500/10]="!usr.isActive"
+                            [class.text-rose-400]="!usr.isActive"
+                            [class.hover:bg-rose-500/20]="!usr.isActive"
+                            [class.shadow-[0_0_18px_rgba(16,185,129,0.12)]]="usr.isActive"
+                            [class.shadow-[0_0_18px_rgba(244,63,94,0.12)]]="!usr.isActive">
+                            @if (isUserToggleLoading(usr.id)) {
+                              <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                                <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            } @else if (usr.id === currentUserId()) {
+                              <span class="text-[10px] font-bold uppercase tracking-wider">
+                                {{ 'USERS.CURRENT_USER' | translate }}
+                              </span>
+                            } @else {
+                              <span class="h-2.5 w-2.5 rounded-full"
+                                [class.bg-emerald-400]="usr.isActive"
+                                [class.bg-rose-400]="!usr.isActive"></span>
+                              <span class="text-[10px] font-bold uppercase tracking-wider">
+                                {{ usr.isActive ? ('USERS.ACTION_SUSPEND' | translate) : ('USERS.ACTION_ACTIVATE' | translate) }}
+                              </span>
+                            }
+                          </button>
+                        </div>
+                      </td>
                       <td class="px-6 py-4 font-medium text-slate-300">{{ usr.lastName }}</td>
                       <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.email }}</td>
                       <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.contactPhone || '—' }}</td>
@@ -726,10 +781,14 @@ export class ProjectsComponent implements OnInit {
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly uploadService = inject(ImageUploadService);
   private readonly authService = inject(AuthService);
+  private readonly translateService = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly confirmService = inject(ConfirmModalService);
+  private readonly toastService = inject(ToastService);
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
+  readonly togglingUserId = signal<string | null>(null);
+  readonly currentUserId = computed(() => this.authService.currentUser()?.userId || '');
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
 
@@ -799,6 +858,13 @@ export class ProjectsComponent implements OnInit {
 
   ngOnInit(): void {
     const url = this.router.url;
+    const isRestrictedTab = url.includes('/dashboard/users') || url.includes('/dashboard/profile');
+    if (isRestrictedTab && this.currentUserRole() !== 'TenantOwner') {
+      this.activeTab.set('projects');
+      this.router.navigate(['/dashboard/projects'], { replaceUrl: true });
+      return;
+    }
+
     if (url.includes('/dashboard/users')) {
       this.activeTab.set('users');
     } else if (url.includes('/dashboard/profile')) {
@@ -904,6 +970,55 @@ export class ProjectsComponent implements OnInit {
           err.status === 401
             ? 'Session expired. Please log in again.'
             : err.error?.message || 'Error connecting to backend.'
+        );
+      }
+    });
+  }
+
+  isUserToggleLoading(userId: string): boolean {
+    return this.togglingUserId() === userId;
+  }
+
+  toggleUserStatus(user: UserDto): void {
+    if (this.currentUserRole() !== 'TenantOwner') {
+      return;
+    }
+
+    if (user.id === this.currentUserId()) {
+      this.toastService.show(
+        this.translateService.instant('COMMON.ERROR'),
+        this.translateService.instant('USERS.CANNOT_DISABLE_SELF'),
+        'error'
+      );
+      return;
+    }
+
+    this.togglingUserId.set(user.id);
+    this.userService.toggleUserStatus(user.id).pipe(take(1)).subscribe({
+      next: (response) => {
+        this.togglingUserId.set(null);
+        if (response.success) {
+          const updatedActiveState = response.data ?? !user.isActive;
+          this.users.update(current => current.map(item => item.id === user.id ? { ...item, isActive: updatedActiveState } : item));
+          this.toastService.show(
+            this.translateService.instant('COMMON.SUCCESS'),
+            this.translateService.instant('USERS.STATUS_UPDATED_SUCCESS'),
+            'success'
+          );
+        } else {
+          this.toastService.show(
+            this.translateService.instant('COMMON.ERROR'),
+            this.translateService.instant(response.message || 'USERS.STATUS_UPDATE_FAILED'),
+            'error'
+          );
+        }
+      },
+      error: (err) => {
+        this.togglingUserId.set(null);
+        this.toastService.show(
+          this.translateService.instant('COMMON.ERROR'),
+          this.translateService.instant(err.error?.message || err.message || 'USERS.STATUS_UPDATE_FAILED'),
+          'error'
         );
       }
     });

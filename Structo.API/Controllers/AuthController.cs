@@ -15,19 +15,30 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginDto dto)
     {
-        var (success, data, message) = await authService.LoginAsync(dto);
-
-        if (!success)
+        try
         {
-            return Unauthorized(new ApiResponse<LoginResponseDto> { Success = false, Message = message });
+            var (success, data, message) = await authService.LoginAsync(dto);
+
+            if (!success)
+            {
+                return Unauthorized(new ApiResponse<LoginResponseDto> { Success = false, Message = message });
+            }
+
+            return Ok(new ApiResponse<LoginResponseDto>
+            {
+                Data = data,
+                Message = message,
+                Success = true
+            });
         }
-
-        return Ok(new ApiResponse<LoginResponseDto>
+        catch (UnauthorizedAccessException ex)
         {
-            Data = data,
-            Message = message,
-            Success = true
-        });
+            return Unauthorized(new ApiResponse<LoginResponseDto>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
     }
 
     [HttpPost("register-tenant")]

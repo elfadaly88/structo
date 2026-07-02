@@ -19,8 +19,13 @@ namespace Structo.API.Controllers;
 public class UsersController(IUserService userService, StructoDbContext context, INotificationEngine notificationEngine) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private Guid CurrentUserId => Guid.Parse(
+        User.FindFirstValue("sub") ??
+        User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+        Guid.Empty.ToString());
 
     [HttpGet]
+    [Authorize(Roles = "TenantOwner,SuperAdmin")]
     public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetAll()
     {
         var users = await userService.GetAllUsersAsync();
@@ -48,6 +53,64 @@ public class UsersController(IUserService userService, StructoDbContext context,
             Data = data, 
             Message = message, 
             CurrentUserRole = CurrentUserRole 
+        });
+    }
+
+    [HttpPut("{id:guid}/toggle-status")]
+    [Authorize(Roles = "TenantOwner,SuperAdmin")]
+    public async Task<ActionResult<ApiResponse<bool>>> ToggleStatus(Guid id)
+    {
+        var isSuperAdmin = User.IsInRole("SuperAdmin");
+        var currentTenantId = context.CurrentTenantId;
+
+        if (id == CurrentUserId)
+        {
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "USERS.CANNOT_DISABLE_SELF",
+                CurrentUserRole = CurrentUserRole
+            });
+        }
+
+        var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null)
+        {
+            return NotFound(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "USERS.USER_NOT_FOUND",
+                CurrentUserRole = CurrentUserRole
+            });
+        }
+
+        if (!isSuperAdmin)
+        {
+            if (!currentTenantId.HasValue || user.TenantId != currentTenantId)
+            {
+                return NotFound(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "USERS.USER_NOT_FOUND",
+                    CurrentUserRole = CurrentUserRole
+                });
+            }
+
+            if (user.Role == UserRole.SuperAdmin)
+            {
+                return Forbid();
+            }
+        }
+
+        user.IsActive = !user.IsActive;
+        await context.SaveChangesAsync();
+
+        return Ok(new ApiResponse<bool>
+        {
+            Data = user.IsActive,
+            Success = true,
+            Message = user.IsActive ? "USERS.STATUS_ACTIVATED" : "USERS.STATUS_SUSPENDED",
+            CurrentUserRole = CurrentUserRole
         });
     }
 

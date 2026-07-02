@@ -18,6 +18,7 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
             .Select(u => new UserDto
             {
                 Id = u.Id,
+                IsActive = u.IsActive,
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Email = u.Email,
@@ -50,7 +51,8 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
             WhatsAppPhone = dto.WhatsAppPhone,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
-            TenantId = tenantId
+            TenantId = tenantId,
+            IsActive = true
         };
 
         usersDbSet.Add(user);
@@ -59,6 +61,7 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
         var resultDto = new UserDto
         {
             Id = user.Id,
+            IsActive = user.IsActive,
             FirstName = user.FirstName,
             LastName = user.LastName,
             Email = user.Email,

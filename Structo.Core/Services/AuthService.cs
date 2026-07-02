@@ -19,7 +19,12 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
         {
-            return (false, null, "Invalid email or password");
+            return (false, null, "AUTH.INVALID_CREDENTIALS");
+        }
+
+        if (!user.IsActive)
+        {
+            throw new UnauthorizedAccessException("AUTH.ACCOUNT_DEACTIVATED");
         }
 
         if (user.TenantId.HasValue)
@@ -27,7 +32,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             var tenant = await context.Set<Tenant>().IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == user.TenantId.Value);
             if (tenant == null || tenant.Status != TenantStatus.Active)
             {
-                return (false, null, "Your account is pending approval or inactive.");
+                return (false, null, "AUTH.ACCOUNT_PENDING_OR_INACTIVE");
             }
         }
 
@@ -42,7 +47,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             Name = $"{user.FirstName} {user.LastName}"
         };
 
-        return (true, responseDto, "Login successful");
+        return (true, responseDto, "AUTH.LOGIN_SUCCESS");
     }
 
     public async Task<(bool Success, Guid? TenantId, string Message)> RegisterTenantAsync(TenantRegisterDto dto)

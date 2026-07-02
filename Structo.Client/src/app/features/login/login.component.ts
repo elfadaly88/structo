@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
@@ -173,6 +173,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly translateService = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -209,15 +210,17 @@ export class LoginComponent {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
           this.router.navigateByUrl(returnUrl);
         } else {
-          this.errorMessage.set(response.message || 'Login failed.');
+          this.errorMessage.set(this.translateService.instant(response.message || 'LOGIN.FAILED'));
         }
       },
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(
-          err.error?.message ||
-          err.message ||
-          'Unable to connect to the backend server. Please verify it is running on port 5000.'
+          this.translateService.instant(
+            err.error?.message ||
+            err.message ||
+            'LOGIN.BACKEND_UNAVAILABLE'
+          )
         );
       }
     });
