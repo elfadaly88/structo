@@ -202,6 +202,14 @@ public class SettlementService(DbContext context) : ISettlementService
         if (pettyCash == null)
             return (false, "Associated petty cash record is missing.");
 
+        var returnedCash = pettyCash.Amount - settlement.TotalAmount;
+
+        var project = await context.Set<Project>().FindAsync(projectId);
+        if (project != null)
+        {
+            project.Budget += returnedCash;
+        }
+
         if (pettyCash.SourcePoolId.HasValue)
         {
             var pool = await context.Set<ProjectCashPool>()
@@ -210,7 +218,7 @@ public class SettlementService(DbContext context) : ISettlementService
             if (pool != null)
             {
                 // Restore treasury balance
-                pool.AvailableBalance += settlement.NetDifference;
+                pool.AvailableBalance += returnedCash;
             }
         }
 
@@ -219,7 +227,7 @@ public class SettlementService(DbContext context) : ISettlementService
         pettyCash.IsSettled = true;
         pettyCash.Status = "Settled";
         pettyCash.SpentAmount = settlement.TotalAmount;
-        pettyCash.ReturnAmount = settlement.NetDifference;
+        pettyCash.ReturnAmount = returnedCash;
 
         // Register the actual spent amount as project expense
         var expense = new FinancialTransaction
@@ -242,9 +250,9 @@ public class SettlementService(DbContext context) : ISettlementService
         {
             ProjectId = projectId,
             TenantId = settlement.TenantId,
-            Type = TransactionType.Refund,
-            Amount = settlement.NetDifference,
-            Description = $"Petty Cash Settlement Refund - Unused cash returned to pool: {pettyCash.Reason}",
+            Type = TransactionType.RefundToTreasury,
+            Amount = returnedCash,
+            Description = $"Petty Cash Settlement Refund - Unused cash returned to project budget: {pettyCash.Reason}",
             PaymentMethod = PaymentMethod.Cash,
             TransactionDate = DateTime.UtcNow,
             PaymentDate = DateTime.UtcNow,
@@ -254,7 +262,7 @@ public class SettlementService(DbContext context) : ISettlementService
         context.Set<FinancialTransaction>().Add(refundTx);
 
         await context.SaveChangesAsync();
-        return (true, "Refund confirmed. Cash pool balance restored and settlement fully closed.");
+        return (true, "Refund confirmed. Cash pool balance and project budget restored, settlement fully closed.");
     }
 
     public async Task<(bool Success, string Message)> RejectSettlementAsync(Guid projectId, Guid id, SettlementRejectDto dto, string userRole, Guid resolvedByUserId)

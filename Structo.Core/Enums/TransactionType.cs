@@ -9,5 +9,6 @@ public enum TransactionType
     CustodyRequest,
     DirectDisbursement,
     Reimbursement,
-    DirectProjectExpense
+    DirectProjectExpense,
+    RefundToTreasury
 }
