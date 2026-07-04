@@ -17,18 +17,24 @@
 1. **تعديل حقل التاريخ (Payment Date Picker):** المستقر والمربوط بـ `paymentDate`.
 2. **منطق طلب العهدة (Custody Request Validation):** الـ `insufficientBalanceValidator` شغال ويقارن المبلغ بالصناديق.
 3. **لوحة تحكم أدمن الشركة (Company Admin Controls):** تعديل البيانات، الخصوصية `IsPublicPortfolio`، ومعرض الصور (بحد أقصى 5 صور وحجم 2MB).
+4. **نظام العهد والتسويات المالي المتكامل (Financial Module):**
+   - هيكل البيانات (Entities) للتسويات وبنودها (`Settlement`, `SettlementLine`).
+   - جدار الميزانية الصارم (Budget Guard) مع التحقق الأمني من الـ JWT claim للـ bypass.
+   - دورة الاسترجاع النقدي للخزينة (Treasury Refund Loop) مع تأكيد المحاسب (`ApprovedPendingRefund`).
+   - واجهة إدخال بنود التسوية الديناميكية (`FormArray` Multi-line Invoice Modal).
+   - تحويل مباشر للعهدة للمهندس (Direct Disbursement).
+   - إرسال إشعارات واتساب عبر روابط ذكية عميقة (Serverless WhatsApp Alerts).
+   - دعم كامل للتشغيل أوفلاين والحفظ المؤقت بـ `OfflineSyncService`.
 
 ---
 
 ## ⚠️ قواعد صارمة للمطور والـ AI (Strict Coding Rules)
 - **ممنوع بتاتاً** تغيير أسماء الـ Form Controls الحالية والمستقرة وعلى رأسها `paymentDate`.
 - الاعتماد التام على كلاسات Tailwind CSS المتوافقة مع الـ Theme الغامق لضمان اتساق الواجهة (Dark UI consistency).
-- عند رفع الصور، يتم التحقق من الحجم برموز الـ TypeScript (`file.size`) قبل إرسال أي بيانات للسيرفر.
+- عند رفع الصور أو المستندات، يتم التحقق من الحجم برموز الـ TypeScript (`file.size` < 2MB) قبل إرسال أي بيانات للسيرفر.
 
 ---
 
 ## 📝 خطة العمل القادمة (Next Steps - Offline Capabilities)
 - [ ] تحويل تطبيق Angular إلى **PWA** بإضافة الـ `@angular/pwa` والـ Service Worker لعمل كاش لملفات الـ UI.
-- [ ] إعداد مكتبة `Dexie.js` لإنشاء قاعدة بيانات **IndexedDB** محلية لتخزين (المشاريع - أرصدة الصناديق - مصادر الفلوس).
-- [ ] تعديل ميثود الـ Submit الخاصة بالعهدة لتفحص حالة النت؛ لو أوفلاين يتم حفظ الطلب في الـ `PendingCustodyRequests Queue` داخل الـ IndexedDB.
-- [ ] بناء نظام المزامنة (Sync Service) لرفع الطلبات المخزنة تلقائياً للسيرفر بمجرد عودة الإنترنت.
+- [ ] إعداد مكتبة `Dexie.js` لإنشاء قاعدة بيانات **IndexedDB** محلية لتخزين البيانات المالية الكبيرة محلياً بدلاً من `localStorage`.

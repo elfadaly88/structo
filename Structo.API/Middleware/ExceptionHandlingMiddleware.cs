@@ -35,11 +35,14 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         if (exception switch
         {
             BusinessRuleException e => (int)StatusCodes.Status400BadRequest,
+            UnauthorizedAccessException e => (int)StatusCodes.Status403Forbidden,
             _ => (int)StatusCodes.Status500InternalServerError
         } is var statusCode)
         {
             context.Response.StatusCode = statusCode;
-            response.Message = exception is BusinessRuleException ? exception.Message : "An unexpected internal server error occurred.";
+            response.Message = exception is BusinessRuleException || exception is UnauthorizedAccessException 
+                ? exception.Message 
+                : "An unexpected internal server error occurred.";
         }
 
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

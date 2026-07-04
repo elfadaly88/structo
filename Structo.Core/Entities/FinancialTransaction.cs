@@ -23,8 +23,12 @@ public class FinancialTransaction : ITenantEntity
     
     public bool IsSystemGenerated { get; set; }
     public CashPoolSourceType? SourceType { get; set; }
+    
+    public bool IsOverrun { get; set; }
+    public Guid? SettlementId { get; set; }
 
     // Navigation properties
     public Tenant? Tenant { get; set; }
     public Project? Project { get; set; }
+    public Settlement? Settlement { get; set; }
 }

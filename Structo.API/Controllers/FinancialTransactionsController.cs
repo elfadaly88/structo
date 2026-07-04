@@ -22,7 +22,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] FinancialTransactionCreateDto dto)
     {
-        var (success, message) = await financialTransactionService.CreateTransactionAsync(projectId, dto);
+        var (success, message) = await financialTransactionService.CreateTransactionAsync(projectId, dto, CurrentUserRole);
         return Ok(new ApiResponse<bool> { Data = success, Message = message, CurrentUserRole = CurrentUserRole });
     }
 
@@ -93,6 +93,26 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
         {
             if (message.Contains("not found"))
                 return NotFound(new ApiResponse<bool> { Success = false, Message = message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
+        }
+
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
+    }
+
+    [HttpPost("direct-disbursement")]
+    [Authorize(Roles = "TenantOwner,Accountant")]
+    public async Task<ActionResult<ApiResponse<bool>>> DirectDisbursement([FromRoute] Guid projectId, [FromBody] DirectDisbursementDto dto)
+    {
+        var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant ID claim missing or invalid." });
+        }
+
+        var (success, message) = await financialTransactionService.DirectDisbursementAsync(projectId, dto, tenantId, CurrentUserRole);
+
+        if (!success)
+        {
             return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
         }
 

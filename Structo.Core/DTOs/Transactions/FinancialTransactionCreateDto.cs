@@ -9,4 +9,5 @@ public class FinancialTransactionCreateDto
     public string Description { get; set; } = string.Empty;
     public TransactionType Type { get; set; }
     public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+    public bool ForceOverrun { get; set; }
 }

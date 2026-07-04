@@ -76,4 +76,11 @@ export class FinancialService {
       dto
     );
   }
+
+  directDisbursement(projectId: string, dto: any): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(
+      `${this.baseUrl}/${projectId}/financialtransactions/direct-disbursement`,
+      dto
+    );
+  }
 }

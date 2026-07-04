@@ -165,8 +165,8 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IAuthService, Structo.Core.Se
 builder.Services.AddScoped<Structo.Core.Interfaces.IUserService, Structo.Core.Services.UserService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IProjectService, Structo.Core.Services.ProjectService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialTransactionService, Structo.Core.Services.FinancialTransactionService>();
-// Note: IPettyCashService is already registered on line 112, but we need to ensure it uses the Core implementation.
 builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.Core.Services.SettlementService>();
 
 // Notification System (SignalR + OneSignal + DB)
 builder.Services.AddHttpClient("OneSignal");

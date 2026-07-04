@@ -1,20 +1,23 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../core/services/project.service';
 import { PettyCashService } from '../../../core/services/petty-cash.service';
 import { FinancialService } from '../../../core/services/financial.service';
 import { ProjectDto, ProjectCashPoolDto } from '../../../core/models/project.models';
 import { PettyCashMobileDto, PettyCashSettleDto } from '../../../core/models/petty-cash.models';
-import { FinancialTransactionMobileDto } from '../../../core/models/financial.models';
+import { FinancialTransactionMobileDto, SettlementMobileDto } from '../../../core/models/financial.models';
 import { ImageUploadService, SitePhotoDto } from '../../../core/services/image-upload.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
-import { FormsModule } from '@angular/forms';
 import { TenantProfileService } from '../../../core/services/tenant-profile.service';
+import { TenantUserService } from '../../../core/services/tenant-user.service';
+import { SettlementService } from '../../../core/services/settlement.service';
+import { OfflineSyncService } from '../../../core/services/offline-sync.service';
+import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 
 
 @Component({
@@ -246,6 +249,19 @@ import { TenantProfileService } from '../../../core/services/tenant-profile.serv
             {{ 'DETAILS.TAB_GALLERY' | translate }}
           </button>
         }
+        <button
+          id="tab-settlements"
+          (click)="activeTab.set('settlements')"
+          class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo flex items-center gap-1.5"
+          [class.border-indigo-500]="activeTab() === 'settlements'"
+          [class.text-indigo-400]="activeTab() === 'settlements'"
+          [class.border-transparent]="activeTab() !== 'settlements'"
+          [class.text-slate-400]="activeTab() !== 'settlements'">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <span>التسويات / Settlements</span>
+        </button>
         @if (isTenantOwner()) {
           <button
             id="tab-admin-settings"
@@ -396,11 +412,21 @@ import { TenantProfileService } from '../../../core/services/tenant-profile.serv
                       </td>
                       <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
-                          @if (!item.isSettled) {
+                          @if (!item.isSettled && item.status === 'Issued') {
                             <button
-                              (click)="openSettleModal(item)"
-                              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-lg text-white shadow-md shadow-indigo-600/10 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer">
+                              (click)="openSettlementModal(item)"
+                              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-lg text-white shadow-md shadow-indigo-600/10 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
                               {{ 'DETAILS.BTN_SETTLE' | translate }}
+                            </button>
+                          }
+                          @if (item.status === 'Issued' || item.status === 'Pending' || item.isSettled) {
+                            <button
+                              (click)="onWhatsAppAlert(item)"
+                              class="px-2.5 py-1.5 bg-emerald-600/80 hover:bg-emerald-700 text-xs font-semibold rounded-lg text-white shadow-md transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-cairo">
+                              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
+                              </svg>
+                              <span>واتساب</span>
                             </button>
                           } @else {
                             @if (item.receiptPhotoUrl) {
@@ -467,12 +493,136 @@ import { TenantProfileService } from '../../../core/services/tenant-profile.serv
         </div>
       }
 
+      <!-- Tab Content: Settlements -->
+      @if (activeTab() === 'settlements') {
+        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+          <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
+            <h3 class="text-base font-bold text-white font-cairo">طلبات تسوية العهد / Settlements</h3>
+            <span class="text-xs text-slate-500 font-semibold font-cairo">{{ settlements().length }} سجل / Records</span>
+          </div>
+
+          @if (isLoadingSettlements()) {
+            <div class="flex justify-center py-12">
+              <svg class="animate-spin h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          } @else {
+            <div class="overflow-x-auto font-sans">
+              <table class="w-full text-left rtl:text-right">
+                <thead>
+                  <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
+                    <th class="px-6 py-4 font-cairo">صاحب العهدة / Engineer</th>
+                    <th class="px-6 py-4 font-cairo">مبلغ العهدة / Custody</th>
+                    <th class="px-6 py-4 font-cairo">المبلغ المصروف / Spent</th>
+                    <th class="px-6 py-4 font-cairo">الفرق / Difference</th>
+                    <th class="px-6 py-4 font-cairo">الحالة / Status</th>
+                    <th class="px-6 py-4 font-cairo">التاريخ / Date</th>
+                    <th class="px-6 py-4 text-center font-cairo">العمليات / Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 text-sm">
+                  @for (s of settlements(); track s.id) {
+                    <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
+                      <td class="px-6 py-4">
+                        <div class="font-semibold text-white">{{ s.issuedTo }}</div>
+                        <div class="text-xs text-slate-500 max-w-xs truncate">{{ s.custodyReason }}</div>
+                      </td>
+                      <td class="px-6 py-4 font-mono font-bold text-slate-400">{{ s.custodyAmount | number:'1.2-2' }} EGP</td>
+                      <td class="px-6 py-4 font-mono font-bold text-amber-400">{{ s.totalAmount | number:'1.2-2' }} EGP</td>
+                      <td class="px-6 py-4 font-mono font-bold" [class.text-emerald-400]="s.netDifference > 0" [class.text-rose-400]="s.netDifference < 0">
+                        {{ s.netDifference | number:'1.2-2' }} EGP
+                      </td>
+                      <td class="px-6 py-4">
+                        @if (s.status === 'Approved') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400">Approved</span>
+                        } @else if (s.status === 'ApprovedPendingRefund') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400">Pending Refund</span>
+                        } @else if (s.status === 'Refunded') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400">Refunded</span>
+                        } @else if (s.status === 'Rejected') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/10 text-rose-400">Rejected</span>
+                        } @else {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400">Pending Approval</span>
+                        }
+                      </td>
+                      <td class="px-6 py-4 text-slate-400 text-xs">{{ s.submittedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-6 py-4">
+                        <div class="flex items-center justify-center gap-2">
+                          @if (s.status === 'Pending' && isOwnerOrAccountant()) {
+                            <button
+                              (click)="onApproveSettlement(s.id)"
+                              class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-lg text-white font-cairo">
+                              اعتماد
+                            </button>
+                            <button
+                              (click)="onRejectSettlement(s.id)"
+                              class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-xs font-semibold rounded-lg text-white font-cairo">
+                              رفض
+                            </button>
+                          }
+                          @if (s.status === 'ApprovedPendingRefund' && isOwnerOrAccountant()) {
+                            <button
+                              (click)="onConfirmRefund(s.id)"
+                              class="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-xs font-semibold rounded-lg text-white font-cairo">
+                              تأكيد استلام المرتجع
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Nested Lines View -->
+                    <tr class="bg-slate-950/20">
+                      <td colspan="7" class="px-6 py-3 border-b border-slate-800/40">
+                        <div class="text-xs font-bold text-slate-400 mb-2 font-cairo">تفاصيل البنود المصروفة / Invoiced Lines:</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          @for (line of s.lines; track line.id) {
+                            <div class="bg-slate-900/50 border border-slate-800/50 rounded-xl p-3 flex justify-between items-center">
+                              <div>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-300 font-cairo">{{ line.category }}</span>
+                                <div class="text-xs text-white mt-1 font-semibold">{{ line.description }}</div>
+                              </div>
+                              <div class="text-right">
+                                <div class="text-xs font-bold text-amber-400 font-mono">{{ line.amount }} EGP</div>
+                                @if (line.invoiceUrl) {
+                                  <a [href]="line.invoiceUrl" target="_blank" class="text-[10px] text-indigo-400 hover:underline font-cairo mt-1 block">📄 الفاتورة</a>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="7" class="px-6 py-14 text-center text-slate-500 text-sm font-cairo">
+                        لا توجد طلبات تسوية مقدمة حالياً / No settlements submitted yet.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
       <!-- Tab Content: Financial Transactions -->
       @if (activeTab() === 'transactions') {
         <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
-            <span class="text-xs text-slate-500 font-semibold">{{ transactions().length }} {{ 'DETAILS.ENTRIES' | translate }}</span>
+            <div class="flex items-center gap-3">
+              @if (isOwnerOrAccountant()) {
+                <button
+                  (click)="openDisburseModal()"
+                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
+                  تعزيز عهدة مباشر / Direct Disbursement
+                </button>
+              }
+              <span class="text-xs text-slate-500 font-semibold">{{ transactions().length }} {{ 'DETAILS.ENTRIES' | translate }}</span>
+            </div>
           </div>
 
           @if (isLoadingTransactions()) {
@@ -1277,6 +1427,204 @@ import { TenantProfileService } from '../../../core/services/tenant-profile.serv
         </div>
       </div>
     }
+
+    <!-- Direct Disbursement Modal -->
+    @if (isDisburseModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+        <div (click)="closeDisburseModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-white font-cairo">تعزيز عهدة مباشر / Direct Disbursement</h3>
+            <button (click)="closeDisburseModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          @if (disburseErrors().length > 0) {
+            <div class="mb-4 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold">
+              @for (err of disburseErrors(); track err) {
+                <div>{{ err }}</div>
+              }
+            </div>
+          }
+
+          <form [formGroup]="disburseForm" (ngSubmit)="onDisburseSubmit()" class="space-y-4 font-sans">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المهندس / Engineer <span class="text-red-400">*</span></label>
+              <select formControlName="userId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+                <option [ngValue]="null" disabled>اختر مهندس / Select Engineer</option>
+                @for (u of usersList(); track u.id) {
+                  <option [value]="u.id">{{ u.firstName }} {{ u.lastName }} ({{ u.role }})</option>
+                }
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المبلغ / Amount <span class="text-red-400">*</span></label>
+                <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">طريقة الدفع / Payment Method <span class="text-red-400">*</span></label>
+                <select formControlName="paymentMethod" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+                  <option value="Cash">Cash / نقدي</option>
+                  <option value="BankTransfer">Bank Transfer / تحويل بنكي</option>
+                  <option value="InstaPay">InstaPay</option>
+                  <option value="Cheque">Cheque / شيك</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">مصدر التمويل / Fund Pool <span class="text-red-400">*</span></label>
+              <select formControlName="sourcePoolId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+                <option [ngValue]="null" disabled>اختر الصندوق / Select Pool</option>
+                @for (pool of cashPools(); track pool.id) {
+                  <option [value]="pool.id">{{ pool.sourceType }} ({{ pool.availableBalance }} EGP)</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">البيان / Notes <span class="text-red-400">*</span></label>
+              <textarea formControlName="description" rows="2" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button type="button" (click)="closeDisburseModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
+              <button type="submit" [disabled]="disburseForm.invalid || isDisbursing()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 font-cairo">
+                @if (isDisbursing()) {
+                  جاري التحويل...
+                } @else {
+                  تأكيد التحويل
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- Settlement Modal -->
+    @if (isSettlementModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+        <div (click)="closeSettlementModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-3xl mx-auto max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h3 class="text-xl font-bold text-white font-cairo">تسوية عهدة / Settlement Voucher</h3>
+              <p class="text-xs text-slate-400 font-cairo mt-1">
+                العهد الحالية الصادرة: <span class="text-amber-400 font-bold font-mono">{{ selectedPettyCashForSettlement()?.amount }} EGP</span> |
+                بيان: <span class="text-slate-200">{{ selectedPettyCashForSettlement()?.reason }}</span>
+              </p>
+            </div>
+            <button (click)="closeSettlementModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          @if (settlementErrors().length > 0) {
+            <div class="mb-4 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold">
+              @for (err of settlementErrors(); track err) {
+                <div>{{ err }}</div>
+              }
+            </div>
+          }
+
+          <form [formGroup]="settlementForm" (ngSubmit)="onSettlementSubmit()" class="space-y-4 font-sans">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+              <span class="text-sm text-slate-400 font-cairo">بنود الفواتير والمصروفات / Invoice Line Items</span>
+              <button type="button" (click)="addSettlementLine()" class="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-400 border border-indigo-500/20 text-xs font-bold rounded-lg font-cairo flex items-center gap-1 cursor-pointer">
+                + إضافة بند / Add Line
+              </button>
+            </div>
+
+            <div formArrayName="lines" class="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
+              @for (line of settlementLines.controls; track line; let idx = $index) {
+                <div [formGroupName]="idx" class="p-3 bg-slate-950/40 border border-slate-850 rounded-xl space-y-3 relative">
+                  <button type="button" (click)="removeSettlementLine(idx)" class="absolute top-2 right-2 text-rose-500 hover:text-rose-400 cursor-pointer" title="Remove Line" [disabled]="settlementLines.length === 1">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">التصنيف / Category</label>
+                      <select formControlName="category" class="w-full px-2 py-1.5 border border-slate-800 bg-slate-900 rounded-lg text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500">
+                        <option value="Cement">Cement / أسمنت</option>
+                        <option value="Logistics">Logistics / خدمات لوجستية</option>
+                        <option value="Materials">Materials / مواد بناء</option>
+                        <option value="Labor">Labor / حوافز وأجور عمال</option>
+                        <option value="Other">Other / أخرى</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">المبلغ المصروف / Amount</label>
+                      <input type="number" formControlName="amount" class="w-full px-2 py-1.5 border border-slate-800 bg-slate-900 rounded-lg text-slate-200 text-xs font-mono focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">إيصال الفاتورة / Invoice Receipt</label>
+                      <input type="file" accept="image/*" (change)="onSettlementLineFileSelected($event, idx)" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-850 file:text-indigo-400 cursor-pointer">
+                      @if (line.get('uploading')?.value) {
+                        <span class="text-[10px] text-indigo-400 animate-pulse mt-0.5 block">Uploading...</span>
+                      }
+                      @if (line.get('invoiceUrl')?.value) {
+                        <span class="text-[10px] text-emerald-400 mt-0.5 block">✓ Attached</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">البيان / Description</label>
+                    <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full px-2 py-1.5 border border-slate-800 bg-slate-900 rounded-lg text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500">
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Ledger summary & Net calculation -->
+            <div class="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-2">
+              <div class="flex justify-between text-xs text-slate-400 font-cairo">
+                <span>إجمالي مبلغ العهدة الأصلي:</span>
+                <span class="font-mono font-semibold">{{ selectedPettyCashForSettlement()?.amount }} EGP</span>
+              </div>
+              <div class="flex justify-between text-xs text-slate-400 font-cairo">
+                <span>إجمالي المبالغ المصروفة بالفواتير:</span>
+                <span class="font-mono font-semibold text-amber-400">{{ calculateSettlementTotal() }} EGP</span>
+              </div>
+              <div class="border-t border-slate-800/80 pt-2 flex justify-between text-sm font-bold font-cairo">
+                @if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() > 0) {
+                  <span class="text-emerald-400">متبقي يجب إرجاعه للخزينة (Net Refund to Treasury):</span>
+                  <span class="text-emerald-400 font-mono">+{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() }} EGP</span>
+                } @else if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() < 0) {
+                  <span class="text-rose-400">مستحق للمهندس (Due to Employee):</span>
+                  <span class="text-rose-400 font-mono">{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() }} EGP</span>
+                } @else {
+                  <span class="text-slate-300">تسوية متطابقة تماماً (Matched):</span>
+                  <span class="text-slate-300 font-mono">0.00 EGP</span>
+                }
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+              <button type="button" (click)="closeSettlementModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
+              <button type="submit" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 font-cairo">
+                @if (isSubmittingSettlement()) {
+                  جاري التقديم...
+                } @else {
+                  تقديم طلب التسوية
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `
 })
 export class ProjectDetailsComponent implements OnInit {
@@ -1290,6 +1638,10 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly confirmService = inject(ConfirmModalService);
   private readonly profileService = inject(TenantProfileService);
+  private readonly settlementService = inject(SettlementService);
+  private readonly offlineSync = inject(OfflineSyncService);
+  private readonly whatsappLink = inject(WhatsAppLinkService);
+  private readonly userService = inject(TenantUserService);
 
   readonly isEditPettyCashModalOpen = signal(false);
   readonly isEditingPettyCash = signal(false);
@@ -1318,6 +1670,54 @@ export class ProjectDetailsComponent implements OnInit {
     reasonForChange: ['', [Validators.required, Validators.minLength(5)]],
     boqFileUrl: ['']
   });
+
+  // Direct Disbursement signals & form
+  readonly isDisburseModalOpen = signal(false);
+  readonly isDisbursing = signal(false);
+  readonly disburseErrors = signal<string[]>([]);
+  readonly usersList = signal<any[]>([]); // To populate engineer select in direct disbursement
+  readonly disburseForm: FormGroup = this.fb.group({
+    userId: [null, Validators.required],
+    amount: [null, [Validators.required, Validators.min(0.01)]],
+    description: ['', [Validators.required, Validators.minLength(5)]],
+    sourcePoolId: [null, Validators.required],
+    paymentMethod: ['Cash', Validators.required]
+  });
+
+  // Settlement signals & FormArray form
+  readonly isSettlementModalOpen = signal(false);
+  readonly isSubmittingSettlement = signal(false);
+  readonly settlementErrors = signal<string[]>([]);
+  readonly selectedPettyCashForSettlement = signal<PettyCashMobileDto | null>(null);
+  readonly settlements = signal<SettlementMobileDto[]>([]);
+  readonly isLoadingSettlements = signal(false);
+  
+  readonly settlementForm: FormGroup = this.fb.group({
+    lines: this.fb.array([])
+  });
+
+  get settlementLines(): FormArray {
+    return this.settlementForm.get('lines') as FormArray;
+  }
+
+  addSettlementLine(): void {
+    this.settlementLines.push(this.fb.group({
+      category: ['Cement', Validators.required],
+      amount: [null, [Validators.required, Validators.min(0.01)]],
+      description: ['', [Validators.required, Validators.minLength(3)]],
+      invoiceUrl: [''],
+      uploading: [false] // local uploading helper
+    }));
+  }
+
+  removeSettlementLine(index: number): void {
+    this.settlementLines.removeAt(index);
+  }
+
+  calculateSettlementTotal(): number {
+    return this.settlementLines.controls.reduce((sum, control) => sum + (control.get('amount')?.value || 0), 0);
+  }
+
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
   readonly isTenantOwner = computed(() => ['tenantowner', 'admin'].includes(this.currentUserRole().toLowerCase()));
@@ -1366,7 +1766,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingPettyCash = signal(false);
   readonly isLoadingTransactions = signal(false);
 
-  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings'>('petty-cash');
+  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings' | 'settlements'>('petty-cash');
 
   // Admin settings forms & signals
   readonly isUploadingLogo = signal(false);
@@ -1515,6 +1915,7 @@ export class ProjectDetailsComponent implements OnInit {
       this.fetchProjectDetails();
       this.fetchBudgetHistory();
       this.fetchPettyCash();
+      this.fetchSettlements();
       if (!this.isEngineer()) {
         this.fetchTransactions();
         this.fetchCashPools();
@@ -1523,6 +1924,13 @@ export class ProjectDetailsComponent implements OnInit {
       if (this.isTenantOwner()) {
         this.fetchCompanyProfile();
       }
+      if (this.isOwnerOrAccountant()) {
+        this.fetchUsersList();
+      }
+
+      this.offlineSync.registerHandler('create-settlement', (payload: any) => 
+        this.settlementService.createSettlement(this.projectId, payload)
+      );
     }
   }
 
@@ -2309,6 +2717,278 @@ export class ProjectDetailsComponent implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.budgetHistory.set(res.data);
+        }
+      }
+    });
+  }
+
+  fetchUsersList(): void {
+    this.userService.getUsers().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.usersList.set(res.data.filter(u => ['manager', 'siteengineer', 'designengineer'].includes(u.role.toLowerCase())));
+        }
+      }
+    });
+  }
+
+  fetchSettlements(): void {
+    this.isLoadingSettlements.set(true);
+    this.settlementService.getSettlements(this.projectId).subscribe({
+      next: (res) => {
+        this.isLoadingSettlements.set(false);
+        if (res.success && res.data) {
+          this.settlements.set(res.data);
+        }
+      },
+      error: () => this.isLoadingSettlements.set(false)
+    });
+  }
+
+  openDisburseModal(): void {
+    this.disburseForm.reset({
+      userId: null,
+      amount: null,
+      description: '',
+      sourcePoolId: null,
+      paymentMethod: 'Cash'
+    });
+    this.disburseErrors.set([]);
+    this.isDisburseModalOpen.set(true);
+  }
+
+  closeDisburseModal(): void {
+    this.isDisburseModalOpen.set(false);
+  }
+
+  onDisburseSubmit(): void {
+    if (this.disburseForm.invalid) return;
+    this.isDisbursing.set(true);
+    this.disburseErrors.set([]);
+    
+    this.financialService.directDisbursement(this.projectId, this.disburseForm.value).subscribe({
+      next: (res) => {
+        this.isDisbursing.set(false);
+        if (res.success) {
+          this.confirmService.alert({
+            title: 'تم التحويل بنجاح',
+            message: 'تم تعزيز عهدة المهندس مباشرة بنجاح وتحديث الرصيد.',
+            type: 'success'
+          });
+          this.closeDisburseModal();
+          this.fetchCashPools();
+          this.fetchPettyCash();
+          this.fetchTransactions();
+        } else {
+          this.disburseErrors.set([res.message || 'فشل التحويل المباشر.']);
+        }
+      },
+      error: (err) => {
+        this.isDisbursing.set(false);
+        this.disburseErrors.set([err.error?.message || err.message || 'حدث خطأ أثناء الاتصال بالخادم.']);
+      }
+    });
+  }
+
+  openSettlementModal(pettyCash: PettyCashMobileDto): void {
+    this.selectedPettyCashForSettlement.set(pettyCash);
+    this.settlementErrors.set([]);
+    this.settlementLines.clear();
+    this.addSettlementLine(); // start with one line
+    this.isSettlementModalOpen.set(true);
+  }
+
+  closeSettlementModal(): void {
+    this.isSettlementModalOpen.set(false);
+    this.selectedPettyCashForSettlement.set(null);
+  }
+
+  onSettlementLineFileSelected(event: any, index: number): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        this.confirmService.alert({
+          title: 'حجم الملف كبير جداً',
+          message: 'الحد الأقصى للمرفقات 2 ميجابايت.',
+          type: 'error'
+        });
+        return;
+      }
+      const lineGroup = this.settlementLines.at(index);
+      lineGroup.patchValue({ uploading: true });
+      this.uploadService.uploadProjectDocument(this.projectId, file).subscribe({
+        next: (res) => {
+          lineGroup.patchValue({ uploading: false });
+          if (res.success && res.data) {
+            lineGroup.patchValue({ invoiceUrl: res.data.url });
+          } else {
+            this.confirmService.alert({ title: 'فشل الرفع', message: 'فشل رفع إيصال الفاتورة.', type: 'error' });
+          }
+        },
+        error: () => {
+          lineGroup.patchValue({ uploading: false });
+          this.confirmService.alert({ title: 'خطأ في الرفع', message: 'حدث خطأ أثناء رفع إيصال الفاتورة.', type: 'error' });
+        }
+      });
+    }
+  }
+
+  onSettlementSubmit(): void {
+    if (this.settlementForm.invalid) return;
+    const pettyCash = this.selectedPettyCashForSettlement();
+    if (!pettyCash) return;
+
+    this.isSubmittingSettlement.set(true);
+    this.settlementErrors.set([]);
+
+    const payload = {
+      pettyCashId: pettyCash.id,
+      lines: this.settlementLines.value.map((l: any) => ({
+        category: l.category,
+        amount: l.amount,
+        description: l.description,
+        invoiceUrl: l.invoiceUrl
+      }))
+    };
+
+    // Integrate Offline sync submission
+    this.offlineSync.submit(
+      'create-settlement',
+      payload,
+      (p) => this.settlementService.createSettlement(this.projectId, p)
+    ).subscribe({
+      next: (res) => {
+        this.isSubmittingSettlement.set(false);
+        if (res.success) {
+          this.confirmService.alert({
+            title: 'تم تقديم التسوية',
+            message: res.message || 'تم تقديم طلب تسوية العهدة بنجاح.',
+            type: 'success'
+          });
+          this.closeSettlementModal();
+          this.fetchPettyCash();
+          this.fetchSettlements();
+        } else {
+          this.settlementErrors.set([res.message || 'فشل تقديم التسوية.']);
+        }
+      },
+      error: (err) => {
+        this.isSubmittingSettlement.set(false);
+        this.settlementErrors.set([err.error?.message || err.message || 'حدث خطأ أثناء الاتصال بالخادم.']);
+      }
+    });
+  }
+
+  onApproveSettlement(id: string): void {
+    this.confirmService.confirm({
+      title: 'اعتماد التسوية / Approve Settlement',
+      message: 'هل أنت متأكد من اعتماد طلب تسوية هذه العهدة؟ / Are you sure you want to approve this settlement?',
+      confirmText: 'نعم، اعتمد / Yes, Approve',
+      cancelText: 'إلغاء / Cancel'
+    }).then((confirmed) => {
+      if (confirmed) {
+        this.settlementService.approveSettlement(this.projectId, id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم الاعتماد بنجاح',
+                message: res.message || 'تم اعتماد التسوية بنجاح.',
+                type: 'success'
+              });
+              this.fetchSettlements();
+              this.fetchPettyCash();
+              this.fetchCashPools();
+              this.fetchTransactions();
+            } else {
+              this.confirmService.alert({ title: 'فشل الاعتماد', message: res.message || 'فشل اعتماد التسوية.', type: 'error' });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  onConfirmRefund(id: string): void {
+    this.confirmService.confirm({
+      title: 'تأكيد استرجاع النقود / Confirm Refund',
+      message: 'هل تؤكد استلام المبلغ المرتجع نقداً من المهندس وإيداعه بالخزينة؟ / Do you confirm receiving the cash refund from the engineer?',
+      confirmText: 'نعم، استلمت / Yes, Confirmed',
+      cancelText: 'إلغاء / Cancel'
+    }).then((confirmed) => {
+      if (confirmed) {
+        this.settlementService.confirmRefund(this.projectId, id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم التأكيد وإيداع المبلغ',
+                message: 'تم استلام النقود بنجاح وإعادة شحن الخزينة/الصندوق.',
+                type: 'success'
+              });
+              this.fetchSettlements();
+              this.fetchPettyCash();
+              this.fetchCashPools();
+              this.fetchTransactions();
+            } else {
+              this.confirmService.alert({ title: 'فشل التأكيد', message: res.message || 'فشل تأكيد استلام النقود.', type: 'error' });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  onRejectSettlement(id: string): void {
+    this.confirmService.confirm({
+      title: 'رفض التسوية / Reject Settlement',
+      message: 'هل تريد رفض تسوية هذه العهدة؟ برجاء كتابة سبب الرفض أدناه: / Write reason for rejection:',
+      confirmText: 'رفض / Reject',
+      cancelText: 'إلغاء / Cancel'
+    }).then((confirmed) => {
+      if (confirmed) {
+        // Prompt for reject reason
+        const comments = prompt('سبب الرفض / Rejection Comments:');
+        if (comments === null) return;
+        if (!comments.trim()) {
+          alert('يجب كتابة سبب الرفض / Rejection comments are required.');
+          return;
+        }
+
+        this.settlementService.rejectSettlement(this.projectId, id, comments).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم الرفض',
+                message: 'تم رفض طلب تسوية العهدة بنجاح وإعادتها للمهندس.',
+                type: 'success'
+              });
+              this.fetchSettlements();
+              this.fetchPettyCash();
+            } else {
+              this.confirmService.alert({ title: 'فشل الرفض', message: res.message || 'فشل رفض التسوية.', type: 'error' });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  onWhatsAppAlert(pettyCash: PettyCashMobileDto, customMessage?: string): void {
+    const defaultMsg = `مرحباً ${pettyCash.issuedTo}، تم اعتماد وتحديث طلب العهدة الخاص بك بقيمة ${pettyCash.amount} EGP لـ ${pettyCash.projectName} - ${pettyCash.reason}.`;
+    const message = customMessage || defaultMsg;
+    this.userService.getUsers().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          const userObj = res.data.find(u => `${u.firstName} ${u.lastName}`.trim() === pettyCash.issuedTo.trim());
+          const phone = userObj?.whatsAppPhone || userObj?.contactPhone;
+          if (phone) {
+            this.whatsappLink.openChat(phone, message);
+          } else {
+            this.confirmService.alert({
+              title: 'تنبيه واتساب',
+              message: 'لم يتم العثور على رقم واتساب مسجل لهذا المستخدم لإرسال التنبيه.',
+              type: 'info'
+            });
+          }
         }
       }
     });

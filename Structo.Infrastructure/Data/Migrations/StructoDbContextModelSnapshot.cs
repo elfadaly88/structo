@@ -55,6 +55,9 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<bool>("IsOverrun")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsSystemGenerated")
                         .HasColumnType("boolean");
 
@@ -69,6 +72,9 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.Property<string>("ReceiptPhotoUrl")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("SettlementId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SourceType")
                         .HasMaxLength(30)
@@ -88,6 +94,8 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("SettlementId");
 
                     b.HasIndex("TenantId");
 
@@ -351,6 +359,93 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.ToTable("ProjectCashPools");
                 });
 
+            modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("NetDifference")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("PettyCashId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PettyCashId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ResolvedByUserId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("Settlements");
+                });
+
+            modelBuilder.Entity("Structo.Core.Entities.SettlementLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("InvoiceUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("SettlementId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SettlementId");
+
+                    b.ToTable("SettlementLines");
+                });
+
             modelBuilder.Entity("Structo.Core.Entities.SitePhoto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -508,6 +603,10 @@ namespace Structo.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Structo.Core.Entities.Settlement", "Settlement")
+                        .WithMany()
+                        .HasForeignKey("SettlementId");
+
                     b.HasOne("Structo.Core.Entities.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
@@ -515,6 +614,8 @@ namespace Structo.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+
+                    b.Navigation("Settlement");
 
                     b.Navigation("Tenant");
                 });
@@ -601,6 +702,51 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
+                {
+                    b.HasOne("Structo.Core.Entities.PettyCash", "PettyCash")
+                        .WithMany()
+                        .HasForeignKey("PettyCashId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Structo.Core.Entities.Project", "Project")
+                        .WithMany("Settlements")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Structo.Core.Entities.User", "ResolvedByUser")
+                        .WithMany()
+                        .HasForeignKey("ResolvedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Structo.Core.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PettyCash");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("ResolvedByUser");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Structo.Core.Entities.SettlementLine", b =>
+                {
+                    b.HasOne("Structo.Core.Entities.Settlement", "Settlement")
+                        .WithMany("Lines")
+                        .HasForeignKey("SettlementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Settlement");
+                });
+
             modelBuilder.Entity("Structo.Core.Entities.SitePhoto", b =>
                 {
                     b.HasOne("Structo.Core.Entities.Project", "Project")
@@ -644,7 +790,14 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.Navigation("PettyCashes");
 
+                    b.Navigation("Settlements");
+
                     b.Navigation("SitePhotos");
+                });
+
+            modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Tenant", b =>

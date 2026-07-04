@@ -1,1 +1,0 @@
-import {D,m as qt,o as bo,X}from'./main-2K4NZSYY.js';var p=class t{http=D(qt);apiUrl=`${bo.apiUrl}/tenant-profile`;getProfile(){return this.http.get(this.apiUrl)}updateProfile(e){return this.http.put(`${this.apiUrl}/update`,e)}static \u0275fac=function(a){return new(a||t)};static \u0275prov=X({token:t,factory:t.\u0275fac,providedIn:"root"})};export{p};

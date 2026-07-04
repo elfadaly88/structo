@@ -5,5 +5,9 @@ public enum TransactionType
     Income,
     Expense,
     Refund,
-    PettyCashPayout
+    PettyCashPayout,
+    CustodyRequest,
+    DirectDisbursement,
+    Reimbursement,
+    DirectProjectExpense
 }

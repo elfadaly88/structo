@@ -32,6 +32,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<ProjectCashPool> ProjectCashPools => Set<ProjectCashPool>();
     public DbSet<ProjectBudgetLog> ProjectBudgetLogs => Set<ProjectBudgetLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Settlement> Settlements => Set<Settlement>();
+    public DbSet<SettlementLine> SettlementLines => Set<SettlementLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +45,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<PettyCash>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<Settlement>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         // Notifications: SuperAdmin sees all (null TenantId = global), tenant users see only their own
         modelBuilder.Entity<Notification>().HasQueryFilter(e =>
             CurrentTenantId == null ||
@@ -205,6 +208,49 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.DeepLink).HasMaxLength(500);
             entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.TargetRole).HasConversion<string>().HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<Settlement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.TotalAmount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.NetDifference).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.Comments).HasMaxLength(500);
+
+            entity.HasOne(e => e.Tenant)
+                  .WithMany()
+                  .HasForeignKey(e => e.TenantId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany(p => p.Settlements)
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.PettyCash)
+                  .WithMany()
+                  .HasForeignKey(e => e.PettyCashId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ResolvedByUser)
+                  .WithMany()
+                  .HasForeignKey(e => e.ResolvedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SettlementLine>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Category).HasMaxLength(100);
+            entity.Property(e => e.Amount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.InvoiceUrl).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Settlement)
+                  .WithMany(s => s.Lines)
+                  .HasForeignKey(e => e.SettlementId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

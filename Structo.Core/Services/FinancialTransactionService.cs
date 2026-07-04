@@ -13,15 +13,43 @@ namespace Structo.Core.Services;
 
 public class FinancialTransactionService(DbContext context, ICloudStorageService storageService) : IFinancialTransactionService
 {
-    public async Task<(bool Success, string Message)> CreateTransactionAsync(Guid projectId, FinancialTransactionCreateDto dto)
+    public async Task<(bool Success, string Message)> CreateTransactionAsync(Guid projectId, FinancialTransactionCreateDto dto, string userRole)
     {
+        var project = await context.Set<Project>().FindAsync(projectId);
+        if (project == null)
+            return (false, "Project not found.");
+
+        var isExpense = dto.Type == TransactionType.Expense || dto.Type == TransactionType.DirectProjectExpense;
+        if (isExpense)
+        {
+            var totalExpenses = await context.Set<FinancialTransaction>()
+                .Where(t => t.ProjectId == projectId && (t.Type == TransactionType.Expense || t.Type == TransactionType.DirectProjectExpense))
+                .SumAsync(t => t.Amount);
+
+            if (totalExpenses + dto.Amount > project.Budget)
+            {
+                if (dto.ForceOverrun)
+                {
+                    if (userRole != "TenantOwner" && userRole != "SuperAdmin")
+                    {
+                        throw new UnauthorizedAccessException("Unauthorized budget overrun override. Only TenantOwner and SuperAdmin can bypass project budget limits.");
+                    }
+                }
+                else
+                {
+                    return (false, "BUDGET_EXCEEDED: This transaction exceeds the remaining project budget.");
+                }
+            }
+        }
+
         var transaction = new FinancialTransaction
         {
             ProjectId = projectId,
             Amount = dto.Amount,
             Description = dto.Description,
             Type = dto.Type,
-            TransactionDate = dto.TransactionDate
+            TransactionDate = dto.TransactionDate,
+            IsOverrun = dto.ForceOverrun
         };
 
         context.Set<FinancialTransaction>().Add(transaction);
@@ -182,5 +210,60 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         await context.SaveChangesAsync();
 
         return (true, "Transaction deleted and pool balance corrected.");
+    }
+
+    public async Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole)
+    {
+        if (userRole != "TenantOwner" && userRole != "SuperAdmin" && userRole != "Accountant")
+        {
+            throw new UnauthorizedAccessException("Only TenantOwner, SuperAdmin, and Accountants are allowed to perform direct disbursements.");
+        }
+
+        var pool = await context.Set<ProjectCashPool>()
+            .FirstOrDefaultAsync(p => p.Id == dto.SourcePoolId && p.ProjectId == projectId);
+        if (pool == null)
+            return (false, "Selected cash pool not found.");
+
+        if (dto.Amount > pool.AvailableBalance)
+            return (false, $"Insufficient funds in selected pool. Available balance is {pool.AvailableBalance} EGP.");
+
+        // Deduct from pool
+        pool.AvailableBalance -= dto.Amount;
+
+        // Create PettyCash entity immediately in Issued status
+        var pettyCash = new PettyCash
+        {
+            ProjectId = projectId,
+            TenantId = tenantId,
+            IssuedToUserId = dto.UserId,
+            Amount = dto.Amount,
+            Reason = dto.Description,
+            Status = "Issued",
+            Category = "Direct Disbursement",
+            SourcePoolId = pool.Id,
+            IssuedAt = DateTime.UtcNow,
+            IsSettled = false
+        };
+
+        context.Set<PettyCash>().Add(pettyCash);
+
+        // Create FinancialTransaction for accountability
+        var transaction = new FinancialTransaction
+        {
+            ProjectId = projectId,
+            TenantId = tenantId,
+            Amount = dto.Amount,
+            Description = $"Direct Disbursement - {dto.Description}",
+            Type = TransactionType.DirectDisbursement,
+            TransactionDate = DateTime.UtcNow,
+            PaymentDate = DateTime.UtcNow,
+            PaymentMethod = dto.PaymentMethod,
+            IsSystemGenerated = true
+        };
+
+        context.Set<FinancialTransaction>().Add(transaction);
+        await context.SaveChangesAsync();
+
+        return (true, "Direct disbursement credited successfully.");
     }
 }

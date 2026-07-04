@@ -28,4 +28,5 @@ public class Project : ITenantEntity
     public ICollection<FinancialTransaction> FinancialTransactions { get; set; } = [];
     public ICollection<PettyCash> PettyCashes { get; set; } = [];
     public ICollection<SitePhoto> SitePhotos { get; set; } = [];
+    public ICollection<Settlement> Settlements { get; set; } = [];
 }
