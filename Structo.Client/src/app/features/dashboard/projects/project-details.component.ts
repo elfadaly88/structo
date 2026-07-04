@@ -1538,24 +1538,45 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
           <form [formGroup]="settlementForm" class="space-y-4 font-sans">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
               <span class="text-sm text-slate-400 font-cairo">بنود الفواتير والمصروفات / Invoice Line Items</span>
-              <button type="button" (click)="addSettlementLine()" class="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-400 border border-indigo-500/20 text-xs font-bold rounded-lg font-cairo flex items-center gap-1 cursor-pointer">
-                + إضافة بند / Add Line
-              </button>
+              @if (!isSettlementLocked()) {
+                <button type="button" (click)="addSettlementLine()" class="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-400 border border-indigo-500/20 text-xs font-bold rounded-lg font-cairo flex items-center gap-1 cursor-pointer">
+                  + إضافة بند / Add Line
+                </button>
+              }
             </div>
 
-            <div formArrayName="lines" class="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
-              @for (line of settlementLines.controls; track line; let idx = $index) {
-                <div [formGroupName]="idx" class="p-3 bg-slate-950/40 border border-slate-850 rounded-xl space-y-3 relative">
-                  <button type="button" (click)="removeSettlementLine(idx)" class="absolute top-2 right-2 text-rose-500 hover:text-rose-400 cursor-pointer" title="Remove Line" [disabled]="settlementLines.length === 1">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+            <!-- Remaining Custody Live Summary Card -->
+            <div class="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.08)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-sans">
+              <div>
+                <span class="text-xs font-bold text-slate-400 block font-cairo">الرصيد المتبقي من العهدة / Remaining Custody</span>
+                <span class="text-2xl font-black text-emerald-400 font-mono tracking-wide mt-1 block">
+                  {{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() }} EGP
+                </span>
+              </div>
+              <div class="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold font-cairo self-start sm:self-center">
+                إصدار عهدة بقيمة: {{ selectedPettyCashForSettlement()?.amount }} EGP
+              </div>
+            </div>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- Cards-based FormArray List -->
+            <div formArrayName="lines" class="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+              @for (line of settlementLines.controls; track line; let idx = $index) {
+                <div [formGroupName]="idx" class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-4 relative hover:border-slate-700/60 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_15px_rgba(99,102,241,0.05)] transition-all duration-200">
+                  <div class="flex justify-between items-center pb-2 border-b border-slate-800/80">
+                    <span class="text-xs font-bold text-indigo-400 font-cairo bg-indigo-500/10 px-2.5 py-1 rounded-lg">البند #{{ idx + 1 }} / Item #{{ idx + 1 }}</span>
+                    @if (!isSettlementLocked()) {
+                      <button type="button" (click)="removeSettlementLine(idx)" class="text-slate-500 hover:text-rose-400 p-1.5 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer" title="Remove Item" [disabled]="settlementLines.length === 1">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    }
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">التصنيف / Category</label>
-                      <select formControlName="category" class="w-full px-2 py-1.5 border border-slate-800 bg-slate-900 rounded-lg text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500">
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">التصنيف / Category</label>
+                      <select formControlName="category" class="w-full px-3 py-2 border border-slate-800 bg-slate-950 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:outline-none transition-all">
                         <option value="Cement">Cement / أسمنت</option>
                         <option value="Logistics">Logistics / خدمات لوجستية</option>
                         <option value="Materials">Materials / مواد بناء</option>
@@ -1564,24 +1585,38 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
                       </select>
                     </div>
                     <div>
-                      <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">المبلغ المصروف / Amount</label>
-                      <input type="number" formControlName="amount" class="w-full px-2 py-1.5 border border-slate-800 bg-slate-900 rounded-lg text-slate-200 text-xs font-mono focus:ring-1 focus:ring-indigo-500">
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">المبلغ المصروف / Amount</label>
+                      <input type="number" formControlName="amount" class="w-full px-3 py-2 border border-slate-800 bg-slate-950 rounded-xl text-slate-200 text-xs font-mono focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:outline-none transition-all">
                     </div>
                     <div>
-                      <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">إيصال الفاتورة / Invoice Receipt</label>
-                      <input type="file" accept="image/*" (change)="onSettlementLineFileSelected($event, idx)" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-850 file:text-indigo-400 cursor-pointer">
-                      @if (line.get('uploading')?.value) {
-                        <span class="text-[10px] text-indigo-400 animate-pulse mt-0.5 block">Uploading...</span>
-                      }
-                      @if (line.get('invoiceUrl')?.value) {
-                        <span class="text-[10px] text-emerald-400 mt-0.5 block">✓ Attached</span>
-                      }
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">إيصال الفاتورة / Invoice Receipt</label>
+                      <div class="flex items-center gap-3">
+                        <div class="relative flex-1">
+                          <input type="file" accept="image/*" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-[10px] file:bg-slate-800 file:text-indigo-400 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          @if (line.get('uploading')?.value) {
+                            <span class="text-[10px] text-indigo-400 animate-pulse mt-1 block">Uploading...</span>
+                          }
+                        </div>
+                        
+                        <!-- Thumbnail Preview -->
+                        @if (line.get('localPreviewUrl')?.value) {
+                          <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="relative w-12 h-12 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform group shadow-md" title="View Full Receipt">
+                            <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        }
+                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1 font-cairo">البيان / Description</label>
-                    <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full px-2 py-1.5 border border-slate-800 bg-slate-900 rounded-lg text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500">
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">البيان / Description</label>
+                    <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full px-3 py-2 border border-slate-800 bg-slate-950 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:outline-none transition-all">
                   </div>
                 </div>
               }
@@ -1591,7 +1626,7 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
             <div class="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-2">
               <div class="flex justify-between text-xs text-slate-400 font-cairo">
                 <span>إجمالي مبلغ العهدة الأصلي:</span>
-                <span class="font-mono font-semibold">{{ selectedPettyCashForSettlement()?.amount }} EGP</span>
+                <span class="font-mono font-semibold text-slate-300">{{ selectedPettyCashForSettlement()?.amount }} EGP</span>
               </div>
               <div class="flex justify-between text-xs text-slate-400 font-cairo">
                 <span>إجمالي المبالغ المصروفة بالفواتير:</span>
@@ -1614,22 +1649,39 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" (click)="closeSettlementModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
               
-              <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-4 py-2 text-sm font-semibold rounded-xl text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 disabled:opacity-50 font-cairo">
-                @if (isSubmittingSettlement()) {
-                  جاري الحفظ...
-                } @else {
-                  حفظ كمسودة / Save Draft
-                }
-              </button>
+              @if (!isSettlementLocked()) {
+                <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-4 py-2 text-sm font-semibold rounded-xl text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 disabled:opacity-50 font-cairo">
+                  @if (isSubmittingSettlement()) {
+                    جاري الحفظ...
+                  } @else {
+                    حفظ كمسودة / Save Draft
+                  }
+                </button>
 
-              <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 font-cairo">
-                @if (isSubmittingSettlement()) {
-                  جاري التقديم...
-                } @else {
-                  تقديم للمراجعة النهائية / Submit for Review
-                }
-              </button>
+                <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 font-cairo">
+                  @if (isSubmittingSettlement()) {
+                    جاري التقديم...
+                  } @else {
+                    تقديم للمراجعة النهائية / Submit for Review
+                  }
+                </button>
+              }
             </div>
+
+            <!-- Image Preview Lightbox Modal -->
+            @if (activePreviewPhotoUrl()) {
+              <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+                <div (click)="activePreviewPhotoUrl.set(null)" class="absolute inset-0"></div>
+                <div class="relative max-w-4xl max-h-[85vh] z-10">
+                  <button (click)="activePreviewPhotoUrl.set(null)" class="absolute -top-12 right-0 text-white/80 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 p-2 rounded-full cursor-pointer transition-colors shadow-lg">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <img [src]="activePreviewPhotoUrl()" class="max-w-full max-h-[80vh] rounded-2xl object-contain border border-slate-750 shadow-2xl">
+                </div>
+              </div>
+            }
           </form>
         </div>
       </div>
@@ -1651,6 +1703,13 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly offlineSync = inject(OfflineSyncService);
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly userService = inject(TenantUserService);
+
+  readonly isSettlementLocked = computed(() => {
+    const pc = this.selectedPettyCashForSettlement();
+    if (!pc) return false;
+    const sett = this.settlements().find(s => s.pettyCashId === pc.id);
+    return !!sett && sett.status !== 'Draft' && sett.status !== 'Rejected';
+  });
 
   readonly isEditPettyCashModalOpen = signal(false);
   readonly isEditingPettyCash = signal(false);
@@ -1700,6 +1759,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly selectedPettyCashForSettlement = signal<PettyCashMobileDto | null>(null);
   readonly settlements = signal<SettlementMobileDto[]>([]);
   readonly isLoadingSettlements = signal(false);
+  readonly activePreviewPhotoUrl = signal<string | null>(null);
   
   readonly settlementForm: FormGroup = this.fb.group({
     lines: this.fb.array([])
@@ -1715,7 +1775,8 @@ export class ProjectDetailsComponent implements OnInit {
       amount: [null, [Validators.required, Validators.min(0.01)]],
       description: ['', [Validators.required, Validators.minLength(3)]],
       invoiceUrl: [''],
-      uploading: [false] // local uploading helper
+      uploading: [false],
+      localPreviewUrl: ['']
     }));
   }
 
@@ -1901,11 +1962,15 @@ export class ProjectDetailsComponent implements OnInit {
 
   readonly netBalance = computed(() => this.totalIncome() - this.totalExpenses());
 
-  readonly totalUnsettledPettyCash = computed(() =>
-    this.pettyCashes()
+  readonly totalUnsettledPettyCash = computed(() => {
+    return this.pettyCashes()
       .filter(p => !p.isSettled)
-      .reduce((sum, p) => sum + p.amount, 0)
-  );
+      .reduce((sum, p) => {
+        const sett = this.settlements().find(s => s.pettyCashId === p.id);
+        const spent = sett ? sett.lines.reduce((sSum, l) => sSum + l.amount, 0) : 0;
+        return sum + (p.amount - spent);
+      }, 0);
+  });
 
   readonly unsettledCount = computed(() =>
     this.pettyCashes().filter(p => !p.isSettled).length
@@ -2804,15 +2869,18 @@ export class ProjectDetailsComponent implements OnInit {
     this.settlementErrors.set([]);
     this.settlementLines.clear();
 
-    const existingDraft = this.settlements().find(s => s.pettyCashId === pettyCash.id && s.status === 'Draft');
-    if (existingDraft && existingDraft.lines && existingDraft.lines.length > 0) {
-      existingDraft.lines.forEach(line => {
+    const existing = this.settlements().find(s => s.pettyCashId === pettyCash.id);
+    const isLocked = existing && existing.status !== 'Draft' && existing.status !== 'Rejected';
+
+    if (existing && existing.lines && existing.lines.length > 0) {
+      existing.lines.forEach(line => {
         this.settlementLines.push(this.fb.group({
-          category: [line.category, Validators.required],
-          amount: [line.amount, [Validators.required, Validators.min(0.01)]],
-          description: [line.description, Validators.required],
+          category: [{ value: line.category, disabled: isLocked }, Validators.required],
+          amount: [{ value: line.amount, disabled: isLocked }, [Validators.required, Validators.min(0.01)]],
+          description: [{ value: line.description, disabled: isLocked }, Validators.required],
           invoiceUrl: [line.invoiceUrl],
-          uploading: [false]
+          uploading: [false],
+          localPreviewUrl: [line.invoiceUrl || '']
         }));
       });
     } else {
@@ -2837,13 +2905,14 @@ export class ProjectDetailsComponent implements OnInit {
         });
         return;
       }
+      const localUrl = URL.createObjectURL(file);
       const lineGroup = this.settlementLines.at(index);
-      lineGroup.patchValue({ uploading: true });
+      lineGroup.patchValue({ localPreviewUrl: localUrl, uploading: true });
       this.uploadService.uploadProjectDocument(this.projectId, file).subscribe({
         next: (res) => {
           lineGroup.patchValue({ uploading: false });
           if (res.success && res.data) {
-            lineGroup.patchValue({ invoiceUrl: res.data.url });
+            lineGroup.patchValue({ invoiceUrl: res.data.url, localPreviewUrl: res.data.url });
           } else {
             this.confirmService.alert({ title: 'فشل الرفع', message: 'فشل رفع إيصال الفاتورة.', type: 'error' });
           }

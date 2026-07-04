@@ -102,16 +102,31 @@ public class SettlementService(DbContext context) : ISettlementService
         if (pettyCash == null)
             return (false, "Associated petty cash record is missing.");
 
-        // positive = unused custody due back, negative = employee spent extra
         var netDifference = pettyCash.Amount - settlement.TotalAmount;
         settlement.NetDifference = netDifference;
 
         if (netDifference > 0)
         {
-            // Case 2: TREASURY REFUND LOOP -> total lines < custody amount.
-            // Do NOT auto-credit immediately. Wait for confirm-refund.
-            settlement.Status = SettlementStatus.ApprovedPendingRefund;
-            pettyCash.Status = "SettlePending"; // Settle pending refund confirmation
+            // Partial settlement: keep PettyCash open
+            settlement.Status = SettlementStatus.Approved;
+            pettyCash.Status = "Issued";
+            pettyCash.IsSettled = false;
+
+            // Register line expenses in system ledger
+            var expense = new FinancialTransaction
+            {
+                ProjectId = projectId,
+                TenantId = settlement.TenantId,
+                Type = TransactionType.Expense,
+                Amount = settlement.TotalAmount,
+                Description = $"Petty Cash Partial Settlement - {pettyCash.Reason}",
+                PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
+                TransactionDate = DateTime.UtcNow,
+                PaymentDate = DateTime.UtcNow,
+                IsSystemGenerated = true,
+                SettlementId = settlement.Id
+            };
+            context.Set<FinancialTransaction>().Add(expense);
         }
         else
         {
