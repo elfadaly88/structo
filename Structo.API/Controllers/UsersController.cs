@@ -25,7 +25,7 @@ public class UsersController(IUserService userService, StructoDbContext context,
         Guid.Empty.ToString());
 
     [HttpGet]
-    [Authorize(Roles = "TenantOwner,SuperAdmin")]
+    [Authorize(Roles = "TenantOwner, Accountant, SuperAdmin")]
     public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetAll()
     {
         var users = await userService.GetAllUsersAsync();
