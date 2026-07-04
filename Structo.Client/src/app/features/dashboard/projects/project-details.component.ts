@@ -963,7 +963,7 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
                 formControlName="receiptDescription"
                 rows="3"
                 class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
-                placeholder="مثال: شراء نثريات للموقع، حوافز عمال، فواتير نقل..."></textarea>
+                placeholder="مثال: شراء مستلزمات للموقع، حوافز عمال، فواتير نقل..."></textarea>
               @if (isSettleFieldInvalid('receiptDescription')) {
                 <span class="text-xs text-red-400 mt-1 block">
                   {{ 'DETAILS.INPUT_NOTES_ERR' | translate }}
@@ -1535,7 +1535,7 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
             </div>
           }
 
-          <form [formGroup]="settlementForm" (ngSubmit)="onSettlementSubmit()" class="space-y-4 font-sans">
+          <form [formGroup]="settlementForm" class="space-y-4 font-sans">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
               <span class="text-sm text-slate-400 font-cairo">بنود الفواتير والمصروفات / Invoice Line Items</span>
               <button type="button" (click)="addSettlementLine()" class="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-400 border border-indigo-500/20 text-xs font-bold rounded-lg font-cairo flex items-center gap-1 cursor-pointer">
@@ -1613,11 +1613,20 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
 
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" (click)="closeSettlementModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
-              <button type="submit" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 font-cairo">
+              
+              <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-4 py-2 text-sm font-semibold rounded-xl text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 disabled:opacity-50 font-cairo">
+                @if (isSubmittingSettlement()) {
+                  جاري الحفظ...
+                } @else {
+                  حفظ كمسودة / Save Draft
+                }
+              </button>
+
+              <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 font-cairo">
                 @if (isSubmittingSettlement()) {
                   جاري التقديم...
                 } @else {
-                  تقديم طلب التسوية
+                  تقديم للمراجعة النهائية / Submit for Review
                 }
               </button>
             </div>
@@ -2794,7 +2803,21 @@ export class ProjectDetailsComponent implements OnInit {
     this.selectedPettyCashForSettlement.set(pettyCash);
     this.settlementErrors.set([]);
     this.settlementLines.clear();
-    this.addSettlementLine(); // start with one line
+
+    const existingDraft = this.settlements().find(s => s.pettyCashId === pettyCash.id && s.status === 'Draft');
+    if (existingDraft && existingDraft.lines && existingDraft.lines.length > 0) {
+      existingDraft.lines.forEach(line => {
+        this.settlementLines.push(this.fb.group({
+          category: [line.category, Validators.required],
+          amount: [line.amount, [Validators.required, Validators.min(0.01)]],
+          description: [line.description, Validators.required],
+          invoiceUrl: [line.invoiceUrl],
+          uploading: [false]
+        }));
+      });
+    } else {
+      this.addSettlementLine();
+    }
     this.isSettlementModalOpen.set(true);
   }
 
@@ -2833,7 +2856,7 @@ export class ProjectDetailsComponent implements OnInit {
     }
   }
 
-  onSettlementSubmit(): void {
+  onSettlementSubmit(isDraft: boolean): void {
     if (this.settlementForm.invalid) return;
     const pettyCash = this.selectedPettyCashForSettlement();
     if (!pettyCash) return;
@@ -2848,7 +2871,8 @@ export class ProjectDetailsComponent implements OnInit {
         amount: l.amount,
         description: l.description,
         invoiceUrl: l.invoiceUrl
-      }))
+      })),
+      isDraft: isDraft
     };
 
     // Integrate Offline sync submission
@@ -2861,15 +2885,15 @@ export class ProjectDetailsComponent implements OnInit {
         this.isSubmittingSettlement.set(false);
         if (res.success) {
           this.confirmService.alert({
-            title: 'تم تقديم التسوية',
-            message: res.message || 'تم تقديم طلب تسوية العهدة بنجاح.',
+            title: isDraft ? 'تم حفظ المسودة' : 'تم تقديم التسوية للمراجعة',
+            message: res.message || (isDraft ? 'تم حفظ مسودة التسوية بنجاح.' : 'تم تقديم طلب تسوية العهدة بنجاح للمراجعة النهائية.'),
             type: 'success'
           });
           this.closeSettlementModal();
           this.fetchPettyCash();
           this.fetchSettlements();
         } else {
-          this.settlementErrors.set([res.message || 'فشل تقديم التسوية.']);
+          this.settlementErrors.set([res.message || 'فشل عملية التسوية.']);
         }
       },
       error: (err) => {

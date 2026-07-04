@@ -29,16 +29,31 @@ public class SettlementService(DbContext context) : ISettlementService
 
         var totalAmount = dto.Lines.Sum(l => l.Amount);
 
-        var settlement = new Settlement
+        var settlement = await context.Set<Settlement>()
+            .Include(s => s.Lines)
+            .FirstOrDefaultAsync(s => s.PettyCashId == dto.PettyCashId && s.Status == SettlementStatus.Draft);
+
+        bool isNew = false;
+        if (settlement == null)
         {
-            ProjectId = projectId,
-            TenantId = tenantId,
-            PettyCashId = dto.PettyCashId,
-            TotalAmount = totalAmount,
-            Status = SettlementStatus.Pending,
-            SubmittedAt = DateTime.UtcNow,
-            NetDifference = pettyCash.Amount - totalAmount
-        };
+            isNew = true;
+            settlement = new Settlement
+            {
+                ProjectId = projectId,
+                TenantId = tenantId,
+                PettyCashId = dto.PettyCashId,
+                SubmittedAt = DateTime.UtcNow
+            };
+        }
+        else
+        {
+            settlement.Lines.Clear();
+            settlement.SubmittedAt = DateTime.UtcNow;
+        }
+
+        settlement.TotalAmount = totalAmount;
+        settlement.Status = dto.IsDraft ? SettlementStatus.Draft : SettlementStatus.Pending;
+        settlement.NetDifference = pettyCash.Amount - totalAmount;
 
         foreach (var lineDto in dto.Lines)
         {
@@ -51,10 +66,15 @@ public class SettlementService(DbContext context) : ISettlementService
             });
         }
 
-        context.Set<Settlement>().Add(settlement);
+        if (isNew)
+        {
+            context.Set<Settlement>().Add(settlement);
+        }
+
         await context.SaveChangesAsync();
 
-        return (true, "Settlement request submitted successfully.", settlement.Id);
+        var statusMessage = dto.IsDraft ? "Settlement draft saved successfully." : "Settlement request submitted for review.";
+        return (true, statusMessage, settlement.Id);
     }
 
     public async Task<(bool Success, string Message)> ApproveSettlementAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId)

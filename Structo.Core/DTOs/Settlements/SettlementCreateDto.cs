@@ -12,4 +12,6 @@ public class SettlementCreateDto
     [Required]
     [MinLength(1, ErrorMessage = "At least one settlement line is required.")]
     public List<SettlementLineCreateDto> Lines { get; set; } = [];
+
+    public bool IsDraft { get; set; }
 }

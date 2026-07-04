@@ -27,6 +27,7 @@ export interface SettlementLineDto {
 export interface SettlementCreateDto {
   pettyCashId: string;
   lines: SettlementLineDto[];
+  isDraft?: boolean;
 }
 
 export interface SettlementLineMobileDto {

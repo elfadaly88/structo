@@ -185,8 +185,7 @@ export class DashboardLayoutComponent {
       case 'SiteEngineer':
       case 'DesignEngineer':
         return [
-          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.icons.financials },
-          { label: 'DASHBOARD.MY_PROJECTS', route: '/dashboard/projects', icon: this.icons.projects }
+          { label: 'My Custody / عهدي', route: '/dashboard/projects', icon: this.icons.pettyCash }
         ];
       default:
         return [];
