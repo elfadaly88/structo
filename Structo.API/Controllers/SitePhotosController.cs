@@ -19,7 +19,7 @@ namespace Structo.API.Controllers;
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer,DesignEngineer")]
 public class SitePhotosController(StructoDbContext context) : ControllerBase
 {
-    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> UploadPhoto([FromRoute] Guid projectId, [FromForm] Models.SitePhotoUploadDto dto)

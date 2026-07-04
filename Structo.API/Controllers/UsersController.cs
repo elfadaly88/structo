@@ -18,7 +18,7 @@ namespace Structo.API.Controllers;
 [Authorize]
 public class UsersController(IUserService userService, StructoDbContext context, INotificationEngine notificationEngine) : ControllerBase
 {
-    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid CurrentUserId => Guid.Parse(
         User.FindFirstValue("sub") ??
         User.FindFirstValue(ClaimTypes.NameIdentifier) ??

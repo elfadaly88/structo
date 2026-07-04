@@ -17,7 +17,7 @@ namespace Structo.API.Controllers;
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
 public class PettyCashController(IPettyCashService pettyCashService) : ControllerBase
 {
-    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] PettyCashCreateDto dto)

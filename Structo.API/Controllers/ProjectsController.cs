@@ -16,7 +16,7 @@ namespace Structo.API.Controllers;
 [Authorize]
 public class ProjectsController(IProjectService projectService) : ControllerBase
 {
-    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<List<ProjectDto>>>> GetAll([FromQuery] Guid? tenantId = null)

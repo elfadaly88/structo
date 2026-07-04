@@ -16,7 +16,7 @@ namespace Structo.API.Controllers;
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
 public class SettlementsController(ISettlementService settlementService) : ControllerBase
 {
-    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid CurrentUserId
     {
         get
