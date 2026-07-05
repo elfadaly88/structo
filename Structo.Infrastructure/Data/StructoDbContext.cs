@@ -86,6 +86,13 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.ClientName).HasMaxLength(150);
             entity.Property(e => e.Category).HasMaxLength(100);
 
+            // Closeout fields
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.PublicReviewToken).HasMaxLength(64);
+            entity.Property(e => e.ClientReviewNotes).HasMaxLength(2000);
+            entity.Property(e => e.ClientRating);
+            entity.HasIndex(e => e.PublicReviewToken).IsUnique().HasFilter($"\"{nameof(Project.PublicReviewToken)}\" IS NOT NULL");
+
             entity.HasOne(e => e.Tenant)
                   .WithMany(t => t.Projects)
                   .HasForeignKey(e => e.TenantId)
@@ -96,6 +103,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .HasForeignKey(e => e.ManagerId)
                   .OnDelete(DeleteBehavior.SetNull); 
         });
+
 
         modelBuilder.Entity<FinancialTransaction>(entity =>
         {

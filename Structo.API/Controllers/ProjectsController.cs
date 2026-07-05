@@ -14,9 +14,10 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ProjectsController(IProjectService projectService) : ControllerBase
+public class ProjectsController(IProjectService projectService, ITenantContextAccessor tenantContextAccessor) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private Guid? CurrentTenantId => tenantContextAccessor.GetCurrentTenantId();
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<List<ProjectDto>>>> GetAll([FromQuery] Guid? tenantId = null)
@@ -33,7 +34,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "SuperAdmin,TenantOwner,Manager")]
+    [Authorize(Roles = "TenantOwner,Manager")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> Create([FromBody] ProjectCreateDto dto)
     {
         var (success, data, message) = await projectService.CreateProjectAsync(dto, CurrentUserRole);
@@ -41,9 +42,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
         if (!success)
         {
             if (message.Contains("claim missing") || message.Contains("required"))
-            {
                 return Unauthorized(new ApiResponse<ProjectDto> { Success = false, Message = message });
-            }
             return BadRequest(new ApiResponse<ProjectDto> { Success = false, Message = message });
         }
 
@@ -58,6 +57,9 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
         if (project == null)
             return NotFound(new ApiResponse<ProjectDto> { Success = false, Message = "Project not found" });
 
+        if (CurrentUserRole == "SuperAdmin")
+            project.Description = string.Empty;
+
         return Ok(new ApiResponse<ProjectDto> { Data = project, CurrentUserRole = CurrentUserRole });
     }
 
@@ -69,18 +71,12 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
         if (project == null)
             return NotFound(new ApiResponse<ProjectClientViewDto> { Success = false, Message = "Project not found" });
 
-        return Ok(new ApiResponse<ProjectClientViewDto>
-        {
-            Data = project,
-            CurrentUserRole = CurrentUserRole
-        });
+        return Ok(new ApiResponse<ProjectClientViewDto> { Data = project, CurrentUserRole = CurrentUserRole });
     }
 
     [HttpPost("{id}/budget-revision")]
     [Authorize(Roles = "TenantOwner,Accountant")]
-    public async Task<ActionResult<ApiResponse<bool>>> ReviseBudget(
-        [FromRoute] Guid id,
-        [FromBody] ProjectBudgetRevisionDto dto)
+    public async Task<ActionResult<ApiResponse<bool>>> ReviseBudget([FromRoute] Guid id, [FromBody] ProjectBudgetRevisionDto dto)
     {
         var (success, message) = await projectService.ReviseBudgetAsync(id, dto);
 
@@ -98,17 +94,73 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "SuperAdmin,TenantOwner,Manager")]
+    [Authorize(Roles = "TenantOwner,Manager")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> Update([FromRoute] Guid id, [FromBody] ProjectCreateDto dto)
     {
         var (success, data, message) = await projectService.UpdateProjectAsync(id, dto, CurrentUserRole);
 
         if (!success)
-        {
             return BadRequest(new ApiResponse<ProjectDto> { Success = false, Message = message });
-        }
 
         return Ok(new ApiResponse<ProjectDto> { Data = data, Message = message, CurrentUserRole = CurrentUserRole });
     }
-}
 
+    // =====================================================================
+    // CLOSEOUT ENDPOINTS
+    // =====================================================================
+
+    [HttpGet("{id}/reconciliation-report")]
+    [Authorize(Roles = "TenantOwner,Accountant")]
+    public async Task<ActionResult<ApiResponse<ProjectReconciliationReportDto>>> GetReconciliationReport([FromRoute] Guid id)
+    {
+        var tenantId = CurrentTenantId;
+        if (tenantId == null)
+            return Unauthorized(new ApiResponse<ProjectReconciliationReportDto> { Success = false, Message = "Tenant context missing." });
+
+        var report = await projectService.GetReconciliationReportAsync(id, tenantId.Value);
+        if (report == null)
+            return NotFound(new ApiResponse<ProjectReconciliationReportDto> { Success = false, Message = "Project not found." });
+
+        return Ok(new ApiResponse<ProjectReconciliationReportDto> { Data = report, CurrentUserRole = CurrentUserRole });
+    }
+
+    [HttpPost("{id}/freeze")]
+    [Authorize(Roles = "TenantOwner,Accountant")]
+    public async Task<ActionResult<ApiResponse<bool>>> FreezeProject([FromRoute] Guid id)
+    {
+        var tenantId = CurrentTenantId;
+        if (tenantId == null)
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant context missing." });
+
+        try
+        {
+            var (success, message) = await projectService.FreezeProjectAsync(id, tenantId.Value, CurrentUserRole);
+            if (!success) return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
+            return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    [HttpPost("{id}/final-closeout")]
+    [Authorize(Roles = "TenantOwner")]
+    public async Task<ActionResult<ApiResponse<bool>>> FinalCloseout([FromRoute] Guid id)
+    {
+        var tenantId = CurrentTenantId;
+        if (tenantId == null)
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant context missing." });
+
+        try
+        {
+            var (success, message) = await projectService.FinalCloseoutAsync(id, tenantId.Value, CurrentUserRole);
+            if (!success) return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
+            return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+}

@@ -13,6 +13,7 @@ export interface PettyCashMobileDto {
   receiptPhotoUrl: string;
   settlementPaymentMethod: string;
   expenseDate?: string;
+  isReimbursement?: boolean;
 }
 
 export interface PaginatedList<T> {

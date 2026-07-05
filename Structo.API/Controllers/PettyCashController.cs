@@ -14,10 +14,14 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
-[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
+[Authorize(Roles = "TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
 public class PettyCashController(IPettyCashService pettyCashService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private Guid CurrentUserId => Guid.Parse(
+        User.FindFirstValue("sub") ??
+        User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+        Guid.Empty.ToString());
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] PettyCashCreateDto dto)
@@ -94,7 +98,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
         [FromQuery] int pageNumber = 1, 
         [FromQuery] int pageSize = 10)
     {
-        var data = await pettyCashService.GetMobilePettyCashAsync(projectId, pageNumber, pageSize);
+        var data = await pettyCashService.GetMobilePettyCashAsync(projectId, pageNumber, pageSize, CurrentUserId, CurrentUserRole);
         return Ok(new ApiResponse<PaginatedList<PettyCashMobileDto>>
         {
             Data = data,

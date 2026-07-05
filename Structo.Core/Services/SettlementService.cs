@@ -33,31 +33,27 @@ public class SettlementService(DbContext context) : ISettlementService
             .Include(s => s.Lines)
             .FirstOrDefaultAsync(s => s.PettyCashId == dto.PettyCashId && s.Status == SettlementStatus.Draft);
 
-        bool isNew = false;
-        if (settlement == null)
+        if (settlement != null)
         {
-            isNew = true;
-            settlement = new Settlement
-            {
-                ProjectId = projectId,
-                TenantId = tenantId,
-                PettyCashId = dto.PettyCashId,
-                SubmittedAt = DateTime.UtcNow
-            };
-        }
-        else
-        {
-            settlement.Lines.Clear();
-            settlement.SubmittedAt = DateTime.UtcNow;
+            context.Set<Settlement>().Remove(settlement);
+            // Save immediately to ensure deletion propagates and releases constraints before adding new one
+            await context.SaveChangesAsync();
         }
 
-        settlement.TotalAmount = totalAmount;
-        settlement.Status = dto.IsDraft ? SettlementStatus.Draft : SettlementStatus.Pending;
-        settlement.NetDifference = pettyCash.Amount - totalAmount;
+        var newSettlement = new Settlement
+        {
+            ProjectId = projectId,
+            TenantId = tenantId,
+            PettyCashId = dto.PettyCashId,
+            SubmittedAt = DateTime.UtcNow,
+            TotalAmount = totalAmount,
+            Status = dto.IsDraft ? SettlementStatus.Draft : SettlementStatus.Pending,
+            NetDifference = pettyCash.Amount - totalAmount
+        };
 
         foreach (var lineDto in dto.Lines)
         {
-            settlement.Lines.Add(new SettlementLine
+            newSettlement.Lines.Add(new SettlementLine
             {
                 Category = lineDto.Category,
                 Amount = lineDto.Amount,
@@ -66,22 +62,18 @@ public class SettlementService(DbContext context) : ISettlementService
             });
         }
 
-        if (isNew)
-        {
-            context.Set<Settlement>().Add(settlement);
-        }
-
+        context.Set<Settlement>().Add(newSettlement);
         await context.SaveChangesAsync();
 
         var statusMessage = dto.IsDraft ? "Settlement draft saved successfully." : "Settlement request submitted for review.";
-        return (true, statusMessage, settlement.Id);
+        return (true, statusMessage, newSettlement.Id);
     }
 
     public async Task<(bool Success, string Message)> ApproveSettlementAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId)
     {
-        if (userRole != "TenantOwner" && userRole != "SuperAdmin" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner, SuperAdmin, and Accountants are allowed to approve settlements.");
+            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to approve settlements.");
         }
 
         var settlement = await context.Set<Settlement>()
@@ -107,19 +99,19 @@ public class SettlementService(DbContext context) : ISettlementService
 
         if (netDifference > 0)
         {
-            // Partial settlement: keep PettyCash open
-            settlement.Status = SettlementStatus.Approved;
-            pettyCash.Status = "Issued";
+            // Spent less than custody: transitions to ApprovedPendingRefund so accountant can confirm receipt of returned cash
+            settlement.Status = SettlementStatus.ApprovedPendingRefund;
+            pettyCash.Status = "ApprovedPendingRefund";
             pettyCash.IsSettled = false;
 
-            // Register line expenses in system ledger
+            // Register spent amount as project expense
             var expense = new FinancialTransaction
             {
                 ProjectId = projectId,
                 TenantId = settlement.TenantId,
                 Type = TransactionType.Expense,
                 Amount = settlement.TotalAmount,
-                Description = $"Petty Cash Partial Settlement - {pettyCash.Reason}",
+                Description = $"Petty Cash Settlement - Spent Amount: {pettyCash.Reason}",
                 PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
                 TransactionDate = DateTime.UtcNow,
                 PaymentDate = DateTime.UtcNow,
@@ -130,21 +122,21 @@ public class SettlementService(DbContext context) : ISettlementService
         }
         else
         {
-            // Case 1: total lines >= custody amount
+            // Spent equal to or greater than custody: mark custody as settled, register expense, and generate a new pending reimbursement request for the difference if spent more
             settlement.Status = SettlementStatus.Approved;
             pettyCash.IsSettled = true;
             pettyCash.Status = "Settled";
-            pettyCash.SpentAmount = pettyCash.Amount;
+            pettyCash.SpentAmount = settlement.TotalAmount; // The actual spent amount
             pettyCash.ReturnAmount = 0;
 
-            // Register line expenses in system ledger
+            // Register total spent amount as project expense
             var expense = new FinancialTransaction
             {
                 ProjectId = projectId,
                 TenantId = settlement.TenantId,
                 Type = TransactionType.Expense,
-                Amount = pettyCash.Amount,
-                Description = $"Petty Cash Settlement - {pettyCash.Reason}",
+                Amount = settlement.TotalAmount,
+                Description = $"Petty Cash Settlement - Spent Amount: {pettyCash.Reason}",
                 PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
                 TransactionDate = DateTime.UtcNow,
                 PaymentDate = DateTime.UtcNow,
@@ -155,23 +147,22 @@ public class SettlementService(DbContext context) : ISettlementService
 
             if (netDifference < 0)
             {
-                // Engineer spent more. Register difference as an operational liability (DueToEmployee)
+                // Generate a new pending reimbursement request for the difference which requires accountant/manager approval
                 var liabilityAmount = Math.Abs(netDifference);
-                
-                var reimbursementLiability = new FinancialTransaction
+                var reimbursementRequest = new PettyCash
                 {
                     ProjectId = projectId,
                     TenantId = settlement.TenantId,
-                    Type = TransactionType.Reimbursement,
+                    IssuedToUserId = pettyCash.IssuedToUserId,
                     Amount = liabilityAmount,
-                    Description = $"Overrun Reimbursement Liability due to Employee - Settlement {settlement.Id}",
-                    PaymentMethod = PaymentMethod.Cash,
-                    TransactionDate = DateTime.UtcNow,
-                    PaymentDate = DateTime.UtcNow,
-                    IsSystemGenerated = true,
-                    SettlementId = settlement.Id
+                    Reason = $"تعويض مصاريف زائدة عن تسوية عهدة بيان: {pettyCash.Reason} (Reimbursement for Overspend)",
+                    Status = "Pending",
+                    Category = "Other",
+                    IssuedAt = DateTime.UtcNow,
+                    IsSettled = false,
+                    IsReimbursement = true
                 };
-                context.Set<FinancialTransaction>().Add(reimbursementLiability);
+                context.Set<PettyCash>().Add(reimbursementRequest);
             }
         }
 
@@ -183,9 +174,9 @@ public class SettlementService(DbContext context) : ISettlementService
 
     public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole)
     {
-        if (userRole != "TenantOwner" && userRole != "SuperAdmin" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner, SuperAdmin, and Accountants are allowed to confirm refunds.");
+            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to confirm refunds.");
         }
 
         var settlement = await context.Set<Settlement>()
@@ -267,9 +258,9 @@ public class SettlementService(DbContext context) : ISettlementService
 
     public async Task<(bool Success, string Message)> RejectSettlementAsync(Guid projectId, Guid id, SettlementRejectDto dto, string userRole, Guid resolvedByUserId)
     {
-        if (userRole != "TenantOwner" && userRole != "SuperAdmin" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner, SuperAdmin, and Accountants are allowed to reject settlements.");
+            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to reject settlements.");
         }
 
         var settlement = await context.Set<Settlement>()
@@ -296,15 +287,22 @@ public class SettlementService(DbContext context) : ISettlementService
         return (true, "Settlement request rejected.");
     }
 
-    public async Task<IEnumerable<SettlementMobileDto>> GetSettlementsAsync(Guid projectId)
+    public async Task<IEnumerable<SettlementMobileDto>> GetSettlementsAsync(Guid projectId, Guid userId, string userRole)
     {
-        var items = await context.Set<Settlement>()
+        var query = context.Set<Settlement>()
             .Include(s => s.Lines)
             .Include(s => s.PettyCash)
             .ThenInclude(pc => pc!.IssuedToUser)
             .Include(s => s.ResolvedByUser)
             .Include(s => s.Project)
-            .Where(s => s.ProjectId == projectId)
+            .Where(s => s.ProjectId == projectId);
+
+        if (userRole == "SiteEngineer" || userRole == "DesignEngineer" || userRole == "Manager")
+        {
+            query = query.Where(s => s.PettyCash != null && s.PettyCash.IssuedToUserId == userId);
+        }
+
+        var items = await query
             .OrderByDescending(s => s.SubmittedAt)
             .ToListAsync();
 

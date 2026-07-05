@@ -13,7 +13,7 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
-[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
+[Authorize(Roles = "TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
 public class SettlementsController(ISettlementService settlementService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
@@ -92,7 +92,7 @@ public class SettlementsController(ISettlementService settlementService) : Contr
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<SettlementMobileDto>>>> GetSettlements([FromRoute] Guid projectId)
     {
-        var data = await settlementService.GetSettlementsAsync(projectId);
+        var data = await settlementService.GetSettlementsAsync(projectId, CurrentUserId, CurrentUserRole);
         return Ok(new ApiResponse<IEnumerable<SettlementMobileDto>>
         {
             Data = data,

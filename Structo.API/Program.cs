@@ -303,6 +303,35 @@ using (var scope = app.Services.CreateScope())
             context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();
         }
+
+        try
+        {
+            var targetProj = context.Projects.IgnoreQueryFilters().FirstOrDefault(p => p.Id == Guid.Parse("436abb4b-529f-4a9a-b559-e2f5c66e071f"));
+            if (targetProj != null)
+            {
+                var targetTenantId = Guid.Parse("65ea11dc-d7cd-48fe-917c-508d1be80632");
+                if (targetProj.TenantId != targetTenantId)
+                {
+                    Console.WriteLine($"[PATCH] Aligning Project {targetProj.Id} tenant ID to {targetTenantId}");
+                    targetProj.TenantId = targetTenantId;
+
+                    var pools = context.ProjectCashPools.IgnoreQueryFilters().Where(p => p.ProjectId == targetProj.Id).ToList();
+                    foreach (var pool in pools) pool.TenantId = targetTenantId;
+
+                    var pettyCashes = context.PettyCashes.IgnoreQueryFilters().Where(p => p.ProjectId == targetProj.Id).ToList();
+                    foreach (var pc in pettyCashes) pc.TenantId = targetTenantId;
+
+                    var settlements = context.Settlements.IgnoreQueryFilters().Where(s => s.ProjectId == targetProj.Id).ToList();
+                    foreach (var s in settlements) s.TenantId = targetTenantId;
+
+                    context.SaveChanges();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PATCH ERROR] Failed to run database alignment patch: {ex.Message}");
+        }
     }
     catch { /* Ignore if table doesn't exist yet */ }
 }

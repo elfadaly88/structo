@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../core/services/project.service';
 import { PettyCashService } from '../../../core/services/petty-cash.service';
 import { FinancialService } from '../../../core/services/financial.service';
-import { ProjectDto, ProjectCashPoolDto } from '../../../core/models/project.models';
+import { ProjectDto, ProjectCashPoolDto, ProjectReconciliationReportDto } from '../../../core/models/project.models';
 import { PettyCashMobileDto, PettyCashSettleDto } from '../../../core/models/petty-cash.models';
 import { FinancialTransactionMobileDto, SettlementMobileDto } from '../../../core/models/financial.models';
 import { ImageUploadService, SitePhotoDto } from '../../../core/services/image-upload.service';
@@ -18,6 +18,8 @@ import { TenantUserService } from '../../../core/services/tenant-user.service';
 import { SettlementService } from '../../../core/services/settlement.service';
 import { OfflineSyncService } from '../../../core/services/offline-sync.service';
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
+import { ProjectCloseoutService } from '../../../core/services/project-closeout.service';
+
 
 
 @Component({
@@ -61,7 +63,33 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
         }
       </div>
 
-      <!-- KPI Stats Grid -->
+      <!-- Project Status Banner (Freeze / Closed Guard) -->
+      @if (project() && project()!.status !== 'Active') {
+        <div class="rounded-2xl border px-5 py-4 flex items-start gap-4"
+          [class.border-amber-500]="project()!.status === 'FinancialFreeze'"
+          [class.bg-amber-500\/5]="project()!.status === 'FinancialFreeze'"
+          [class.border-slate-700]="project()!.status === 'Closed'"
+          [class.bg-slate-900\/40]="project()!.status === 'Closed'">
+          <div class="shrink-0 mt-0.5">
+            @if (project()!.status === 'FinancialFreeze') {
+              <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            } @else {
+              <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            }
+          </div>
+          <div>
+            <p class="text-sm font-bold font-cairo" [class.text-amber-300]="project()!.status === 'FinancialFreeze'" [class.text-slate-300]="project()!.status === 'Closed'">
+              {{ project()!.status === 'FinancialFreeze' ? 'المشروع في وضع التجميد المالي — لا يمكن تقديم طلبات جديدة' : 'المشروع مغلق نهائياً — جميع العمليات المالية محظورة' }}
+            </p>
+            <p class="text-xs text-slate-500 mt-0.5 font-cairo">{{ project()!.status === 'FinancialFreeze' ? 'تم تجميد المشروع بانتظار المراجعة المالية النهائية والإغلاق الرسمي.' : 'تم إغلاق هذا المشروع بشكل نهائي. البيانات محفوظة للتدقيق.' }}</p>
+          </div>
+        </div>
+      }
+
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 font-sans">
         @if (!isEngineer()) {
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
@@ -141,19 +169,21 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
               <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</span>
               <p class="text-base font-semibold text-slate-200 mt-1">{{ parsedClient() || 'N/A' }}</p>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</span>
-                @if (isOwnerOrAccountant()) {
-                  <button
-                    (click)="openReviseBudgetModal()"
-                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors cursor-pointer font-cairo">
-                    Revise / تعديل
-                  </button>
-                }
+            @if (!isEngineer()) {
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</span>
+                  @if (isOwnerOrAccountant()) {
+                    <button
+                      (click)="openReviseBudgetModal()"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors cursor-pointer font-cairo">
+                      Revise / تعديل
+                    </button>
+                  }
+                </div>
+                <p class="text-base font-bold text-emerald-400 mt-1">{{ parsedBudget() | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</p>
               </div>
-              <p class="text-base font-bold text-emerald-400 mt-1">{{ parsedBudget() | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</p>
-            </div>
+            }
           </div>
           <div>
             <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'DETAILS.SCOPE_DESC' | translate }}</span>
@@ -278,11 +308,391 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
             <span>لوحة تحكم الأدمن</span>
           </button>
         }
+        @if (isOwnerOrAccountant()) {
+          <button
+            id="tab-closeout"
+            (click)="activeTab.set('closeout')"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo flex items-center gap-1.5"
+            [class.border-rose-500]="activeTab() === 'closeout'"
+            [class.text-rose-400]="activeTab() === 'closeout'"
+            [class.border-transparent]="activeTab() !== 'closeout'"
+            [class.text-slate-400]="activeTab() !== 'closeout'">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>إغلاق المشروع</span>
+          </button>
+        }
       </div>
 
-      <!-- Tab Content: Project Gallery -->
+      <!-- ======================== CLOSEOUT DASHBOARD TAB ======================== -->
+      @if (activeTab() === 'closeout' && isOwnerOrAccountant()) {
+        <div class="space-y-6">
+          <!-- Header -->
+          <div class="bg-gradient-to-br from-slate-900/80 to-rose-950/20 border border-rose-900/40 rounded-2xl p-6 shadow-xl">
+            <div class="flex items-start justify-between">
+              <div>
+                <h3 class="text-lg font-extrabold text-white font-cairo flex items-center gap-2">
+                  <svg class="w-5 h-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  لوحة إغلاق المشروع / Project Closeout Dashboard
+                </h3>
+                <p class="text-xs text-slate-400 mt-1 font-cairo">مرحلة تجميد العمليات المالية، مراجعة الأرصدة، والإغلاق النهائي الموثَّق.</p>
+              </div>
+              @if (project()) {
+                <span class="px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase font-cairo border"
+                  [class.bg-emerald-500\/10]="project()!.status === 'Active'"
+                  [class.text-emerald-400]="project()!.status === 'Active'"
+                  [class.border-emerald-500\/30]="project()!.status === 'Active'"
+                  [class.bg-amber-500\/10]="project()!.status === 'FinancialFreeze'"
+                  [class.text-amber-300]="project()!.status === 'FinancialFreeze'"
+                  [class.border-amber-500\/30]="project()!.status === 'FinancialFreeze'"
+                  [class.bg-slate-800]="project()!.status === 'Closed'"
+                  [class.text-slate-400]="project()!.status === 'Closed'"
+                  [class.border-slate-700]="project()!.status === 'Closed'">
+                  {{ project()!.status === 'Active' ? '🟢 نشط' : project()!.status === 'FinancialFreeze' ? '🟡 مجمّد' : '⚫ مغلق نهائياً' }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          @if (project() && project()!.status !== 'Closed') {
+            <div class="flex flex-wrap gap-3">
+              @if (project()!.status === 'Active') {
+                <button id="btn-freeze-project" (click)="onFreezeProject()" [disabled]="isCloseoutLoading()"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer font-cairo">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  تجميد المشروع مالياً
+                </button>
+              }
+              <button id="btn-run-audit" (click)="onRunReconciliation()" [disabled]="isCloseoutLoading()"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer font-cairo">
+                @if (isCloseoutLoading()) {
+                  <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 12 5.373 12 12h4z"></path></svg>
+                } @else {
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M12 7h.01M15 7h.01M9 17h6" /></svg>
+                }
+                تشغيل تدقيق الأرصدة
+              </button>
+              @if (isTenantOwner()) {
+                <button id="btn-final-closeout" (click)="onFinalCloseout()"
+                  [disabled]="isCloseoutLoading() || !reconciliationReport()?.isFullyReconciled || project()!.status !== 'FinancialFreeze'"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/30 text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-cairo">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                  الإغلاق النهائي للمشروع
+                  @if (!reconciliationReport()?.isFullyReconciled) { <span class="text-[10px] opacity-60">(يتطلب تصفية كاملة)</span> }
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Reconciliation Report -->
+          @if (reconciliationReport()) {
+            <div class="space-y-4">
+              <!-- KPI Summary -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي الميزانية</span>
+                  <p class="text-xl font-extrabold text-slate-200 mt-1 font-mono">{{ reconciliationReport()!.totalBudget | number:'1.0-0' }} EGP</p>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي الدخل</span>
+                  <p class="text-xl font-extrabold text-emerald-400 mt-1 font-mono">{{ reconciliationReport()!.totalIncome | number:'1.0-0' }} EGP</p>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي المصروفات</span>
+                  <p class="text-xl font-extrabold text-rose-400 mt-1 font-mono">{{ reconciliationReport()!.totalExpenses | number:'1.0-0' }} EGP</p>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">صافي الرصيد</span>
+                  <p class="text-xl font-extrabold mt-1 font-mono" [class.text-emerald-400]="reconciliationReport()!.netBalance >= 0" [class.text-rose-400]="reconciliationReport()!.netBalance < 0">{{ reconciliationReport()!.netBalance | number:'1.0-0' }} EGP</p>
+                </div>
+              </div>
+              <!-- Custody Row (Clickable KPI Drill-Down triggers) -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Card 1: Unsettled Custody -->
+                <div (click)="selectedDrilldown.set(selectedDrilldown() === 'unsettled' ? null : 'unsettled')"
+                  class="bg-slate-900/40 border p-4 rounded-xl text-center cursor-pointer transition-all duration-200 hover:border-slate-700 select-none hover:scale-[1.01]"
+                  [class.border-amber-500]="selectedDrilldown() === 'unsettled'"
+                  [class.border-slate-800\/60]="selectedDrilldown() !== 'unsettled'"
+                  [class.bg-amber-500\/5]="selectedDrilldown() === 'unsettled'">
+                  <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-cairo block">عُهَد معلَّقة للغلق / Unsettled Custody</span>
+                  <p class="text-lg font-bold text-amber-400 mt-1 font-mono hover:underline">
+                    {{ unsettledCustodyList().length }} عهدة ({{ unsettledCustodySum() | number:'1.0-0' }} EGP)
+                  </p>
+                  <span class="text-[9px] text-slate-500 font-cairo block mt-0.5">اضغط للتفاصيل وإرسال التذكيرات</span>
+                </div>
+
+                <!-- Card 2: Pending Treasury Refunds -->
+                <div (click)="selectedDrilldown.set(selectedDrilldown() === 'refunds' ? null : 'refunds')"
+                  class="bg-slate-900/40 border p-4 rounded-xl text-center cursor-pointer transition-all duration-200 hover:border-slate-700 select-none hover:scale-[1.01]"
+                  [class.border-amber-500]="selectedDrilldown() === 'refunds'"
+                  [class.border-slate-800\/60]="selectedDrilldown() !== 'refunds'"
+                  [class.bg-amber-500\/5]="selectedDrilldown() === 'refunds'">
+                  <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-cairo block">مرتجعات الخزينة المعلقة / Treasury Refunds</span>
+                  <p class="text-lg font-bold text-amber-400 mt-1 font-mono hover:underline">
+                    {{ pendingRefundsList().length }} تسوية ({{ pendingRefundsSum() | number:'1.0-0' }} EGP)
+                  </p>
+                  <span class="text-[9px] text-slate-500 font-cairo block mt-0.5">اضغط لتأكيد استلام المبلغ نقداً</span>
+                </div>
+
+                <!-- Card 3: Pending Reimbursements -->
+                <div (click)="selectedDrilldown.set(selectedDrilldown() === 'reimbursements' ? null : 'reimbursements')"
+                  class="bg-slate-900/40 border p-4 rounded-xl text-center cursor-pointer transition-all duration-200 hover:border-slate-700 select-none hover:scale-[1.01]"
+                  [class.border-amber-500]="selectedDrilldown() === 'reimbursements'"
+                  [class.border-slate-800\/60]="selectedDrilldown() !== 'reimbursements'"
+                  [class.bg-amber-500\/5]="selectedDrilldown() === 'reimbursements'">
+                  <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-cairo block">تعويضات الموظفين المعلقة / Reimbursements</span>
+                  <p class="text-lg font-bold text-amber-400 mt-1 font-mono hover:underline">
+                    {{ pendingReimbursementsList().length }} طلب ({{ pendingReimbursementsSum() | number:'1.0-0' }} EGP)
+                  </p>
+                  <span class="text-[9px] text-slate-500 font-cairo block mt-0.5">اضغط لصرف التعويض للموظف</span>
+                </div>
+              </div>
+
+              <!-- Drill-down details container -->
+              @if (selectedDrilldown() !== null) {
+                <div class="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 space-y-4 transition-all duration-200 shadow-lg">
+                  <div class="flex items-center justify-between pb-2 border-b border-slate-800/50">
+                    <h4 class="text-sm font-bold text-white font-cairo flex items-center gap-2">
+                      <svg class="w-4 h-4 text-amber-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                      </svg>
+                      @if (selectedDrilldown() === 'unsettled') {
+                        تفاصيل العهد المعلقة / Unsettled Custody Details
+                      } @else if (selectedDrilldown() === 'refunds') {
+                        تفاصيل مرتجعات الخزينة المطلوبة / Pending Treasury Refunds
+                      } @else if (selectedDrilldown() === 'reimbursements') {
+                        تفاصيل التعويضات المستحقة للموظفين / Pending Reimbursements
+                      }
+                    </h4>
+                    <button (click)="selectedDrilldown.set(null)" class="text-slate-400 hover:text-white text-xs font-cairo cursor-pointer">
+                      إغلاق / Close ×
+                    </button>
+                  </div>
+
+                  <!-- Details View: Unsettled Custody -->
+                  @if (selectedDrilldown() === 'unsettled') {
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left rtl:text-right text-xs">
+                        <thead class="bg-slate-950/40 text-slate-400 border-b border-slate-800/50">
+                          <tr>
+                            <th class="px-4 py-2.5 font-cairo">المستلم / Engineer</th>
+                            <th class="px-4 py-2.5 font-cairo">البيان / Reason</th>
+                            <th class="px-4 py-2.5 text-right font-cairo">المبلغ / Amount</th>
+                            <th class="px-4 py-2.5 font-cairo">الحالة / Status</th>
+                            <th class="px-4 py-2.5 text-center font-cairo">إجراء سريع / Quick Reminder</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/30">
+                          @for (item of unsettledCustodyList(); track item.id) {
+                            <tr class="hover:bg-slate-900/20 text-slate-300">
+                              <td class="px-4 py-2.5 font-semibold text-white font-cairo">{{ item.issuedTo || 'Staff' }}</td>
+                              <td class="px-4 py-2.5 text-slate-400 max-w-xs truncate font-cairo">{{ item.reason }}</td>
+                              <td class="px-4 py-2.5 text-right font-mono font-bold text-amber-400">{{ item.amount | number:'1.2-2' }} EGP</td>
+                              <td class="px-4 py-2.5 font-mono text-[10px] text-amber-500">{{ item.status }}</td>
+                              <td class="px-4 py-2.5 text-center">
+                                <button (click)="onWhatsAppAlert(item, 'مرحباً ' + item.issuedTo + '، يرجى تسوية عهدتك المعلقة بقيمة ' + item.amount + ' EGP لـ ' + item.projectName + ' - ' + item.reason + '.')" 
+                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold cursor-pointer font-cairo transition-all">
+                                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
+                                  </svg>
+                                  إرسال تذكير تسوية / WhatsApp Reminder
+                                </button>
+                              </td>
+                            </tr>
+                          } @empty {
+                            <tr>
+                              <td colspan="5" class="px-4 py-8 text-center text-slate-500 font-cairo">لا توجد عهد معلقة للغلق</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+
+                  <!-- Details View: Pending Refunds -->
+                  @if (selectedDrilldown() === 'refunds') {
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left rtl:text-right text-xs">
+                        <thead class="bg-slate-950/40 text-slate-400 border-b border-slate-800/50">
+                          <tr>
+                            <th class="px-4 py-2.5 font-cairo">المستلم / Engineer</th>
+                            <th class="px-4 py-2.5 font-cairo">البيان الأساسي / Reason</th>
+                            <th class="px-4 py-2.5 text-right font-cairo">قيمة العهدة</th>
+                            <th class="px-4 py-2.5 text-right font-cairo">إجمالي الصرف</th>
+                            <th class="px-4 py-2.5 text-right font-cairo">المبلغ المرتجع / Net Difference</th>
+                            <th class="px-4 py-2.5 text-center font-cairo">إجراء سريع / Immediate Action</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/30">
+                          @for (sett of pendingRefundsList(); track sett.id) {
+                            <tr class="hover:bg-slate-900/20 text-slate-300">
+                              <td class="px-4 py-2.5 font-semibold text-white font-cairo">{{ sett.issuedTo }}</td>
+                              <td class="px-4 py-2.5 text-slate-400 max-w-xs truncate font-cairo">{{ sett.custodyReason }}</td>
+                              <td class="px-4 py-2.5 text-right font-mono text-slate-400">{{ sett.custodyAmount | number:'1.2-2' }} EGP</td>
+                              <td class="px-4 py-2.5 text-right font-mono text-slate-400">{{ sett.totalAmount | number:'1.2-2' }} EGP</td>
+                              <td class="px-4 py-2.5 text-right font-mono font-bold text-emerald-400">{{ sett.netDifference | number:'1.2-2' }} EGP</td>
+                              <td class="px-4 py-2.5 text-center">
+                                <button (click)="onConfirmRefund(sett.id)" 
+                                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20 text-[11px] font-bold cursor-pointer font-cairo transition-all">
+                                  تأكيد استلام المرتجع / Confirm Refund
+                                </button>
+                              </td>
+                            </tr>
+                          } @empty {
+                            <tr>
+                              <td colspan="6" class="px-4 py-8 text-center text-slate-500 font-cairo">لا توجد مبالغ مرتجعة معلقة بالخزينة</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+
+                  <!-- Details View: Pending Reimbursements -->
+                  @if (selectedDrilldown() === 'reimbursements') {
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left rtl:text-right text-xs">
+                        <thead class="bg-slate-950/40 text-slate-400 border-b border-slate-800/50">
+                          <tr>
+                            <th class="px-4 py-2.5 font-cairo">المستحق / Employee</th>
+                            <th class="px-4 py-2.5 font-cairo">تفاصيل المصاريف الزائدة / Reason</th>
+                            <th class="px-4 py-2.5 text-right font-cairo">مبلغ التعويض المطلوب</th>
+                            <th class="px-4 py-2.5 font-cairo">محفظة الصرف / Treasury Pool</th>
+                            <th class="px-4 py-2.5 text-center font-cairo">إجراء سريع / Immediate Action</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/30">
+                          @for (item of pendingReimbursementsList(); track item.id) {
+                            <tr class="hover:bg-slate-900/20 text-slate-300">
+                              <td class="px-4 py-2.5 font-semibold text-white font-cairo">{{ item.issuedTo || 'Staff' }}</td>
+                              <td class="px-4 py-2.5 text-slate-400 max-w-xs truncate font-cairo">{{ item.reason }}</td>
+                              <td class="px-4 py-2.5 text-right font-mono font-bold text-amber-400">{{ item.amount | number:'1.2-2' }} EGP</td>
+                              <td class="px-4 py-2.5">
+                                <select [(ngModel)]="selectedReimbursementPool[item.id]" 
+                                  class="w-full max-w-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-cairo">
+                                  <option [value]="undefined" disabled selected>-- اختر محفظة الصندوق --</option>
+                                  @for (pool of cashPools(); track pool.id) {
+                                    <option [value]="pool.id" [disabled]="pool.availableBalance < item.amount">
+                                      {{ getPoolSourceTranslationKey(pool.sourceType) }} ({{ pool.availableBalance | number:'1.0-0' }} EGP)
+                                    </option>
+                                  }
+                                </select>
+                              </td>
+                              <td class="px-4 py-2.5 text-center">
+                                <button (click)="onApproveReimbursement(item, selectedReimbursementPool[item.id])" 
+                                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold cursor-pointer font-cairo transition-all">
+                                  اعتماد وصرف التعويض / Disburse
+                                </button>
+                              </td>
+                            </tr>
+                          } @empty {
+                            <tr>
+                              <td colspan="5" class="px-4 py-8 text-center text-slate-500 font-cairo">لا توجد تعويضات معلقة مستحقة للموظفين</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Status Banner -->
+              <div class="rounded-xl border px-5 py-3 flex flex-col gap-2"
+                [class.bg-emerald-500\/5]="reconciliationReport()!.isFullyReconciled" [class.border-emerald-500\/30]="reconciliationReport()!.isFullyReconciled"
+                [class.bg-rose-500\/5]="!reconciliationReport()!.isFullyReconciled" [class.border-rose-500\/30]="!reconciliationReport()!.isFullyReconciled">
+                <div class="flex items-center gap-3">
+                  @if (reconciliationReport()!.isFullyReconciled) {
+                    <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <p class="text-sm font-bold text-emerald-300 font-cairo">✅ جميع الأرصدة مصفَّاة — المشروع جاهز للإغلاق النهائي</p>
+                  } @else {
+                    <svg class="w-5 h-5 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                    <p class="text-sm font-bold text-rose-300 font-cairo">⚠️ لا يمكن الإغلاق — يوجد عهد معلَّقة أو أرصدة موظفين غير صفرية</p>
+                  }
+                </div>
+                @if (!reconciliationReport()!.isFullyReconciled) {
+                  <p class="text-xs text-rose-400 font-cairo ml-8 rtl:mr-8 rtl:ml-0">
+                    * يجب تصفية جميع العهد المعلقة، واسترداد المبالغ المرتجعة، وصرف التعويضات المستحقة للموظفين حتى تتساوى كافة الأرصدة إلى 0.00 EGP تماماً لتمكين زر الإغلاق النهائي للمشروع.
+                  </p>
+                }
+              </div>
+              <!-- Employee Ledger -->
+              @if (reconciliationReport()!.employeeBalances.length > 0) {
+                <div class="bg-slate-950/50 border border-slate-800/60 rounded-2xl overflow-hidden">
+                  <div class="px-5 py-3 border-b border-slate-800/60 bg-slate-900/40">
+                    <h4 class="text-sm font-bold text-white font-cairo flex items-center gap-2">
+                      <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      دفتر أرصدة الموظفين / Employee Balance Ledger
+                    </h4>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left rtl:text-right text-xs">
+                      <thead class="bg-slate-900/60 border-b border-slate-800/60">
+                        <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          <th class="px-4 py-3 font-cairo">الموظف</th>
+                          <th class="px-4 py-3 text-right font-cairo">إجمالي العُهَد</th>
+                          <th class="px-4 py-3 text-right font-cairo">المُسوَّى</th>
+                          <th class="px-4 py-3 text-right font-cairo">الرصيد</th>
+                          <th class="px-4 py-3 text-center font-cairo">الحالة</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-800/40">
+                        @for (emp of reconciliationReport()!.employeeBalances; track emp.userId) {
+                          <tr class="hover:bg-slate-900/30 transition-colors" [class.bg-rose-950\/10]="!emp.isClean">
+                            <td class="px-4 py-3 font-semibold text-slate-200 font-cairo">{{ emp.fullName }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-amber-300">{{ emp.totalIssued | number:'1.2-2' }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-emerald-400">{{ emp.totalSettled | number:'1.2-2' }}</td>
+                            <td class="px-4 py-3 text-right font-mono font-bold" [class.text-rose-400]="emp.balance > 0" [class.text-slate-300]="emp.balance === 0" [class.text-blue-400]="emp.balance < 0">{{ emp.balance | number:'1.2-2' }}</td>
+                            <td class="px-4 py-3 text-center">
+                              @if (emp.isClean) {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">✅ مُصفَّى</span>
+                              } @else if (emp.balance > 0) {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 font-cairo">⚠️ دَيْن</span>
+                              } @else {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 font-cairo">💙 تعويض</span>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+              <!-- Client Review Link -->
+              @if (project()!.publicReviewToken) {
+                <div class="bg-slate-900/40 border border-indigo-900/40 rounded-2xl p-5">
+                  <h4 class="text-sm font-bold text-indigo-300 font-cairo flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    رابط تقييم العميل / Client Review Link
+                  </h4>
+                  <p class="text-xs text-slate-400 mb-3 font-cairo">أرسل هذا الرابط للعميل لتقييم المشروع — لا يتطلب تسجيل دخول.</p>
+                  <div class="flex items-center gap-2">
+                    <input type="text" readonly [value]="getPublicReviewUrl()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 font-mono focus:outline-none" />
+                    <button (click)="copyReviewLink()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo">نسخ الرابط</button>
+                  </div>
+                </div>
+              }
+              <p class="text-[11px] text-slate-600 text-center font-cairo">آخر تدقيق: {{ reconciliationReport()!.generatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+            </div>
+          } @else if (!isCloseoutLoading()) {
+            <div class="text-center py-12 text-slate-500">
+              <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              <p class="text-sm font-cairo">اضغط "تشغيل تدقيق الأرصدة" لتوليد تقرير المراجعة المالية الشاملة.</p>
+            </div>
+          }
+        </div>
+      }
+
       @if (activeTab() === 'gallery') {
         <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-6">
+
           <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
             <div>
               <h3 class="text-base font-bold text-white font-cairo">{{ 'MARKETPLACE.PROJECT_GALLERY' | translate }}</h3>
@@ -535,7 +945,9 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
                         {{ s.netDifference | number:'1.2-2' }} EGP
                       </td>
                       <td class="px-6 py-4">
-                        @if (s.status === 'Approved') {
+                        @if (s.status === 'Draft') {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-500/20 text-slate-400">Draft / مسودة</span>
+                        } @else if (s.status === 'Approved') {
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400">Approved</span>
                         } @else if (s.status === 'ApprovedPendingRefund') {
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400">Pending Refund</span>
@@ -1564,13 +1976,18 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
                 <div [formGroupName]="idx" class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-4 relative hover:border-slate-700/60 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_15px_rgba(99,102,241,0.05)] transition-all duration-200">
                   <div class="flex justify-between items-center pb-2 border-b border-slate-800/80">
                     <span class="text-xs font-bold text-indigo-400 font-cairo bg-indigo-500/10 px-2.5 py-1 rounded-lg">البند #{{ idx + 1 }} / Item #{{ idx + 1 }}</span>
-                    @if (!isSettlementLocked()) {
-                      <button type="button" (click)="removeSettlementLine(idx)" class="text-slate-500 hover:text-rose-400 p-1.5 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer" title="Remove Item" [disabled]="settlementLines.length === 1">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    }
+                    <div class="flex items-center gap-2">
+                      @if (!isSettlementLocked()) {
+                        <button type="button" (click)="onSettlementSubmit(true)" [disabled]="line.invalid || isSubmittingSettlement()" class="px-2.5 py-1 rounded-xl text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 disabled:opacity-50 transition-all font-cairo cursor-pointer" title="حفظ هذا البند كمسودة / Save this item draft">
+                          💾 حفظ البند / Save Item
+                        </button>
+                        <button type="button" (click)="removeSettlementLine(idx)" class="text-slate-500 hover:text-rose-400 p-1.5 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer" title="Remove Item" [disabled]="settlementLines.length === 1">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      }
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1646,25 +2063,27 @@ import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.servic
               </div>
             </div>
 
-            <div class="flex justify-end gap-3 pt-2">
-              <button type="button" (click)="closeSettlementModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-800">
+              <button type="button" (click)="closeSettlementModal()" class="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all font-cairo cursor-pointer">إغلاق النافذة / Close</button>
               
               @if (!isSettlementLocked()) {
-                <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-4 py-2 text-sm font-semibold rounded-xl text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 disabled:opacity-50 font-cairo">
-                  @if (isSubmittingSettlement()) {
-                    جاري الحفظ...
-                  } @else {
-                    حفظ كمسودة / Save Draft
-                  }
-                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-750 border border-slate-700 disabled:opacity-50 transition-all font-cairo cursor-pointer">
+                    @if (isSubmittingSettlement()) {
+                      جاري الحفظ...
+                    } @else {
+                      💾 حفظ الكل كمسودة / Save All Draft
+                    }
+                  </button>
 
-                <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 font-cairo">
-                  @if (isSubmittingSettlement()) {
-                    جاري التقديم...
-                  } @else {
-                    تقديم للمراجعة النهائية / Submit for Review
-                  }
-                </button>
+                  <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-5 py-2 text-sm font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50 transition-all font-cairo cursor-pointer">
+                    @if (isSubmittingSettlement()) {
+                      جاري التقديم...
+                    } @else {
+                      🚀 تقديم للمراجعة النهائية / Submit for Review
+                    }
+                  </button>
+                </div>
               }
             </div>
 
@@ -1703,6 +2122,36 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly offlineSync = inject(OfflineSyncService);
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly userService = inject(TenantUserService);
+  private readonly projectCloseoutService = inject(ProjectCloseoutService);
+
+  readonly reconciliationReport = signal<ProjectReconciliationReportDto | null>(null);
+  readonly isCloseoutLoading = signal(false);
+  readonly selectedDrilldown = signal<'unsettled' | 'refunds' | 'reimbursements' | null>(null);
+  selectedReimbursementPool: { [key: string]: string } = {};
+
+  readonly unsettledCustodyList = computed(() =>
+    this.pettyCashes().filter(pc => !pc.isSettled && !pc.isReimbursement)
+  );
+
+  readonly unsettledCustodySum = computed(() =>
+    this.unsettledCustodyList().reduce((sum, item) => sum + item.amount, 0)
+  );
+
+  readonly pendingRefundsList = computed(() =>
+    this.settlements().filter(s => s.status === 'ApprovedPendingRefund')
+  );
+
+  readonly pendingRefundsSum = computed(() =>
+    this.pendingRefundsList().reduce((sum, item) => sum + item.netDifference, 0)
+  );
+
+  readonly pendingReimbursementsList = computed(() =>
+    this.pettyCashes().filter(pc => pc.status === 'Pending' && pc.isReimbursement)
+  );
+
+  readonly pendingReimbursementsSum = computed(() =>
+    this.pendingReimbursementsList().reduce((sum, item) => sum + item.amount, 0)
+  );
 
   readonly isSettlementLocked = computed(() => {
     const pc = this.selectedPettyCashForSettlement();
@@ -1836,7 +2285,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingPettyCash = signal(false);
   readonly isLoadingTransactions = signal(false);
 
-  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings' | 'settlements'>('petty-cash');
+  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings' | 'settlements' | 'closeout'>('petty-cash');
 
   // Admin settings forms & signals
   readonly isUploadingLogo = signal(false);
@@ -2227,10 +2676,6 @@ export class ProjectDetailsComponent implements OnInit {
         if (response.success && response.data) {
           const proj = response.data;
           const user = this.authService.currentUser();
-          if (user && ['Manager', 'SiteEngineer', 'DesignEngineer'].includes(user.role) && proj.managerId !== user.userId) {
-            this.router.navigate(['/dashboard/projects']);
-            return;
-          }
           this.project.set(proj);
 
           // Extract isPublicPortfolio to patch form
@@ -2958,7 +3403,9 @@ export class ProjectDetailsComponent implements OnInit {
             message: res.message || (isDraft ? 'تم حفظ مسودة التسوية بنجاح.' : 'تم تقديم طلب تسوية العهدة بنجاح للمراجعة النهائية.'),
             type: 'success'
           });
-          this.closeSettlementModal();
+          if (!isDraft) {
+            this.closeSettlementModal();
+          }
           this.fetchPettyCash();
           this.fetchSettlements();
         } else {
@@ -2992,6 +3439,7 @@ export class ProjectDetailsComponent implements OnInit {
               this.fetchPettyCash();
               this.fetchCashPools();
               this.fetchTransactions();
+              this.onRunReconciliation();
             } else {
               this.confirmService.alert({ title: 'فشل الاعتماد', message: res.message || 'فشل اعتماد التسوية.', type: 'error' });
             }
@@ -3021,6 +3469,7 @@ export class ProjectDetailsComponent implements OnInit {
               this.fetchPettyCash();
               this.fetchCashPools();
               this.fetchTransactions();
+              this.onRunReconciliation();
             } else {
               this.confirmService.alert({ title: 'فشل التأكيد', message: res.message || 'فشل تأكيد استلام النقود.', type: 'error' });
             }
@@ -3056,9 +3505,63 @@ export class ProjectDetailsComponent implements OnInit {
               });
               this.fetchSettlements();
               this.fetchPettyCash();
+              this.onRunReconciliation();
             } else {
               this.confirmService.alert({ title: 'فشل الرفض', message: res.message || 'فشل رفض التسوية.', type: 'error' });
             }
+          }
+        });
+      }
+    });
+  }
+
+  onApproveReimbursement(item: PettyCashMobileDto, poolId: string): void {
+    if (!poolId) {
+      this.confirmService.alert({
+        title: 'اختر محفظة التمويل',
+        message: 'يرجى اختيار محفظة التمويل أولاً لصرف التعويض.',
+        type: 'info'
+      });
+      return;
+    }
+
+    this.confirmService.confirm({
+      title: 'صرف تعويض المصاريف / Approve Reimbursement',
+      message: `هل تؤكد صرف مبلغ التعويض بقيمة ${item.amount} EGP للموظف ${item.issuedTo} من محفظة التمويل المحددة؟`,
+      confirmText: 'تأكيد الصرف / Yes, Disburse',
+      cancelText: 'إلغاء / Cancel'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isCloseoutLoading.set(true);
+        this.pettyCashService.approvePettyCash(this.projectId, item.id, { sourcePoolId: poolId }).subscribe({
+          next: (res) => {
+            this.isCloseoutLoading.set(false);
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم الصرف والتسوية',
+                message: 'تمت الموافقة على طلب التعويض وصرفه بنجاح من محفظة المشروع وتحديث رصيد الموظف.',
+                type: 'success'
+              });
+              this.fetchPettyCash();
+              this.fetchSettlements();
+              this.fetchCashPools();
+              this.fetchTransactions();
+              this.onRunReconciliation();
+            } else {
+              this.confirmService.alert({
+                title: 'فشل صرف التعويض',
+                message: res.message || 'حدث خطأ أثناء صرف التعويض.',
+                type: 'error'
+              });
+            }
+          },
+          error: (err) => {
+            this.isCloseoutLoading.set(false);
+            this.confirmService.alert({
+              title: 'خطأ في العملية',
+              message: err.error?.message || err.message || 'فشلت عملية صرف التعويض.',
+              type: 'error'
+            });
           }
         });
       }
@@ -3086,4 +3589,132 @@ export class ProjectDetailsComponent implements OnInit {
       }
     });
   }
+
+  // --- Closeout & Reconciliation Operations ---
+
+  onFreezeProject(): void {
+    this.confirmService.confirm({
+      title: 'تجميد العمليات المالية للمشروع / Freeze Financial Operations',
+      message: 'هل أنت متأكد من تجميد جميع المعاملات المالية وطلبات العهد لهذا المشروع؟ لا يمكن التراجع عن هذه الخطوة إلا بطلب رسمي.',
+      confirmText: 'نعم، قم بالتجميد / Yes, Freeze',
+      cancelText: 'إلغاء / Cancel'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isCloseoutLoading.set(true);
+        this.projectCloseoutService.freezeProject(this.projectId).subscribe({
+          next: (res) => {
+            this.isCloseoutLoading.set(false);
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم التجميد المالي',
+                message: 'تم تجميد العمليات المالية للمشروع وتوليد رابط تقييم العميل بنجاح.',
+                type: 'success'
+              });
+              // Refresh project details to update status
+              this.fetchProjectDetails();
+            } else {
+              this.confirmService.alert({
+                title: 'فشل التجميد المالي',
+                message: res.message || 'حدث خطأ غير متوقع أثناء تجميد العمليات.',
+                type: 'error'
+              });
+            }
+          },
+          error: (err) => {
+            this.isCloseoutLoading.set(false);
+            this.confirmService.alert({
+              title: 'خطأ في العملية',
+              message: err.error?.message || err.message || 'فشلت عملية تجميد المشروع.',
+              type: 'error'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  onRunReconciliation(): void {
+    this.isCloseoutLoading.set(true);
+    this.projectCloseoutService.getReconciliationReport(this.projectId).subscribe({
+      next: (res) => {
+        this.isCloseoutLoading.set(false);
+        if (res.success && res.data) {
+          this.reconciliationReport.set(res.data);
+        } else {
+          this.confirmService.alert({
+            title: 'فشل التدقيق',
+            message: res.message || 'لم نتمكن من الحصول على تقرير مطابقة الأرصدة.',
+            type: 'error'
+          });
+        }
+      },
+      error: (err) => {
+        this.isCloseoutLoading.set(false);
+        this.confirmService.alert({
+          title: 'خطأ في التدقيق',
+          message: err.error?.message || err.message || 'حدث خطأ أثناء تشغيل محرك التسوية الأوتوماتيكي.',
+          type: 'error'
+        });
+      }
+    });
+  }
+
+  onFinalCloseout(): void {
+    this.confirmService.confirm({
+      title: 'الإغلاق النهائي والمطابقة / Final Project Closeout',
+      message: 'تحذير: سيتم إغلاق هذا المشروع نهائياً وتجميد جميع حساباته ولا يمكن تعديل أو تصفية أي عهد بعد ذلك. هل ترغب في المتابعة؟',
+      confirmText: 'نعم، إغلاق نهائي / Yes, Close Out',
+      cancelText: 'إلغاء / Cancel'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isCloseoutLoading.set(true);
+        this.projectCloseoutService.finalCloseout(this.projectId).subscribe({
+          next: (res) => {
+            this.isCloseoutLoading.set(false);
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم الإغلاق بنجاح',
+                message: 'تم إغلاق المشروع نهائياً وحفظ الأرشيف والبيانات المالية بنجاح.',
+                type: 'success'
+              });
+              this.fetchProjectDetails();
+            } else {
+              this.confirmService.alert({
+                title: 'فشل الإغلاق النهائي',
+                message: res.message || 'يرجى مراجعة كافة المعاملات والأرصدة المعلقة أولاً.',
+                type: 'error'
+              });
+            }
+          },
+          error: (err) => {
+            this.isCloseoutLoading.set(false);
+            this.confirmService.alert({
+              title: 'خطأ في الإغلاق',
+              message: err.error?.message || err.message || 'فشلت عملية الإغلاق النهائي.',
+              type: 'error'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  getPublicReviewUrl(): string {
+    const proj = this.project();
+    if (!proj || !proj.publicReviewToken) return '';
+    return `${window.location.origin}/public/project-review/${proj.publicReviewToken}`;
+  }
+
+  copyReviewLink(): void {
+    const url = this.getPublicReviewUrl();
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      this.confirmService.alert({
+        title: 'تم النسخ',
+        message: 'تم نسخ رابط تقييم العميل إلى الحافظة بنجاح.',
+        type: 'success'
+      });
+    });
+  }
 }
+

@@ -19,6 +19,13 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         if (tenantId == null)
             return (false, "Tenant ID claim missing or invalid.");
 
+        // --- Financial Freeze Guard ---
+        var project = await context.Set<Project>().FindAsync(projectId);
+        if (project == null)
+            return (false, "Project not found.");
+        if (project.Status == ProjectStatus.FinancialFreeze || project.Status == ProjectStatus.Closed)
+            return (false, $"PROJECT_FROZEN: لا يمكن تقديم طلبات جديدة. المشروع في وضع {project.Status}. يرجى مراجعة المحاسب.");
+
         var pettyCash = new PettyCash
         {
             ProjectId = projectId,
@@ -59,6 +66,7 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return (true, "Petty cash request submitted successfully");
     }
 
+
     public async Task<(bool Success, string Message)> ApprovePettyCashAsync(Guid projectId, Guid id, PettyCashApproveDto dto)
     {
         var pettyCash = await context.Set<PettyCash>().FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
@@ -75,10 +83,28 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         if (pettyCash.Amount > pool.AvailableBalance)
             return (false, $"Insufficient funds. Available pool is {pool.AvailableBalance} EGP.");
 
-        pettyCash.Status = "Issued";
+        if (pettyCash.IsReimbursement)
+        {
+            pettyCash.Status = "Settled";
+            pettyCash.IsSettled = true;
+            pettyCash.SpentAmount = pettyCash.Amount;
+        }
+        else
+        {
+            pettyCash.Status = "Issued";
+        }
+        
         pettyCash.SourcePoolId = pool.Id;
         pool.AvailableBalance -= pettyCash.Amount;
         await context.SaveChangesAsync();
+
+        // Trigger Notification to the Engineer
+        await notificationEngine.RaiseFinancialApprovalNotificationAsync(
+            pettyCash.IssuedToUserId,
+            pettyCash.Amount,
+            pettyCash.Id,
+            pettyCash.TenantId,
+            pettyCash.ProjectId);
 
         return (true, "Petty cash approved and issued successfully.");
     }
@@ -144,13 +170,19 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return true;
     }
 
-    public async Task<PaginatedList<PettyCashMobileDto>> GetMobilePettyCashAsync(Guid projectId, int pageNumber, int pageSize)
+    public async Task<PaginatedList<PettyCashMobileDto>> GetMobilePettyCashAsync(Guid projectId, int pageNumber, int pageSize, Guid userId, string userRole)
     {
         var query = context.Set<PettyCash>()
             .Include(p => p.Project)
             .Include(p => p.IssuedToUser)
-            .Where(t => t.ProjectId == projectId)
-            .OrderByDescending(t => t.IssuedAt);
+            .Where(t => t.ProjectId == projectId);
+
+        if (userRole == "SiteEngineer" || userRole == "DesignEngineer" || userRole == "Manager")
+        {
+            query = query.Where(t => t.IssuedToUserId == userId);
+        }
+
+        query = query.OrderByDescending(t => t.IssuedAt);
 
         var totalCount = await query.CountAsync();
 
@@ -172,7 +204,8 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
                 Comments = t.Comments,
                 ReceiptPhotoUrl = t.ReceiptPhotoUrl,
                 SettlementPaymentMethod = t.SettlementPaymentMethod.HasValue ? t.SettlementPaymentMethod.Value.ToString() : string.Empty,
-                ExpenseDate = t.ExpenseDate
+                ExpenseDate = t.ExpenseDate,
+                IsReimbursement = t.IsReimbursement
             })
             .ToListAsync();
 

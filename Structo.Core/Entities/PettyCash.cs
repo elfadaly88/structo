@@ -29,6 +29,8 @@ public class PettyCash : ITenantEntity
     public PaymentMethod? SettlementPaymentMethod { get; set; }
     public DateTime? ExpenseDate { get; set; }
 
+    public bool IsReimbursement { get; set; }
+
     // Navigation properties
     public Tenant? Tenant { get; set; }
     public Project? Project { get; set; }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Structo.Core.Enums;
 using Structo.Core.Interfaces;
 
 namespace Structo.Core.Entities;
@@ -21,7 +22,13 @@ public class Project : ITenantEntity
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid? ManagerId { get; set; }
-    
+
+    // --- Closeout fields ---
+    public ProjectStatus Status { get; set; } = ProjectStatus.Active;
+    public string? PublicReviewToken { get; set; }
+    public string? ClientReviewNotes { get; set; }
+    public int? ClientRating { get; set; }
+
     // Navigation properties
     public Tenant? Tenant { get; set; }
     public User? Manager { get; set; }

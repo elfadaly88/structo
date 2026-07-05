@@ -18,7 +18,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe, ReactiveFormsModule],
   template: `
-    <div class="w-full max-w-none">
+    @if (!isSuperAdmin()) {
+      <div class="w-full max-w-none">
       <!-- Page Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-white mb-2 font-cairo">{{ 'FINANCE.PAGE_TITLE' | translate }}</h1>
@@ -26,7 +27,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
       </div>
 
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 font-sans">
+      <ng-container *ngIf="!isEngineer()"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 font-sans">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
           <div class="text-slate-400 text-sm font-medium mb-2 font-cairo">{{ 'FINANCE.TOTAL_INCOME' | translate }}</div>
           <div class="text-3xl font-bold text-emerald-400 font-mono">{{ totalIncome | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</div>
@@ -46,6 +47,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           <div class="text-3xl font-bold text-amber-400 font-mono">{{ pendingPettyCashCount }}</div>
         </div>
       </div>
+      </ng-container>
 
       <!-- Project Selector (for all roles) -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8">
@@ -75,7 +77,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
       </div>
 
       <!-- Project Budget Consumption (Burn Rate) Widescreen UI -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8">
+      <div *ngIf="!isEngineer()" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8">
         <h2 class="text-xl font-bold text-white mb-6 font-cairo">{{ 'FINANCE.BURN_RATES' | translate }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (project of getFilteredProjects(); track project.id) {
@@ -666,6 +668,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
         </div>
       </div>
     }
+    } @else {
+      <div class="p-6 text-center text-rose-400 font-bold font-cairo">
+        غير مسموح للمسؤول العام بعرض التفاصيل المالية للمستأجرين.
+      </div>
+    }
   `,
   styles: [`
     .font-cairo {
@@ -874,6 +881,15 @@ export class FinancialsComponent {
 
   isSiteEngineer(): boolean {
     return this.authService.currentUser()?.role === 'SiteEngineer';
+  }
+
+  isEngineer(): boolean {
+    const role = this.authService.currentUser()?.role?.toLowerCase() || '';
+    return ['manager', 'siteengineer', 'designengineer'].includes(role);
+  }
+
+  isSuperAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'SuperAdmin';
   }
 
   isOwnerOrAccountant(): boolean {

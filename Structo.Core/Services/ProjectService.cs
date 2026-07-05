@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Structo.Core.DTOs.Projects;
 using Structo.Core.Entities;
+using Structo.Core.Enums;
 using Structo.Core.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,19 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         return obj.ToJsonString();
     }
 
+    private ProjectDto MapToDto(Project p, string? userRole = null) => new()
+    {
+        Id = p.Id,
+        Name = p.Name,
+        Description = userRole == "SuperAdmin" ? string.Empty : BuildLegacyDescription(p),
+        StartDate = p.StartDate,
+        EndDate = p.EndDate,
+        IsActive = p.IsActive,
+        ManagerId = p.ManagerId,
+        Status = p.Status.ToString(),
+        PublicReviewToken = p.PublicReviewToken
+    };
+
     public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole)
     {
         var query = context.Set<Project>().AsQueryable();
@@ -46,16 +60,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
-        return projects.Select(p => new ProjectDto
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Description = BuildLegacyDescription(p),
-            StartDate = p.StartDate,
-            EndDate = p.EndDate,
-            IsActive = p.IsActive,
-            ManagerId = p.ManagerId
-        }).ToList();
+        return projects.Select(p => MapToDto(p, userRole)).ToList();
     }
 
     public async Task<(bool Success, ProjectDto? Data, string Message)> CreateProjectAsync(ProjectCreateDto dto, string userRole)
@@ -109,24 +114,14 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             ClientName = client,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
-            ManagerId = dto.ManagerId
+            ManagerId = dto.ManagerId,
+            Status = ProjectStatus.Active
         };
 
         context.Set<Project>().Add(project);
         await context.SaveChangesAsync();
 
-        var resultDto = new ProjectDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            Description = BuildLegacyDescription(project),
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            IsActive = project.IsActive,
-            ManagerId = project.ManagerId
-        };
-
-        return (true, resultDto, "Project created successfully");
+        return (true, MapToDto(project), "Project created successfully");
     }
 
     public async Task<(bool Success, ProjectDto? Data, string Message)> UpdateProjectAsync(Guid id, ProjectCreateDto dto, string userRole)
@@ -181,36 +176,14 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
         await context.SaveChangesAsync();
 
-        var resultDto = new ProjectDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            Description = BuildLegacyDescription(project),
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            IsActive = project.IsActive,
-            ManagerId = project.ManagerId
-        };
-
-        return (true, resultDto, "Project updated successfully");
+        return (true, MapToDto(project), "Project updated successfully");
     }
 
     public async Task<ProjectDto?> GetProjectByIdAsync(Guid id)
-
     {
         var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return null;
-
-        return new ProjectDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            Description = BuildLegacyDescription(project),
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            IsActive = project.IsActive,
-            ManagerId = project.ManagerId
-        };
+        return MapToDto(project);
     }
 
     public async Task<ProjectClientViewDto?> GetProjectClientViewAsync(Guid id)
@@ -265,5 +238,161 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             .Where(l => l.ProjectId == id)
             .OrderByDescending(l => l.ChangedAt)
             .ToListAsync();
+    }
+
+    // =====================================================================
+    // CLOSEOUT WORKFLOW
+    // =====================================================================
+
+    public async Task<ProjectReconciliationReportDto?> GetReconciliationReportAsync(Guid id, Guid tenantId)
+    {
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
+        if (project == null) return null;
+
+        // Load all PettyCash for this project (not rejected)
+        var pettyCashes = await context.Set<PettyCash>()
+            .Include(pc => pc.IssuedToUser)
+            .Where(pc => pc.ProjectId == id && pc.Status != "Rejected")
+            .ToListAsync();
+
+        // Load all FinancialTransactions for this project
+        var transactions = await context.Set<FinancialTransaction>()
+            .Where(t => t.ProjectId == id)
+            .ToListAsync();
+
+        var incomeTypes = new[] { TransactionType.Income };
+        var expenseTypes = new[] { TransactionType.Expense, TransactionType.DirectProjectExpense };
+
+        var totalIncome = transactions.Where(t => incomeTypes.Contains(t.Type)).Sum(t => t.Amount);
+        var totalExpenses = transactions.Where(t => expenseTypes.Contains(t.Type)).Sum(t => t.Amount);
+
+        var totalCustodyIssued = pettyCashes.Sum(pc => pc.Amount);
+        var totalCustodySettled = pettyCashes.Where(pc => pc.IsSettled).Sum(pc => pc.Amount);
+        var unsettledCustody = pettyCashes.Where(pc => !pc.IsSettled).ToList();
+
+        // Build per-employee balance ledger
+        var employeeGroups = pettyCashes
+            .GroupBy(pc => pc.IssuedToUserId)
+            .Select(g =>
+            {
+                var first = g.First();
+                var name = first.IssuedToUser != null
+                    ? $"{first.IssuedToUser.FirstName} {first.IssuedToUser.LastName}"
+                    : g.Key.ToString();
+                var issued = g.Sum(pc => pc.Amount);
+                var settled = g.Where(pc => pc.IsSettled).Sum(pc => pc.SpentAmount); // actual spent
+                var unsettledCount = g.Count(pc => !pc.IsSettled);
+                // Balance > 0: employee still holds unaccounted cash
+                // Balance == 0: fully clean
+                var balance = issued - settled - g.Where(pc => pc.IsSettled).Sum(pc => pc.ReturnAmount);
+                return new EmployeeBalanceDto
+                {
+                    UserId = g.Key,
+                    FullName = name,
+                    TotalIssued = issued,
+                    TotalSettled = settled,
+                    Balance = balance,
+                    UnsettledCount = unsettledCount
+                };
+            })
+            .ToList();
+
+        var isFullyReconciled = employeeGroups.All(e => e.Balance == 0) && unsettledCustody.Count == 0;
+
+        return new ProjectReconciliationReportDto
+        {
+            ProjectId = project.Id,
+            ProjectName = project.Name,
+            Status = project.Status.ToString(),
+            TotalBudget = project.Budget,
+            TotalIncome = totalIncome,
+            TotalExpenses = totalExpenses,
+            NetBalance = totalIncome - totalExpenses,
+            TotalCustodyIssued = totalCustodyIssued,
+            TotalCustodySettled = totalCustodySettled,
+            TotalCustodyPending = totalCustodyIssued - totalCustodySettled,
+            UnsettledCustodyCount = unsettledCustody.Count,
+            EmployeeBalances = employeeGroups,
+            IsFullyReconciled = isFullyReconciled,
+            GeneratedAt = DateTime.UtcNow
+        };
+    }
+
+    public async Task<(bool Success, string Message)> FreezeProjectAsync(Guid id, Guid tenantId, string userRole)
+    {
+        if (userRole != "TenantOwner" && userRole != "Accountant")
+            throw new UnauthorizedAccessException("Only TenantOwner or Accountant can freeze a project.");
+
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
+        if (project == null) return (false, "Project not found.");
+
+        if (project.Status == ProjectStatus.Closed)
+            return (false, "Project is already closed and cannot be modified.");
+
+        project.Status = ProjectStatus.FinancialFreeze;
+        if (string.IsNullOrEmpty(project.PublicReviewToken))
+            project.PublicReviewToken = Guid.NewGuid().ToString("N");
+
+        await context.SaveChangesAsync();
+        return (true, $"Project frozen successfully. Public review token: {project.PublicReviewToken}");
+    }
+
+    public async Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole)
+    {
+        if (userRole != "TenantOwner")
+            throw new UnauthorizedAccessException("Only TenantOwner can perform a final project closeout.");
+
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
+        if (project == null) return (false, "Project not found.");
+
+        if (project.Status == ProjectStatus.Closed)
+            return (false, "Project is already closed.");
+
+        // Run reconciliation check
+        var report = await GetReconciliationReportAsync(id, tenantId);
+        if (report == null) return (false, "Failed to generate reconciliation report.");
+
+        if (!report.IsFullyReconciled)
+        {
+            var pendingNames = report.EmployeeBalances
+                .Where(e => !e.IsClean)
+                .Select(e => $"{e.FullName} (رصيد: {e.Balance:F2} EGP)")
+                .ToList();
+            var detail = report.UnsettledCustodyCount > 0
+                ? $"يوجد {report.UnsettledCustodyCount} عهدة غير مُسوّاة. "
+                : string.Empty;
+            detail += pendingNames.Count > 0
+                ? "الأرصدة غير المصفّاة: " + string.Join(", ", pendingNames)
+                : string.Empty;
+            return (false, $"RECONCILIATION_REQUIRED: لا يمكن إغلاق المشروع بشكل نهائي. {detail}".Trim());
+        }
+
+        project.Status = ProjectStatus.Closed;
+        project.IsActive = false;
+
+        await context.SaveChangesAsync();
+        return (true, "تم إغلاق المشروع نهائياً وتجميد جميع العمليات المالية. سجل التدقيق محفوظ بشكل دائم.");
+    }
+
+    public async Task<(bool Success, string Message)> SubmitClientReviewAsync(string token, ClientReviewSubmitDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return (false, "Invalid review token.");
+
+        var project = await context.Set<Project>()
+            .IgnoreQueryFilters() // bypass tenant filter — this is a public endpoint
+            .FirstOrDefaultAsync(p => p.PublicReviewToken == token);
+
+        if (project == null)
+            return (false, "Review link is invalid or has expired.");
+
+        if (dto.Rating.HasValue && (dto.Rating < 1 || dto.Rating > 5))
+            return (false, "Rating must be between 1 and 5.");
+
+        if (dto.Rating.HasValue) project.ClientRating = dto.Rating;
+        if (!string.IsNullOrWhiteSpace(dto.Notes)) project.ClientReviewNotes = dto.Notes;
+
+        await context.SaveChangesAsync();
+        return (true, "شكراً لك! تم تسجيل تقييمك بنجاح.");
     }
 }

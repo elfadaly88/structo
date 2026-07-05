@@ -87,6 +87,10 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'public/project-review/:token',
+    loadComponent: () => import('./features/public/project-review.component').then(m => m.ProjectReviewComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

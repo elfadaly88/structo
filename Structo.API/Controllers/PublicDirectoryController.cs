@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Structo.Core.DTOs.Common;
+using Structo.Core.DTOs.Projects;
 using Structo.Core.DTOs.Tenants;
 using Structo.Core.Entities;
+using Structo.Core.Interfaces;
 using Structo.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+
 
 namespace Structo.API.Controllers;
 
@@ -189,3 +192,24 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         return Ok(new ApiResponse<PublicTenantPortfolioDto> { Data = portfolio, Success = true });
     }
 }
+
+// =====================================================================
+// ANONYMOUS CLIENT REVIEW CONTROLLER
+// =====================================================================
+
+[ApiController]
+[Route("api/public/projects")]
+[AllowAnonymous]
+public class PublicProjectReviewController(IProjectService projectService) : ControllerBase
+{
+    [HttpPost("review/{token}")]
+    public async Task<ActionResult<ApiResponse<bool>>> SubmitReview(
+        [FromRoute] string token,
+        [FromBody] ClientReviewSubmitDto dto)
+    {
+        var (success, message) = await projectService.SubmitClientReviewAsync(token, dto);
+        if (!success) return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
+        return Ok(new ApiResponse<bool> { Data = true, Message = message });
+    }
+}
+

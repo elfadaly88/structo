@@ -15,5 +15,13 @@ public interface IProjectService
     Task<ProjectClientViewDto?> GetProjectClientViewAsync(Guid id);
     Task<(bool Success, string Message)> ReviseBudgetAsync(Guid id, ProjectBudgetRevisionDto dto);
     Task<List<ProjectBudgetLog>> GetBudgetHistoryAsync(Guid id);
+
+    // --- Closeout workflow ---
+    Task<ProjectReconciliationReportDto?> GetReconciliationReportAsync(Guid id, Guid tenantId);
+    Task<(bool Success, string Message)> FreezeProjectAsync(Guid id, Guid tenantId, string userRole);
+    Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole);
+    Task<(bool Success, string Message)> SubmitClientReviewAsync(string token, ClientReviewSubmitDto dto);
 }
+
+
 

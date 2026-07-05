@@ -137,6 +137,16 @@ export class NotificationService implements OnDestroy {
     if (!deepLink) return;
     let targetLink = deepLink;
 
+    // Convert absolute URLs to relative paths to keep the user on their current domain (local/prod)
+    if (targetLink.startsWith('http://') || targetLink.startsWith('https://')) {
+      try {
+        const parsedUrl = new URL(targetLink);
+        targetLink = parsedUrl.pathname + parsedUrl.search + parsedUrl.hash;
+      } catch (e) {
+        // Fallback to original string if URL parsing fails
+      }
+    }
+
     // Rewrite legacy/mismatched deep links for backward compatibility
     if (targetLink.includes('/dashboard/admin/approvals')) {
       targetLink = '/dashboard/tenants';

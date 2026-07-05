@@ -14,7 +14,7 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
-[Authorize(Roles = "SuperAdmin,TenantOwner,Manager,Accountant")]
+[Authorize(Roles = "TenantOwner,Manager,Accountant")]
 public class FinancialTransactionsController(IFinancialTransactionService financialTransactionService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
@@ -27,6 +27,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
     }
 
     [HttpGet("mobile")]
+    [Authorize(Roles = "TenantOwner, Accountant")]
     public async Task<ActionResult<ApiResponse<PaginatedList<FinancialTransactionMobileDto>>>> GetMobileTransactions(
         [FromRoute] Guid projectId, 
         [FromQuery] int pageNumber = 1, 
@@ -56,6 +57,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
     }
 
     [HttpGet("cash-pools")]
+    [Authorize(Roles = "TenantOwner, Accountant")]
     public async Task<ActionResult<ApiResponse<IEnumerable<ProjectCashPool>>>> GetCashPools([FromRoute] Guid projectId)
     {
         var pools = await financialTransactionService.GetCashPoolsAsync(projectId);

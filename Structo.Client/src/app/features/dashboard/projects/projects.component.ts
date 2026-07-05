@@ -161,7 +161,9 @@ export interface ProjectViewDto extends ProjectDto {
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wider bg-slate-950/40">
                     <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_NAME' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</th>
+                    @if (!isEngineer()) {
+                      <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</th>
+                    }
                     <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }}</th>
                     <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.FIELD_CATEGORY' | translate }}</th>
                     <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_START_DATE' | translate }}</th>
@@ -186,9 +188,11 @@ export interface ProjectViewDto extends ProjectDto {
                         </span>
                       </td>
                       <td class="px-6 py-4 text-slate-400 font-medium">{{ proj.client }}</td>
-                      <td class="px-6 py-4 font-mono text-emerald-400 font-bold">
-                        {{ proj.budget | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}
-                      </td>
+                      @if (!isEngineer()) {
+                        <td class="px-6 py-4 font-mono text-emerald-400 font-bold">
+                          {{ proj.budget | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}
+                        </td>
+                      }
                       <td class="px-6 py-4 text-center">
                         @if (proj.status === 'Active') {
                           <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
@@ -791,6 +795,7 @@ export class ProjectsComponent implements OnInit {
   readonly currentUserId = computed(() => this.authService.currentUser()?.userId || '');
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
+  readonly isEngineer = computed(() => ['manager', 'siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
 
   // Upload Signals
   readonly isUploadingLogo = signal(false);
@@ -931,10 +936,6 @@ export class ProjectsComponent implements OnInit {
           });
 
           let filtered = mapped;
-          const user = this.authService.currentUser();
-          if (user && ['Manager', 'SiteEngineer', 'DesignEngineer'].includes(user.role)) {
-            filtered = mapped.filter(p => p.managerId === user.userId);
-          }
 
           this.projects.set(filtered as ProjectViewDto[]);
         } else {

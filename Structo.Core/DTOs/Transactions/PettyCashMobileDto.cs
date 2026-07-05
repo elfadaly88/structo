@@ -18,4 +18,5 @@ public class PettyCashMobileDto
     public string ReceiptPhotoUrl { get; set; } = string.Empty;
     public string SettlementPaymentMethod { get; set; } = string.Empty;
     public DateTime? ExpenseDate { get; set; }
+    public bool IsReimbursement { get; set; }
 }

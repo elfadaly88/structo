@@ -19,6 +19,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (project == null)
             return (false, "Project not found.");
 
+        // --- Financial Freeze Guard ---
+        if (project.Status == ProjectStatus.FinancialFreeze || project.Status == ProjectStatus.Closed)
+            return (false, $"PROJECT_FROZEN: لا يمكن إضافة معاملات مالية جديدة. المشروع في وضع {project.Status}.");
+
         var isExpense = dto.Type == TransactionType.Expense || dto.Type == TransactionType.DirectProjectExpense;
         if (isExpense)
         {
@@ -30,9 +34,9 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             {
                 if (dto.ForceOverrun)
                 {
-                    if (userRole != "TenantOwner" && userRole != "SuperAdmin")
+                    if (userRole != "TenantOwner")
                     {
-                        throw new UnauthorizedAccessException("Unauthorized budget overrun override. Only TenantOwner and SuperAdmin can bypass project budget limits.");
+                        throw new UnauthorizedAccessException("Unauthorized budget overrun override. Only TenantOwner can bypass project budget limits.");
                     }
                 }
                 else
@@ -95,6 +99,11 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
     {
         if (tenantId == null)
             return (false, "Tenant ID missing or invalid.");
+
+        // --- Financial Freeze Guard ---
+        var projectCheck = await context.Set<Project>().FindAsync(projectId);
+        if (projectCheck != null && (projectCheck.Status == ProjectStatus.FinancialFreeze || projectCheck.Status == ProjectStatus.Closed))
+            return (false, $"PROJECT_FROZEN: لا يمكن حقن رأس مال جديد. المشروع في وضع {projectCheck.Status}.");
 
         var pool = await context.Set<ProjectCashPool>()
             .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == dto.SourceType);
@@ -214,9 +223,9 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
     public async Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole)
     {
-        if (userRole != "TenantOwner" && userRole != "SuperAdmin" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner, SuperAdmin, and Accountants are allowed to perform direct disbursements.");
+            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to perform direct disbursements.");
         }
 
         var pool = await context.Set<ProjectCashPool>()

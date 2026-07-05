@@ -175,6 +175,9 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("ExpenseDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsReimbursement")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsSettled")
                         .HasColumnType("boolean");
 
@@ -249,6 +252,13 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<int?>("ClientRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ClientReviewNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -274,8 +284,17 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("PublicReviewToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -283,6 +302,10 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ManagerId");
+
+                    b.HasIndex("PublicReviewToken")
+                        .IsUnique()
+                        .HasFilter("\"PublicReviewToken\" IS NOT NULL");
 
                     b.HasIndex("TenantId");
 

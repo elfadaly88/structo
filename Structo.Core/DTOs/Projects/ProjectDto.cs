@@ -11,4 +11,7 @@ public class ProjectDto
     public DateTime? EndDate { get; set; }
     public bool IsActive { get; set; }
     public Guid? ManagerId { get; set; }
+    public string Status { get; set; } = "Active";
+    public string? PublicReviewToken { get; set; }
 }
+

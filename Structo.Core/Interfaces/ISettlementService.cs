@@ -11,5 +11,5 @@ public interface ISettlementService
     Task<(bool Success, string Message)> ApproveSettlementAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId);
     Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole);
     Task<(bool Success, string Message)> RejectSettlementAsync(Guid projectId, Guid id, SettlementRejectDto dto, string userRole, Guid resolvedByUserId);
-    Task<IEnumerable<SettlementMobileDto>> GetSettlementsAsync(Guid projectId);
+    Task<IEnumerable<SettlementMobileDto>> GetSettlementsAsync(Guid projectId, Guid userId, string userRole);
 }

@@ -76,4 +76,17 @@ public class NotificationEngine(DbContext context, INotificationService notifica
             });
         }
     }
+
+    public async Task RaiseFinancialApprovalNotificationAsync(Guid requesterId, decimal amount, Guid pettyCashId, Guid tenantId, Guid projectId)
+    {
+        await notificationService.SendAsync(new SendNotificationDto
+        {
+            TenantId = tenantId,
+            ReceiverId = requesterId,
+            Title = "تمت الموافقة على صرف العهدة 💰",
+            Message = $"وافق المحاسب على طلب صرف العهدة الخاص بك بقيمة {amount:N0} EGP.",
+            Type = NotificationType.PettyCash,
+            DeepLink = $"/dashboard/projects/{projectId}"
+        });
+    }
 }
