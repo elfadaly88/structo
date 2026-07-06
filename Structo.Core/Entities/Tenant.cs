@@ -20,6 +20,12 @@ public class Tenant
     public TenantStatus Status { get; set; } = TenantStatus.Active;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public string Location { get; set; } = string.Empty;
+    public string MobileNumber { get; set; } = string.Empty;
+    public string? CommercialRegister { get; set; }
+    public string? TaxCard { get; set; }
+    public string AccountType { get; set; } = "Company";
+
     // Navigation properties
     public ICollection<User> Users { get; set; } = [];
     public ICollection<Project> Projects { get; set; } = [];

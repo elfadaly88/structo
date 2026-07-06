@@ -514,8 +514,15 @@ namespace Structo.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AccountType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("BannerUrl")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CommercialRegister")
                         .HasColumnType("text");
 
                     b.Property<string>("CompanyDescription")
@@ -528,12 +535,20 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("LogoUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("MaxActiveProjects")
                         .HasColumnType("integer");
+
+                    b.Property<string>("MobileNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -556,6 +571,9 @@ namespace Structo.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<string>("TaxCard")
+                        .HasColumnType("text");
 
                     b.Property<string>("WhatsAppPhone")
                         .HasColumnType("text");
@@ -595,6 +613,9 @@ namespace Structo.Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("NationalId")
+                        .HasColumnType("text");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -604,6 +625,9 @@ namespace Structo.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<string>("SyndicateId")
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");

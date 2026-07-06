@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -103,6 +103,104 @@ interface ApiResponse<T> {
 
             <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5" autocomplete="off">
               
+              <!-- Verification & Onboarding Block (Top) -->
+              <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                <div class="border-b border-slate-800 pb-3">
+                  <h3 class="text-xs font-bold text-indigo-400 font-cairo uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    بيانات الاعتماد والتحقق / Verification Credentials
+                  </h3>
+                  <p class="text-[9px] text-slate-500 font-cairo mt-1">يطلع عليها مدير النظام مباشرة للتحقق والموافقة على الحساب.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Account Type Selector -->
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">نوع الحساب / Account Type</label>
+                    <select formControlName="accountType"
+                      class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                      <option value="Company">Company / شركة أو مؤسسة</option>
+                      <option value="Freelancer">Freelancer / مستقل أو مهندس حر</option>
+                    </select>
+                  </div>
+
+                  <!-- Governorate Location Dropdown -->
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المحافظة / Location</label>
+                    <select formControlName="location"
+                      class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                      <option value="" disabled selected>-- اختر المحافظة --</option>
+                      <option value="Cairo">Cairo / القاهرة</option>
+                      <option value="Giza">Giza / الجيزة</option>
+                      <option value="Alexandria">Alexandria / الإسكندرية</option>
+                      <option value="Qalyubia">Qalyubia / القليوبية</option>
+                      <option value="Gharbia">Gharbia / الغربية</option>
+                      <option value="Dakahlia">Dakahlia / الدقهلية</option>
+                      <option value="Sharqia">Sharqia / الشرقية</option>
+                      <option value="Monufia">Monufia / المنوفية</option>
+                      <option value="Beheira">Beheira / البحيرة</option>
+                      <option value="Kafr El Sheikh">Kafr El Sheikh / كفر الشيخ</option>
+                      <option value="Damietta">Damietta / دمياط</option>
+                      <option value="Port Said">Port Said / بورسعيد</option>
+                      <option value="Ismailia">Ismailia / الإسماعيلية</option>
+                      <option value="Suez">Suez / السويس</option>
+                      <option value="Aswan">Aswan / أسوان</option>
+                      <option value="Luxor">Luxor / الأقصر</option>
+                      <option value="Red Sea">Red Sea / البحر الأحمر</option>
+                      <option value="Matrouh">Matrouh / مطروح</option>
+                    </select>
+                    @if (isFieldInvalid('location')) {
+                      <p class="text-[10px] text-rose-400 mt-1 font-medium font-cairo">الموقع مطلوب / Location is required.</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Mobile Number -->
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم الهاتف المحمول / Mobile Number</label>
+                  <input type="text" formControlName="mobileNumber" placeholder="e.g. +201012345678"
+                    class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                  @if (isFieldInvalid('mobileNumber')) {
+                    <p class="text-[10px] text-rose-400 mt-1 font-medium font-cairo">رقم الهاتف مطلوب / Mobile is required.</p>
+                  }
+                </div>
+
+                <!-- Company-only Fields -->
+                @if (registerForm.get('accountType')?.value === 'Company') {
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">السجل التجاري / Commercial Register</label>
+                      <input type="text" formControlName="commercialRegister" placeholder="رقم السجل التجاري"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">البطاقة الضريبية / Tax Card</label>
+                      <input type="text" formControlName="taxCard" placeholder="الرقم الضريبي"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                    </div>
+                  </div>
+                }
+
+                <!-- Freelancer-only Fields -->
+                @if (registerForm.get('accountType')?.value === 'Freelancer') {
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">الرقم القومي (14 رقم) / National ID *</label>
+                      <input type="text" formControlName="nationalId" placeholder="أدخل 14 رقماً"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                      @if (isFieldInvalid('nationalId')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-medium font-cairo">يجب إدخال 14 رقماً للمستقل / Must be 14 digits.</p>
+                      }
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم النقابة / Syndicate ID (Optional)</label>
+                      <input type="text" formControlName="syndicateId" placeholder="عضوية نقابة المهندسين"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                    </div>
+                  </div>
+                }
+              </div>
+
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Tenant Name</label>
                 <input type="text" formControlName="tenantName" placeholder="Acme Corp" autocomplete="off"
@@ -162,8 +260,32 @@ interface ApiResponse<T> {
                     }
                   </button>
                 </div>
+                
+                <!-- Password Strength Meter Bar -->
+                <div class="mt-2.5 space-y-1.5 bg-slate-900/40 border border-slate-850 rounded-xl p-2.5">
+                  <div class="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden flex gap-0.5">
+                    <div class="h-full rounded-full transition-all duration-300"
+                      [style.width.%]="passwordStrength() * 25"
+                      [class.bg-rose-500]="passwordStrength() <= 1"
+                      [class.bg-amber-500]="passwordStrength() === 2"
+                      [class.bg-emerald-500]="passwordStrength() >= 3">
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center text-[10px] font-medium font-cairo">
+                    <span class="text-slate-500">قوة كلمة المرور / Password Strength:</span>
+                    <span [class.text-rose-400]="passwordStrength() <= 1"
+                          [class.text-amber-400]="passwordStrength() === 2"
+                          [class.text-emerald-400]="passwordStrength() >= 3">
+                      {{ passwordStrength() <= 1 ? 'Weak / ضعيف (يجب إدراج رموز وأرقام)' : passwordStrength() === 2 ? 'Fair / متوسط (قريب من القوي)' : 'Strong / قوي جداً (مقبول للتسجيل)' }}
+                    </span>
+                  </div>
+                </div>
+
                 @if (isFieldInvalid('password')) {
                   <p class="text-xs text-rose-400 mt-1.5 font-medium">Password must be at least 6 characters.</p>
+                }
+                @if (passwordStrength() < 3 && registerForm.get('password')?.dirty) {
+                  <p class="text-[10px] text-rose-400 mt-1 font-medium font-cairo">يجب أن تكون كلمة المرور قوية لتتمكن من إرسال النموذج.</p>
                 }
               </div>
               
@@ -177,8 +299,8 @@ interface ApiResponse<T> {
               </div>
 
               <div class="pt-2">
-                <button type="submit" [disabled]="isLoading()" 
-                  class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-sm font-bold rounded-xl text-white shadow-lg shadow-indigo-600/20 transition-all duration-200 active:scale-[0.98] flex items-center justify-center font-cairo">
+                <button type="submit" [disabled]="isLoading() || passwordStrength() < 3 || registerForm.invalid" 
+                  class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold rounded-xl text-white shadow-lg shadow-indigo-600/20 transition-all duration-200 active:scale-[0.98] flex items-center justify-center font-cairo">
                   @if (isLoading()) {
                     <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -216,9 +338,18 @@ export class TenantRegisterComponent {
   readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  togglePasswordVisibility(): void {
-    this.showPassword.update(v => !v);
-  }
+  readonly passwordValue = signal('');
+
+  readonly passwordStrength = computed(() => {
+    const pass = this.passwordValue();
+    if (!pass) return 0;
+    let score = 0;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[a-z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^a-zA-Z0-9]/.test(pass)) score++;
+    return score;
+  });
 
   readonly registerForm = this.fb.nonNullable.group({
     tenantName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -226,8 +357,36 @@ export class TenantRegisterComponent {
     adminLastName: ['', [Validators.required, Validators.maxLength(50)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    subscriptionPlan: ['Free', Validators.required]
+    subscriptionPlan: ['Free', Validators.required],
+    accountType: ['Company', Validators.required],
+    location: ['', Validators.required],
+    mobileNumber: ['', [Validators.required]],
+    commercialRegister: [''],
+    taxCard: [''],
+    nationalId: [''],
+    syndicateId: ['']
   });
+
+  constructor() {
+    this.registerForm.get('accountType')?.valueChanges.subscribe(value => {
+      const nationalIdControl = this.registerForm.get('nationalId');
+      if (value === 'Freelancer') {
+        nationalIdControl?.setValidators([Validators.required, Validators.pattern(/^\d{14}$/)]);
+      } else {
+        nationalIdControl?.clearValidators();
+      }
+      nationalIdControl?.updateValueAndValidity();
+    });
+
+    // Also keep passwordValue signal in sync
+    this.registerForm.get('password')?.valueChanges.subscribe(value => {
+      this.passwordValue.set(value || '');
+    });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update(v => !v);
+  }
 
   isFieldInvalid(field: string): boolean {
     const control = this.registerForm.get(field);
@@ -235,7 +394,7 @@ export class TenantRegisterComponent {
   }
 
   onSubmit(): void {
-    if (this.registerForm.invalid) {
+    if (this.registerForm.invalid || this.passwordStrength() < 3) {
       this.registerForm.markAllAsTouched();
       return;
     }
@@ -249,7 +408,14 @@ export class TenantRegisterComponent {
       ownerName: `${this.registerForm.value.adminFirstName} ${this.registerForm.value.adminLastName}`.trim(),
       adminEmail: this.registerForm.value.email,
       password: this.registerForm.value.password,
-      subscriptionPlan: String(this.registerForm.value.subscriptionPlan)
+      subscriptionPlan: String(this.registerForm.value.subscriptionPlan),
+      accountType: this.registerForm.value.accountType,
+      location: this.registerForm.value.location,
+      mobileNumber: this.registerForm.value.mobileNumber,
+      commercialRegister: this.registerForm.value.commercialRegister || null,
+      taxCard: this.registerForm.value.taxCard || null,
+      nationalId: this.registerForm.value.nationalId || null,
+      syndicateId: this.registerForm.value.syndicateId || null
     };
 
     this.http.post<ApiResponse<string>>(`${environment.apiUrl}/Auth/register-tenant`, payload)

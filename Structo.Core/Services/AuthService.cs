@@ -52,6 +52,37 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
 
     public async Task<(bool Success, Guid? TenantId, string Message)> RegisterTenantAsync(TenantRegisterDto dto)
     {
+        // Validate password complexity
+        if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
+        {
+            return (false, null, "Password must be at least 6 characters.");
+        }
+
+        int passScore = 0;
+        if (dto.Password.Length >= 8) passScore++;
+        if (dto.Password.Any(char.IsUpper)) passScore++;
+        if (dto.Password.Any(char.IsLower)) passScore++;
+        if (dto.Password.Any(char.IsDigit)) passScore++;
+        if (dto.Password.Any(c => !char.IsLetterOrDigit(c))) passScore++;
+
+        if (passScore < 3)
+        {
+            return (false, null, "Password is too weak. Must include uppercase, lowercase, numbers, or special characters.");
+        }
+
+        // Validation Guard based on AccountType
+        if (dto.AccountType == "Freelancer")
+        {
+            if (string.IsNullOrWhiteSpace(dto.NationalId))
+            {
+                return (false, null, "National ID is required for Freelancers.");
+            }
+            if (dto.NationalId.Length != 14 || !dto.NationalId.All(char.IsDigit))
+            {
+                return (false, null, "National ID must be exactly 14 digits.");
+            }
+        }
+
         var usersDbSet = context.Set<User>();
         if (await usersDbSet.IgnoreQueryFilters().AnyAsync(u => u.Email == dto.AdminEmail))
         {
@@ -64,7 +95,12 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             CompanyDescription = dto.BusinessDomain,
             SubscriptionPlan = Enum.TryParse<SubscriptionPlan>(dto.SubscriptionPlan, true, out var parsedPlan) ? parsedPlan : SubscriptionPlan.Free,
             Status = TenantStatus.PendingApproval,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Location = dto.Location,
+            MobileNumber = dto.MobileNumber,
+            CommercialRegister = dto.CommercialRegister,
+            TaxCard = dto.TaxCard,
+            AccountType = dto.AccountType
         };
 
         var tenantsDbSet = context.Set<Tenant>();
@@ -82,7 +118,10 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = UserRole.TenantOwner,
             TenantId = tenant.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            ContactPhone = dto.MobileNumber,
+            NationalId = dto.NationalId,
+            SyndicateId = dto.SyndicateId
         };
 
         usersDbSet.Add(user);

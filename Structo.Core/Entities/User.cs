@@ -19,6 +19,8 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     
     public UserRole Role { get; set; }
+    public string? NationalId { get; set; }
+    public string? SyndicateId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties

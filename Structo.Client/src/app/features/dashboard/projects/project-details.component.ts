@@ -3356,6 +3356,7 @@ export class ProjectDetailsComponent implements OnInit {
       this.uploadService.uploadProjectDocument(this.projectId, file).subscribe({
         next: (res) => {
           lineGroup.patchValue({ uploading: false });
+          URL.revokeObjectURL(localUrl);
           if (res.success && res.data) {
             lineGroup.patchValue({ invoiceUrl: res.data.url, localPreviewUrl: res.data.url });
           } else {
@@ -3364,6 +3365,7 @@ export class ProjectDetailsComponent implements OnInit {
         },
         error: () => {
           lineGroup.patchValue({ uploading: false });
+          URL.revokeObjectURL(localUrl);
           this.confirmService.alert({ title: 'خطأ في الرفع', message: 'حدث خطأ أثناء رفع إيصال الفاتورة.', type: 'error' });
         }
       });
