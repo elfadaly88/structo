@@ -41,7 +41,10 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         SiteAddress = p.SiteAddress,
         ClientName = p.ClientName,
         ClientWhatsApp = p.ClientWhatsApp,
-        PropertyType = p.PropertyType.ToString()
+        PropertyType = p.PropertyType.ToString(),
+        ClientReviewNotes = p.ClientReviewNotes,
+        ClientRating = p.ClientRating,
+        IsReviewHidden = p.IsReviewHidden
     };
 
     public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole)

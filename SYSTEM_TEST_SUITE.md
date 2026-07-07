@@ -112,3 +112,37 @@ Verify that form validation rules dynamically toggle based on `AccountType` duri
    * **Expected Button State:** Submit button becomes enabled once all other validations pass.
 6. **Submit Form:**
    * **Expected Result:** Payload sends correctly, matches `TenantRegisterDto`, and registers successfully on the backend.
+
+---
+
+### 📋 Test Case 5: Platform Suspension & Tenant Locking
+
+#### Purpose
+Verify that when a SuperAdmin suspends a tenant, any user of that company is strictly denied login capabilities and token generation.
+
+#### Test Execution Steps
+1. **Login** as SuperAdmin.
+2. **Navigate to Tenants Panel** (`/dashboard/tenants` or `/superadmin/dashboard`).
+3. **Click "Suspend"** next to the target company.
+4. **Logout** from SuperAdmin session.
+5. **Attempt to Login** with any user account belonging to that company.
+6. **Expected Result**: Login fails, displaying: `"⚠️ تم تعليق حساب شركتكم مؤقتًا؛ يرجى مراجعة إدارة المنصة لتجديد الاشتراك."`
+7. **Login** as SuperAdmin, navigate back, and click **"Activate"** to restore account access.
+
+---
+
+### 📋 Test Case 6: Enriched Project Creation & Mapping
+
+#### Purpose
+Verify that new project site metadata (Location, Address, Client WhatsApp, and Property Type) is mapped correctly during creation and displayed accurately on the Project details page.
+
+#### Test Execution Steps
+1. **Login** as TenantOwner.
+2. **Open the Project Creation Modal**.
+3. **Fill in all fields**, selecting a Governorate (e.g., *Cairo*), City/Zone (e.g., *Fifth Settlement*), Site Address (e.g., *North 90 Street*), Client WhatsApp (e.g., *+201020304050*), and Property Type (e.g., *Administrative*).
+4. **Submit project**.
+5. **Navigate to the newly created project's workspace details page**.
+6. **Expected Result**: 
+   - The location badge (`📍 Cairo - Fifth Settlement`) displays in the header.
+   - The property type badge (`🏢 Administrative`) displays alongside it.
+   - The exact physical site address shows clearly next to them.

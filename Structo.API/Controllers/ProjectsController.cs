@@ -8,13 +8,15 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Structo.Infrastructure.Data;
 
 namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ProjectsController(IProjectService projectService, ITenantContextAccessor tenantContextAccessor) : ControllerBase
+public class ProjectsController(IProjectService projectService, ITenantContextAccessor tenantContextAccessor, StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid? CurrentTenantId => tenantContextAccessor.GetCurrentTenantId();
@@ -162,5 +164,26 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
         {
             return Forbid();
         }
+    }
+
+    [HttpPost("/api/superadmin/reviews/{reviewId}/toggle-visibility")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<ActionResult<ApiResponse<bool>>> ToggleReviewVisibility([FromRoute] Guid reviewId)
+    {
+        var project = await context.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == reviewId);
+        if (project == null)
+        {
+            return NotFound(new ApiResponse<bool> { Success = false, Message = "Review/Project not found." });
+        }
+
+        project.IsReviewHidden = !project.IsReviewHidden;
+        await context.SaveChangesAsync();
+
+        return Ok(new ApiResponse<bool>
+        {
+            Data = project.IsReviewHidden,
+            Success = true,
+            Message = $"Review visibility has been toggled. Hidden status is now: {project.IsReviewHidden}."
+        });
     }
 }

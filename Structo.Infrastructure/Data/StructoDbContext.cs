@@ -91,6 +91,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.PublicReviewToken).HasMaxLength(64);
             entity.Property(e => e.ClientReviewNotes).HasMaxLength(2000);
             entity.Property(e => e.ClientRating);
+            entity.Property(e => e.IsReviewHidden).HasDefaultValue(false);
             entity.Property(e => e.PropertyType).HasConversion<string>().HasMaxLength(30);
             entity.HasIndex(e => e.PublicReviewToken).IsUnique().HasFilter($"\"{nameof(Project.PublicReviewToken)}\" IS NOT NULL");
 

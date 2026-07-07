@@ -87,6 +87,11 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'superadmin/dashboard',
+    redirectTo: 'dashboard/tenants',
+    pathMatch: 'full'
+  },
+  {
     path: 'public/project-review/:token',
     loadComponent: () => import('./features/public/project-review.component').then(m => m.ProjectReviewComponent)
   },

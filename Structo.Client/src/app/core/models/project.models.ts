@@ -14,6 +14,9 @@ export interface ProjectDto {
   clientName?: string;
   clientWhatsApp?: string;
   propertyType?: string;
+  clientReviewNotes?: string | null;
+  clientRating?: number | null;
+  isReviewHidden?: boolean;
 }
 
 export interface ProjectCreateDto {

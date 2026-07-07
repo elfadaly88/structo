@@ -30,9 +30,16 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         if (user.TenantId.HasValue)
         {
             var tenant = await context.Set<Tenant>().IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == user.TenantId.Value);
-            if (tenant == null || tenant.Status != TenantStatus.Active)
+            if (tenant != null)
             {
-                return (false, null, "AUTH.ACCOUNT_PENDING_OR_INACTIVE");
+                if (tenant.Status == TenantStatus.Suspended)
+                {
+                    throw new UnauthorizedAccessException("⚠️ تم تعليق حساب شركتكم مؤقتًا؛ يرجى مراجعة إدارة المنصة لتجديد الاشتراك.");
+                }
+                if (tenant.Status != TenantStatus.Active)
+                {
+                    return (false, null, "AUTH.ACCOUNT_PENDING_OR_INACTIVE");
+                }
             }
         }
 

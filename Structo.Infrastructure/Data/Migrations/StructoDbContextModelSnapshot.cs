@@ -289,6 +289,11 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<bool>("IsPublicPortfolio")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsReviewHidden")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<Guid?>("ManagerId")
                         .HasColumnType("uuid");
 

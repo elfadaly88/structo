@@ -34,6 +34,7 @@ public class Project : ITenantEntity
     public string? PublicReviewToken { get; set; }
     public string? ClientReviewNotes { get; set; }
     public int? ClientRating { get; set; }
+    public bool IsReviewHidden { get; set; } = false;
 
     // Navigation properties
     public Tenant? Tenant { get; set; }

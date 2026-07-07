@@ -20,5 +20,9 @@ public class ProjectDto
     public string ClientName { get; set; } = string.Empty;
     public string ClientWhatsApp { get; set; } = string.Empty;
     public string PropertyType { get; set; } = "Residential";
+
+    public string? ClientReviewNotes { get; set; }
+    public int? ClientRating { get; set; }
+    public bool IsReviewHidden { get; set; }
 }
 

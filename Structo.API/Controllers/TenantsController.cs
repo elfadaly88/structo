@@ -109,4 +109,58 @@ public class TenantsController(StructoDbContext context) : ControllerBase
             Message = "Tenant has been provisioned and is now Active."
         });
     }
+
+    [HttpPost("{id}/toggle-status")]
+    public async Task<ActionResult<ApiResponse<string>>> ToggleStatus(Guid id)
+    {
+        var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+        if (tenant == null)
+        {
+            return NotFound(new ApiResponse<string> { Success = false, Message = "Tenant not found." });
+        }
+
+        tenant.Status = tenant.Status == TenantStatus.Suspended ? TenantStatus.Active : TenantStatus.Suspended;
+        await context.SaveChangesAsync();
+
+        return Ok(new ApiResponse<string>
+        {
+            Data = tenant.Status.ToString(),
+            Success = true,
+            Message = $"Tenant status toggled successfully to {tenant.Status}."
+        });
+    }
+
+    [HttpGet("/api/superadmin/tenants/{id}/profile")]
+    public async Task<ActionResult<ApiResponse<object>>> GetTenantProfile(Guid id)
+    {
+        var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+        if (tenant == null)
+        {
+            return NotFound(new ApiResponse<object> { Success = false, Message = "Tenant not found." });
+        }
+
+        var projectCount = await context.Projects.IgnoreQueryFilters().CountAsync(p => p.TenantId == id);
+        var userCount = await context.Users.IgnoreQueryFilters().CountAsync(u => u.TenantId == id && u.IsActive);
+        
+        var invoiceCount = await context.Set<SettlementLine>().IgnoreQueryFilters()
+            .CountAsync(sl => sl.Settlement != null && sl.Settlement.TenantId == id && !string.IsNullOrEmpty(sl.InvoiceUrl));
+        var photoCount = await context.SitePhotos.IgnoreQueryFilters().CountAsync(sp => sp.TenantId == id);
+        
+        double storageUsedMb = Math.Round((invoiceCount * 1.5) + (photoCount * 2.0), 2);
+
+        var result = new
+        {
+            TotalProjectsCount = projectCount,
+            ActiveUserCount = userCount,
+            StorageUsedMb = storageUsedMb,
+            GlobalRatingScore = tenant.Rating
+        };
+
+        return Ok(new ApiResponse<object>
+        {
+            Data = result,
+            Success = true,
+            Message = "Tenant audit profile retrieved successfully."
+        });
+    }
 }
