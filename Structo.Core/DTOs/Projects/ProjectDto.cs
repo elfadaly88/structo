@@ -13,5 +13,12 @@ public class ProjectDto
     public Guid? ManagerId { get; set; }
     public string Status { get; set; } = "Active";
     public string? PublicReviewToken { get; set; }
+
+    public string Governorate { get; set; } = string.Empty;
+    public string CityOrZone { get; set; } = string.Empty;
+    public string SiteAddress { get; set; } = string.Empty;
+    public string ClientName { get; set; } = string.Empty;
+    public string ClientWhatsApp { get; set; } = string.Empty;
+    public string PropertyType { get; set; } = "Residential";
 }
 

@@ -70,18 +70,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             return (false, null, "Password is too weak. Must include uppercase, lowercase, numbers, or special characters.");
         }
 
-        // Validation Guard based on AccountType
-        if (dto.AccountType == "Freelancer")
-        {
-            if (string.IsNullOrWhiteSpace(dto.NationalId))
-            {
-                return (false, null, "National ID is required for Freelancers.");
-            }
-            if (dto.NationalId.Length != 14 || !dto.NationalId.All(char.IsDigit))
-            {
-                return (false, null, "National ID must be exactly 14 digits.");
-            }
-        }
+        // Validation Guard based on AccountType is removed to allow optional fields during registration.
 
         var usersDbSet = context.Set<User>();
         if (await usersDbSet.IgnoreQueryFilters().AnyAsync(u => u.Email == dto.AdminEmail))

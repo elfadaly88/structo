@@ -13,7 +13,6 @@ public class Project : ITenantEntity
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public decimal Budget { get; set; }
-    public string? ClientName { get; set; }
     public bool IsPublicPortfolio { get; set; }
     public string? Category { get; set; }
     public DateTime StartDate { get; set; }
@@ -22,6 +21,13 @@ public class Project : ITenantEntity
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid? ManagerId { get; set; }
+
+    public string Governorate { get; set; } = string.Empty;
+    public string CityOrZone { get; set; } = string.Empty;
+    public string SiteAddress { get; set; } = string.Empty;
+    public string ClientName { get; set; } = string.Empty;
+    public string ClientWhatsApp { get; set; } = string.Empty;
+    public PropertyType PropertyType { get; set; } = PropertyType.Residential;
 
     // --- Closeout fields ---
     public ProjectStatus Status { get; set; } = ProjectStatus.Active;

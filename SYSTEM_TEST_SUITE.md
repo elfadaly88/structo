@@ -103,7 +103,7 @@ Verify that form validation rules dynamically toggle based on `AccountType` duri
    * **Validation Behavior:** These fields are optional for later dashboard completion.
 3. **Select Account Type: "Freelancer"**:
    * **Expected Fields:** National ID and Syndicate ID inputs are visible.
-   * **Validation Behavior:** National ID is strictly marked as required and validated against a 14-digit pattern.
+   * **Validation Behavior:** These fields are 100% optional (all validation requirements and regex checks for National ID are removed for registration flexibility).
 4. **Input Weak Password** (e.g. `123456`):
    * **Expected Strength Meter:** Displays red `Weak / ضعيف`.
    * **Expected Button State:** Submit button remains disabled.

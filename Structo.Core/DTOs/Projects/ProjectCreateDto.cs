@@ -10,4 +10,11 @@ public class ProjectCreateDto
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public Guid? ManagerId { get; set; }
+
+    public string Governorate { get; set; } = string.Empty;
+    public string CityOrZone { get; set; } = string.Empty;
+    public string SiteAddress { get; set; } = string.Empty;
+    public string ClientName { get; set; } = string.Empty;
+    public string ClientWhatsApp { get; set; } = string.Empty;
+    public string PropertyType { get; set; } = "Residential";
 }

@@ -49,6 +49,29 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
               <span class="text-slate-500">{{ 'DETAILS.PROJECT_NOT_FOUND' | translate }}</span>
             }
           </h1>
+          @if (project()) {
+            <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-400">
+              @if (project()!.governorate) {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full font-cairo font-semibold">
+                  📍 {{ project()!.governorate }} @if (project()!.cityOrZone) { - {{ project()!.cityOrZone }} }
+                </span>
+              }
+              @if (project()!.propertyType) {
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full font-cairo font-semibold">
+                  @if (project()!.propertyType === 'Residential') {
+                    🏠 {{ 'Residential' }}
+                  } @else {
+                    🏢 {{ 'Administrative' }}
+                  }
+                </span>
+              }
+              @if (project()!.siteAddress) {
+                <span class="text-slate-500 font-cairo text-[11px] font-medium hidden sm:inline">
+                  ({{ project()!.siteAddress }})
+                </span>
+              }
+            </div>
+          }
         </div>
         @if (project()) {
           @if (project()!.isActive) {

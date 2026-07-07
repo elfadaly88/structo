@@ -185,12 +185,9 @@ interface ApiResponse<T> {
                 @if (registerForm.get('accountType')?.value === 'Freelancer') {
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                     <div>
-                      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">الرقم القومي (14 رقم) / National ID *</label>
-                      <input type="text" formControlName="nationalId" placeholder="أدخل 14 رقماً"
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">الرقم القومي (14 رقم) / National ID (Optional)</label>
+                      <input type="text" formControlName="nationalId" placeholder="أدخل 14 رقماً (اختياري)"
                         class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
-                      @if (isFieldInvalid('nationalId')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-medium font-cairo">يجب إدخال 14 رقماً للمستقل / Must be 14 digits.</p>
-                      }
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم النقابة / Syndicate ID (Optional)</label>
@@ -368,16 +365,6 @@ export class TenantRegisterComponent {
   });
 
   constructor() {
-    this.registerForm.get('accountType')?.valueChanges.subscribe(value => {
-      const nationalIdControl = this.registerForm.get('nationalId');
-      if (value === 'Freelancer') {
-        nationalIdControl?.setValidators([Validators.required, Validators.pattern(/^\d{14}$/)]);
-      } else {
-        nationalIdControl?.clearValidators();
-      }
-      nationalIdControl?.updateValueAndValidity();
-    });
-
     // Also keep passwordValue signal in sync
     this.registerForm.get('password')?.valueChanges.subscribe(value => {
       this.passwordValue.set(value || '');

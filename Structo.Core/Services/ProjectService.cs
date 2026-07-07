@@ -35,7 +35,13 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         IsActive = p.IsActive,
         ManagerId = p.ManagerId,
         Status = p.Status.ToString(),
-        PublicReviewToken = p.PublicReviewToken
+        PublicReviewToken = p.PublicReviewToken,
+        Governorate = p.Governorate,
+        CityOrZone = p.CityOrZone,
+        SiteAddress = p.SiteAddress,
+        ClientName = p.ClientName,
+        ClientWhatsApp = p.ClientWhatsApp,
+        PropertyType = p.PropertyType.ToString()
     };
 
     public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole)
@@ -111,11 +117,16 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             Name = dto.Name,
             Description = innerDesc,
             Budget = budget,
-            ClientName = client,
+            ClientName = !string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             ManagerId = dto.ManagerId,
-            Status = ProjectStatus.Active
+            Status = ProjectStatus.Active,
+            Governorate = dto.Governorate,
+            CityOrZone = dto.CityOrZone,
+            SiteAddress = dto.SiteAddress,
+            ClientWhatsApp = dto.ClientWhatsApp,
+            PropertyType = Enum.TryParse<PropertyType>(dto.PropertyType, true, out var pType) ? pType : PropertyType.Residential
         };
 
         context.Set<Project>().Add(project);
@@ -170,9 +181,14 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
         project.Description = innerDesc;
         project.Budget = budget;
-        project.ClientName = client;
+        project.ClientName = !string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client;
         project.IsPublicPortfolio = isPublic;
         project.Category = category;
+        project.Governorate = dto.Governorate;
+        project.CityOrZone = dto.CityOrZone;
+        project.SiteAddress = dto.SiteAddress;
+        project.ClientWhatsApp = dto.ClientWhatsApp;
+        project.PropertyType = Enum.TryParse<PropertyType>(dto.PropertyType, true, out var pType) ? pType : PropertyType.Residential;
 
         await context.SaveChangesAsync();
 

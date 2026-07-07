@@ -495,7 +495,7 @@ export interface ProjectViewDto extends ProjectDto {
         <div (click)="closeProjectModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal container -->
-        <div class="relative bg-slate-900 border border-slate-700/60 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl shadow-black/50 z-10">
+        <div class="relative bg-slate-900 border border-slate-700/60 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl shadow-black/50 z-10 max-h-[90vh] overflow-y-auto">
           <div class="flex items-start justify-between mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">{{ 'PROJECTS.MODAL_TITLE' | translate }}</h3>
@@ -568,6 +568,105 @@ export interface ProjectViewDto extends ProjectDto {
                   type="date"
                   formControlName="endDate"
                   class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+              </div>
+            </div>
+
+            <!-- Geographic Location Group -->
+            <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-3.5">
+              <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
+                📍 تفاصيل الموقع الجغرافي دقیقًا / Geographic Location
+              </span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label for="proj-gov" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">المحافظة / Governorate <span class="text-red-400">*</span></label>
+                  <select
+                    id="proj-gov"
+                    formControlName="governorate"
+                    class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                    <option value="" disabled selected>-- اختر المحافظة --</option>
+                    <option value="Cairo">Cairo / القاهرة</option>
+                    <option value="Giza">Giza / الجيزة</option>
+                    <option value="Alexandria">Alexandria / الإسكندرية</option>
+                    <option value="Qalyubia">Qalyubia / القليوبية</option>
+                    <option value="Gharbia">Gharbia / الغربية</option>
+                    <option value="Dakahlia">Dakahlia / الدقهلية</option>
+                    <option value="Sharqia">Sharqia / الشرقية</option>
+                    <option value="Monufia">Monufia / المنوفية</option>
+                    <option value="Beheira">Beheira / البحيرة</option>
+                    <option value="Kafr El Sheikh">Kafr El Sheikh / كفر الشيخ</option>
+                    <option value="Damietta">Damietta / دمياط</option>
+                    <option value="Port Said">Port Said / بورسعيد</option>
+                    <option value="Ismailia">Ismailia / الإسماعيلية</option>
+                    <option value="Suez">Suez / السويس</option>
+                    <option value="Aswan">Aswan / أسوان</option>
+                    <option value="Luxor">Luxor / الأقصر</option>
+                    <option value="Red Sea">Red Sea / البحر الأحمر</option>
+                    <option value="Matrouh">Matrouh / مطروح</option>
+                  </select>
+                  @if (isProjectFieldInvalid('governorate')) {
+                    <p class="text-[9px] text-rose-400 mt-1 font-cairo">المحافظة مطلوبة / Governorate is required.</p>
+                  }
+                </div>
+                <div>
+                  <label for="proj-city" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">المدينة أو المنطقة / City or Zone <span class="text-red-400">*</span></label>
+                  <input
+                    id="proj-city"
+                    type="text"
+                    formControlName="cityOrZone"
+                    placeholder="e.g. التجمع الخامس"
+                    class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                  @if (isProjectFieldInvalid('cityOrZone')) {
+                    <p class="text-[9px] text-rose-400 mt-1 font-cairo">المنطقة مطلوبة / Zone is required.</p>
+                  }
+                </div>
+              </div>
+              <div>
+                <label for="proj-address" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">العنوان التفصيلي / Physical Site Address <span class="text-red-400">*</span></label>
+                <input
+                  id="proj-address"
+                  type="text"
+                  formControlName="siteAddress"
+                  placeholder="e.g. شارع التسعين الشمالي، قطعة 44"
+                  class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                @if (isProjectFieldInvalid('siteAddress')) {
+                  <p class="text-[9px] text-rose-400 mt-1 font-cairo">العنوان مطلوب / Address is required.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Client & Owner Details Group -->
+            <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-3.5">
+              <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
+                👤 بيانات العميل وصاحب المشروع / Client & Owner Info
+              </span>
+              <div>
+                <label for="proj-client-wh" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">رقم واتساب العميل / Client WhatsApp <span class="text-red-400">*</span></label>
+                <input
+                  id="proj-client-wh"
+                  type="text"
+                  formControlName="clientWhatsApp"
+                  placeholder="e.g. +201012345678"
+                  class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                @if (isProjectFieldInvalid('clientWhatsApp')) {
+                  <p class="text-[9px] text-rose-400 mt-1 font-cairo">رقم واتساب العميل مطلوب بصيغة صحيحة / Invalid WhatsApp number.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Property Classification Group -->
+            <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-3.5">
+              <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
+                🏢 تصنيف المنشأ / Property Classification
+              </span>
+              <div>
+                <label for="proj-prop-type" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">تصنيف العقار / Property Type <span class="text-red-400">*</span></label>
+                <select
+                  id="proj-prop-type"
+                  formControlName="propertyType"
+                  class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                  <option value="Residential">Residential / سكني</option>
+                  <option value="Administrative">Administrative / إداري</option>
+                </select>
               </div>
             </div>
 
@@ -838,7 +937,12 @@ export class ProjectsComponent implements OnInit {
     status: ['Active', Validators.required],
     category: ['Residential', Validators.required],
     isPublicPortfolio: [false],
-    description: ['']
+    description: [''],
+    governorate: ['', Validators.required],
+    cityOrZone: ['', Validators.required],
+    siteAddress: ['', Validators.required],
+    clientWhatsApp: ['', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
+    propertyType: ['Residential', Validators.required]
   });
 
   readonly userForm: FormGroup = this.fb.group({
@@ -923,6 +1027,9 @@ export class ProjectsComponent implements OnInit {
                 if (parsed.description !== undefined) description = parsed.description;
               }
             } catch (e) { }
+
+            // Prefer the first-class clientName field over legacy JSON
+            if (p.clientName) client = p.clientName;
 
             return {
               ...p,
@@ -1152,7 +1259,12 @@ export class ProjectsComponent implements OnInit {
       status: 'Active',
       category: 'Residential',
       isPublicPortfolio: false,
-      description: ''
+      description: '',
+      governorate: '',
+      cityOrZone: '',
+      siteAddress: '',
+      clientWhatsApp: '',
+      propertyType: 'Residential'
     });
     this.projectValidationErrors.set([]);
     this.isProjectModalOpen.set(true);
@@ -1190,7 +1302,13 @@ export class ProjectsComponent implements OnInit {
       startDate: new Date(formVal.startDate).toISOString(),
       endDate: formVal.endDate ? new Date(formVal.endDate).toISOString() : null,
       managerId: null,
-      tenantId: null
+      tenantId: null,
+      governorate: formVal.governorate,
+      cityOrZone: formVal.cityOrZone,
+      siteAddress: formVal.siteAddress,
+      clientName: formVal.client,
+      clientWhatsApp: formVal.clientWhatsApp,
+      propertyType: formVal.propertyType
     };
 
     this.projectService.createProject(dto).subscribe({

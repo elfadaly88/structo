@@ -8,6 +8,12 @@ export interface ProjectDto {
   managerId: string | null;
   status: string;
   publicReviewToken?: string | null;
+  governorate?: string;
+  cityOrZone?: string;
+  siteAddress?: string;
+  clientName?: string;
+  clientWhatsApp?: string;
+  propertyType?: string;
 }
 
 export interface ProjectCreateDto {
@@ -17,6 +23,12 @@ export interface ProjectCreateDto {
   endDate: string | null;
   managerId: string | null;
   tenantId?: string | null;
+  governorate: string;
+  cityOrZone: string;
+  siteAddress: string;
+  clientName: string;
+  clientWhatsApp: string;
+  propertyType: string;
 }
 
 export interface ProjectClientViewDto {
