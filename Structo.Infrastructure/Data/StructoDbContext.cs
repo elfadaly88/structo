@@ -46,6 +46,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<Settlement>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SettlementLine>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         // Notifications: SuperAdmin sees all (null TenantId = global), tenant users see only their own
         modelBuilder.Entity<Notification>().HasQueryFilter(e =>
             CurrentTenantId == null ||
@@ -276,17 +277,34 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    private void SetTenantIdOnSave()
-    {
-        var entries = ChangeTracker.Entries<ITenantEntity>()
-            .Where(e => e.State == EntityState.Added);
+   private void SetTenantIdOnSave()
+{
+    // 1. الميكانزم القديم الطبيعي لكل الجداول
+    var entries = ChangeTracker.Entries<ITenantEntity>()
+        .Where(e => e.State == EntityState.Added);
 
-        foreach (var entry in entries)
+    foreach (var entry in entries)
+    {
+        if (CurrentTenantId.HasValue && CurrentTenantId.Value != Guid.Empty)
         {
-            if (CurrentTenantId.HasValue && CurrentTenantId.Value != Guid.Empty)
+            entry.Entity.TenantId = CurrentTenantId.Value;
+        }
+    }
+
+    // 2. 🚀 الحل السحري لحل لغم الـ FK في الـ Master-Detail (Settlement Lines)
+    var settlementEntries = ChangeTracker.Entries<Settlement>()
+        .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+    foreach (var entry in settlementEntries)
+    {
+        if (entry.Entity.Lines != null && entry.Entity.Lines.Any())
+        {
+            foreach (var line in entry.Entity.Lines)
             {
-                entry.Entity.TenantId = CurrentTenantId.Value;
+                // نجبر السطر ياخد نفس الـ TenantId بتاع الـ Settlement الأب فوراً
+                line.TenantId = entry.Entity.TenantId;
             }
         }
     }
+}
 }
