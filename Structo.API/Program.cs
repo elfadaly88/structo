@@ -345,11 +345,17 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
 
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");    
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");   
+    c.RoutePrefix = string.Empty; 
 });//}
 
 app.UseHttpsRedirection();
 
+// 🚀 تفعيل التوجيه فقط في البيئة المحلية، وتعطيله على Railway لترك المهمة للبروكسي الخارجي
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".js"] = "application/javascript";
 app.UseStaticFiles(new StaticFileOptions
