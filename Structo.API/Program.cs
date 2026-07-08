@@ -16,10 +16,17 @@ using Structo.Core.Validators;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.StaticFiles;
 using Structo.API.Hubs;
+
+// 1. FIRST: Preserve JWT Claim Type Map - ABSOLUTELY AT THE TOP
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ------------------------------
+// 2. SERVICE REGISTRATION
+// ------------------------------
+
+// Add MVC Controllers with Filters
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<ValidationFilterAttribute>();
@@ -30,37 +37,37 @@ builder.Services.AddControllers(options =>
     })
     .ConfigureApiBehaviorOptions(options =>
     {
-        options.SuppressModelStateInvalidFilter = true; // Supress default 400 ProblemDetails
+        options.SuppressModelStateInvalidFilter = true;
     });
+
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
         policy.WithOrigins("http://localhost:4200", "https://structo-production.up.railway.app")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials()); // Required for SignalR WebSocket auth
+              .AllowCredentials());
 });
-//builder.Services.AddSignalR();
+
+// SignalR with Keep-Alives
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
-    options.KeepAliveInterval = TimeSpan.FromSeconds(15); // يبعت بينج كل 15 ثانية عشان يصحصح الـ Proxy
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // وقت انتظار العميل
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
 });
+
+// Data Protection
 builder.Services.AddDataProtection()
     .PersistKeysToDbContext<StructoDbContext>();
-// Register FluentValidation
 
-
-
-
-
+// FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<ProjectCreateDtoValidator>();
 
-builder.Services.AddEndpointsApiExplorer();
-
 // Swagger with JWT Support
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -89,7 +96,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configure Entity Framework and PostgreSQL
+// Entity Framework and PostgreSQL
 builder.Services.AddDbContext<StructoDbContext>(options =>
 {
     var databaseUrl = builder.Configuration["DATABASE_URL"];
@@ -114,31 +121,18 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
 
     options.UseNpgsql(connectionString, npgsqlOptions =>
         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null))
-
-        // 👇 السطر السحري الجديد لمنع المشكلة جوه .NET 9 👇
         .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
-// Add HTTP Context Accessor and Tenant Accessor
+
+// HTTP Context and Tenant Services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
 builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<StructoDbContext>());
+
+// Cloudflare R2 Settings
 builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
 
-// AWS S3/R2 Configuration
-// builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
-// {
-//     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
-//     var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
-//     var config = new Amazon.S3.AmazonS3Config
-//     {
-//         ServiceURL = serviceUrl,
-//         UseHttp = false, // Force HTTPS
-//         ForcePathStyle = true, // Required for Cloudflare R2 compatibility
-//         AuthenticationRegion = "auto"
-//     };
-//     var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
-//     return new Amazon.S3.AmazonS3Client(credentials, config);
-// });
+// Cloud Storage Service
 builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
@@ -156,10 +150,9 @@ builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
     var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
     return new Amazon.S3.AmazonS3Client(credentials, config);
 });
-
 builder.Services.AddScoped<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.CloudflareR2StorageService>();
 
-// Phase 2: Auth and User Management Services
+// Core Business Services
 builder.Services.AddScoped<Structo.Core.Interfaces.ITokenProvider, Structo.Infrastructure.Auth.JwtTokenProvider>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IAuthService, Structo.Core.Services.AuthService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IUserService, Structo.Core.Services.UserService>();
@@ -168,7 +161,7 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialTransactionService,
 builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.Core.Services.SettlementService>();
 
-// Notification System (SignalR + OneSignal + DB)
+// Notification Services
 builder.Services.AddHttpClient("OneSignal");
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo.API.Services.NotificationService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.Core.Services.NotificationEngine>();
@@ -197,8 +190,6 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
-
-        // 🔥 ضيف السطرين السحريين دول هنا جوه الاوبجكت 👇
         NameClaimType = "name",
         RoleClaimType = "role"
     };
@@ -210,7 +201,6 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.Request.Path;
             
-            // Match our notification hub path prefix
             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
             {
                 context.Token = accessToken;
@@ -222,17 +212,20 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// ------------------------------
+// 3. BUILD APP
+// ------------------------------
 var app = builder.Build();
 
-// Seed SuperAdmin
+// ------------------------------
+// 4. DATABASE INITIALIZATION
+// ------------------------------
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
     try
     {
-        // 👇 السطر السحري اللي كان ناقصك عشان يلحق يكريت جدول الـ DataProtectionKeys أوتوماتيك 👇
         context.Database.EnsureCreated();
-
         context.Database.Migrate();
     }
     catch (Exception ex)
@@ -252,13 +245,12 @@ using (var scope = app.Services.CreateScope())
                 Email = "superadmin",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("SuperAdmin@123"),
                 Role = UserRole.SuperAdmin,
-                TenantId = null // Global
+                TenantId = null
             };
             context.Users.Add(superAdmin);
             context.SaveChanges();
         }
 
-        // Seed Tenant 1 and Owner 1
         if (!context.Tenants.Any(t => t.Name == "Tenant 1"))
         {
             var t1 = new Tenant { Name = "Tenant 1", SubscriptionPlan = SubscriptionPlan.Premium, MaxActiveProjects = 50 };
@@ -276,12 +268,10 @@ using (var scope = app.Services.CreateScope())
             };
             context.Users.Add(owner1);
 
-            // Optional: Seed a project for testing
             context.Projects.Add(new Project { TenantId = t1.Id, Name = "Tenant 1 Alpha Project", Description = "T1 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();
         }
 
-        // Seed Tenant 2 and Owner 2
         if (!context.Tenants.Any(t => t.Name == "Tenant 2"))
         {
             var t2 = new Tenant { Name = "Tenant 2", SubscriptionPlan = SubscriptionPlan.Free, MaxActiveProjects = 2 };
@@ -299,7 +289,6 @@ using (var scope = app.Services.CreateScope())
             };
             context.Users.Add(owner2);
 
-            // Optional: Seed a project for testing
             context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();
         }
@@ -336,43 +325,84 @@ using (var scope = app.Services.CreateScope())
     catch { /* Ignore if table doesn't exist yet */ }
 }
 
-// Configure the HTTP request pipeline.
+// ------------------------------
+// 5. HTTP PIPELINE CONFIGURATION
+// ------------------------------
+
+// Exception Handling First
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-//if (app.Environment.IsDevelopment())
-//{
+// Swagger (always enabled for this project)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");   
-   // c.RoutePrefix = string.Empty; 
-});//}
-
-//app.UseHttpsRedirection();
-
-// 🚀 تفعيل التوجيه فقط في البيئة المحلية، وتعطيله على Railway لترك المهمة للبروكسي الخارجي
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-var provider = new FileExtensionContentTypeProvider();
-provider.Mappings[".js"] = "application/javascript";
-app.UseStaticFiles(new StaticFileOptions
-{
-    ContentTypeProvider = provider
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");
+    // NO RoutePrefix = string.Empty - keep default /swagger
 });
 
+// NO HTTPS Redirection - TLS Termination at Railway Edge Proxy!
+
+// Static Files Configuration
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".js"] = "application/javascript";
+
+// Check: Do we have files in wwwroot/browser/?
+var angularOutputPath = Path.Combine(app.Environment.WebRootPath, "browser");
+var browserIndexPath = Path.Combine(angularOutputPath, "index.html");
+var rootIndexPath = Path.Combine(app.Environment.WebRootPath, "index.html");
+
+// Serve from correct location (prefer wwwroot/ if you manually copied files there, otherwise wwwroot/browser/)
+if (File.Exists(rootIndexPath))
+{
+    // Serve directly from wwwroot/ (manual copy case)
+    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+}
+else if (File.Exists(browserIndexPath))
+{
+    // Serve from wwwroot/browser/ (new Angular default output)
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        ContentTypeProvider = provider,
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath),
+        RequestPath = ""
+    });
+}
+else
+{
+    // Fallback: Serve whatever is in wwwroot
+    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+}
+
+// CORS, Auth, Authorization
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// MAP CONTROLLERS and HUB FIRST (BEFORE SPA FALLBACK!)
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
-//app.MapFallbackToFile("index.html");
+
+// MAP SPA FALLBACK: Serve index.html from correct location
+if (File.Exists(rootIndexPath))
+{
+    app.MapFallbackToFile("index.html");
+}
+else if (File.Exists(browserIndexPath))
+{
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath)
+    });
+}
+
+// Expose Service Provider for Global Access
 Structo.API.Program.AppServices = app.Services;
+
 app.Run();
 
+// ------------------------------
+// 6. GLOBAL SERVICE PROVIDER & HELPERS
+// ------------------------------
 namespace Structo.API 
 { 
     public partial class Program 
