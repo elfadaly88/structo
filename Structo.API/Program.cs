@@ -346,10 +346,10 @@ app.UseSwaggerUI(c =>
 {
 
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");   
-    c.RoutePrefix = string.Empty; 
+   // c.RoutePrefix = string.Empty; 
 });//}
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // 🚀 تفعيل التوجيه فقط في البيئة المحلية، وتعطيله على Railway لترك المهمة للبروكسي الخارجي
 if (app.Environment.IsDevelopment())
@@ -369,7 +369,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
-app.MapFallbackToFile("index.html");
+//app.MapFallbackToFile("index.html");
 Structo.API.Program.AppServices = app.Services;
 app.Run();
 
