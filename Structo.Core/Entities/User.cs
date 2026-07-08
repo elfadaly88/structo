@@ -23,6 +23,11 @@ public class User
     public string? SyndicateId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public string? ManualAddress { get; set; }
+    public string? MapLocationUrl { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+
     // Navigation properties
     public Tenant? Tenant { get; set; }
     public ICollection<Project> ManagedProjects { get; set; } = [];

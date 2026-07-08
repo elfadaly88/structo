@@ -26,6 +26,11 @@ public class Tenant
     public string? TaxCard { get; set; }
     public string AccountType { get; set; } = "Company";
 
+    public string? ManualAddress { get; set; }
+    public string? MapLocationUrl { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+
     // Navigation properties
     public ICollection<User> Users { get; set; } = [];
     public ICollection<Project> Projects { get; set; } = [];

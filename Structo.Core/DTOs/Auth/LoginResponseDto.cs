@@ -9,4 +9,6 @@ public class LoginResponseDto
     public string Role { get; set; } = string.Empty;
     public Guid? TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
+    public bool IsApproved { get; set; }
+    public bool IsProfileComplete { get; set; }
 }

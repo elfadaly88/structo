@@ -155,6 +155,27 @@ interface ApiResponse<T> {
                   </div>
                 </div>
 
+                <!-- Physical Address & Map Selector Trigger -->
+                <div class="grid grid-cols-1 gap-4 pt-1">
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">العنوان الفعلي / Physical Address (Optional)</label>
+                    <div class="flex gap-2">
+                      <input type="text" formControlName="manualAddress" placeholder="أدخل العنوان يدوياً أو اختر من الخريطة"
+                        class="flex-1 px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                      
+                      <button type="button" (click)="openMapModal()"
+                        class="px-3 py-2.5 bg-indigo-950/40 text-indigo-400 border border-indigo-900/35 hover:bg-indigo-900/30 transition-all duration-200 rounded-xl text-xs font-bold font-cairo shrink-0 cursor-pointer active:scale-95 flex items-center gap-1">
+                        📍 الخريطة / Map
+                      </button>
+                    </div>
+                    @if (registerForm.get('latitude')?.value) {
+                      <div class="mt-2 text-[10px] text-slate-500 font-mono">
+                        Coordinates: {{ registerForm.get('latitude')?.value }} , {{ registerForm.get('longitude')?.value }}
+                      </div>
+                    }
+                  </div>
+                </div>
+
                 <!-- Mobile Number -->
                 <div>
                   <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم الهاتف المحمول / Mobile Number</label>
@@ -319,6 +340,58 @@ interface ApiResponse<T> {
         </div>
       </div>
     </div>
+
+    <!-- MAP SELECTOR MODAL -->
+    @if (isMapModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div (click)="closeMapModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+
+        <!-- Modal Content -->
+        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl z-10 font-cairo">
+          <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-bold text-white">تحديد الموقع الجغرافي / Drop Pin on Map</h3>
+            <button type="button" (click)="closeMapModal()" class="text-slate-500 hover:text-white">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <!-- Simulated Map Visual -->
+          <div class="relative h-64 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center mb-4">
+            <!-- Simulated Grid Pattern -->
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
+            <!-- Radar sweep circles -->
+            <div class="absolute w-48 h-48 rounded-full border border-indigo-500/20 animate-pulse"></div>
+            <div class="absolute w-24 h-24 rounded-full border border-purple-500/10"></div>
+            <!-- Map marker -->
+            <div class="relative z-10 flex flex-col items-center">
+              <svg class="w-10 h-10 text-rose-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+              <span class="mt-2 text-[10px] bg-slate-900/90 text-slate-300 px-2 py-0.5 rounded border border-slate-800 font-mono">30.0444° N, 31.2357° E</span>
+            </div>
+            <!-- Dynamic map labels mockup -->
+            <div class="absolute top-4 left-4 text-[9px] text-slate-600 font-sans">El Tahrir, Downtown Cairo</div>
+            <div class="absolute bottom-4 right-4 text-[9px] text-indigo-500/60 font-sans font-bold">Google Maps API Hybrid</div>
+          </div>
+
+          <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+            انقر على زر إسقاط الدبوس لتحديد إحداثيات موقعك التلقائية وملء حقول العنوان ومحافظة القاهرة تلقائياً.
+          </p>
+
+          <div class="flex gap-3 justify-end text-xs">
+            <button type="button" (click)="closeMapModal()"
+              class="px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition-all">
+              إلغاء / Cancel
+            </button>
+            <button type="button" (click)="simulatePinDrop()"
+              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/15">
+              إسقاط الدبوس / Drop Pin & Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .font-cairo {
@@ -348,6 +421,33 @@ export class TenantRegisterComponent {
     return score;
   });
 
+  readonly isMapModalOpen = signal(false);
+
+  openMapModal(): void {
+    this.isMapModalOpen.set(true);
+  }
+
+  closeMapModal(): void {
+    this.isMapModalOpen.set(false);
+  }
+
+  simulatePinDrop(): void {
+    const lat = 30.0444 + (Math.random() - 0.5) * 0.05;
+    const lng = 31.2357 + (Math.random() - 0.5) * 0.05;
+    const computedAddr = `شارع التسعين، التجمع الخامس، القاهرة / Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const mapUrl = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+    this.registerForm.patchValue({
+      manualAddress: computedAddr,
+      mapLocationUrl: mapUrl,
+      latitude: lat,
+      longitude: lng,
+      location: 'Cairo'
+    });
+
+    this.isMapModalOpen.set(false);
+  }
+
   readonly registerForm = this.fb.nonNullable.group({
     tenantName: ['', [Validators.required, Validators.maxLength(100)]],
     adminFirstName: ['', [Validators.required, Validators.maxLength(50)]],
@@ -361,7 +461,11 @@ export class TenantRegisterComponent {
     commercialRegister: [''],
     taxCard: [''],
     nationalId: [''],
-    syndicateId: ['']
+    syndicateId: [''],
+    manualAddress: [''],
+    mapLocationUrl: [''],
+    latitude: [null as number | null],
+    longitude: [null as number | null]
   });
 
   constructor() {
@@ -402,7 +506,11 @@ export class TenantRegisterComponent {
       commercialRegister: this.registerForm.value.commercialRegister || null,
       taxCard: this.registerForm.value.taxCard || null,
       nationalId: this.registerForm.value.nationalId || null,
-      syndicateId: this.registerForm.value.syndicateId || null
+      syndicateId: this.registerForm.value.syndicateId || null,
+      manualAddress: this.registerForm.value.manualAddress || null,
+      mapLocationUrl: this.registerForm.value.mapLocationUrl || null,
+      latitude: this.registerForm.value.latitude || null,
+      longitude: this.registerForm.value.longitude || null
     };
 
     this.http.post<ApiResponse<string>>(`${environment.apiUrl}/Auth/register-tenant`, payload)

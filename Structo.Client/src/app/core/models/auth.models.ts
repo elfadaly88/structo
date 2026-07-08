@@ -17,6 +17,8 @@ export interface AuthResponse {
   role: string;
   tenantId: string | null;
   name: string;
+  isApproved: boolean;
+  isProfileComplete: boolean;
 }
 
 export interface UserSession {
@@ -25,5 +27,7 @@ export interface UserSession {
   tenantId: string | null;
   email: string;
   name: string;
+  isApproved: boolean;
+  isProfileComplete: boolean;
 }
 

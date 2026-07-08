@@ -15,7 +15,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
     public async Task<(bool Success, LoginResponseDto? Data, string Message)> LoginAsync(LoginDto dto)
     {
         var usersDbSet = context.Set<User>();
-        var user = await usersDbSet.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await usersDbSet.IgnoreQueryFilters().Include(u => u.Tenant).FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
         {
@@ -29,7 +29,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
 
         if (user.TenantId.HasValue)
         {
-            var tenant = await context.Set<Tenant>().IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == user.TenantId.Value);
+            var tenant = user.Tenant ?? await context.Set<Tenant>().IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == user.TenantId.Value);
             if (tenant != null)
             {
                 if (tenant.Status == TenantStatus.Suspended)
@@ -43,6 +43,33 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             }
         }
 
+        bool isApproved = user.IsActive;
+        bool isProfileComplete = false;
+
+        if (user.Role == UserRole.SuperAdmin)
+        {
+            isProfileComplete = true;
+        }
+        else if (user.Tenant != null)
+        {
+            var tenant = user.Tenant;
+            isApproved = user.IsActive && tenant.Status == TenantStatus.Active;
+
+            if (tenant.AccountType == "Freelancer")
+            {
+                isProfileComplete = !string.IsNullOrEmpty(user.NationalId) && 
+                                    !string.IsNullOrEmpty(user.ManualAddress) && 
+                                    user.Latitude.HasValue;
+            }
+            else
+            {
+                isProfileComplete = !string.IsNullOrEmpty(tenant.TaxCard) && 
+                                    !string.IsNullOrEmpty(tenant.CommercialRegister) && 
+                                    !string.IsNullOrEmpty(tenant.ManualAddress) && 
+                                    tenant.Latitude.HasValue;
+            }
+        }
+
         var token = tokenProvider.GenerateToken(user);
 
         var responseDto = new LoginResponseDto
@@ -51,7 +78,9 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             UserId = user.Id,
             Role = user.Role.ToString(),
             TenantId = user.TenantId,
-            Name = $"{user.FirstName} {user.LastName}"
+            Name = $"{user.FirstName} {user.LastName}",
+            IsApproved = isApproved,
+            IsProfileComplete = isProfileComplete
         };
 
         return (true, responseDto, "AUTH.LOGIN_SUCCESS");
@@ -96,7 +125,11 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             MobileNumber = dto.MobileNumber,
             CommercialRegister = dto.CommercialRegister,
             TaxCard = dto.TaxCard,
-            AccountType = dto.AccountType
+            AccountType = dto.AccountType,
+            ManualAddress = dto.ManualAddress,
+            MapLocationUrl = dto.MapLocationUrl,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude
         };
 
         var tenantsDbSet = context.Set<Tenant>();
@@ -117,7 +150,11 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             CreatedAt = DateTime.UtcNow,
             ContactPhone = dto.MobileNumber,
             NationalId = dto.NationalId,
-            SyndicateId = dto.SyndicateId
+            SyndicateId = dto.SyndicateId,
+            ManualAddress = dto.ManualAddress,
+            MapLocationUrl = dto.MapLocationUrl,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude
         };
 
         usersDbSet.Add(user);

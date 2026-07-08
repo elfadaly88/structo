@@ -146,3 +146,20 @@ Verify that new project site metadata (Location, Address, Client WhatsApp, and P
    - The location badge (`📍 Cairo - Fifth Settlement`) displays in the header.
    - The property type badge (`🏢 Administrative`) displays alongside it.
    - The exact physical site address shows clearly next to them.
+
+---
+
+### 📋 Test Case 7: Google Maps Selector & Profile Completeness Alert
+
+#### Purpose
+Verify that registration accepts Google Maps address metadata, and dynamic warnings display for incomplete profiles.
+
+#### Test Execution Steps
+1. **Navigate to `/register`**.
+2. **Click "📍 Map / الخريطة"** trigger button to open the map selector modal.
+3. **Click "Drop Pin & Confirm"** (which drops a simulated marker, resolves address, coordinates and updates form controls).
+4. **Fill in basic required credentials** (leaving tax card/national ID blank) and complete registration.
+5. **Log in** with the registered user profile.
+6. **Expected Result**: 
+   - An amber warning strip is displayed persistently at the top of the screen: *"⚠️ حسابك مفعل ومقبول، ولكن يرجى استكمال باقي بياناتك القانونية والعنوان على الخريطة لتجنب تعليق الحساب مستقبلاً."*
+   - The warning stays visible until all legal fields (NationalId or TaxCard) are filled out.

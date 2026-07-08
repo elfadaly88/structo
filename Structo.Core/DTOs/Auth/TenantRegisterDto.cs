@@ -39,4 +39,9 @@ public class TenantRegisterDto
     public string? TaxCard { get; set; }
     public string? NationalId { get; set; }
     public string? SyndicateId { get; set; }
+
+    public string? ManualAddress { get; set; }
+    public string? MapLocationUrl { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }

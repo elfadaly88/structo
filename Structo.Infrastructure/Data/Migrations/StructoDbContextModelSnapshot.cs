@@ -562,12 +562,24 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LogoUrl")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ManualAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MapLocationUrl")
                         .HasColumnType("text");
 
                     b.Property<int>("MaxActiveProjects")
@@ -639,6 +651,18 @@ namespace Structo.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ManualAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MapLocationUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("NationalId")
                         .HasColumnType("text");
