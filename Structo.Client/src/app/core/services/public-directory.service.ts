@@ -15,9 +15,23 @@ export interface TenantDto {
   companyDescription: string;
   contactPhone: string | null;
   whatsAppPhone: string | null;
+  location?: string | null;
   rating: number;
   createdAt: string;
   status: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  accountType?: string | null;
+  mobileNumber?: string | null;
+  commercialRegister?: string | null;
+  taxCard?: string | null;
+  nationalId?: string | null;
+  syndicateId?: string | null;
+  manualAddress?: string | null;
+  mapLocationUrl?: string | null;
+  adminEmail?: string | null;
+  adminFirstName?: string | null;
+  adminLastName?: string | null;
 }
 
 export interface PublicProjectDto {

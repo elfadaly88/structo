@@ -1,4 +1,3 @@
-
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +5,15 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { TenantDto } from '../../../core/services/public-directory.service';
 import { ProjectDto } from '../../../core/models/project.models';
+
+interface ModeratedProject {
+  id: string;
+  name: string;
+  clientRating?: number | null;
+  clientName?: string | null;
+  clientReviewNotes?: string | null;
+  isReviewHidden?: boolean;
+}
 
 @Component({
   selector: 'app-tenants',
@@ -22,7 +30,6 @@ import { ProjectDto } from '../../../core/models/project.models';
         </div>
       </div>
 
-      <!-- Quick Metrics Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
           <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">إجمالي الشركات / Total Companies</span>
@@ -38,7 +45,6 @@ import { ProjectDto } from '../../../core/models/project.models';
         </div>
       </div>
 
-      <!-- Error & Success Alerts -->
       @if (errorMessage()) {
         <div class="bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl p-4 text-sm font-semibold flex items-center justify-between">
           <span>{{ errorMessage() }}</span>
@@ -56,7 +62,6 @@ import { ProjectDto } from '../../../core/models/project.models';
         </div>
       }
 
-      <!-- Datatable -->
       <div class="bg-slate-900/20 border border-slate-850 rounded-2xl overflow-hidden shadow-xl">
         <div class="px-6 py-4 border-b border-slate-850 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <h3 class="text-base font-bold text-white font-cairo">سجل الشركات والمؤسسات</h3>
@@ -96,7 +101,7 @@ import { ProjectDto } from '../../../core/models/project.models';
                         @if (tenant.logoUrl) {
                           <img [src]="tenant.logoUrl" class="w-8 h-8 rounded-lg object-cover">
                         } @else {
-                          <div class="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase">{{ tenant.name.substring(0,2) }}</div>
+                          <div class="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase">{{ tenant.name.substring(0, 2) }}</div>
                         }
                         <span class="font-bold text-white text-sm">{{ tenant.name }}</span>
                       </div>
@@ -124,7 +129,6 @@ import { ProjectDto } from '../../../core/models/project.models';
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center justify-center gap-2">
-                        <!-- Toggle Status -->
                         <button
                           (click)="toggleStatus(tenant.id)"
                           [disabled]="isTogglingId() === tenant.id"
@@ -144,7 +148,6 @@ import { ProjectDto } from '../../../core/models/project.models';
                           }
                         </button>
 
-                        <!-- Inspect / Profile -->
                         <button
                           (click)="inspectTenant(tenant)"
                           class="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-indigo-400 border border-indigo-900/30 rounded-xl text-[10px] font-bold font-cairo transition-all duration-200 active:scale-95 cursor-pointer">
@@ -163,118 +166,210 @@ import { ProjectDto } from '../../../core/models/project.models';
           </div>
         }
       </div>
-    </div>
 
-    <!-- MODAL: INSPECT TENANT / PLATFORM GOVERNANCE ROOM -->
-    @if (selectedTenant()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <!-- Backdrop -->
-        <div (click)="closeInspector()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+      @if (selectedTenant()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div (click)="closeInspector()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
-        <!-- Modal container -->
-        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 md:p-8 shadow-2xl shadow-black/80 z-10 max-h-[85vh] overflow-y-auto">
-          <!-- Modal Header -->
-          <div class="flex items-start justify-between mb-6 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">Platform Audit & Moderation Control</span>
-              <h3 class="text-xl font-bold text-white font-cairo mt-1">
-                {{ selectedTenant()!.name }}
-              </h3>
-            </div>
-            <button
-              (click)="closeInspector()"
-              class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors duration-150 cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
-
-          <!-- Loading Inspector Data -->
-          @if (isLoadingAudit()) {
-            <div class="flex justify-center items-center py-12">
-              <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </div>
-          } @else if (auditProfile()) {
-            <div class="space-y-6 font-sans">
-              <!-- Audit Stats Cards -->
-              <div class="grid grid-cols-3 gap-4">
-                <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
-                  <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">عدد المشاريع</span>
-                  <div class="text-xl font-bold text-slate-200 mt-0.5">{{ auditProfile().totalProjectsCount }}</div>
-                </div>
-                <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
-                  <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">المستخدمين النشطين</span>
-                  <div class="text-xl font-bold text-slate-200 mt-0.5">{{ auditProfile().activeUserCount }}</div>
-                </div>
-                <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
-                  <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">التقييم العام</span>
-                  <div class="text-xl font-bold text-amber-400 mt-0.5">⭐ {{ auditProfile().globalRatingScore | number:'1.1-1' }}</div>
-                </div>
+          <div class="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/80">
+            <div class="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-6 py-4 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">Platform Audit & Moderation Control</span>
+                <h3 class="text-xl font-bold text-white font-cairo mt-1">{{ selectedTenant()!.name }}</h3>
               </div>
+              <button
+                (click)="closeInspector()"
+                class="self-start sm:self-auto px-3 py-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
+                إغلاق التفاصيل / Close
+              </button>
+            </div>
 
-              <!-- Storage Metric Bar -->
-              <div class="bg-slate-950/40 border border-slate-850 rounded-xl p-4.5 space-y-2">
-                <div class="flex justify-between items-center text-xs">
-                  <span class="text-slate-400 font-cairo font-bold">💾 السعة التخزينية المستخدمة / Storage Metrics</span>
-                  <span class="font-mono text-indigo-400 font-bold">{{ auditProfile().storageUsedMb }} MB / 100 MB</span>
+            <div class="p-6 space-y-6">
+              @if (isLoadingAudit()) {
+                <div class="flex justify-center items-center py-16">
+                  <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </div>
-                <div class="h-2 w-full bg-slate-900 rounded-full overflow-hidden flex">
-                  <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500"
-                    [style.width.%]="storagePercentage()">
-                  </div>
-                </div>
-                <div class="flex justify-between items-center text-[10px] text-slate-500 font-cairo">
-                  <span>تم احتسابها من ملفات المقايسات المرفوعة والعهدة.</span>
-                  <span>نسبة الاستهلاك: {{ storagePercentage() | number:'1.0-0' }}%</span>
-                </div>
-              </div>
-
-              <!-- Review Moderation Hub -->
-              <div class="space-y-3.5">
-                <span class="text-xs font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800 pb-2">
-                  ✍️ مراجعة التقييمات العامة والتعليقات / Review Moderation Hub
-                </span>
-                
-                <div class="space-y-3 max-h-[30vh] overflow-y-auto pr-2">
-                  @for (project of moderatedProjects(); track project.id) {
-                    <div class="bg-slate-950/65 border border-slate-850 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                          <span class="text-xs font-bold text-white">{{ project.name }}</span>
-                          <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-amber-400 font-bold border border-slate-800">⭐ {{ project.clientRating }}</span>
-                        </div>
-                        <p class="text-xs text-slate-400 font-cairo font-medium">العميل: {{ project.clientName || 'غير مسجل' }}</p>
-                        <p class="text-[11px] text-slate-300 italic bg-slate-900/30 rounded p-2 border border-slate-850/60 font-cairo mt-1.5">{{ project.clientReviewNotes || 'لم يكتب تعليقاً نصياً' }}</p>
+              } @else {
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                  <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                      <div>
+                        <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">بيانات التسجيل / Registration Data</span>
+                        <h4 class="text-lg font-bold text-white font-cairo mt-1">ملف العميل الأساسي</h4>
                       </div>
+                      @if (selectedTenant()!.status === 'Active') {
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/25 text-[10px]">Active</span>
+                      } @else if (selectedTenant()!.status === 'Suspended') {
+                        <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-bold border border-rose-500/25 text-[10px]">Suspended</span>
+                      } @else {
+                        <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold border border-amber-500/25 text-[10px]">{{ selectedTenant()!.status }}</span>
+                      }
+                    </div>
 
-                      <div class="shrink-0 flex items-center gap-2 self-end sm:self-center">
-                        @if (project.isReviewHidden) {
-                          <span class="text-[10px] font-bold text-rose-400 bg-rose-950/20 border border-rose-900/30 px-2 py-0.5 rounded font-cairo">مخفي / Hidden</span>
-                        } @else {
-                          <span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 px-2 py-0.5 rounded font-cairo">نشط / Visible</span>
-                        }
-                        
-                        <button
-                          (click)="toggleReview(project)"
-                          [disabled]="isModeratingId() === project.id"
-                          class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-800 hover:text-white rounded-xl text-[10px] font-bold font-cairo cursor-pointer active:scale-95 transition-all flex items-center gap-1">
-                          @if (isModeratingId() === project.id) {
-                            <svg class="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">اسم المسؤول</div>
+                        <div class="mt-1 text-slate-200 font-semibold font-cairo">{{ selectedTenant()!.adminFirstName || 'غير متوفر' }} {{ selectedTenant()!.adminLastName || '' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">البريد الإلكتروني</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.adminEmail || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">نوع الحساب</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.accountType || 'Company' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">المحافظة / Location</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.location || selectedTenant()!.region || 'غير محدد' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رقم الهاتف</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.mobileNumber || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الاشتراك</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.subscriptionPlan }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3" [class.sm:col-span-2]="true">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">السجل التجاري</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.commercialRegister || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">البطاقة الضريبية</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.taxCard || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الرقم القومي</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.nationalId || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رقم النقابة</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.syndicateId || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:col-span-2">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">العنوان التفصيلي</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.manualAddress || 'N/A' }}</div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:col-span-2">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رابط الموقع على الخريطة</div>
+                        <div class="mt-1 text-slate-200 break-all">
+                          @if (selectedTenant()!.mapLocationUrl) {
+                            <a [href]="selectedTenant()!.mapLocationUrl!" target="_blank" rel="noreferrer" class="text-indigo-300 hover:text-indigo-200 underline decoration-dotted">افتح الموقع / Open map location</a>
                           } @else {
-                            {{ project.isReviewHidden ? 'إظهار / Show' : 'حجب / Hide' }}
+                            N/A
                           }
-                        </button>
+                        </div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الإحداثيات</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">
+                          {{ selectedTenant()!.latitude ?? 'N/A' }} , {{ selectedTenant()!.longitude ?? 'N/A' }}
+                        </div>
+                      </div>
+                      <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">تاريخ الانضمام</div>
+                        <div class="mt-1 text-slate-200 font-semibold font-mono">{{ selectedTenant()!.createdAt | date:'dd/MM/yyyy' }}</div>
                       </div>
                     </div>
-                  } @empty {
-                    <p class="text-xs text-slate-500 text-center font-cairo py-6 bg-slate-950/30 rounded-xl border border-slate-850">لا توجد تقييمات مكتوبة مسجلة لهذه الشركة بعد.</p>
-                  }
+
+                    <div class="bg-slate-950/40 border border-slate-850 rounded-xl p-4 text-sm text-slate-300 font-cairo">
+                      بيانات التسجيل الحساسة تبقى داخل شاشة السوبرأدمِن فقط، ولا تظهر في الجدول العام أو أي واجهة عامة للمستخدمين.
+                    </div>
+                  </div>
+
+                  <div class="space-y-4">
+                    <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-4">
+                      <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                          <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">الإحصائيات والمراجعات / Audit & Moderation</span>
+                          <h4 class="text-lg font-bold text-white font-cairo mt-1">سجل الأداء والمراجعات</h4>
+                        </div>
+                      </div>
+
+                      @if (auditProfile()) {
+                        <div class="grid grid-cols-3 gap-3">
+                          <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
+                            <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">عدد المشاريع</span>
+                            <div class="text-xl font-bold text-slate-200 mt-0.5">{{ auditProfile().totalProjectsCount }}</div>
+                          </div>
+                          <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
+                            <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">المستخدمين النشطين</span>
+                            <div class="text-xl font-bold text-slate-200 mt-0.5">{{ auditProfile().activeUserCount }}</div>
+                          </div>
+                          <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
+                            <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">التقييم العام</span>
+                            <div class="text-xl font-bold text-amber-400 mt-0.5">⭐ {{ auditProfile().globalRatingScore | number:'1.1-1' }}</div>
+                          </div>
+                        </div>
+
+                        <div class="bg-slate-950/40 border border-slate-850 rounded-xl p-4.5 space-y-2">
+                          <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-cairo font-bold">💾 السعة التخزينية المستخدمة / Storage Metrics</span>
+                            <span class="font-mono text-indigo-400 font-bold">{{ auditProfile().storageUsedMb }} MB / 100 MB</span>
+                          </div>
+                          <div class="h-2 w-full bg-slate-900 rounded-full overflow-hidden flex">
+                            <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500" [style.width.%]="storagePercentage()"></div>
+                          </div>
+                          <div class="flex justify-between items-center text-[10px] text-slate-500 font-cairo">
+                            <span>تم احتسابها من ملفات المقايسات المرفوعة والعهدة.</span>
+                            <span>نسبة الاستهلاك: {{ storagePercentage() | number:'1.0-0' }}%</span>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="bg-slate-950/40 border border-slate-850 rounded-xl p-4 text-sm text-slate-400 font-cairo">
+                          لا توجد بيانات مراجعة متاحة بعد.
+                        </div>
+                      }
+                    </div>
+
+                    <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-3">
+                      <span class="text-xs font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800 pb-2">✍️ Review Moderation Hub</span>
+
+                      <div class="space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+                        @for (project of moderatedProjects(); track project.id) {
+                          <div class="bg-slate-950/65 border border-slate-850 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="space-y-1">
+                              <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-white">{{ project.name }}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-amber-400 font-bold border border-slate-800">⭐ {{ project.clientRating }}</span>
+                              </div>
+                              <p class="text-xs text-slate-400 font-cairo font-medium">العميل: {{ project.clientName || 'غير مسجل' }}</p>
+                              <p class="text-[11px] text-slate-300 italic bg-slate-900/30 rounded p-2 border border-slate-850/60 font-cairo mt-1.5">{{ project.clientReviewNotes || 'لم يكتب تعليقاً نصياً' }}</p>
+                            </div>
+
+                            <div class="shrink-0 flex items-center gap-2 self-end sm:self-center">
+                              @if (project.isReviewHidden) {
+                                <span class="text-[10px] font-bold text-rose-400 bg-rose-950/20 border border-rose-900/30 px-2 py-0.5 rounded font-cairo">مخفي / Hidden</span>
+                              } @else {
+                                <span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 px-2 py-0.5 rounded font-cairo">نشط / Visible</span>
+                              }
+
+                              <button
+                                (click)="toggleReview(project)"
+                                [disabled]="isModeratingId() === project.id"
+                                class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-800 hover:text-white rounded-xl text-[10px] font-bold font-cairo cursor-pointer active:scale-95 transition-all flex items-center gap-1">
+                                @if (isModeratingId() === project.id) {
+                                  <svg class="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                } @else {
+                                  {{ project.isReviewHidden ? 'إظهار / Show' : 'حجب / Hide' }}
+                                }
+                              </button>
+                            </div>
+                          </div>
+                        } @empty {
+                          <p class="text-xs text-slate-500 text-center font-cairo py-6 bg-slate-950/30 rounded-xl border border-slate-850">لا توجد تقييمات مكتوبة مسجلة لهذه الشركة بعد.</p>
+                        }
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              }
             </div>
-          }
+          </div>
         </div>
-      </div>
-    }
+      }
+    </div>
   `
 })
 export class TenantsComponent implements OnInit {
@@ -286,17 +381,14 @@ export class TenantsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
-  // Search & Filter
   searchQuery = '';
 
-  // Inspector Panel / Audit State
   readonly selectedTenant = signal<TenantDto | null>(null);
   readonly auditProfile = signal<any | null>(null);
   readonly isLoadingAudit = signal(false);
-  readonly moderatedProjects = signal<ProjectDto[]>([]);
+  readonly moderatedProjects = signal<ModeratedProject[]>([]);
   readonly isModeratingId = signal<string | null>(null);
 
-  // Computed signals
   readonly filteredTenants = computed(() => {
     const query = this.searchQuery.toLowerCase().trim();
     if (!query) return this.tenants();
@@ -314,7 +406,7 @@ export class TenantsComponent implements OnInit {
     const profile = this.auditProfile();
     if (!profile) return 0;
     const pct = (profile.storageUsedMb / 100) * 100;
-    return Math.min(Math.max(pct, 2), 100); // keep visual bar between 2% and 100%
+    return Math.min(Math.max(pct, 2), 100);
   });
 
   ngOnInit(): void {
@@ -368,7 +460,6 @@ export class TenantsComponent implements OnInit {
     this.auditProfile.set(null);
     this.moderatedProjects.set([]);
 
-    // Fetch audit profile stats
     this.tenantsService.getTenantAuditProfile(tenant.id).subscribe({
       next: (res) => {
         if (res.success) {
@@ -380,11 +471,9 @@ export class TenantsComponent implements OnInit {
       }
     });
 
-    // Fetch projects for review moderation
     this.tenantsService.getTenantProjects(tenant.id).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          // Filter projects that have clientReviewNotes to populate moderation list
           this.moderatedProjects.set(res.data.filter(p => !!p.clientReviewNotes));
         }
       }
@@ -397,13 +486,12 @@ export class TenantsComponent implements OnInit {
     this.moderatedProjects.set([]);
   }
 
-  toggleReview(project: ProjectDto): void {
+  toggleReview(project: ModeratedProject): void {
     this.isModeratingId.set(project.id);
     this.tenantsService.toggleReviewVisibility(project.id).subscribe({
       next: (res) => {
         this.isModeratingId.set(null);
         if (res.success) {
-          // Toggle local state
           const updated = this.moderatedProjects().map(p =>
             p.id === project.id ? { ...p, isReviewHidden: !p.isReviewHidden } : p
           );

@@ -1,9 +1,10 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, AfterViewInit, OnDestroy, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import * as L from 'leaflet';
 
 interface ApiResponse<T> {
   data: T;
@@ -12,10 +13,17 @@ interface ApiResponse<T> {
   errors?: string[];
 }
 
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+}
+
 @Component({
   selector: 'app-tenant-register',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule],
+  encapsulation: ViewEncapsulation.None,
   template: `
     <div class="min-h-screen bg-slate-950 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white">
       
@@ -348,44 +356,70 @@ interface ApiResponse<T> {
         <div (click)="closeMapModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal Content -->
-        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl z-10 font-cairo">
-          <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+        <div class="relative max-w-2xl w-full max-h-[90vh] flex flex-col bg-slate-950 border border-slate-800 rounded-xl shadow-2xl overflow-hidden z-10 font-cairo">
+          <!-- Header -->
+          <div class="p-4 border-b border-slate-900 flex justify-between items-center">
             <h3 class="text-sm font-bold text-white">تحديد الموقع الجغرافي / Drop Pin on Map</h3>
             <button type="button" (click)="closeMapModal()" class="text-slate-500 hover:text-white">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
 
-          <!-- Simulated Map Visual -->
-          <div class="relative h-64 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center mb-4">
-            <!-- Simulated Grid Pattern -->
-            <div class="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
-            <!-- Radar sweep circles -->
-            <div class="absolute w-48 h-48 rounded-full border border-indigo-500/20 animate-pulse"></div>
-            <div class="absolute w-24 h-24 rounded-full border border-purple-500/10"></div>
-            <!-- Map marker -->
-            <div class="relative z-10 flex flex-col items-center">
-              <svg class="w-10 h-10 text-rose-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-              </svg>
-              <span class="mt-2 text-[10px] bg-slate-900/90 text-slate-300 px-2 py-0.5 rounded border border-slate-800 font-mono">30.0444° N, 31.2357° E</span>
+          <!-- Body -->
+          <div class="p-4 flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+            <!-- Search Input -->
+            <div class="relative shrink-0">
+              <input 
+                type="text" 
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchQueryChange($event)"
+                (keydown.enter)="onSearchSubmit()"
+                placeholder="ابحث عن مدينة أو منطقة / Search for city or area..."
+                class="w-full px-4 py-3 bg-slate-900 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-cairo text-sm"
+              />
+              <button 
+                type="button" 
+                (click)="onSearchSubmit()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </button>
             </div>
-            <!-- Dynamic map labels mockup -->
-            <div class="absolute top-4 left-4 text-[9px] text-slate-600 font-sans">El Tahrir, Downtown Cairo</div>
-            <div class="absolute bottom-4 right-4 text-[9px] text-indigo-500/60 font-sans font-bold">Google Maps API Hybrid</div>
+
+            <!-- Search Results Dropdown -->
+            @if (searchResults.length > 0) {
+              <div class="bg-slate-900 border border-slate-800 rounded-lg max-h-48 overflow-y-auto shrink-0">
+                @for (result of searchResults; track $index) {
+                  <button 
+                    type="button" 
+                    (click)="selectSearchResult(result)"
+                    class="w-full px-4 py-3 text-left text-sm text-slate-200 hover:bg-slate-800 transition-colors font-cairo border-b border-slate-800 last:border-b-0"
+                  >
+                    {{ result.display_name }}
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Descriptive Text -->
+            <p class="text-xs text-slate-400 leading-relaxed shrink-0">
+              انقر على زر إسقاط الدبوس لتحديد إحداثيات موقعك التلقائية وملء حقول العنوان ومحافظة القاهرة تلقائياً.
+            </p>
+
+            <!-- Interactive Leaflet Map -->
+            <div #mapContainer id="interactive-map" class="w-full h-[280px] rounded-lg border border-slate-900 shrink-0"></div>
           </div>
 
-          <p class="text-xs text-slate-400 mb-5 leading-relaxed">
-            انقر على زر إسقاط الدبوس لتحديد إحداثيات موقعك التلقائية وملء حقول العنوان ومحافظة القاهرة تلقائياً.
-          </p>
-
-          <div class="flex gap-3 justify-end text-xs">
+          <!-- Footer Actions -->
+          <div class="p-4 border-t border-slate-900 flex justify-end gap-3 bg-slate-950/80">
             <button type="button" (click)="closeMapModal()"
-              class="px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition-all">
+              class="px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition-all text-xs">
               إلغاء / Cancel
             </button>
-            <button type="button" (click)="simulatePinDrop()"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/15">
+            <button type="button" (click)="confirmPinDrop()"
+              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/15 text-xs">
               إسقاط الدبوس / Drop Pin & Confirm
             </button>
           </div>
@@ -397,11 +431,33 @@ interface ApiResponse<T> {
     .font-cairo {
       font-family: 'Cairo', 'Inter', sans-serif;
     }
+    .leaflet-container {
+      height: 280px !important;
+      width: 100% !important;
+      display: block !important;
+      z-index: 9999 !important;
+    }
+    #interactive-map {
+      height: 280px !important;
+      width: 100% !important;
+      display: block !important;
+    }
   `]
 })
-export class TenantRegisterComponent {
+
+export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  
+  @ViewChild('mapContainer') mapContainer!: ElementRef<HTMLDivElement>;
+  
+  private map: L.Map | null = null;
+  private marker: L.Marker | null = null;
+  private currentLatLng: L.LatLng = L.latLng(30.0444, 31.2357); // Cairo/Giza
+  
+  searchQuery = '';
+  searchResults: NominatimResult[] = [];
+  private searchTimeout: any = null;
   
   readonly isLoading = signal(false);
   readonly isSuccess = signal(false);
@@ -425,17 +481,73 @@ export class TenantRegisterComponent {
 
   openMapModal(): void {
     this.isMapModalOpen.set(true);
+    setTimeout(() => {
+      this.initMap();
+      // Ensure map size is calculated correctly after modal layout
+      if (this.map) {
+        this.map.invalidateSize();
+      }
+    }, 200);
   }
 
   closeMapModal(): void {
     this.isMapModalOpen.set(false);
   }
 
-  simulatePinDrop(): void {
-    const lat = 30.0444 + (Math.random() - 0.5) * 0.05;
-    const lng = 31.2357 + (Math.random() - 0.5) * 0.05;
-    const computedAddr = `شارع التسعين، التجمع الخامس، القاهرة / Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    const mapUrl = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.initMap();
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  }
+
+  private initMap(): void {
+    if (this.map || !this.mapContainer) return;
+    
+    // Fix broken Leaflet marker icon with CDN assets
+    const iconDefault = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      shadowSize: [41, 41]
+    });
+    L.Marker.prototype.options.icon = iconDefault;
+    
+    this.map = L.map(this.mapContainer.nativeElement).setView(this.currentLatLng, 12);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(this.map);
+    
+    // Create red marker
+    this.marker = L.marker(this.currentLatLng, { draggable: true }).addTo(this.map);
+    
+    // Listen to drag events
+    this.marker.on('dragend', (e) => {
+      this.currentLatLng = this.marker!.getLatLng();
+    });
+    
+    // Invalidate size after initializing to fix display issues
+    this.map.invalidateSize();
+  }
+
+  confirmPinDrop(): void {
+    const lat = this.currentLatLng.lat;
+    const lng = this.currentLatLng.lng;
+    const computedAddr = `موقع تم إسقاطه على الخريطة / Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
     this.registerForm.patchValue({
       manualAddress: computedAddr,
@@ -446,6 +558,56 @@ export class TenantRegisterComponent {
     });
 
     this.isMapModalOpen.set(false);
+  }
+
+  onSearchQueryChange(query: string): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    if (query.length < 2) {
+      this.searchResults = [];
+      return;
+    }
+    this.searchTimeout = setTimeout(() => this.searchNominatim(query), 500);
+  }
+
+  onSearchSubmit(): void {
+    if (this.searchQuery.length >= 2) {
+      this.searchNominatim(this.searchQuery);
+    }
+  }
+
+  private searchNominatim(query: string): void {
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`;
+    this.http.get<any>(url).subscribe({
+      next: (response) => {
+        this.searchResults = response.features.map((feature: any) => ({
+          lat: feature.geometry.coordinates[1].toString(),
+          lon: feature.geometry.coordinates[0].toString(),
+          display_name: feature.properties.name || feature.properties.street || feature.properties.city || feature.properties.country || query
+        }));
+      },
+      error: (err) => {
+        console.error('Photon search failed:', err);
+      }
+    });
+  }
+
+  selectSearchResult(result: NominatimResult): void {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    this.currentLatLng = L.latLng(lat, lng);
+    
+    if (this.map) {
+      this.map.flyTo(this.currentLatLng, 14);
+    }
+    
+    if (this.marker) {
+      this.marker.setLatLng(this.currentLatLng);
+    }
+    
+    this.searchResults = [];
+    this.searchQuery = result.display_name;
   }
 
   readonly registerForm = this.fb.nonNullable.group({

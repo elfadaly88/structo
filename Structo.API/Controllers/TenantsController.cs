@@ -44,7 +44,19 @@ public class TenantsController(StructoDbContext context) : ControllerBase
     {
         var tenants = await context.Tenants
             .OrderByDescending(t => t.CreatedAt)
-            .Select(t => new TenantDto
+            .ToListAsync();
+
+        var tenantIds = tenants.Select(t => t.Id).ToList();
+        var tenantOwners = await context.Users.IgnoreQueryFilters()
+            .Where(u => u.TenantId.HasValue && tenantIds.Contains(u.TenantId.Value) && u.Role == UserRole.TenantOwner)
+            .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
+
+        var tenantOwnerLookup = tenantOwners
+            .GroupBy(u => u.TenantId!.Value)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var mappedTenants = tenants.Select(t => new TenantDto
             {
                 Id = t.Id,
                 Name = t.Name,
@@ -56,13 +68,27 @@ public class TenantsController(StructoDbContext context) : ControllerBase
                 CompanyDescription = t.CompanyDescription,
                 Rating = t.Rating,
                 Status = t.Status.ToString(),
-                CreatedAt = t.CreatedAt
+                CreatedAt = t.CreatedAt,
+                AdminEmail = tenantOwnerLookup.TryGetValue(t.Id, out var owner) ? owner.Email : null,
+                AdminFirstName = tenantOwnerLookup.TryGetValue(t.Id, out var ownerFirst) ? ownerFirst.FirstName : null,
+                AdminLastName = tenantOwnerLookup.TryGetValue(t.Id, out var ownerLast) ? ownerLast.LastName : null,
+                Location = t.Location,
+                MobileNumber = t.MobileNumber,
+                CommercialRegister = t.CommercialRegister,
+                TaxCard = t.TaxCard,
+                NationalId = t.AccountType == "Freelancer" ? t.Users.Where(u => u.Role == UserRole.TenantOwner).Select(u => u.NationalId).FirstOrDefault() : null,
+                SyndicateId = t.AccountType == "Freelancer" ? t.Users.Where(u => u.Role == UserRole.TenantOwner).Select(u => u.SyndicateId).FirstOrDefault() : null,
+                ManualAddress = t.ManualAddress,
+                MapLocationUrl = t.MapLocationUrl,
+                AccountType = t.AccountType,
+                Latitude = t.Latitude,
+                Longitude = t.Longitude
             })
-            .ToListAsync();
+            .ToList();
 
         return Ok(new ApiResponse<List<TenantDto>>
         {
-            Data = tenants,
+            Data = mappedTenants,
             Success = true,
             Message = "Tenants retrieved successfully"
         });
