@@ -6,6 +6,16 @@ import { TenantsService } from '../../../core/services/tenants.service';
 import { TenantDto } from '../../../core/services/public-directory.service';
 import { ProjectDto } from '../../../core/models/project.models';
 
+type TenantActionType = 'Activate' | 'Reject' | 'Suspend';
+
+interface ActiveActionContext {
+  tenantName: string;
+  ownerName: string;
+  phone: string;
+  status: TenantActionType;
+  mapLink: string | null;
+}
+
 interface ModeratedProject {
   id: string;
   name: string;
@@ -130,28 +140,9 @@ interface ModeratedProject {
                     <td class="px-6 py-4">
                       <div class="flex items-center justify-center gap-2">
                         <button
-                          (click)="toggleStatus(tenant.id)"
-                          [disabled]="isTogglingId() === tenant.id"
-                          class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold font-cairo transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-1 border"
-                          [class.bg-rose-950/20]="tenant.status === 'Active'"
-                          [class.text-rose-400]="tenant.status === 'Active'"
-                          [class.border-rose-900/30]="tenant.status === 'Active'"
-                          [class.hover:bg-rose-900/30]="tenant.status === 'Active'"
-                          [class.bg-emerald-950/20]="tenant.status === 'Suspended'"
-                          [class.text-emerald-400]="tenant.status === 'Suspended'"
-                          [class.border-emerald-900/30]="tenant.status === 'Suspended'"
-                          [class.hover:bg-emerald-900/30]="tenant.status === 'Suspended'">
-                          @if (isTogglingId() === tenant.id) {
-                            <svg class="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                          } @else {
-                            {{ tenant.status === 'Active' ? 'تعليق / Suspend' : 'تفعيل / Activate' }}
-                          }
-                        </button>
-
-                        <button
                           (click)="inspectTenant(tenant)"
                           class="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-indigo-400 border border-indigo-900/30 rounded-xl text-[10px] font-bold font-cairo transition-all duration-200 active:scale-95 cursor-pointer">
-                          فحص الحساب / Inspect
+                          مراجعة / Inspect
                         </button>
                       </div>
                     </td>
@@ -167,7 +158,7 @@ interface ModeratedProject {
         }
       </div>
 
-      @if (selectedTenant()) {
+      @if (selectedTenant(); as tenant) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div (click)="closeInspector()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
@@ -175,7 +166,7 @@ interface ModeratedProject {
             <div class="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-6 py-4 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">Platform Audit & Moderation Control</span>
-                <h3 class="text-xl font-bold text-white font-cairo mt-1">{{ selectedTenant()!.name }}</h3>
+                <h3 class="text-xl font-bold text-white font-cairo mt-1">{{ tenant.name }}</h3>
               </div>
               <button
                 (click)="closeInspector()"
@@ -185,6 +176,59 @@ interface ModeratedProject {
             </div>
 
             <div class="p-6 space-y-6">
+              @if (activeActionContext(); as actionContext) {
+                <div
+                  class="rounded-2xl border px-5 py-4 shadow-lg shadow-black/20 transition-all duration-300"
+                  [class.border-emerald-500/30]="actionContext.status === 'Activate'"
+                  [class.bg-emerald-500/10]="actionContext.status === 'Activate'"
+                  [class.border-amber-500/30]="actionContext.status === 'Reject' || actionContext.status === 'Suspend'"
+                  [class.bg-amber-500/10]="actionContext.status === 'Reject'"
+                  [class.bg-rose-500/10]="actionContext.status === 'Suspend'">
+                  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div class="space-y-1">
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-cairo">Operational Action Tray</div>
+                      <div class="text-sm font-bold text-white font-cairo">
+                        @if (actionContext.status === 'Activate') {
+                          تم اعتماد طلب الانضمام للشركة {{ actionContext.tenantName }}.
+                        } @else if (actionContext.status === 'Reject') {
+                          تم إرسال طلب التعديل للشركة {{ actionContext.tenantName }}.
+                        } @else {
+                          تم تعليق الشركة {{ actionContext.tenantName }} مؤقتاً.
+                        }
+                      </div>
+                      <div class="text-xs text-slate-300 font-cairo">المسؤول: {{ actionContext.ownerName }} · الهاتف: {{ actionContext.phone }}</div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                      <button
+                        (click)="launchWhatsAppAction()"
+                        class="px-4 py-2 rounded-xl text-xs font-bold font-cairo border transition-all duration-200 active:scale-95 cursor-pointer"
+                        [class.bg-emerald-500/15]="actionContext.status === 'Activate'"
+                        [class.text-emerald-300]="actionContext.status === 'Activate'"
+                        [class.border-emerald-500/30]="actionContext.status === 'Activate'"
+                        [class.hover:bg-emerald-500/20]="actionContext.status === 'Activate'"
+                        [class.bg-amber-500/15]="actionContext.status === 'Reject' || actionContext.status === 'Suspend'"
+                        [class.text-amber-300]="actionContext.status === 'Reject' || actionContext.status === 'Suspend'"
+                        [class.border-amber-500/30]="actionContext.status === 'Reject' || actionContext.status === 'Suspend'"
+                        [class.hover:bg-amber-500/20]="actionContext.status === 'Reject' || actionContext.status === 'Suspend'"
+                        [class.bg-rose-500/15]="actionContext.status === 'Suspend'"
+                        [class.text-rose-300]="actionContext.status === 'Suspend'"
+                        [class.border-rose-500/30]="actionContext.status === 'Suspend'">
+                        إرسال عبر WhatsApp
+                      </button>
+
+                      @if (actionContext.status === 'Reject' && actionContext.mapLink) {
+                        <button
+                          (click)="launchTargetMapLocation()"
+                          class="px-4 py-2 rounded-xl text-xs font-bold font-cairo border border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 transition-all duration-200 active:scale-95 cursor-pointer">
+                          فتح مكان التعديل المطلوب على الخريطة / Open Targeted Map Location
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
               @if (isLoadingAudit()) {
                 <div class="flex justify-center items-center py-16">
                   <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -197,65 +241,65 @@ interface ModeratedProject {
                         <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">بيانات التسجيل / Registration Data</span>
                         <h4 class="text-lg font-bold text-white font-cairo mt-1">ملف العميل الأساسي</h4>
                       </div>
-                      @if (selectedTenant()!.status === 'Active') {
+                      @if (tenant.status === 'Active') {
                         <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/25 text-[10px]">Active</span>
-                      } @else if (selectedTenant()!.status === 'Suspended') {
+                      } @else if (tenant.status === 'Suspended') {
                         <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-bold border border-rose-500/25 text-[10px]">Suspended</span>
                       } @else {
-                        <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold border border-amber-500/25 text-[10px]">{{ selectedTenant()!.status }}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-bold border border-amber-500/25 text-[10px]">{{ tenant.status }}</span>
                       }
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">اسم المسؤول</div>
-                        <div class="mt-1 text-slate-200 font-semibold font-cairo">{{ selectedTenant()!.adminFirstName || 'غير متوفر' }} {{ selectedTenant()!.adminLastName || '' }}</div>
+                        <div class="mt-1 text-slate-200 font-semibold font-cairo">{{ tenant.adminFirstName || 'غير متوفر' }} {{ tenant.adminLastName || '' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">البريد الإلكتروني</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.adminEmail || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.adminEmail || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">نوع الحساب</div>
-                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.accountType || 'Company' }}</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ tenant.accountType || 'Company' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">المحافظة / Location</div>
-                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.location || selectedTenant()!.region || 'غير محدد' }}</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ tenant.location || tenant.region || 'غير محدد' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رقم الهاتف</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.mobileNumber || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.mobileNumber || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الاشتراك</div>
-                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.subscriptionPlan }}</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ tenant.subscriptionPlan }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3" [class.sm:col-span-2]="true">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">السجل التجاري</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.commercialRegister || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.commercialRegister || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">البطاقة الضريبية</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.taxCard || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.taxCard || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الرقم القومي</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.nationalId || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.nationalId || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رقم النقابة</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ selectedTenant()!.syndicateId || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.syndicateId || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:col-span-2">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">العنوان التفصيلي</div>
-                        <div class="mt-1 text-slate-200 font-semibold">{{ selectedTenant()!.manualAddress || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-semibold">{{ tenant.manualAddress || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:col-span-2">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رابط الموقع على الخريطة</div>
                         <div class="mt-1 text-slate-200 break-all">
-                          @if (selectedTenant()!.mapLocationUrl) {
-                            <a [href]="selectedTenant()!.mapLocationUrl!" target="_blank" rel="noreferrer" class="text-indigo-300 hover:text-indigo-200 underline decoration-dotted">افتح الموقع / Open map location</a>
+                          @if (tenant.mapLocationUrl) {
+                            <a [href]="tenant.mapLocationUrl" target="_blank" rel="noreferrer" class="text-indigo-300 hover:text-indigo-200 underline decoration-dotted">افتح الموقع / Open map location</a>
                           } @else {
                             N/A
                           }
@@ -264,14 +308,60 @@ interface ModeratedProject {
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الإحداثيات</div>
                         <div class="mt-1 text-slate-200 font-mono break-all">
-                          {{ selectedTenant()!.latitude ?? 'N/A' }} , {{ selectedTenant()!.longitude ?? 'N/A' }}
+                          {{ tenant.latitude ?? 'N/A' }} , {{ tenant.longitude ?? 'N/A' }}
                         </div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">تاريخ الانضمام</div>
-                        <div class="mt-1 text-slate-200 font-semibold font-mono">{{ selectedTenant()!.createdAt | date:'dd/MM/yyyy' }}</div>
+                        <div class="mt-1 text-slate-200 font-semibold font-mono">{{ tenant.createdAt | date:'dd/MM/yyyy' }}</div>
                       </div>
                     </div>
+
+                    <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-4 space-y-3">
+                      <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                          <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">Administrative Action Set</span>
+                          <h4 class="text-lg font-bold text-white font-cairo mt-1">إجراءات المراجعة المباشرة</h4>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        @if (tenant.status !== 'Active') {
+                          <button
+                            (click)="onAction(tenant.id, 'Activate')"
+                            [disabled]="isActioningId() === tenant.id"
+                            class="px-3 py-2 rounded-xl text-xs font-bold font-cairo border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-2">
+                            @if (isActioningId() === tenant.id) {
+                              <svg class="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            }
+                            Activate
+                          </button>
+                        }
+
+                        @if (tenant.status !== 'Suspended') {
+                          <button
+                            (click)="onAction(tenant.id, 'Reject')"
+                            [disabled]="isActioningId() === tenant.id"
+                            class="px-3 py-2 rounded-xl text-xs font-bold font-cairo border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-2">
+                            @if (isActioningId() === tenant.id) {
+                              <svg class="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            }
+                            Reject
+                          </button>
+
+                          <button
+                            (click)="onAction(tenant.id, 'Suspend')"
+                            [disabled]="isActioningId() === tenant.id"
+                            class="px-3 py-2 rounded-xl text-xs font-bold font-cairo border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-2">
+                            @if (isActioningId() === tenant.id) {
+                              <svg class="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            }
+                            Suspend
+                          </button>
+                        }
+                      </div>
+
+                      </div>
 
                     <div class="bg-slate-950/40 border border-slate-850 rounded-xl p-4 text-sm text-slate-300 font-cairo">
                       بيانات التسجيل الحساسة تبقى داخل شاشة السوبرأدمِن فقط، ولا تظهر في الجدول العام أو أي واجهة عامة للمستخدمين.
@@ -377,9 +467,10 @@ export class TenantsComponent implements OnInit {
 
   readonly tenants = signal<TenantDto[]>([]);
   readonly isLoading = signal(false);
-  readonly isTogglingId = signal<string | null>(null);
+  readonly isActioningId = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+  readonly activeActionContext = signal<ActiveActionContext | null>(null);
 
   searchQuery = '';
 
@@ -432,28 +523,6 @@ export class TenantsComponent implements OnInit {
     });
   }
 
-  toggleStatus(id: string): void {
-    this.isTogglingId.set(id);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    this.tenantsService.toggleTenantStatus(id).subscribe({
-      next: (res) => {
-        this.isTogglingId.set(null);
-        if (res.success) {
-          this.successMessage.set(res.message || 'Status updated successfully.');
-          this.fetchTenants();
-        } else {
-          this.errorMessage.set(res.message || 'Failed to toggle status.');
-        }
-      },
-      error: (err) => {
-        this.isTogglingId.set(null);
-        this.errorMessage.set(err.error?.message || 'Error occurred toggling company status.');
-      }
-    });
-  }
-
   inspectTenant(tenant: TenantDto): void {
     this.selectedTenant.set(tenant);
     this.isLoadingAudit.set(true);
@@ -484,6 +553,144 @@ export class TenantsComponent implements OnInit {
     this.selectedTenant.set(null);
     this.auditProfile.set(null);
     this.moderatedProjects.set([]);
+    this.activeActionContext.set(null);
+    this.successMessage.set(null);
+  }
+
+  onAction(tenantId: string, actionType: TenantActionType): void {
+    const tenant = this.tenants().find(item => item.id === tenantId) ?? this.selectedTenant();
+
+    if (!tenant) {
+      this.errorMessage.set('Tenant not found.');
+      return;
+    }
+
+    this.isActioningId.set(tenantId);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    if (actionType === 'Activate') {
+      this.tenantsService.provisionTenant(tenantId).subscribe({
+        next: (res) => {
+          this.isActioningId.set(null);
+
+          if (!res.success) {
+            this.errorMessage.set(res.message || 'Failed to update company status.');
+            return;
+          }
+
+          const ownerName = [tenant.adminFirstName, tenant.adminLastName].filter(Boolean).join(' ').trim() || 'غير متوفر';
+          const phone = this.resolveActionPhone(tenant);
+          const updatedTenant: TenantDto = {
+            ...tenant,
+            status: 'Active'
+          };
+
+          this.tenants.update(list => list.map(item => item.id === tenantId ? updatedTenant : item));
+          if (this.selectedTenant()?.id === tenantId) {
+            this.selectedTenant.set(updatedTenant);
+          }
+
+          this.activeActionContext.set({
+            tenantName: tenant.name,
+            ownerName,
+            phone,
+            status: 'Activate',
+            mapLink: null
+          });
+          this.successMessage.set(res.message || 'Status updated successfully.');
+        },
+        error: (err: { error?: { message?: string } }) => {
+          this.isActioningId.set(null);
+          this.errorMessage.set(err.error?.message || 'Error occurred updating company status.');
+        }
+      });
+      return;
+    }
+
+    this.tenantsService.toggleTenantStatus(tenantId).subscribe({
+      next: (res) => {
+        this.isActioningId.set(null);
+
+        if (!res.success) {
+          this.errorMessage.set(res.message || 'Failed to update company status.');
+          return;
+        }
+
+        const ownerName = [tenant.adminFirstName, tenant.adminLastName].filter(Boolean).join(' ').trim() || 'غير متوفر';
+        const phone = this.resolveActionPhone(tenant);
+        const mapLink = actionType === 'Reject' ? this.buildMapLink(tenant.latitude, tenant.longitude) : null;
+        const updatedTenant: TenantDto = {
+          ...tenant,
+          status: 'Suspended'
+        };
+
+        this.tenants.update(list => list.map(item => item.id === tenantId ? updatedTenant : item));
+        if (this.selectedTenant()?.id === tenantId) {
+          this.selectedTenant.set(updatedTenant);
+        }
+
+        this.activeActionContext.set({
+          tenantName: tenant.name,
+          ownerName,
+          phone,
+          status: actionType,
+          mapLink
+        });
+        this.successMessage.set(res.message || 'Status updated successfully.');
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.isActioningId.set(null);
+        this.errorMessage.set(err.error?.message || 'Error occurred updating company status.');
+      }
+    });
+  }
+
+  launchWhatsAppAction(): void {
+    const actionContext = this.activeActionContext();
+    if (!actionContext || !actionContext.phone) {
+      return;
+    }
+
+    const message = this.buildWhatsAppMessage(actionContext);
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://api.whatsapp.com/send?phone=${actionContext.phone}&text=${encodedMessage}`, '_blank');
+  }
+
+  launchTargetMapLocation(): void {
+    const actionContext = this.activeActionContext();
+    if (!actionContext?.mapLink) {
+      return;
+    }
+
+    window.open(actionContext.mapLink, '_blank');
+  }
+
+  private buildWhatsAppMessage(actionContext: ActiveActionContext): string {
+    const loginUrl = new URL('/login', window.location.origin).toString();
+
+    if (actionContext.status === 'Activate') {
+      return `السلام عليكم أ/ ${actionContext.ownerName}، تم مراجعة وقبول طلب انضمام شركتك (${actionContext.tenantName}) إلى منصة Structo بنجاح! يمكنك الآن تسجيل الدخول واستكمال ملفك التجاري: ${loginUrl}`;
+    }
+
+    if (actionContext.status === 'Reject') {
+      return `السلام عليكم أ/ ${actionContext.ownerName}، بخصوص طلب انضمام شركتك (${actionContext.tenantName})، يرجى إعادة مراجعة وتعديل إحداثيات موقع المكتب على الخريطة المرفقة هنا: ${actionContext.mapLink}. شكراً لك!`;
+    }
+
+    return `السلام عليكم أ/ ${actionContext.ownerName}، تم تعليق حالة شركة (${actionContext.tenantName}) مؤقتاً من قبل الإدارة. يرجى التواصل مع فريق Structo لمراجعة التفاصيل.`;
+  }
+
+  private resolveActionPhone(tenant: TenantDto): string {
+    const rawPhone = tenant.whatsAppPhone ?? tenant.contactPhone ?? tenant.mobileNumber ?? '';
+    return rawPhone.replace(/\D/g, '');
+  }
+
+  private buildMapLink(latitude?: number | null, longitude?: number | null): string | null {
+    if (latitude == null || longitude == null) {
+      return null;
+    }
+
+    return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   }
 
   toggleReview(project: ModeratedProject): void {
