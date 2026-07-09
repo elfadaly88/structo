@@ -13,7 +13,7 @@ export interface TenantDto {
   bannerUrl: string;
   region: string;
   companyDescription: string;
-  contactPhone: string | null;
+  personalPhone: string | null;
   whatsAppPhone: string | null;
   location?: string | null;
   rating: number;
@@ -22,7 +22,6 @@ export interface TenantDto {
   latitude?: number | null;
   longitude?: number | null;
   accountType?: string | null;
-  mobileNumber?: string | null;
   commercialRegister?: string | null;
   taxCard?: string | null;
   nationalId?: string | null;
@@ -32,6 +31,7 @@ export interface TenantDto {
   adminEmail?: string | null;
   adminFirstName?: string | null;
   adminLastName?: string | null;
+  governorateId?: string | null;
 }
 
 export interface PublicProjectDto {

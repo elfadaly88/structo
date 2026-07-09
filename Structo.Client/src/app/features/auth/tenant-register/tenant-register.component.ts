@@ -184,14 +184,22 @@ interface NominatimResult {
                   </div>
                 </div>
 
-                <!-- Mobile Number -->
-                <div>
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم الهاتف المحمول / Mobile Number</label>
-                  <input type="text" formControlName="mobileNumber" placeholder="e.g. +201012345678"
-                    class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
-                  @if (isFieldInvalid('mobileNumber')) {
-                    <p class="text-[10px] text-rose-400 mt-1 font-medium font-cairo">رقم الهاتف مطلوب / Mobile is required.</p>
-                  }
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم الهاتف الشخصي / Personal Phone</label>
+                    <input type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
+                      class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C6.48 2 2 6.48 2 12c0 1.86.52 3.58 1.42 5.06L2 22l4.99-1.39A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm5.2 14.2c-.22.63-1.28 1.2-1.76 1.25-.47.05-1.05.07-1.7-.14-.4-.13-.91-.31-1.57-.59-2.77-1.19-4.58-3.98-4.72-4.17-.13-.19-1.13-1.52-1.13-2.9 0-1.38.72-2.06.97-2.34.25-.28.55-.35.74-.35h.53c.17 0 .42-.06.66.5.25.59.85 2.04.93 2.19.07.15.12.33.02.53-.1.2-.15.32-.3.49-.15.17-.32.38-.46.51-.15.15-.3.31-.13.61.17.29.76 1.26 1.63 2.05 1.12 1 2.05 1.31 2.36 1.46.3.15.48.13.66-.08.18-.2.77-.9.98-1.21.2-.31.4-.26.67-.15.27.1 1.72.81 2.02.96.3.14.5.22.57.34.07.12.07.71-.16 1.34z"/>
+                      </svg>
+                      رقم الواتساب / WhatsApp Phone
+                    </label>
+                    <input type="tel" formControlName="whatsAppPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
+                      class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-sans text-xs">
+                  </div>
                 </div>
 
                 <!-- Company-only Fields -->
@@ -619,7 +627,8 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
     subscriptionPlan: ['Free', Validators.required],
     accountType: ['Company', Validators.required],
     location: ['', Validators.required],
-    mobileNumber: ['', [Validators.required]],
+    personalPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
+    whatsAppPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
     commercialRegister: [''],
     taxCard: [''],
     nationalId: [''],
@@ -664,7 +673,8 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
       subscriptionPlan: String(this.registerForm.value.subscriptionPlan),
       accountType: this.registerForm.value.accountType,
       location: this.registerForm.value.location,
-      mobileNumber: this.registerForm.value.mobileNumber,
+      personalPhone: this.registerForm.value.personalPhone,
+      whatsAppPhone: this.registerForm.value.whatsAppPhone,
       commercialRegister: this.registerForm.value.commercialRegister || null,
       taxCard: this.registerForm.value.taxCard || null,
       nationalId: this.registerForm.value.nationalId || null,

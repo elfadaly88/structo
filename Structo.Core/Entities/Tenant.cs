@@ -14,14 +14,13 @@ public class Tenant
     public string BannerUrl { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
-    public string? ContactPhone { get; set; }
+    public string? PersonalPhone { get; set; }
     public string? WhatsAppPhone { get; set; }
     public double Rating { get; set; }
     public TenantStatus Status { get; set; } = TenantStatus.Active;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public string Location { get; set; } = string.Empty;
-    public string MobileNumber { get; set; } = string.Empty;
     public string? CommercialRegister { get; set; }
     public string? TaxCard { get; set; }
     public string AccountType { get; set; } = "Company";

@@ -13,7 +13,7 @@ public class TenantDto
     public string BannerUrl { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
-    public string? ContactPhone { get; set; }
+    public string? PersonalPhone { get; set; }
     public string? WhatsAppPhone { get; set; }
     public double Rating { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -22,7 +22,6 @@ public class TenantDto
     public string? AdminFirstName { get; set; }
     public string? AdminLastName { get; set; }
     public string? Location { get; set; }
-    public string? MobileNumber { get; set; }
     public string? CommercialRegister { get; set; }
     public string? TaxCard { get; set; }
     public string? NationalId { get; set; }

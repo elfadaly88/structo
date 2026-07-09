@@ -3600,7 +3600,7 @@ export class ProjectDetailsComponent implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           const userObj = res.data.find(u => `${u.firstName} ${u.lastName}`.trim() === pettyCash.issuedTo.trim());
-          const phone = userObj?.whatsAppPhone || userObj?.contactPhone;
+          const phone = userObj?.whatsAppPhone || userObj?.personalPhone;
           if (phone) {
             this.whatsappLink.openChat(phone, message);
           } else {

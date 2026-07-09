@@ -10,7 +10,7 @@ export interface UserDto {
   firstName: string;
   lastName: string;
   email: string;
-  contactPhone: string | null;
+  personalPhone: string | null;
   whatsAppPhone: string | null;
   role: 'SuperAdmin' | 'TenantOwner' | 'Manager' | 'Accountant' | 'SiteEngineer' | 'DesignEngineer';
   createdAt: string;
@@ -21,7 +21,7 @@ export interface UserCreateDto {
   lastName: string;
   email: string;
   password?: string;
-  contactPhone?: string | null;
+  personalPhone?: string | null;
   whatsAppPhone?: string | null;
   role: 'Manager' | 'Accountant' | 'SiteEngineer' | 'DesignEngineer';
 }

@@ -11,8 +11,13 @@ export interface TenantProfileUpdateDto {
   bannerUrl: string;
   region: string;
   companyDescription: string;
-  contactPhone: string | null;
+  governorateId?: string | null;
+  personalPhone: string | null;
   whatsAppPhone: string | null;
+  manualAddress?: string | null;
+  mapLocationUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 @Injectable({

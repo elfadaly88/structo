@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { ProjectDto, ProjectCreateDto } from '../../../core/models/project.models';
@@ -14,6 +15,18 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { take } from 'rxjs';
+import * as L from 'leaflet';
+
+interface MapSearchResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+}
+
+interface GovernorateOption {
+  id: string;
+  label: string;
+}
 export interface ProjectViewDto extends ProjectDto {
   client: string;
   budget: number;
@@ -21,6 +34,27 @@ export interface ProjectViewDto extends ProjectDto {
   category: string;
   isPublicPortfolio: boolean;
 }
+
+const GOVERNORATES: GovernorateOption[] = [
+  { id: 'Cairo', label: 'Cairo / القاهرة' },
+  { id: 'Giza', label: 'Giza / الجيزة' },
+  { id: 'Alexandria', label: 'Alexandria / الإسكندرية' },
+  { id: 'Qalyubia', label: 'Qalyubia / القليوبية' },
+  { id: 'Gharbia', label: 'Gharbia / الغربية' },
+  { id: 'Dakahlia', label: 'Dakahlia / الدقهلية' },
+  { id: 'Sharqia', label: 'Sharqia / الشرقية' },
+  { id: 'Monufia', label: 'Monufia / المنوفية' },
+  { id: 'Beheira', label: 'Beheira / البحيرة' },
+  { id: 'Kafr El Sheikh', label: 'Kafr El Sheikh / كفر الشيخ' },
+  { id: 'Damietta', label: 'Damietta / دمياط' },
+  { id: 'Port Said', label: 'Port Said / بورسعيد' },
+  { id: 'Ismailia', label: 'Ismailia / الإسماعيلية' },
+  { id: 'Suez', label: 'Suez / السويس' },
+  { id: 'Aswan', label: 'Aswan / أسوان' },
+  { id: 'Luxor', label: 'Luxor / الأقصر' },
+  { id: 'Red Sea', label: 'Red Sea / البحر الأحمر' },
+  { id: 'Matrouh', label: 'Matrouh / مطروح' }
+];
 
 @Component({
   selector: 'app-projects',
@@ -328,7 +362,7 @@ export interface ProjectViewDto extends ProjectDto {
                       </td>
                       <td class="px-6 py-4 font-medium text-slate-300">{{ usr.lastName }}</td>
                       <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.email }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.contactPhone || '—' }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.personalPhone || '—' }}</td>
                       <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.whatsAppPhone || '—' }}</td>
                       <td class="px-6 py-4 text-center">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-cairo"
@@ -435,7 +469,7 @@ export interface ProjectViewDto extends ProjectDto {
               </div>
               <div class="pb-1">
                 <h3 class="text-lg font-bold text-white font-cairo">{{ profileForm.get('name')?.value || 'Company Profile' }}</h3>
-                <p class="text-xs text-slate-500 font-cairo">{{ profileForm.get('region')?.value || 'Region not set' }}</p>
+                <p class="text-xs text-slate-500 font-cairo">{{ resolveGovernorateLabel(profileForm.get('governorateId')?.value || profileForm.get('region')?.value) || 'Region not set' }}</p>
               </div>
             </div>
 
@@ -452,20 +486,77 @@ export interface ProjectViewDto extends ProjectDto {
                   <input id="prof-name" type="text" formControlName="name" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="Company Name">
                 </div>
                 <div>
-                  <label for="prof-region" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_REGION' | translate }}</label>
-                  <input id="prof-region" type="text" formControlName="region" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="e.g. Cairo, Giza, Alexandria">
+                  <label for="prof-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Governorate</label>
+                  <select id="prof-gov" formControlName="governorateId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                    <option value="">-- Select governorate --</option>
+                    @for (gov of governorates; track gov.id) {
+                      <option [value]="gov.id">{{ gov.label }}</option>
+                    }
+                  </select>
                 </div>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label for="prof-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Contact Phone</label>
-                  <input id="prof-contact-phone" type="tel" formControlName="contactPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
+                  <label for="prof-personal-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Personal Phone</label>
+                  <input id="prof-personal-phone" type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
                 </div>
                 <div>
-                  <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">WhatsApp Phone</label>
+                  <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12 2C6.48 2 2 6.48 2 12c0 1.86.52 3.58 1.42 5.06L2 22l4.99-1.39A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm5.2 14.2c-.22.63-1.28 1.2-1.76 1.25-.47.05-1.05.07-1.7-.14-.4-.13-.91-.31-1.57-.59-2.77-1.19-4.58-3.98-4.72-4.17-.13-.19-1.13-1.52-1.13-2.9 0-1.38.72-2.06.97-2.34.25-.28.55-.35.74-.35h.53c.17 0 .42-.06.66.5.25.59.85 2.04.93 2.19.07.15.12.33.02.53-.1.2-.15.32-.3.49-.15.17-.32.38-.46.51-.15.15-.3.31-.13.61.17.29.76 1.26 1.63 2.05 1.12 1 2.05 1.31 2.36 1.46.3.15.48.13.66-.08.18-.2.77-.9.98-1.21.2-.31.4-.26.67-.15.27.1 1.72.81 2.02.96.3.14.5.22.57.34.07.12.07.71-.16 1.34z"/>
+                    </svg>
+                    WhatsApp Phone
+                  </label>
                   <input id="prof-whatsapp-phone" type="tel" formControlName="whatsAppPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
                 </div>
+              </div>
+
+              <div class="grid grid-cols-1 gap-5">
+                <div>
+                  <label for="prof-address" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Manual Address</label>
+                  <input id="prof-address" type="text" formControlName="manualAddress" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="Enter or update the corporate site address">
+                </div>
+              </div>
+
+              <div class="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider font-cairo">Interactive Location</span>
+                    <p class="text-[11px] text-slate-500 font-cairo mt-1">Search an address, drag the pin, or restore the saved corporate site.</p>
+                  </div>
+                </div>
+
+                <div class="relative">
+                  <input
+                    type="text"
+                    [value]="profileMapSearchQuery"
+                    (input)="onProfileMapSearchChange($event)"
+                    (keydown.enter)="onProfileMapSearchSubmit()"
+                    placeholder="Search by city, street, or landmark"
+                    class="w-full px-3 py-2.5 pr-10 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                  <button type="button" (click)="onProfileMapSearchSubmit()" class="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-white">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.2-5.2m1.2-4.8a6.8 6.8 0 11-13.6 0 6.8 6.8 0 0113.6 0z" /></svg>
+                  </button>
+                </div>
+
+                @if (profileMapSearchResults().length > 0) {
+                  <div class="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden max-h-44 overflow-y-auto">
+                    @for (result of profileMapSearchResults(); track result.display_name) {
+                      <button type="button" (click)="selectProfileMapSearchResult(result)" class="w-full text-left px-3 py-2.5 text-xs text-slate-300 hover:bg-slate-900 border-b border-slate-800 last:border-b-0 transition-colors font-cairo">
+                        {{ result.display_name }}
+                      </button>
+                    }
+                  </div>
+                }
+
+                <div #profileMapContainer id="profile-map" class="w-full h-72 rounded-2xl border border-slate-800"></div>
+
+                @if (profileForm.get('latitude')?.value && profileForm.get('longitude')?.value) {
+                  <div class="text-[11px] text-slate-500 font-mono">
+                    Coordinates: {{ profileForm.get('latitude')?.value }} , {{ profileForm.get('longitude')?.value }}
+                  </div>
+                }
               </div>
 
               <div>
@@ -803,11 +894,11 @@ export interface ProjectViewDto extends ProjectDto {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label for="usr-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Contact Phone</label>
+                <label for="usr-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Personal Phone</label>
                 <input
                   id="usr-contact-phone"
                   type="tel"
-                  formControlName="contactPhone"
+                  formControlName="personalPhone"
                   inputmode="numeric"
                   maxlength="11"
                   class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
@@ -887,8 +978,10 @@ export class ProjectsComponent implements OnInit {
   private readonly translateService = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly http = inject(HttpClient);
   private readonly confirmService = inject(ConfirmModalService);
   private readonly toastService = inject(ToastService);
+  @ViewChild('profileMapContainer') profileMapContainer?: ElementRef<HTMLDivElement>;
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
   readonly togglingUserId = signal<string | null>(null);
   readonly currentUserId = computed(() => this.authService.currentUser()?.userId || '');
@@ -919,6 +1012,15 @@ export class ProjectsComponent implements OnInit {
   // Signals for Profile
   readonly isSavingProfile = signal(false);
   readonly profileSuccessMessage = signal<string | null>(null);
+  readonly profileMapSearchResults = signal<MapSearchResult[]>([]);
+
+  readonly governorates = GOVERNORATES;
+
+  private profileMap: L.Map | null = null;
+  private profileMarker: L.Marker | null = null;
+  private profileMapSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+  private profileMapLatLng: L.LatLng = L.latLng(30.0444, 31.2357);
+  profileMapSearchQuery = '';
 
   // Computed counters
   readonly activeProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
@@ -949,7 +1051,7 @@ export class ProjectsComponent implements OnInit {
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    contactPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
+    personalPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
     whatsAppPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     role: ['Manager', Validators.required]
@@ -960,8 +1062,13 @@ export class ProjectsComponent implements OnInit {
     logoUrl: [''],
     bannerUrl: [''],
     region: [''],
-    contactPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
+    governorateId: [''],
+    personalPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
     whatsAppPhone: ['', [Validators.pattern(/^01\d{9}$/)]],
+    manualAddress: [''],
+    mapLocationUrl: [''],
+    latitude: [null as number | null],
+    longitude: [null as number | null],
     companyDescription: ['']
   });
 
@@ -998,7 +1105,168 @@ export class ProjectsComponent implements OnInit {
       this.router.navigate(['/dashboard/projects']);
     } else {
       this.router.navigate([`/dashboard/${tab}`]);
+      if (tab === 'profile') {
+        setTimeout(() => this.syncProfileMapFromForm(), 0);
+      }
     }
+  }
+
+  private resolveGovernorateId(rawValue: string | null | undefined): string {
+    if (!rawValue) {
+      return '';
+    }
+
+    const normalized = rawValue.trim().toLowerCase();
+    const match = GOVERNORATES.find(option =>
+      option.id.toLowerCase() === normalized ||
+      option.label.toLowerCase() === normalized ||
+      option.label.toLowerCase().startsWith(normalized)
+    );
+
+    return match?.id ?? rawValue;
+  }
+
+  resolveGovernorateLabel(rawValue: string | null | undefined): string {
+    if (!rawValue) {
+      return '';
+    }
+
+    const resolved = this.resolveGovernorateId(rawValue);
+    return GOVERNORATES.find(option => option.id === resolved)?.label ?? resolved;
+  }
+
+  private queueProfileMapSync(): void {
+    setTimeout(() => this.syncProfileMapFromForm(), 0);
+  }
+
+  private syncProfileMapFromForm(): void {
+    const latitude = this.profileForm.get('latitude')?.value as number | null;
+    const longitude = this.profileForm.get('longitude')?.value as number | null;
+    const hasCoordinates = latitude != null && longitude != null;
+
+    if (hasCoordinates) {
+      this.profileMapLatLng = L.latLng(latitude, longitude);
+      this.profileMapSearchQuery = this.profileForm.get('manualAddress')?.value || this.profileMapSearchQuery;
+    }
+
+    if (!this.profileMapContainer?.nativeElement) {
+      return;
+    }
+
+    if (!this.profileMap) {
+      this.initProfileMap();
+      return;
+    }
+
+    this.profileMap.invalidateSize();
+    this.profileMap.setView(this.profileMapLatLng, hasCoordinates ? 15 : 12);
+    if (this.profileMarker) {
+      this.profileMarker.setLatLng(this.profileMapLatLng);
+    }
+  }
+
+  private initProfileMap(): void {
+    if (!this.profileMapContainer?.nativeElement || this.profileMap) {
+      return;
+    }
+
+    const iconDefault = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      shadowSize: [41, 41]
+    });
+    L.Marker.prototype.options.icon = iconDefault;
+
+    this.profileMap = L.map(this.profileMapContainer.nativeElement).setView(this.profileMapLatLng, 12);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(this.profileMap);
+
+    this.profileMarker = L.marker(this.profileMapLatLng, { draggable: true }).addTo(this.profileMap);
+    this.profileMarker.on('dragend', () => {
+      const latLng = this.profileMarker!.getLatLng();
+      this.profileMapLatLng = latLng;
+      this.profileForm.patchValue({
+        latitude: latLng.lat,
+        longitude: latLng.lng,
+        manualAddress: `Coordinates: ${latLng.lat.toFixed(5)}, ${latLng.lng.toFixed(5)}`,
+        mapLocationUrl: `https://www.google.com/maps/search/?api=1&query=${latLng.lat},${latLng.lng}`
+      });
+    });
+
+    this.profileMap.invalidateSize();
+  }
+
+  onProfileMapSearchChange(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    this.profileMapSearchQuery = query;
+
+    if (this.profileMapSearchTimeout) {
+      clearTimeout(this.profileMapSearchTimeout);
+    }
+
+    if (query.length < 2) {
+      this.profileMapSearchResults.set([]);
+      return;
+    }
+
+    this.profileMapSearchTimeout = setTimeout(() => this.searchProfileMap(query), 400);
+  }
+
+  onProfileMapSearchSubmit(): void {
+    const query = this.profileMapSearchQuery.trim();
+    if (query.length >= 2) {
+      this.searchProfileMap(query);
+    }
+  }
+
+  private searchProfileMap(query: string): void {
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`;
+    this.http.get<any>(url).subscribe({
+      next: (response) => {
+        const results: MapSearchResult[] = (response.features || []).map((feature: any) => ({
+          lat: feature.geometry.coordinates[1].toString(),
+          lon: feature.geometry.coordinates[0].toString(),
+          display_name: feature.properties.name || feature.properties.street || feature.properties.city || feature.properties.country || query
+        }));
+
+        this.profileMapSearchResults.set(results);
+      },
+      error: () => {
+        this.profileMapSearchResults.set([]);
+      }
+    });
+  }
+
+  selectProfileMapSearchResult(result: MapSearchResult): void {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    this.profileMapLatLng = L.latLng(lat, lng);
+    this.profileMapSearchQuery = result.display_name;
+    this.profileMapSearchResults.set([]);
+
+    if (this.profileMap) {
+      this.profileMap.flyTo(this.profileMapLatLng, 15);
+    }
+
+    if (this.profileMarker) {
+      this.profileMarker.setLatLng(this.profileMapLatLng);
+    }
+
+    this.profileForm.patchValue({
+      latitude: lat,
+      longitude: lng,
+      manualAddress: result.display_name,
+      mapLocationUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    });
   }
 
   fetchProjects(): void {
@@ -1149,11 +1417,18 @@ export class ProjectsComponent implements OnInit {
             name: res.data.name,
             logoUrl: getCleanUrl(res.data.logoUrl),
             bannerUrl: getCleanUrl(res.data.bannerUrl),
-            region: res.data.region,
-            contactPhone: res.data.contactPhone,
+            region: this.resolveGovernorateId(res.data.governorateId ?? res.data.region),
+            governorateId: this.resolveGovernorateId(res.data.governorateId ?? res.data.region),
+            personalPhone: res.data.personalPhone,
             whatsAppPhone: res.data.whatsAppPhone,
+            manualAddress: res.data.manualAddress,
+            mapLocationUrl: res.data.mapLocationUrl,
+            latitude: res.data.latitude,
+            longitude: res.data.longitude,
             companyDescription: res.data.companyDescription
           });
+          this.profileMapSearchQuery = res.data.manualAddress || '';
+          this.queueProfileMapSync();
         }
       }
     });
@@ -1167,7 +1442,18 @@ export class ProjectsComponent implements OnInit {
     this.isSavingProfile.set(true);
     this.profileSuccessMessage.set(null);
 
-    const dto: TenantProfileUpdateDto = this.profileForm.value;
+    const governorateId = this.resolveGovernorateId(this.profileForm.value.governorateId || this.profileForm.value.region || '');
+    const dto: TenantProfileUpdateDto = {
+      ...this.profileForm.value,
+      region: governorateId,
+      governorateId,
+      personalPhone: this.profileForm.value.personalPhone || null,
+      whatsAppPhone: this.profileForm.value.whatsAppPhone || null,
+      manualAddress: this.profileForm.value.manualAddress || null,
+      mapLocationUrl: this.profileForm.value.mapLocationUrl || null,
+      latitude: this.profileForm.value.latitude || null,
+      longitude: this.profileForm.value.longitude || null
+    };
 
     this.offlineSync.submit('tenant-profile-update', dto, (value) => this.profileService.updateProfile(value)).pipe(take(1)).subscribe({
       next: (res) => {
@@ -1177,6 +1463,7 @@ export class ProjectsComponent implements OnInit {
           if (navigator.onLine) {
             this.fetchProfile();
           }
+          this.queueProfileMapSync();
           setTimeout(() => this.profileSuccessMessage.set(null), 5000);
         }
       },
@@ -1339,7 +1626,7 @@ export class ProjectsComponent implements OnInit {
       firstName: '',
       lastName: '',
       email: '',
-      contactPhone: '',
+      personalPhone: '',
       whatsAppPhone: '',
       password: '',
       role: 'Manager'

@@ -32,8 +32,13 @@ public class TenantRegisterDto
     [Required]
     public string Location { get; set; } = string.Empty;
 
-    [Required]
-    public string MobileNumber { get; set; } = string.Empty;
+    [MaxLength(11)]
+    [RegularExpression(@"^01\d{9}$", ErrorMessage = "Personal phone must match 01xxxxxxxxx")]
+    public string? PersonalPhone { get; set; }
+
+    [MaxLength(11)]
+    [RegularExpression(@"^01\d{9}$", ErrorMessage = "WhatsApp phone must match 01xxxxxxxxx")]
+    public string? WhatsAppPhone { get; set; }
 
     public string? CommercialRegister { get; set; }
     public string? TaxCard { get; set; }

@@ -269,7 +269,7 @@ interface ModeratedProject {
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">رقم الهاتف</div>
-                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.mobileNumber || 'N/A' }}</div>
+                        <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.personalPhone || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">الاشتراك</div>
@@ -654,7 +654,16 @@ export class TenantsComponent implements OnInit {
 
     const message = this.buildWhatsAppMessage(actionContext);
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://api.whatsapp.com/send?phone=${actionContext.phone}&text=${encodedMessage}`, '_blank');
+    let cleanPhone = actionContext.phone.replace(/[^0-9]/g, '');
+
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = `2${cleanPhone}`;
+    } else if (!cleanPhone.startsWith('20') && cleanPhone.startsWith('1')) {
+      cleanPhone = `20${cleanPhone}`;
+    }
+
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
   }
 
   launchTargetMapLocation(): void {
@@ -681,8 +690,7 @@ export class TenantsComponent implements OnInit {
   }
 
   private resolveActionPhone(tenant: TenantDto): string {
-    const rawPhone = tenant.whatsAppPhone ?? tenant.contactPhone ?? tenant.mobileNumber ?? '';
-    return rawPhone.replace(/\D/g, '');
+    return tenant.whatsAppPhone ?? tenant.personalPhone ?? '';
   }
 
   private buildMapLink(latitude?: number | null, longitude?: number | null): string | null {

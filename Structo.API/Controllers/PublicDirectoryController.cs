@@ -114,6 +114,12 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             BannerUrl = t.BannerUrl,
             Region = t.Region,
             CompanyDescription = t.CompanyDescription,
+            PersonalPhone = t.PersonalPhone,
+            WhatsAppPhone = t.WhatsAppPhone,
+            ManualAddress = t.ManualAddress,
+            MapLocationUrl = t.MapLocationUrl,
+            Latitude = t.Latitude,
+            Longitude = t.Longitude,
             Rating = t.Rating,
             CreatedAt = t.CreatedAt
         }).ToList();

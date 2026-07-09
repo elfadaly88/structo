@@ -37,10 +37,9 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
                 BannerUrl = t.BannerUrl,
                 Region = t.Region,
                 CompanyDescription = t.CompanyDescription,
-                ContactPhone = t.ContactPhone,
+                PersonalPhone = t.PersonalPhone,
                 WhatsAppPhone = t.WhatsAppPhone,
                 Location = t.Location,
-                MobileNumber = t.MobileNumber,
                 CommercialRegister = t.CommercialRegister,
                 TaxCard = t.TaxCard,
                 NationalId = t.Users.Where(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner).Select(u => u.NationalId).FirstOrDefault(),
@@ -80,8 +79,12 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
         tenant.BannerUrl = dto.BannerUrl ?? string.Empty;
         tenant.Region = dto.Region ?? string.Empty;
         tenant.CompanyDescription = dto.CompanyDescription ?? string.Empty;
-        tenant.ContactPhone = dto.ContactPhone;
+        tenant.PersonalPhone = dto.PersonalPhone;
         tenant.WhatsAppPhone = dto.WhatsAppPhone;
+        tenant.ManualAddress = dto.ManualAddress;
+        tenant.MapLocationUrl = dto.MapLocationUrl;
+        tenant.Latitude = dto.Latitude;
+        tenant.Longitude = dto.Longitude;
 
         await context.SaveChangesAsync();
 
@@ -95,10 +98,9 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
             BannerUrl = tenant.BannerUrl,
             Region = tenant.Region,
             CompanyDescription = tenant.CompanyDescription,
-            ContactPhone = tenant.ContactPhone,
+            PersonalPhone = tenant.PersonalPhone,
             WhatsAppPhone = tenant.WhatsAppPhone,
             Location = tenant.Location,
-            MobileNumber = tenant.MobileNumber,
             CommercialRegister = tenant.CommercialRegister,
             TaxCard = tenant.TaxCard,
             NationalId = tenant.Users.Where(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner).Select(u => u.NationalId).FirstOrDefault(),

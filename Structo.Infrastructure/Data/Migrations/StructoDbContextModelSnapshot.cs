@@ -560,9 +560,6 @@ namespace Structo.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ContactPhone")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -589,14 +586,13 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<int>("MaxActiveProjects")
                         .HasColumnType("integer");
 
-                    b.Property<string>("MobileNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<string>("PersonalPhone")
+                        .HasColumnType("text");
 
                     b.Property<double>("Rating")
                         .HasColumnType("double precision");
@@ -631,9 +627,6 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ContactPhone")
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -675,6 +668,9 @@ namespace Structo.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PersonalPhone")
+                        .HasColumnType("text");
 
                     b.Property<string>("Role")
                         .IsRequired()
