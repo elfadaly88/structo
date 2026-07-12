@@ -121,7 +121,7 @@ interface NominatimResult {
                   <p class="text-[9px] text-slate-500 font-cairo mt-1">يطلع عليها مدير النظام مباشرة للتحقق والموافقة على الحساب.</p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <!-- Account Type Selector -->
                   <div>
                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">نوع الحساب / Account Type</label>
@@ -184,7 +184,7 @@ interface NominatimResult {
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                   <div>
                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">رقم الهاتف الشخصي / Personal Phone</label>
                     <input type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
@@ -204,7 +204,7 @@ interface NominatimResult {
 
                 <!-- Company-only Fields -->
                 @if (registerForm.get('accountType')?.value === 'Company') {
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                     <div>
                       <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">السجل التجاري / Commercial Register</label>
                       <input type="text" formControlName="commercialRegister" placeholder="رقم السجل التجاري"
@@ -220,7 +220,7 @@ interface NominatimResult {
 
                 <!-- Freelancer-only Fields -->
                 @if (registerForm.get('accountType')?.value === 'Freelancer') {
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                     <div>
                       <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">الرقم القومي (14 رقم) / National ID (Optional)</label>
                       <input type="text" formControlName="nationalId" placeholder="أدخل 14 رقماً (اختياري)"
@@ -244,7 +244,7 @@ interface NominatimResult {
                 }
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-cairo">Admin First Name</label>
                   <input type="text" formControlName="adminFirstName" placeholder="Jane" autocomplete="off"
@@ -359,12 +359,12 @@ interface NominatimResult {
 
     <!-- MAP SELECTOR MODAL -->
     @if (isMapModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
         <!-- Backdrop -->
         <div (click)="closeMapModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal Content -->
-        <div class="relative max-w-2xl w-full max-h-[90vh] flex flex-col bg-slate-950 border border-slate-800 rounded-xl shadow-2xl overflow-hidden z-10 font-cairo">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl font-cairo">
           <!-- Header -->
           <div class="p-4 border-b border-slate-900 flex justify-between items-center">
             <h3 class="text-sm font-bold text-white">تحديد الموقع الجغرافي / Drop Pin on Map</h3>
@@ -421,13 +421,13 @@ interface NominatimResult {
           </div>
 
           <!-- Footer Actions -->
-          <div class="p-4 border-t border-slate-900 flex justify-end gap-3 bg-slate-950/80">
+          <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full p-4 border-t border-slate-900 bg-slate-950/80">
             <button type="button" (click)="closeMapModal()"
-              class="px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition-all text-xs">
+              class="w-full md:w-auto px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition-all text-xs">
               إلغاء / Cancel
             </button>
             <button type="button" (click)="confirmPinDrop()"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/15 text-xs">
+              class="w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/15 text-xs">
               إسقاط الدبوس / Drop Pin & Confirm
             </button>
           </div>

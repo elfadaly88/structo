@@ -85,12 +85,12 @@ const GOVERNORATES: GovernorateOption[] = [
           </p>
         </div>
 
-        <div class="flex gap-3">
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           @if (activeTab() === 'projects' && currentUserRole() === 'TenantOwner') {
             <button
               id="btn-new-project"
               (click)="openProjectModal()"
-              class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo">
+              class="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
               </svg>
@@ -100,7 +100,7 @@ const GOVERNORATES: GovernorateOption[] = [
             <button
               id="btn-new-user"
               (click)="openUserModal()"
-              class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo">
+              class="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
@@ -151,7 +151,7 @@ const GOVERNORATES: GovernorateOption[] = [
       <!-- SECTION 1: PROJECTS HUB -->
       @if (activeTab() === 'projects') {
         <!-- Projects Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
             <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.STAT_TOTAL' | translate }}</span>
             <h3 class="text-3xl font-extrabold text-white mt-1">{{ projects().length }}</h3>
@@ -270,7 +270,7 @@ const GOVERNORATES: GovernorateOption[] = [
       <!-- SECTION 2: COMPANY USERS MANAGEMENT -->
       @if (activeTab() === 'users' && currentUserRole() === 'TenantOwner') {
         <!-- Users Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
             <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'USERS.STAT_TOTAL' | translate }}</span>
             <h3 class="text-3xl font-extrabold text-white mt-1">{{ users().length }}</h3>
@@ -480,7 +480,7 @@ const GOVERNORATES: GovernorateOption[] = [
             }
 
             <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-5">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
                   <input id="prof-name" type="text" formControlName="name" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="Company Name">
@@ -496,7 +496,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label for="prof-personal-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Personal Phone</label>
                   <input id="prof-personal-phone" type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
@@ -564,8 +564,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 <textarea id="prof-desc" formControlName="companyDescription" rows="5" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none" placeholder="Write a brief overview of your business..."></textarea>
               </div>
 
-              <div class="flex justify-end pt-2">
-                <button type="submit" [disabled]="profileForm.invalid || isSavingProfile()" class="px-6 py-3 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
+              <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full pt-2">
+                <button type="submit" [disabled]="profileForm.invalid || isSavingProfile()" class="w-full md:w-auto px-6 py-3 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
                   @if (isSavingProfile()) {
                     {{ 'PROFILE.SAVING' | translate }}
                   } @else {
@@ -581,12 +581,12 @@ const GOVERNORATES: GovernorateOption[] = [
 
     <!-- MODAL 1: CREATE PROJECT -->
     @if (isProjectModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
         <!-- Backdrop -->
         <div (click)="closeProjectModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal container -->
-        <div class="relative bg-slate-900 border border-slate-700/60 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl shadow-black/50 z-10 max-h-[90vh] overflow-y-auto">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
           <div class="flex items-start justify-between mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">{{ 'PROJECTS.MODAL_TITLE' | translate }}</h3>
@@ -621,7 +621,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 placeholder="e.g. New Administrative Capital Tower">
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="proj-client" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }} <span class="text-red-400">*</span></label>
                 <input
@@ -643,7 +643,7 @@ const GOVERNORATES: GovernorateOption[] = [
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="proj-start" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_START' | translate }} <span class="text-red-400">*</span></label>
                 <input
@@ -667,7 +667,7 @@ const GOVERNORATES: GovernorateOption[] = [
               <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
                 📍 تفاصيل الموقع الجغرافي دقیقًا / Geographic Location
               </span>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 <div>
                   <label for="proj-gov" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">المحافظة / Governorate <span class="text-red-400">*</span></label>
                   <select
@@ -761,7 +761,7 @@ const GOVERNORATES: GovernorateOption[] = [
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="proj-status" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }} <span class="text-red-400">*</span></label>
                 <select
@@ -808,17 +808,17 @@ const GOVERNORATES: GovernorateOption[] = [
                 placeholder="Scope details..."></textarea>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4">
+            <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full p-4 border-t border-slate-900">
               <button
                 type="button"
                 (click)="closeProjectModal()"
-                class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
+                class="w-full md:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
                 {{ 'COMMON.CANCEL' | translate }}
               </button>
               <button
                 type="submit"
                 [disabled]="projectForm.invalid || isSavingProject()"
-                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+                class="w-full md:w-auto px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
                 {{ 'PROJECTS.BTN_CREATE' | translate }}
               </button>
             </div>
@@ -829,10 +829,10 @@ const GOVERNORATES: GovernorateOption[] = [
 
     <!-- MODAL 2: REGISTER COMPANY USER -->
     @if (isUserModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
         <div (click)="closeUserModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
-        <div class="relative bg-slate-900 border border-slate-700/60 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl shadow-black/50 z-10">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
           <div class="flex items-start justify-between mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">{{ 'USERS.MODAL_TITLE' | translate }}</h3>
@@ -857,7 +857,7 @@ const GOVERNORATES: GovernorateOption[] = [
           }
 
           <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" autocomplete="off" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="usr-first" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_FIRST_NAME' | translate }} <span class="text-red-400">*</span></label>
                 <input
@@ -892,7 +892,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 placeholder="e.g. ahmed.ali@company.com">
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="usr-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Personal Phone</label>
                 <input
@@ -942,17 +942,17 @@ const GOVERNORATES: GovernorateOption[] = [
               </select>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4">
+            <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full p-4 border-t border-slate-900">
               <button
                 type="button"
                 (click)="closeUserModal()"
-                class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
+                class="w-full md:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
                 {{ 'COMMON.CANCEL' | translate }}
               </button>
               <button
                 type="submit"
                 [disabled]="userForm.invalid || isSavingUser()"
-                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+                class="w-full md:w-auto px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
                 {{ 'USERS.BTN_CREATE' | translate }}
               </button>
             </div>

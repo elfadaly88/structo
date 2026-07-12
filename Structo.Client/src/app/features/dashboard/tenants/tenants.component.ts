@@ -40,7 +40,7 @@ interface ModeratedProject {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
           <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">إجمالي الشركات / Total Companies</span>
           <h3 class="text-3xl font-extrabold text-white mt-1">{{ tenants().length }}</h3>
@@ -159,23 +159,23 @@ interface ModeratedProject {
       </div>
 
       @if (selectedTenant(); as tenant) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
           <div (click)="closeInspector()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
-          <div class="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/80">
-            <div class="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-6 py-4 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/80">
+              <div class="sticky top-0 z-10 border-b border-slate-900 bg-slate-950/95 px-4 md:px-6 py-4 backdrop-blur-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
                 <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">Platform Audit & Moderation Control</span>
                 <h3 class="text-xl font-bold text-white font-cairo mt-1">{{ tenant.name }}</h3>
               </div>
               <button
                 (click)="closeInspector()"
-                class="self-start sm:self-auto px-3 py-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
+                class="self-start md:self-auto w-full md:w-auto px-3 py-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
                 إغلاق التفاصيل / Close
               </button>
             </div>
 
-            <div class="p-6 space-y-6">
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
               @if (activeActionContext(); as actionContext) {
                 <div
                   class="rounded-2xl border px-5 py-4 shadow-lg shadow-black/20 transition-all duration-300"
@@ -234,7 +234,7 @@ interface ModeratedProject {
                   <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </div>
               } @else {
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                   <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-4">
                     <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
                       <div>
@@ -250,7 +250,7 @@ interface ModeratedProject {
                       }
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                         <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">اسم المسؤول</div>
                         <div class="mt-1 text-slate-200 font-semibold font-cairo">{{ tenant.adminFirstName || 'غير متوفر' }} {{ tenant.adminLastName || '' }}</div>
@@ -325,7 +325,7 @@ interface ModeratedProject {
                         </div>
                       </div>
 
-                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         @if (tenant.status !== 'Active') {
                           <button
                             (click)="onAction(tenant.id, 'Activate')"
@@ -368,7 +368,7 @@ interface ModeratedProject {
                     </div>
                   </div>
 
-                  <div class="space-y-4">
+                  <div class="space-y-4 w-full">
                     <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-4">
                       <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
                         <div>
