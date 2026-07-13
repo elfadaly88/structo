@@ -206,7 +206,8 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div (click)="closeModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
-          <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto p-0 shadow-2xl z-10 font-sans">
+          <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col p-0 shadow-2xl z-10 font-sans">
+            <div class="overflow-y-auto min-h-0 w-full flex-1">
             <!-- Banner Image -->
             <div class="relative h-44 w-full bg-gradient-to-r from-indigo-950 via-purple-950 to-pink-950 border-b border-slate-800">
               @if (selectedCompany()!.bannerUrl) {
@@ -302,6 +303,7 @@ import { AuthService } from '../../core/services/auth.service';
                   }
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>

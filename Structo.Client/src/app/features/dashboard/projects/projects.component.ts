@@ -244,7 +244,11 @@ const GOVERNORATES: GovernorateOption[] = [
                       </td>
                       <td class="px-6 py-4 text-center">
                         <span class="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 text-xs border border-slate-700 font-cairo">
-                          {{ 'PROJECTS.CATEGORIES.' + proj.category | translate }}
+                          @if (proj.propertyType === 'Residential') {
+                            🏠 {{ 'Residential' }}
+                          } @else {
+                            🏢 {{ 'Administrative' }}
+                          }
                         </span>
                       </td>
                       <td class="px-6 py-4 text-slate-400">{{ proj.startDate | date:'dd/MM/yyyy' }}</td>
@@ -586,7 +590,7 @@ const GOVERNORATES: GovernorateOption[] = [
         <div (click)="closeProjectModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal container -->
-        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
           <div class="flex items-start justify-between mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">{{ 'PROJECTS.MODAL_TITLE' | translate }}</h3>
@@ -610,7 +614,7 @@ const GOVERNORATES: GovernorateOption[] = [
             </div>
           }
 
-          <form [formGroup]="projectForm" (ngSubmit)="onProjectSubmit()" class="space-y-4">
+          <form [formGroup]="projectForm" (ngSubmit)="onProjectSubmit()" class="space-y-4 overflow-y-auto min-h-0 pr-1">
             <div>
               <label for="proj-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
               <input
@@ -832,7 +836,7 @@ const GOVERNORATES: GovernorateOption[] = [
       <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
         <div (click)="closeUserModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
-        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
           <div class="flex items-start justify-between mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">{{ 'USERS.MODAL_TITLE' | translate }}</h3>
@@ -856,7 +860,7 @@ const GOVERNORATES: GovernorateOption[] = [
             </div>
           }
 
-          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" autocomplete="off" class="space-y-4">
+          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" autocomplete="off" class="space-y-4 overflow-y-auto min-h-0 pr-1">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="usr-first" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_FIRST_NAME' | translate }} <span class="text-red-400">*</span></label>

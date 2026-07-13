@@ -10,10 +10,10 @@ namespace Structo.Core.Interfaces;
 public interface IFinancialTransactionService
 {
     Task<(bool Success, string Message)> CreateTransactionAsync(Guid projectId, FinancialTransactionCreateDto dto, string userRole);
-    Task<PaginatedList<FinancialTransactionMobileDto>> GetMobileTransactionsAsync(Guid projectId, int pageNumber, int pageSize);
-    Task<(bool Success, string Message)> InjectCapitalAsync(Guid projectId, CapitalInjectDto dto, Guid? tenantId);
-    Task<IEnumerable<ProjectCashPool>> GetCashPoolsAsync(Guid projectId);
-    Task<(bool Success, string Message)> UpdateTransactionAsync(Guid projectId, Guid id, FinancialTransactionUpdateDto dto);
-    Task<(bool Success, string Message)> DeleteTransactionAsync(Guid projectId, Guid id);
+    Task<PaginatedList<FinancialTransactionMobileDto>> GetMobileTransactionsAsync(Guid projectId, int pageNumber, int pageSize, string userRole);
+    Task<(bool Success, string Message)> InjectCapitalAsync(Guid projectId, CapitalInjectDto dto, Guid? tenantId, string userRole);
+    Task<IEnumerable<ProjectCashPool>> GetCashPoolsAsync(Guid projectId, string userRole);
+    Task<(bool Success, string Message)> UpdateTransactionAsync(Guid projectId, Guid id, FinancialTransactionUpdateDto dto, string userRole);
+    Task<(bool Success, string Message)> DeleteTransactionAsync(Guid projectId, Guid id, string userRole);
     Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole);
 }

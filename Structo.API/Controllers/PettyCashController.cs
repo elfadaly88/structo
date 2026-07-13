@@ -45,7 +45,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Approve([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashApproveDto dto)
     {
-        var (success, message) = await pettyCashService.ApprovePettyCashAsync(projectId, id, dto);
+        var (success, message) = await pettyCashService.ApprovePettyCashAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
         {
@@ -61,7 +61,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Reject([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashRejectDto dto)
     {
-        var (success, message) = await pettyCashService.RejectPettyCashAsync(projectId, id, dto);
+        var (success, message) = await pettyCashService.RejectPettyCashAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
         {
@@ -78,7 +78,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     {
         try
         {
-            var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto);
+            var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto, CurrentUserRole);
             return Ok(new ApiResponse<bool>
             {
                 Data = result,
@@ -113,7 +113,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
         [FromRoute] Guid id,
         [FromBody] PettyCashUpdateDto dto)
     {
-        var (success, message) = await pettyCashService.UpdatePettyCashAsync(projectId, id, dto);
+        var (success, message) = await pettyCashService.UpdatePettyCashAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
         {
@@ -131,7 +131,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
         [FromRoute] Guid projectId,
         [FromRoute] Guid id)
     {
-        var (success, message) = await pettyCashService.DeletePettyCashAsync(projectId, id);
+        var (success, message) = await pettyCashService.DeletePettyCashAsync(projectId, id, CurrentUserRole);
 
         if (!success)
         {

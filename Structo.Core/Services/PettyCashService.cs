@@ -19,6 +19,10 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         if (tenantId == null)
             return (false, "Tenant ID claim missing or invalid.");
 
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
+
         // --- Financial Freeze Guard ---
         var project = await context.Set<Project>().FindAsync(projectId);
         if (project == null)
@@ -67,8 +71,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
     }
 
 
-    public async Task<(bool Success, string Message)> ApprovePettyCashAsync(Guid projectId, Guid id, PettyCashApproveDto dto)
+    public async Task<(bool Success, string Message)> ApprovePettyCashAsync(Guid projectId, Guid id, PettyCashApproveDto dto, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var pettyCash = await context.Set<PettyCash>().FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
         if (pettyCash == null)
             return (false, "Petty cash record not found.");
@@ -109,8 +116,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return (true, "Petty cash approved and issued successfully.");
     }
 
-    public async Task<(bool Success, string Message)> RejectPettyCashAsync(Guid projectId, Guid id, PettyCashRejectDto dto)
+    public async Task<(bool Success, string Message)> RejectPettyCashAsync(Guid projectId, Guid id, PettyCashRejectDto dto, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var pettyCash = await context.Set<PettyCash>().FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
         if (pettyCash == null)
             return (false, "Petty cash record not found.");
@@ -125,8 +135,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return (true, "Petty cash request rejected.");
     }
 
-    public async Task<bool> SettlePettyCashAsync(Guid projectId, Guid pettyCashId, PettyCashSettleDto dto)
+    public async Task<bool> SettlePettyCashAsync(Guid projectId, Guid pettyCashId, PettyCashSettleDto dto, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var pettyCash = await context.Set<PettyCash>()
             .FirstOrDefaultAsync(p => p.Id == pettyCashId && p.ProjectId == projectId);
 
@@ -172,6 +185,9 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
 
     public async Task<PaginatedList<PettyCashMobileDto>> GetMobilePettyCashAsync(Guid projectId, int pageNumber, int pageSize, Guid userId, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var query = context.Set<PettyCash>()
             .Include(p => p.Project)
             .Include(p => p.IssuedToUser)
@@ -218,8 +234,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         };
     }
 
-    public async Task<(bool Success, string Message)> UpdatePettyCashAsync(Guid projectId, Guid id, PettyCashUpdateDto dto)
+    public async Task<(bool Success, string Message)> UpdatePettyCashAsync(Guid projectId, Guid id, PettyCashUpdateDto dto, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var pettyCash = await context.Set<PettyCash>()
             .FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
 
@@ -237,8 +256,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return (true, "Petty cash updated successfully.");
     }
 
-    public async Task<(bool Success, string Message)> DeletePettyCashAsync(Guid projectId, Guid id)
+    public async Task<(bool Success, string Message)> DeletePettyCashAsync(Guid projectId, Guid id, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var pettyCash = await context.Set<PettyCash>()
             .FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
 

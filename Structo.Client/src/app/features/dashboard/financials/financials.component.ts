@@ -363,7 +363,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     @if (showPettyCashModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div (click)="closePettyCashModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.REQUEST_PETTY_CASH' | translate }}</h3>
             <button (click)="closePettyCashModal()" class="text-slate-400 hover:text-white cursor-pointer">
@@ -448,7 +448,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     @if (showSettleModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div (click)="closeSettleModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.SUBMIT_RECEIPTS' | translate }}</h3>
             <button (click)="closeSettleModal()" class="text-slate-400 hover:text-white cursor-pointer">
@@ -548,7 +548,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     @if (showRejectModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div (click)="closeRejectModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">Reject Petty Cash Request</h3>
             <button (click)="closeRejectModal()" class="text-slate-400 hover:text-white cursor-pointer">
@@ -557,7 +557,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </svg>
             </button>
           </div>
-          <form (ngSubmit)="submitRejectRequest()" class="space-y-4 font-sans">
+          <form (ngSubmit)="submitRejectRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Rejection Comments / Reason <span class="text-red-400">*</span></label>
               <textarea 
@@ -594,7 +594,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     @if (showApproveModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div (click)="closeApproveModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">Approve Petty Cash</h3>
             <button (click)="closeApproveModal()" class="text-slate-400 hover:text-white cursor-pointer">
@@ -603,7 +603,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </svg>
             </button>
           </div>
-          <form (ngSubmit)="submitApproveRequest()" class="space-y-4 font-sans">
+          <form (ngSubmit)="submitApproveRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Source Cash Pool <span class="text-red-400">*</span></label>
               <select 
@@ -642,7 +642,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     @if (isEditTransactionModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div (click)="closeEditTransactionModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">تعديل الحركة المالية (Edit Transaction)</h3>
             <button (click)="closeEditTransactionModal()" class="text-slate-400 hover:text-white cursor-pointer">
@@ -651,7 +651,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </svg>
             </button>
           </div>
-          <form [formGroup]="editTransactionForm" (ngSubmit)="submitEditTransaction()" class="space-y-4 font-sans">
+          <form [formGroup]="editTransactionForm" (ngSubmit)="submitEditTransaction()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Amount</label>
               <input type="number" formControlName="amount" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40" required />

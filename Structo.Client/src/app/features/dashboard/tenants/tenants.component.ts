@@ -162,7 +162,7 @@ interface ModeratedProject {
         <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
           <div (click)="closeInspector()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
-            <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/80">
+            <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/80">
               <div class="sticky top-0 z-10 border-b border-slate-900 bg-slate-950/95 px-4 md:px-6 py-4 backdrop-blur-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
                 <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">Platform Audit & Moderation Control</span>
@@ -175,7 +175,7 @@ interface ModeratedProject {
               </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+            <div class="flex-1 overflow-y-auto min-h-0 p-4 md:p-6 space-y-6">
               @if (activeActionContext(); as actionContext) {
                 <div
                   class="rounded-2xl border px-5 py-4 shadow-lg shadow-black/20 transition-all duration-300"

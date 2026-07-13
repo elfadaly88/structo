@@ -12,7 +12,8 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
         <div (click)="modal.resolveConfirm(false)" class="absolute inset-0"></div>
 
         <!-- Modal Panel -->
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+          <div class="p-4 sm:p-6 overflow-y-auto min-h-0 w-full flex-1">
           <!-- Icon -->
           <div class="flex items-center gap-3 mb-4">
             @if (modal.confirmConfig().type === 'danger') {
@@ -61,6 +62,7 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
               {{ modal.confirmConfig().confirmText }}
             </button>
           </div>
+          </div>
         </div>
       </div>
     }
@@ -72,7 +74,8 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
         <div (click)="modal.resolveAlert()" class="absolute inset-0"></div>
 
         <!-- Modal Panel -->
-        <div class="relative w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+          <div class="p-4 sm:p-6 overflow-y-auto min-h-0 w-full flex-1">
           <!-- Icon -->
           <div class="flex items-center gap-3 mb-4">
             @if (modal.alertConfig().type === 'error') {
@@ -109,6 +112,7 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
               class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer">
               {{ modal.alertConfig().buttonText }}
             </button>
+          </div>
           </div>
         </div>
       </div>

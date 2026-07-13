@@ -44,7 +44,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
-        policy.WithOrigins("http://localhost:4200", "https://structo-production.up.railway.app")
+        policy.WithOrigins("http://localhost:4500", "https://structo-production.up.railway.app")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials());

@@ -62,8 +62,11 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         return (true, "Transaction added successfully");
     }
 
-    public async Task<PaginatedList<FinancialTransactionMobileDto>> GetMobileTransactionsAsync(Guid projectId, int pageNumber, int pageSize)
+    public async Task<PaginatedList<FinancialTransactionMobileDto>> GetMobileTransactionsAsync(Guid projectId, int pageNumber, int pageSize, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var query = context.Set<FinancialTransaction>()
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.TransactionDate);
@@ -95,8 +98,11 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         };
     }
 
-    public async Task<(bool Success, string Message)> InjectCapitalAsync(Guid projectId, CapitalInjectDto dto, Guid? tenantId)
+    public async Task<(bool Success, string Message)> InjectCapitalAsync(Guid projectId, CapitalInjectDto dto, Guid? tenantId, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         if (tenantId == null)
             return (false, "Tenant ID missing or invalid.");
 
@@ -145,15 +151,21 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         return (true, "Capital injected successfully.");
     }
 
-    public async Task<IEnumerable<ProjectCashPool>> GetCashPoolsAsync(Guid projectId)
+    public async Task<IEnumerable<ProjectCashPool>> GetCashPoolsAsync(Guid projectId, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         return await context.Set<ProjectCashPool>()
             .Where(p => p.ProjectId == projectId)
             .ToListAsync();
     }
 
-    public async Task<(bool Success, string Message)> UpdateTransactionAsync(Guid projectId, Guid id, FinancialTransactionUpdateDto dto)
+    public async Task<(bool Success, string Message)> UpdateTransactionAsync(Guid projectId, Guid id, FinancialTransactionUpdateDto dto, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var transaction = await context.Set<FinancialTransaction>()
             .FirstOrDefaultAsync(t => t.Id == id && t.ProjectId == projectId);
 
@@ -185,8 +197,11 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         return (true, "Transaction updated successfully.");
     }
 
-    public async Task<(bool Success, string Message)> DeleteTransactionAsync(Guid projectId, Guid id)
+    public async Task<(bool Success, string Message)> DeleteTransactionAsync(Guid projectId, Guid id, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var transaction = await context.Set<FinancialTransaction>()
             .FirstOrDefaultAsync(t => t.Id == id && t.ProjectId == projectId);
 

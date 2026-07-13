@@ -13,8 +13,11 @@ namespace Structo.Core.Services;
 
 public class SettlementService(DbContext context) : ISettlementService
 {
-    public async Task<(bool Success, string Message, Guid SettlementId)> CreateSettlementAsync(Guid projectId, SettlementCreateDto dto, Guid tenantId)
+    public async Task<(bool Success, string Message, Guid SettlementId)> CreateSettlementAsync(Guid projectId, SettlementCreateDto dto, Guid tenantId, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var pettyCash = await context.Set<PettyCash>()
             .FirstOrDefaultAsync(p => p.Id == dto.PettyCashId && p.ProjectId == projectId);
 
@@ -71,6 +74,9 @@ public class SettlementService(DbContext context) : ISettlementService
 
     public async Task<(bool Success, string Message)> ApproveSettlementAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         if (userRole != "TenantOwner" && userRole != "Accountant")
         {
             throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to approve settlements.");
@@ -174,6 +180,9 @@ public class SettlementService(DbContext context) : ISettlementService
 
     public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         if (userRole != "TenantOwner" && userRole != "Accountant")
         {
             throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to confirm refunds.");
@@ -258,6 +267,9 @@ public class SettlementService(DbContext context) : ISettlementService
 
     public async Task<(bool Success, string Message)> RejectSettlementAsync(Guid projectId, Guid id, SettlementRejectDto dto, string userRole, Guid resolvedByUserId)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         if (userRole != "TenantOwner" && userRole != "Accountant")
         {
             throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to reject settlements.");
@@ -289,6 +301,9 @@ public class SettlementService(DbContext context) : ISettlementService
 
     public async Task<IEnumerable<SettlementMobileDto>> GetSettlementsAsync(Guid projectId, Guid userId, string userRole)
     {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
         var query = context.Set<Settlement>()
             .Include(s => s.Lines)
             .Include(s => s.PettyCash)

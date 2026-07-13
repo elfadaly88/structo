@@ -37,11 +37,22 @@ public class SettlementsController(ISettlementService settlementService) : Contr
             return Unauthorized(new ApiResponse<Guid> { Success = false, Message = "Tenant ID claim missing or invalid." });
         }
 
-        var (success, message, settlementId) = await settlementService.CreateSettlementAsync(projectId, dto, tenantId);
+        var (success, message, settlementId) = await settlementService.CreateSettlementAsync(projectId, dto, tenantId, CurrentUserRole);
 
         if (!success)
         {
             return BadRequest(new ApiResponse<Guid> { Success = false, Message = message });
+        }
+
+        // --- Multi-Role Execution Pattern Guard ---
+        // If the creator is a TenantOwner, they can bypass PendingAccountantApproval
+        if (!dto.IsDraft && CurrentUserRole == "TenantOwner")
+        {
+            var (approveSuccess, approveMessage) = await settlementService.ApproveSettlementAsync(projectId, settlementId, CurrentUserRole, CurrentUserId);
+            if (approveSuccess)
+            {
+                message = $"{message} Auto-approved: {approveMessage}";
+            }
         }
 
         return Ok(new ApiResponse<Guid> { Data = settlementId, Message = message, CurrentUserRole = CurrentUserRole });

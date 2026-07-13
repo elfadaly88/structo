@@ -33,7 +33,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
         [FromQuery] int pageNumber = 1, 
         [FromQuery] int pageSize = 10)
     {
-        var data = await financialTransactionService.GetMobileTransactionsAsync(projectId, pageNumber, pageSize);
+        var data = await financialTransactionService.GetMobileTransactionsAsync(projectId, pageNumber, pageSize, CurrentUserRole);
         return Ok(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>>
         {
             Data = data,
@@ -48,7 +48,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
         var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
         Guid? tenantId = tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var parsedId) ? parsedId : null;
 
-        var (success, message) = await financialTransactionService.InjectCapitalAsync(projectId, dto, tenantId);
+        var (success, message) = await financialTransactionService.InjectCapitalAsync(projectId, dto, tenantId, CurrentUserRole);
 
         if (!success)
             return Unauthorized(new ApiResponse<bool> { Success = false, Message = message });
@@ -60,7 +60,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
     [Authorize(Roles = "TenantOwner, Accountant")]
     public async Task<ActionResult<ApiResponse<IEnumerable<ProjectCashPool>>>> GetCashPools([FromRoute] Guid projectId)
     {
-        var pools = await financialTransactionService.GetCashPoolsAsync(projectId);
+        var pools = await financialTransactionService.GetCashPoolsAsync(projectId, CurrentUserRole);
         return Ok(new ApiResponse<IEnumerable<ProjectCashPool>> { Data = pools, CurrentUserRole = CurrentUserRole });
     }
 
@@ -71,7 +71,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
         [FromRoute] Guid id,
         [FromBody] FinancialTransactionUpdateDto dto)
     {
-        var (success, message) = await financialTransactionService.UpdateTransactionAsync(projectId, id, dto);
+        var (success, message) = await financialTransactionService.UpdateTransactionAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
         {
@@ -89,7 +89,7 @@ public class FinancialTransactionsController(IFinancialTransactionService financ
         [FromRoute] Guid projectId,
         [FromRoute] Guid id)
     {
-        var (success, message) = await financialTransactionService.DeleteTransactionAsync(projectId, id);
+        var (success, message) = await financialTransactionService.DeleteTransactionAsync(projectId, id, CurrentUserRole);
 
         if (!success)
         {

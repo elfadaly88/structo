@@ -364,7 +364,7 @@ interface NominatimResult {
         <div (click)="closeMapModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal Content -->
-        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[95vh] md:max-h-[90vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl font-cairo">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl font-cairo">
           <!-- Header -->
           <div class="p-4 border-b border-slate-900 flex justify-between items-center">
             <h3 class="text-sm font-bold text-white">تحديد الموقع الجغرافي / Drop Pin on Map</h3>
@@ -374,7 +374,7 @@ interface NominatimResult {
           </div>
 
           <!-- Body -->
-          <div class="p-4 flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+          <div class="p-4 flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto">
             <!-- Search Input -->
             <div class="relative shrink-0">
               <input 
