@@ -1433,6 +1433,12 @@ export class ProjectsComponent implements OnInit {
           });
           this.profileMapSearchQuery = res.data.manualAddress || '';
           this.queueProfileMapSync();
+          
+          // Evaluate completion to clear warning banner without reload
+          const hasMap = res.data.latitude !== null && res.data.latitude !== undefined && 
+                         res.data.longitude !== null && res.data.longitude !== undefined;
+          const hasAddress = !!res.data.manualAddress && res.data.manualAddress.trim() !== '';
+          this.authService.updateProfileCompletionStatus(hasMap && hasAddress);
         }
       }
     });

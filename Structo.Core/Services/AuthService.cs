@@ -63,10 +63,8 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             }
             else
             {
-                isProfileComplete = !string.IsNullOrEmpty(tenant.TaxCard) && 
-                                    !string.IsNullOrEmpty(tenant.CommercialRegister) && 
-                                    !string.IsNullOrEmpty(tenant.ManualAddress) && 
-                                    tenant.Latitude.HasValue;
+                isProfileComplete = !string.IsNullOrEmpty(tenant.ManualAddress) && 
+                                    tenant.Latitude.HasValue && tenant.Longitude.HasValue;
             }
         }
 

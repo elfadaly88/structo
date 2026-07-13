@@ -123,4 +123,23 @@ export class AuthService {
     localStorage.setItem(this.userKey, JSON.stringify(session));
     this.currentUser.set(session);
   }
+
+  updateProfileCompletionStatus(isComplete: boolean): void {
+    const user = this.currentUser();
+    if (user) {
+      const updatedUser = { ...user, isProfileComplete: isComplete };
+      this.currentUser.set(updatedUser);
+      
+      const userStr = localStorage.getItem(this.userKey);
+      if (userStr) {
+        try {
+          const session = JSON.parse(userStr);
+          session.isProfileComplete = isComplete;
+          localStorage.setItem(this.userKey, JSON.stringify(session));
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+    }
+  }
 }
