@@ -100,7 +100,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<StructoDbContext>(options =>
 {
     var databaseUrl = builder.Configuration["DATABASE_URL"] ?? Environment.GetEnvironmentVariable("DATABASE_URL");
-    string connectionString = string.Empty;
+   string connectionString = string.Empty;
 
     if (!string.IsNullOrEmpty(databaseUrl) && databaseUrl.StartsWith("postgresql://"))
     {

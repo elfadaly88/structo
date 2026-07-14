@@ -1,23 +1,31 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Structo.Core.DTOs.Auth;
 using Structo.Core.DTOs.Common;
 using Structo.Core.Interfaces;
+using Structo.Core.Services;
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController : ControllerBase
 {
+    private readonly IAuthService _authService;
+    private readonly ILogger<AuthController> _logger;
+    public AuthController(IAuthService authService, ILogger<AuthController> logger)
+    {
+        _authService = authService;
+        _logger = logger;
+    }
     [HttpPost("login")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginDto dto)
     {
         try
         {
-            var (success, data, message) = await authService.LoginAsync(dto);
+            var (success, data, message) = await _authService.LoginAsync(dto);
 
             if (!success)
             {
@@ -47,7 +55,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         try
         {
-            var (success, tenantId, message) = await authService.RegisterTenantAsync(dto);
+            var (success, tenantId, message) = await _authService.RegisterTenantAsync(dto);
 
             if (!success)
             {
@@ -63,8 +71,8 @@ public class AuthController(IAuthService authService) : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
-            return StatusCode(500, new ApiResponse<Guid> { Success = false, Message = "An internal database error occurred." });
+            _logger.LogError(ex, "An error occurred during tenant registration.");
+            return StatusCode(500, new ApiResponse<Guid> { Success = false, Message = "An internal error occurred." });
         }
     }
 }

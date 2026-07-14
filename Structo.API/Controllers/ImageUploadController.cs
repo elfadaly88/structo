@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Structo.Core.DTOs.Common;
 using Structo.Core.Entities;
+using Structo.Core.Helpers;
 using Structo.Core.Interfaces;
 using Structo.Infrastructure.Data;
 using System;
@@ -23,13 +24,20 @@ public class UploadResultDto
 [Route("api/ImageUpload")]
 [Authorize]
 public class ImageUploadController(
-    StructoDbContext context, 
+    StructoDbContext context,
     ICloudStorageService storageService,
-    ITenantContextAccessor tenantAccessor) : ControllerBase
+    ITenantContextAccessor tenantAccessor, ILogger<FinancialTransactionsController> _logger) : ControllerBase
 {
     [HttpPost("tenant-logo")]
     public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo(IFormFile file)
     {
+        var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
+        if (!isValid)
+        {
+            // تسجيل محاولة الرفع المشبوهة في الـ Logs للأمان
+            _logger.LogWarning("🚨 Security Warn: Refused file upload attempt. Reason: {Error}. File Name: {FileName}", errorMessage, file?.FileName);
+            return BadRequest(new ApiResponse<string> { Success = false, Message = errorMessage });
+        }
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
@@ -45,15 +53,15 @@ public class ImageUploadController(
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
             string customKey = $"{tenantId}/profile/logo{extension}";
-            
+
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
             if (!string.IsNullOrEmpty(tenant.LogoUrl) && tenant.LogoUrl != dbUrl)
             {
-                _ = DeleteFileAsync(tenant.LogoUrl);
+                await DeleteFileAsync(tenant.LogoUrl);
             }
-            
+
             tenant.LogoUrl = dbUrl;
             await context.SaveChangesAsync();
 
@@ -73,6 +81,14 @@ public class ImageUploadController(
     [HttpPost("tenant-banner")]
     public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantBanner(IFormFile file)
     {
+        var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
+        if (!isValid)
+        {
+            // تسجيل محاولة الرفع المشبوهة في الـ Logs للأمان
+            _logger.LogWarning("🚨 Security Warn: Refused file upload attempt. Reason: {Error}. File Name: {FileName}", errorMessage, file?.FileName);
+
+            return BadRequest(new ApiResponse<string> { Success = false, Message = errorMessage });
+        }
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
@@ -88,7 +104,7 @@ public class ImageUploadController(
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
             string customKey = $"{tenantId}/profile/banner{extension}";
-            
+
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
@@ -96,7 +112,7 @@ public class ImageUploadController(
             {
                 _ = DeleteFileAsync(tenant.BannerUrl);
             }
-            
+
             tenant.BannerUrl = dbUrl;
             await context.SaveChangesAsync();
 
@@ -116,9 +132,16 @@ public class ImageUploadController(
     [HttpPost("project-gallery/{projectId}")]
     public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, IFormFile file)
     {
+        var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
+        if (!isValid)
+        {
+            // تسجيل محاولة الرفع المشبوهة في الـ Logs للأمان
+            _logger.LogWarning("🚨 Security Warn: Refused file upload attempt. Reason: {Error}. File Name: {FileName}", errorMessage, file?.FileName);
+            return BadRequest(new ApiResponse<string> { Success = false, Message = errorMessage });
+        }
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
-            
+
         var tenantId = tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
             return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
@@ -131,7 +154,7 @@ public class ImageUploadController(
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
             string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{extension}";
-            
+
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
@@ -167,6 +190,13 @@ public class ImageUploadController(
     [HttpPost("project-document/{projectId}")]
     public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectDocument([FromRoute] Guid projectId, IFormFile file)
     {
+        var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
+        if (!isValid)
+        {
+            // تسجيل محاولة الرفع المشبوهة في الـ Logs للأمان
+            _logger.LogWarning("🚨 Security Warn: Refused file upload attempt. Reason: {Error}. File Name: {FileName}", errorMessage, file?.FileName);
+            return BadRequest(new ApiResponse<string> { Success = false, Message = errorMessage });
+        }
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
@@ -182,7 +212,7 @@ public class ImageUploadController(
         {
             var extension = Path.GetExtension(file.FileName).ToLower();
             string customKey = $"{tenantId}/projects/{projectId}/files/{Guid.NewGuid()}{extension}";
-            
+
             using var stream = file.OpenReadStream();
             string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
@@ -195,7 +225,12 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload document: {ex.Message}. Inner: {ex.InnerException?.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto>
+            {
+                Success = false,
+                Message = "An internal error occurred while processing your file. Please try again later."
+            }
+        );
         }
     }
 

@@ -7,7 +7,9 @@ using Structo.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using static Structo.Core.Services.FinancialTransactionService;
 
 namespace Structo.Core.Services;
 
@@ -115,17 +117,17 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == dto.SourceType);
 
         if (pool == null)
+        {
+            pool = new ProjectCashPool
             {
-                pool = new ProjectCashPool
-                {
-                    ProjectId = projectId,
-                    TenantId = tenantId.Value,
-                    SourceType = dto.SourceType,
-                    TotalInjected = 0,
-                    AvailableBalance = 0
-                };
-                context.Set<ProjectCashPool>().Add(pool);
-            }
+                ProjectId = projectId,
+                TenantId = tenantId.Value,
+                SourceType = dto.SourceType,
+                TotalInjected = 0,
+                AvailableBalance = 0
+            };
+            context.Set<ProjectCashPool>().Add(pool);
+        }
 
         pool.TotalInjected += dto.Amount;
         pool.AvailableBalance += dto.Amount;
@@ -183,7 +185,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             transaction.PaymentDate = dto.PaymentDate.Value;
         if (dto.PaymentMethod.HasValue)
             transaction.PaymentMethod = dto.PaymentMethod;
-            
+
         if (dto.ReceiptPhotoUrl != null && transaction.ReceiptPhotoUrl != dto.ReceiptPhotoUrl)
         {
             if (!string.IsNullOrEmpty(transaction.ReceiptPhotoUrl))
@@ -292,4 +294,41 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         return (true, "Direct disbursement credited successfully.");
     }
+
+
+    public async Task<bool> UserHasAccessToProjectAsync(ClaimsPrincipal user, Guid projectId)
+    {
+        // 1. استخراج الـ TenantId والـ UserId من الـ Token Claims بأمان
+        var tenantIdClaim = user.FindFirst("tenantId")?.Value;
+        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (string.IsNullOrEmpty(tenantIdClaim) || string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleClaim))
+            return false;
+
+        var tenantId = Guid.Parse(tenantIdClaim);
+        var userId = Guid.Parse(userIdClaim);
+
+        // 2. 🧠 السحر البرمجي: تحويل النص القادم من الـ JWT إلى الـ UserRole Enum بالملي
+        if (!Enum.TryParse<UserRole>(roleClaim, true, out var userRole))
+        {
+            return false; // لو الـ Role غريبة ومش متعرّفة في الـ enum، اقفل الباب فوراً
+        }        
+        // مسموح لهم بالاطلاع الكامل على أي مشروع مالي طالما ينتمي لنفس الشركة (Tenant)
+        if (userRole == UserRole.TenantOwner || userRole == UserRole.Accountant)
+        {
+            return await context.Set<Project>()
+                .AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        }        
+        // ممنوعين من تصفح أي مشروع مالي إلا لو كانوا هما اللي ماسكين المشروع ده ومسجلين كـ ManagerId
+        if (userRole == UserRole.Manager || userRole == UserRole.SiteEngineer || userRole == UserRole.DesignEngineer)
+        {
+            return await context.Set<Project>()
+                .AnyAsync(p => p.Id == projectId && p.TenantId == tenantId && p.ManagerId == userId);
+        }
+
+        // 5. الـ SuperAdmin أو أي رول تانية مش متوضحة فوق بتتحظر أوتوماتيكياً
+        return false;
+    }
 }
+
