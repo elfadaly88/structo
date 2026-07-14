@@ -11,7 +11,7 @@ import { ToastContainerComponent } from './core/components/toast-container.compo
   styleUrl: './app.css'
 })
 export class App implements OnInit {
-  protected readonly title = signal('Structo.Client');
+  protected readonly title = signal('أُسُس / Ousos');
   private readonly langService = inject(LanguageService);
 
   ngOnInit(): void {

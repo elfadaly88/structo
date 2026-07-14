@@ -114,19 +114,19 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
 
         var tenant = new Tenant
         {
-            Name = dto.CompanyName,
-            CompanyDescription = dto.BusinessDomain,
+            Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CompanyName) ?? string.Empty,
+            CompanyDescription = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BusinessDomain) ?? string.Empty,
             SubscriptionPlan = Enum.TryParse<SubscriptionPlan>(dto.SubscriptionPlan, true, out var parsedPlan) ? parsedPlan : SubscriptionPlan.Free,
             Status = TenantStatus.PendingApproval,
             CreatedAt = DateTime.UtcNow,
-            Location = dto.Location,
-            PersonalPhone = dto.PersonalPhone,
-            WhatsAppPhone = dto.WhatsAppPhone,
-            CommercialRegister = dto.CommercialRegister,
-            TaxCard = dto.TaxCard,
-            AccountType = dto.AccountType,
-            ManualAddress = dto.ManualAddress,
-            MapLocationUrl = dto.MapLocationUrl,
+            Location = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Location),
+            PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
+            WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone),
+            CommercialRegister = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CommercialRegister),
+            TaxCard = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.TaxCard),
+            AccountType = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.AccountType),
+            ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress),
+            MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl),
             Latitude = dto.Latitude,
             Longitude = dto.Longitude
         };
@@ -140,19 +140,19 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
 
         var user = new User
         {
-            FirstName = firstName!,
-            LastName = lastName,
-            Email = dto.AdminEmail,
+            FirstName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(firstName) ?? string.Empty,
+            LastName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lastName) ?? string.Empty,
+            Email = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.AdminEmail).ToLower().Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = UserRole.TenantOwner,
             TenantId = tenant.Id,
             CreatedAt = DateTime.UtcNow,
-            PersonalPhone = dto.PersonalPhone,
-            WhatsAppPhone = dto.WhatsAppPhone,
-            NationalId = dto.NationalId,
-            SyndicateId = dto.SyndicateId,
-            ManualAddress = dto.ManualAddress,
-            MapLocationUrl = dto.MapLocationUrl,
+            PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
+            WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone),
+            NationalId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.NationalId),
+            SyndicateId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.SyndicateId),
+            ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress),
+            MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl),
             Latitude = dto.Latitude,
             Longitude = dto.Longitude
         };

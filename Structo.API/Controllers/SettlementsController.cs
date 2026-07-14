@@ -37,7 +37,7 @@ public class SettlementsController(ISettlementService settlementService) : Contr
             return Unauthorized(new ApiResponse<Guid> { Success = false, Message = "Tenant ID claim missing or invalid." });
         }
 
-        var (success, message, settlementId) = await settlementService.CreateSettlementAsync(projectId, dto, tenantId, CurrentUserRole);
+        var (success, message, settlementId) = await settlementService.CreateSettlementAsync(projectId, dto, tenantId, CurrentUserRole, CurrentUserId);
 
         if (!success)
         {

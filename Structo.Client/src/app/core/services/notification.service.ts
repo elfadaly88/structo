@@ -209,7 +209,7 @@ export class NotificationService implements OnDestroy {
       .withUrl(`${apiUrl}/hubs/notifications`, {
         skipNegotiation: false,
         transport: HttpTransportType.WebSockets,
-        accessTokenFactory: () => token ?? ''
+        accessTokenFactory: () => this.authService.getToken() ?? '' // 🚀 بيقرأ التوكن الحي دايماً وقت إعادة الاتصال
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .build();

@@ -74,17 +74,30 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
         if (tenant == null)
             return NotFound(new ApiResponse<TenantDto> { Success = false, Message = "Tenant not found" });
 
-        tenant.Name = dto.Name;
-        tenant.LogoUrl = dto.LogoUrl ?? string.Empty;
-        tenant.BannerUrl = dto.BannerUrl ?? string.Empty;
-        tenant.Region = dto.Region ?? string.Empty;
-        tenant.CompanyDescription = dto.CompanyDescription ?? string.Empty;
-        tenant.PersonalPhone = dto.PersonalPhone;
-        tenant.WhatsAppPhone = dto.WhatsAppPhone;
-        tenant.ManualAddress = dto.ManualAddress;
-        tenant.MapLocationUrl = dto.MapLocationUrl;
-        tenant.Latitude = dto.Latitude;
-        tenant.Longitude = dto.Longitude;
+        tenant.Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty;
+        tenant.LogoUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.LogoUrl) ?? string.Empty;
+        tenant.BannerUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BannerUrl) ?? string.Empty;
+        tenant.Region = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Region) ?? string.Empty;
+        tenant.CompanyDescription = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CompanyDescription) ?? string.Empty;
+        tenant.PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone);
+        tenant.WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone);
+
+        if (!string.IsNullOrWhiteSpace(dto.ManualAddress))
+        {
+            tenant.ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress);
+        }
+        if (!string.IsNullOrWhiteSpace(dto.MapLocationUrl))
+        {
+            tenant.MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl);
+        }
+        if (dto.Latitude.HasValue && dto.Latitude.Value != 0)
+        {
+            tenant.Latitude = dto.Latitude;
+        }
+        if (dto.Longitude.HasValue && dto.Longitude.Value != 0)
+        {
+            tenant.Longitude = dto.Longitude;
+        }
 
         await context.SaveChangesAsync();
 
@@ -115,5 +128,31 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
         };
 
         return Ok(new ApiResponse<TenantDto> { Data = result, Message = "Profile updated successfully", Success = true });
+    }
+
+    [HttpGet("quota")]
+    public async Task<ActionResult<ApiResponse<TenantQuotaDto>>> GetQuota()
+    {
+        var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+        {
+            return Unauthorized(new ApiResponse<TenantQuotaDto> { Success = false, Message = "Tenant ID missing from claims" });
+        }
+
+        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        if (tenant == null)
+            return NotFound(new ApiResponse<TenantQuotaDto> { Success = false, Message = "Tenant not found" });
+
+        var allowedProjects = tenant.MaxActiveProjects;
+        var usedProjects = await context.Projects
+            .CountAsync(p => p.TenantId == tenantId && p.Status != Structo.Core.Enums.ProjectStatus.Closed);
+
+        var data = new TenantQuotaDto
+        {
+            UsedProjects = usedProjects,
+            AllowedProjects = allowedProjects
+        };
+
+        return Ok(new ApiResponse<TenantQuotaDto> { Data = data, Success = true });
     }
 }

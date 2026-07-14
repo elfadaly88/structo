@@ -81,11 +81,18 @@ public class NotificationService : INotificationService
         // 2. Resolve external IDs for OneSignal safely on request thread
         var externalIds = await ResolveOneSignalRecipientsAsync(dto);
 
-        // 3. Trigger SignalR and OneSignal HTTP post concurrently
-        var signalRTask = BroadcastSignalRAsync(dto, notificationDto);
-        var oneSignalTask = SendOneSignalHttpAsync(dto.Title, dto.Message, dto.DeepLink, externalIds);
-
-        await Task.WhenAll(signalRTask, oneSignalTask);
+        // 3. Trigger SignalR and OneSignal HTTP post concurrently.
+        //    Wrapped in try/catch: delivery failures must never crash the API request pipeline.
+        try
+        {
+            var signalRTask = BroadcastSignalRAsync(dto, notificationDto);
+            var oneSignalTask = SendOneSignalHttpAsync(dto.Title, dto.Message, dto.DeepLink, externalIds);
+            await Task.WhenAll(signalRTask, oneSignalTask);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Push delivery failed (SignalR or OneSignal) for notification {NotificationId}. DB record is safe.", notification.Id);
+        }
     }
 
     public async Task<List<NotificationDto>> GetMyNotificationsAsync(Guid userId, Guid? tenantId)
@@ -233,56 +240,116 @@ public class NotificationService : INotificationService
         return externalIds;
     }
 
+    // private async Task SendOneSignalHttpAsync(string title, string message, string deepLink, List<string> externalIds)
+    // {
+    //     if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey))
+    //     {
+    //         _logger.LogWarning("OneSignal configuration is incomplete. Push notification skipped.");
+    //         return;
+    //     }
+
+    //     if (externalIds.Count == 0)
+    //     {
+    //         _logger.LogWarning("OneSignal push skipped because no resolved recipients were found for this notification.");
+    //         return;
+    //     }
+
+    //     try
+    //     {
+    //         var client = _httpClientFactory.CreateClient("OneSignal");
+    //         client.DefaultRequestHeaders.Authorization =
+    //             new AuthenticationHeaderValue("Key", _oneSignalRestApiKey);
+
+    //         // Build payload dictionary
+    //         var merged = new Dictionary<string, object?>
+    //         {
+    //             ["app_id"]   = _oneSignalAppId,
+    //             ["headings"] = new { en = title },
+    //             ["contents"] = new { en = message },
+    //             ["target_channel"] = "push"
+    //         };
+
+    //         if (!string.IsNullOrWhiteSpace(deepLink))
+    //             merged["url"] = deepLink;
+
+    //         merged["include_aliases"] = new { external_id = externalIds.ToArray() };
+
+    //         var json = JsonSerializer.Serialize(merged);
+    //         var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    //         var response = await client.PostAsync("https://onesignal.com/api/v1/notifications", content);
+    //         if (!response.IsSuccessStatusCode)
+    //         {
+    //             var body = await response.Content.ReadAsStringAsync();
+    //             _logger.LogWarning("OneSignal push failed with status code {StatusCode}. Response: {ResponseBody}", response.StatusCode, body);
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         // Log but never throw — push failures should never affect the caller
+    //         _logger.LogError(ex, "OneSignal push failed due to an exception.");
+    //     }
+    // }
     private async Task SendOneSignalHttpAsync(string title, string message, string deepLink, List<string> externalIds)
+{
+    if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey))
     {
-        if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey))
+        _logger.LogWarning("OneSignal configuration is incomplete. Push notification skipped.");    
+        return;
+    }
+
+    if (externalIds.Count == 0)
+    {
+        _logger.LogWarning("OneSignal push skipped because no resolved recipients were found for this notification.");
+        return;
+    }
+
+    try
+    {
+        var client = _httpClientFactory.CreateClient("OneSignal");
+        
+        // 🚀 تأمين السيرفر من الـ Hang: لو مفيش Timeout مسبق على الـ Named Client، نضع حد أقصى 5 ثوانٍ للطلب
+        client.Timeout = TimeSpan.FromSeconds(5); 
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Key", _oneSignalRestApiKey);
+
+        var merged = new Dictionary<string, object?>
         {
-            _logger.LogWarning("OneSignal configuration is incomplete. Push notification skipped.");
-            return;
-        }
+            ["app_id"]   = _oneSignalAppId,
+            ["headings"] = new { en = title },
+            ["contents"] = new { en = message },
+            ["target_channel"] = "push"
+        };
 
-        if (externalIds.Count == 0)
+        if (!string.IsNullOrWhiteSpace(deepLink))
+            merged["url"] = deepLink;
+
+        merged["include_aliases"] = new { external_id = externalIds.ToArray() };
+
+        var json = JsonSerializer.Serialize(merged);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        // 🚀 استخدام CancellationToken مأمن بـ 5 ثوانٍ لضمان البتر الفوري لو السيرفر الخارجي علّق
+        using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(5));
+        
+        var response = await client.PostAsync("https://onesignal.com/api/v1/notifications", content, cts.Token);
+        
+        if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("OneSignal push skipped because no resolved recipients were found for this notification.");
-            return;
-        }
-
-        try
-        {
-            var client = _httpClientFactory.CreateClient("OneSignal");
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Key", _oneSignalRestApiKey);
-
-            // Build payload dictionary
-            var merged = new Dictionary<string, object?>
-            {
-                ["app_id"]   = _oneSignalAppId,
-                ["headings"] = new { en = title },
-                ["contents"] = new { en = message },
-                ["target_channel"] = "push"
-            };
-
-            if (!string.IsNullOrWhiteSpace(deepLink))
-                merged["url"] = deepLink;
-
-            merged["include_aliases"] = new { external_id = externalIds.ToArray() };
-
-            var json = JsonSerializer.Serialize(merged);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await client.PostAsync("https://onesignal.com/api/v1/notifications", content);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("OneSignal push failed with status code {StatusCode}. Response: {ResponseBody}", response.StatusCode, body);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Log but never throw — push failures should never affect the caller
-            _logger.LogError(ex, "OneSignal push failed due to an exception.");
+            var body = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning("OneSignal push failed with status code {StatusCode}. Response: {ResponseBody}", response.StatusCode, body);
         }
     }
+    catch (OperationCanceledException)
+    {
+        _logger.LogWarning("OneSignal push HTTP request timed out (5s limit exceeded). Request was aborted to save server threads.");
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "OneSignal push failed due to an exception.");
+    }
+}
 
     private static NotificationDto MapToDto(Notification n) => new()
     {

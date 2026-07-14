@@ -6,6 +6,7 @@ import { LanguageService } from '../../core/services/language.service';
 import { PublicDirectoryService, TenantDto, PublicTenantPortfolioDto, PublicProjectDto } from '../../core/services/public-directory.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 
 @Component({
   selector: 'app-landing-page',
@@ -50,6 +51,43 @@ import { AuthService } from '../../core/services/auth.service';
         </div>
       </nav>
 
+      <!-- Nav Bar -->
+      <nav class="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <span class="text-white font-extrabold text-sm">أ</span>
+          </div>
+          <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أُسُس / Ousos</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="#marketplace" class="text-sm font-semibold text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
+            {{ 'USERS.TAB_USERS' | translate }}
+          </a>
+          <button 
+            (click)="langService.toggleLanguage()"
+            class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
+            {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
+          </button>
+          @if (authService.isAuthenticated()) {
+            <span class="text-sm text-slate-400 font-medium font-cairo">
+              Welcome back, <span class="text-white font-semibold">{{ authService.currentUser()?.name }}</span>
+            </span>
+            <a routerLink="/dashboard" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+              <span class="relative z-10">Dashboard</span>
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </a>
+          } @else {
+            <a routerLink="/login" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
+              {{ 'NAV.LOGIN' | translate }}
+            </a>
+            <button (click)="navigateToLogin()" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+              <span class="relative z-10">{{ 'NAV.GET_STARTED' | translate }}</span>
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </button>
+          }
+        </div>
+      </nav>
+
       <!-- Hero Section -->
       <header class="relative pt-32 pb-16 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
         <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
@@ -59,14 +97,15 @@ import { AuthService } from '../../core/services/auth.service';
           <span>{{ 'HERO.LIVE_TAG' | translate }}</span>
         </div>
 
-        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-tight mb-8">
-          {{ 'HERO.TITLE_START' | translate }}
-          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            {{ 'HERO.TITLE_HIGHLIGHT' | translate }}
-          </span>
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight max-w-5xl leading-tight mb-8 font-cairo">
+          @if (langService.currentLang() === 'ar') {
+            أُسُس | اضبط عُهد مشاريعك، وراقب مصاريف موقعك <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">في ثانية وبدون محاسب</span>
+          } @else {
+            Ousos | Track your project cash & monitor site expenses <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">instantly without an accountant</span>
+          }
         </h1>
 
-        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
+        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed font-cairo">
           {{ 'HERO.SUBTITLE' | translate }}
         </p>
 
@@ -78,7 +117,7 @@ import { AuthService } from '../../core/services/auth.service';
             </a>
           } @else {
             <button (click)="navigateToLogin()" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
-              {{ 'HERO.CTA_START' | translate }}
+              {{ langService.currentLang() === 'ar' ? 'ابدأ مشروعك الأول مجاناً فوراً' : 'Start Your First Project Free Now' }}
               <span class="inline-block transform transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 ml-1 rtl:mr-1 rtl:ml-0">&rarr;</span>
             </button>
           }
@@ -87,6 +126,91 @@ import { AuthService } from '../../core/services/auth.service';
           </a>
         </div>
       </header>
+
+      <!-- Interactive Pricing Calculator Section -->
+      <section id="pricing" class="py-16 px-6 max-w-4xl mx-auto border-t border-slate-900">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl font-extrabold tracking-tight mb-2 font-cairo">
+            {{ langService.currentLang() === 'ar' ? 'حاسبة الأسعار التفاعلية' : 'Interactive Pricing Calculator' }}
+          </h2>
+          <p class="text-slate-400 font-cairo text-sm max-w-lg mx-auto">
+            {{ langService.currentLang() === 'ar' ? 'اختر عدد المشاريع التي تحتاج لإدارتها وشاهد التكلفة فوراً.' : 'Select the number of projects you need to manage and see the cost instantly.' }}
+          </p>
+        </div>
+
+        <div class="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
+          <div class="absolute -right-16 -top-16 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+          <div class="absolute -left-16 -bottom-16 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+          <!-- Left side: Slider -->
+          <div class="w-full md:w-3/5 space-y-6">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-400 font-cairo">
+                {{ langService.currentLang() === 'ar' ? 'عدد المشاريع المطلوبة' : 'Number of Projects' }}
+              </span>
+              <span class="text-2xl font-extrabold text-indigo-400 font-mono">
+                {{ sliderVal() }} @if (sliderVal() === 10) { + }
+              </span>
+            </div>
+
+            <div class="relative pt-2">
+              <input 
+                type="range" 
+                min="1" 
+                max="10" 
+                [value]="sliderVal()" 
+                (input)="onSliderInput($event)"
+                class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none">
+              
+              <div class="flex justify-between text-[10px] text-slate-500 mt-2 font-mono">
+                <span>1</span>
+                <span>2</span>
+                <span>3</span>
+                <span>4</span>
+                <span>5</span>
+                <span>6</span>
+                <span>7</span>
+                <span>8</span>
+                <span>9</span>
+                <span>10+</span>
+              </div>
+            </div>
+
+            <!-- Features Included Dynamic text -->
+            <div class="p-4 bg-slate-950/40 border border-slate-800/80 rounded-2xl flex items-center gap-3">
+              <div class="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+                💡
+              </div>
+              <p class="text-xs text-slate-300 font-cairo">
+                {{ langService.currentLang() === 'ar' ? pricingInfo().noteAr : pricingInfo().noteEn }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Right side: Price display card -->
+          <div class="w-full md:w-2/5 p-6 bg-slate-950 border border-slate-800/80 rounded-2xl flex flex-col justify-between text-center min-h-[180px] shadow-lg">
+            <div>
+              <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 font-cairo block mb-1">
+                {{ langService.currentLang() === 'ar' ? 'التكلفة الإجمالية' : 'Total Price' }}
+              </span>
+              <div class="text-3xl font-extrabold text-white font-mono my-2 tracking-tight">
+                {{ pricingInfo().price }}
+              </div>
+              <span class="text-[10px] text-slate-500 font-cairo">
+                {{ langService.currentLang() === 'ar' ? 'تفعيل فوري لمدى الحياة' : 'Lifetime instant activation' }}
+              </span>
+            </div>
+
+            <button 
+              (click)="onPricingAction()"
+              class="w-full mt-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white font-cairo transition-all duration-150 flex items-center justify-center gap-2 active:scale-95 shadow-md cursor-pointer">
+              {{ pricingInfo().isCustom 
+                  ? (langService.currentLang() === 'ar' ? 'تواصل مع الإدارة' : 'Contact Support') 
+                  : (langService.currentLang() === 'ar' ? 'ابدأ الآن' : 'Get Started') }}
+            </button>
+          </div>
+        </div>
+      </section>
 
       <!-- MARKETPLACE SaaS DIRECTORY -->
       <section id="marketplace" class="py-20 px-6 border-t border-slate-900 bg-slate-900/10 relative">
@@ -326,6 +450,7 @@ export class LandingPageComponent implements OnInit {
   protected readonly langService = inject(LanguageService);
   protected readonly authService = inject(AuthService);
   private readonly directoryService = inject(PublicDirectoryService);
+  private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly renderer = inject(Renderer2);
   private readonly document = inject(DOCUMENT);
 
@@ -334,6 +459,44 @@ export class LandingPageComponent implements OnInit {
   readonly isModalOpen = signal(false);
   readonly isLoading = signal(false);
 
+  // Pricing state
+  readonly sliderVal = signal(1);
+  readonly pricingInfo = computed(() => {
+    const val = this.sliderVal();
+    if (val <= 1) {
+      return {
+        price: '0 EGP',
+        isCustom: false,
+        noteAr: 'الخطة المجانية الأساسية - مشروع واحد نشط مجاناً مدى الحياة.',
+        noteEn: 'Basic Free Plan - 1 Active Project free for lifetime.'
+      };
+    }
+    if (val >= 10) {
+      return {
+        price: this.langService.currentLang() === 'ar' ? 'سعر مخصص' : 'Custom Pricing',
+        isCustom: true,
+        noteAr: 'للمؤسسات والشركات الكبيرة (10+ مشاريع). تواصل معنا للحصول على عرض سعر مخصص.',
+        noteEn: 'For large enterprises (10+ projects). Contact us for a custom quote.'
+      };
+    }
+    const map: Record<number, { price: string, noteAr: string, noteEn: string }> = {
+      2: { price: '2,000 EGP', noteAr: 'باقة تفعيل مشروع إضافي واحد فوري.', noteEn: '1 Extra Project instant activation.' },
+      3: { price: '4,000 EGP', noteAr: 'باقة تفعيل مشروعين إضافيين فوري.', noteEn: '2 Extra Projects instant activation.' },
+      4: { price: '6,000 EGP', noteAr: 'باقة تفعيل 3 مشاريع إضافية فورية.', noteEn: '3 Extra Projects instant activation.' },
+      5: { price: '7,500 EGP', noteAr: 'باقة 5 مشاريع متميزة (وفر 2,500 جنيه مقارنة بالشراء الفردي).', noteEn: 'Premium 5-Project Pack (Save 2,500 EGP).' },
+      6: { price: '9,500 EGP', noteAr: 'باقة 5 مشاريع + تفعيل مشروع إضافي واحد.', noteEn: '5-Project Pack + 1 Extra Project.' },
+      7: { price: '11,500 EGP', noteAr: 'باقة 5 مشاريع + تفعيل مشروعين إضافيين.', noteEn: '5-Project Pack + 2 Extra Projects.' },
+      8: { price: '13,500 EGP', noteAr: 'باقة 5 مشاريع + تفعيل 3 مشاريع إضافية.', noteEn: '5-Project Pack + 3 Extra Projects.' },
+      9: { price: '15,000 EGP', noteAr: 'باقة مزدوجة 10 مشاريع مخفضة (توفير إضافي).', noteEn: 'Double 5-Project Pack Discounted.' }
+    };
+    return {
+      price: map[val]?.price || 'Custom',
+      isCustom: false,
+      noteAr: map[val]?.noteAr || '',
+      noteEn: map[val]?.noteEn || ''
+    };
+  });
+
   // Filters
   regionFilter = '';
   categoryFilter = '';
@@ -341,6 +504,20 @@ export class LandingPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchCompanies();
+  }
+
+  onSliderInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.sliderVal.set(parseInt(target.value, 10));
+  }
+
+  onPricingAction(): void {
+    if (this.pricingInfo().isCustom) {
+      const msg = `مرحباً، أود ترقية باقة المشاريع لمنصة أُسُس لعدد 10+ مشاريع.`;
+      this.whatsappLink.openChat('201004500766', msg);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   fetchCompanies(): void {

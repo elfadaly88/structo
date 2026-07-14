@@ -59,6 +59,11 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
         if (project == null)
             return NotFound(new ApiResponse<ProjectDto> { Success = false, Message = "Project not found" });
 
+        if (project.Status == "PendingActivation" && CurrentUserRole != "SuperAdmin")
+        {
+            return Forbid();
+        }
+
         if (CurrentUserRole == "SuperAdmin")
             project.Description = string.Empty;
 

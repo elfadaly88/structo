@@ -38,7 +38,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
             await dto.File.CopyToAsync(stream);
         }
 
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         Guid.TryParse(userIdString, out var userId);
 
         var photo = new SitePhoto
@@ -46,7 +46,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
             ProjectId = projectId,
             UploadedByUserId = userId, 
             PhotoUrl = $"/uploads/{fileName}",
-            Description = dto.Description,
+            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description),
             UploadedAt = DateTime.UtcNow
         };
 

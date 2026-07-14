@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormsModule } from '@angular/forms';
@@ -19,6 +20,7 @@ import { SettlementService } from '../../../core/services/settlement.service';
 import { OfflineSyncService } from '../../../core/services/offline-sync.service';
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { ProjectCloseoutService } from '../../../core/services/project-closeout.service';
+import { LanguageService } from '../../../core/services/language.service';
 
 
 
@@ -59,9 +61,9 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
               @if (project()!.propertyType) {
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full font-cairo font-semibold">
                   @if (project()!.propertyType === 'Residential') {
-                    🏠 {{ 'Residential' }}
+                    🏠 {{ langService.currentLang() === 'ar' ? 'سكني' : 'Residential' }}
                   } @else {
-                    🏢 {{ 'Administrative' }}
+                    🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
                   }
                 </span>
               }
@@ -740,12 +742,18 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
                   {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
                 }
               </button>
-              <input
+              <!-- <input
                 #galleryFileInput
                 type="file"
                 class="hidden"
                 (change)="onGalleryFileSelected($event)"
-                accept="image/*">
+                accept="image/*"> -->
+                <input
+                  #galleryFileInput
+                  type="file"
+                  class="hidden"
+                  (change)="onGalleryFileSelected($event)"
+                  accept="image/*">
             </div>
           </div>
 
@@ -1004,6 +1012,11 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
                               تأكيد استلام المرتجع
                             </button>
                           }
+                          <button
+                            (click)="printSettlementReport(s)"
+                            class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-300 hover:text-white border border-slate-700 transition-all font-cairo flex items-center gap-1 active:scale-95 cursor-pointer">
+                            طباعة / Print 🖨️
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1448,7 +1461,7 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
               <input
                 type="file"
                 (change)="onSettleReceiptSelected($event)"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 cursor-pointer">
               @if (isUploadingSettleReceipt()) {
                 <span class="text-xs text-indigo-400 mt-1 flex items-center gap-2">
@@ -2032,7 +2045,11 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
                       <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">إيصال الفاتورة / Invoice Receipt</label>
                       <div class="flex items-center gap-3">
                         <div class="relative flex-1">
-                          <input type="file" accept="image/*" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-[10px] file:bg-slate-800 file:text-indigo-400 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          <input type="file" 
+                          accept="image/*,application/pdf,.xlsx,.xls"
+                          [disabled]="isSettlementLocked()" 
+                          (change)="onSettlementLineFileSelected($event, idx)" 
+                          class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-[10px] file:bg-slate-800 file:text-indigo-400 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                           @if (line.get('uploading')?.value) {
                             <span class="text-[10px] text-indigo-400 animate-pulse mt-1 block">Uploading...</span>
                           }
@@ -2128,9 +2145,95 @@ import { ProjectCloseoutService } from '../../../core/services/project-closeout.
         </div>
       </div>
     }
+
+    <!-- Hidden Print Layout -->
+    @if (activePrintSettlement()) {
+      <div class="print-only hidden print:block p-8 bg-white text-slate-900 font-sans leading-relaxed" dir="rtl">
+        <!-- Report Header -->
+        <div class="text-center border-b-2 border-slate-900 pb-4 mb-6">
+          <h1 class="text-2xl font-extrabold font-cairo">تقرير تسوية عهدة مشروع</h1>
+          <h2 class="text-lg font-bold text-slate-600 font-cairo mt-1">منصة أُسُس لإدارة المشاريع / Ousos</h2>
+        </div>
+
+        <!-- Project & Custody details -->
+        <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div>
+            <p><strong>اسم المشروع / Project Name:</strong> {{ project()?.name }}</p>
+            <p><strong>صاحب العهدة (المهندس) / Engineer:</strong> {{ activePrintSettlement()!.issuedTo }}</p>
+            <p><strong>سبب العهدة / Custody Reason:</strong> {{ activePrintSettlement()!.custodyReason }}</p>
+          </div>
+          <div class="text-left rtl:text-right">
+            <p><strong>تاريخ التقديم / Submitted At:</strong> {{ activePrintSettlement()!.submittedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>حالة التسوية / Status:</strong> {{ activePrintSettlement()!.status }}</p>
+            <p><strong>رقم التسوية / ID:</strong> {{ activePrintSettlement()!.id }}</p>
+          </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="bg-slate-100 p-4 rounded-xl mb-6 grid grid-cols-3 gap-4 text-center border border-slate-300">
+          <div>
+            <span class="text-xs text-slate-500 font-semibold block">قيمة العهدة المستلمة / Custody Amount</span>
+            <span class="text-lg font-bold font-mono">{{ activePrintSettlement()!.custodyAmount | number:'1.2-2' }} EGP</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-500 font-semibold block">المبلغ المصروف فعلياً / Spent Amount</span>
+            <span class="text-lg font-bold font-mono text-amber-600">{{ activePrintSettlement()!.totalAmount | number:'1.2-2' }} EGP</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-500 font-semibold block">المبلغ المستحق (الفرق) / Net Difference</span>
+            <span class="text-lg font-bold font-mono" [class.text-emerald-600]="activePrintSettlement()!.netDifference > 0" [class.text-rose-600]="activePrintSettlement()!.netDifference < 0">
+              {{ activePrintSettlement()!.netDifference | number:'1.2-2' }} EGP
+            </span>
+          </div>
+        </div>
+
+        <!-- Itemized Line Items -->
+        <div class="mb-6">
+          <h3 class="text-base font-bold mb-3 font-cairo">تفاصيل البنود والمصاريف الفردية / Itemized Expenses</h3>
+          <table class="w-full text-right border-collapse text-sm">
+            <thead>
+              <tr class="border-b-2 border-slate-300 text-slate-700 font-bold">
+                <th class="py-2 px-2">التصنيف / Category</th>
+                <th class="py-2 px-2">الوصف / Description</th>
+                <th class="py-2 px-2 text-left rtl:text-right">المبلغ / Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              @for (line of activePrintSettlement()!.lines; track line.id) {
+                <tr class="text-slate-800">
+                  <td class="py-2 px-2 font-medium">{{ 'FINANCE.CATEGORY_' + line.category.toUpperCase() | translate }}</td>
+                  <td class="py-2 px-2 text-slate-600">{{ line.description }}</td>
+                  <td class="py-2 px-2 text-left rtl:text-right font-mono font-semibold">{{ line.amount | number:'1.2-2' }} EGP</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Verification Stamp -->
+        <div class="mt-12 flex justify-between items-center text-xs text-slate-400 border-t border-slate-200 pt-6">
+          <div>
+            <p><strong>المراجع / Approved By:</strong> {{ activePrintSettlement()!.resolvedBy || '—' }}</p>
+            <p><strong>تاريخ الاعتماد / Resolved At:</strong> {{ activePrintSettlement()!.resolvedAt ? (activePrintSettlement()!.resolvedAt | date:'dd/MM/yyyy HH:mm') : '—' }}</p>
+          </div>
+          <div class="text-center p-3 border border-slate-300 rounded-xl bg-slate-50 min-w-[120px] text-slate-700 font-semibold font-mono">
+            VERIFIED BY OUSOS
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class ProjectDetailsComponent implements OnInit {
+  readonly activePrintSettlement = signal<SettlementMobileDto | null>(null);
+
+  printSettlementReport(s: SettlementMobileDto): void {
+    this.activePrintSettlement.set(s);
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  }
+
   private readonly route = inject(ActivatedRoute);
   private readonly projectService = inject(ProjectService);
   private readonly pettyCashService = inject(PettyCashService);
@@ -2146,6 +2249,8 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly userService = inject(TenantUserService);
   private readonly projectCloseoutService = inject(ProjectCloseoutService);
+  protected readonly langService = inject(LanguageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly reconciliationReport = signal<ProjectReconciliationReportDto | null>(null);
   readonly isCloseoutLoading = signal(false);
@@ -2232,7 +2337,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly settlements = signal<SettlementMobileDto[]>([]);
   readonly isLoadingSettlements = signal(false);
   readonly activePreviewPhotoUrl = signal<string | null>(null);
-  
+
   readonly settlementForm: FormGroup = this.fb.group({
     lines: this.fb.array([])
   });
@@ -2316,7 +2421,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isSavingProfile = signal(false);
   readonly profileSuccessMessage = signal<string | null>(null);
   readonly isSavingProjectSettings = signal(false);
-  
+
   readonly profileForm: FormGroup = this.fb.group({
     name: ['', Validators.required],
     logoUrl: [''],
@@ -2369,13 +2474,13 @@ export class ProjectDetailsComponent implements OnInit {
     const amountControl = formGroup.get('amount');
     const sourcePoolIdControl = formGroup.get('sourcePoolId');
     if (!amountControl) return null;
-    
+
     const amount = amountControl.value;
     if (amount === null || amount === undefined) {
       this.clearInsufficientBalanceError(amountControl);
       return null;
     }
-    
+
     const sourcePoolId = sourcePoolIdControl?.value;
     if (sourcePoolId) {
       const pool = this.cashPools().find(p => p.id === sourcePoolId);
@@ -2390,7 +2495,7 @@ export class ProjectDetailsComponent implements OnInit {
         return { insufficientBalance: true };
       }
     }
-    
+
     this.clearInsufficientBalanceError(amountControl);
     return null;
   }
@@ -2474,7 +2579,7 @@ export class ProjectDetailsComponent implements OnInit {
         this.fetchUsersList();
       }
 
-      this.offlineSync.registerHandler('create-settlement', (payload: any) => 
+      this.offlineSync.registerHandler('create-settlement', (payload: any) =>
         this.settlementService.createSettlement(this.projectId, payload)
       );
     }
@@ -2505,10 +2610,10 @@ export class ProjectDetailsComponent implements OnInit {
         return;
       }
       const file = input.files[0];
-      if (file.size > 2 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) {
         this.confirmService.alert({
-          title: 'حجم الملف كبير جداً',
-          message: 'حجم الملف كبير جداً! الحد الأقصى للصور 2 ميجا.',
+          title: 'حجم الملف كبير جداً / File Size Too Large',
+          message: 'حجم الملف كبير جداً! الحد الأقصى للملفات 5 ميجا. / The maximum file size is 5MB.',
           type: 'error'
         });
         return;
@@ -2572,7 +2677,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (this.profileForm.invalid) return;
     this.isSavingProfile.set(true);
     this.profileSuccessMessage.set(null);
-    
+
     this.profileService.updateProfile(this.profileForm.value).subscribe({
       next: (res) => {
         this.isSavingProfile.set(false);
@@ -2637,7 +2742,7 @@ export class ProjectDetailsComponent implements OnInit {
   onProjectSettingsSubmit(): void {
     const isPublic = this.projectSettingsForm.value.isPublicPortfolio;
     this.isSavingProjectSettings.set(true);
-    
+
     const currentProj = this.project();
     if (!currentProj) return;
 
@@ -2655,7 +2760,7 @@ export class ProjectDetailsComponent implements OnInit {
         status = parsed.status || 'Active';
         category = parsed.category || 'Other';
         description = parsed.description || '';
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const legacyDescObj = {
@@ -2693,7 +2798,7 @@ export class ProjectDetailsComponent implements OnInit {
 
   fetchProjectDetails(): void {
     this.isLoadingProject.set(true);
-    this.projectService.getProjectById(this.projectId).subscribe({
+    this.projectService.getProjectById(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isLoadingProject.set(false);
         if (response.success && response.data) {
@@ -2707,7 +2812,7 @@ export class ProjectDetailsComponent implements OnInit {
             try {
               const parsed = JSON.parse(proj.description);
               isPublicPortfolio = !!parsed.isPublicPortfolio || !!parsed.isPublic;
-            } catch (e) {}
+            } catch (e) { }
           }
           this.projectSettingsForm.patchValue({ isPublicPortfolio });
         }
@@ -2719,7 +2824,7 @@ export class ProjectDetailsComponent implements OnInit {
 
   fetchPettyCash(): void {
     this.isLoadingPettyCash.set(true);
-    this.pettyCashService.getProjectPettyCash(this.projectId).subscribe({
+    this.pettyCashService.getProjectPettyCash(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isLoadingPettyCash.set(false);
         if (response.success && response.data) {
@@ -2731,7 +2836,7 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   fetchCashPools(): void {
-    this.financialService.getCashPools(this.projectId).subscribe({
+    this.financialService.getCashPools(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.cashPools.set(response.data);
@@ -2742,7 +2847,7 @@ export class ProjectDetailsComponent implements OnInit {
 
   fetchTransactions(): void {
     this.isLoadingTransactions.set(true);
-    this.financialService.getProjectTransactions(this.projectId).subscribe({
+    this.financialService.getProjectTransactions(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isLoadingTransactions.set(false);
         if (response.success && response.data) {
@@ -2804,9 +2909,9 @@ export class ProjectDetailsComponent implements OnInit {
 
     const fileToUpload = this.selectedSettleReceipt();
     if (fileToUpload) {
-      if (fileToUpload.size > 2 * 1024 * 1024) {
+      if (fileToUpload.size > 5 * 1024 * 1024) {
         this.isSettling.set(false);
-        this.settleErrors.set(['حجم الملف كبير جداً! الحد الأقصى لإيصال الفاتورة 2 ميجا.']);
+        this.settleErrors.set(['حجم الملف كبير جداً! الحد الأقصى لإيصال الفاتورة 5 ميجا.']);
         return;
       }
 
@@ -3265,7 +3370,7 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   fetchUsersList(): void {
-    this.userService.getUsers().subscribe({
+    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.usersList.set(res.data.filter(u => ['manager', 'siteengineer', 'designengineer'].includes(u.role.toLowerCase())));
@@ -3276,7 +3381,7 @@ export class ProjectDetailsComponent implements OnInit {
 
   fetchSettlements(): void {
     this.isLoadingSettlements.set(true);
-    this.settlementService.getSettlements(this.projectId).subscribe({
+    this.settlementService.getSettlements(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.isLoadingSettlements.set(false);
         if (res.success && res.data) {
@@ -3307,7 +3412,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (this.disburseForm.invalid) return;
     this.isDisbursing.set(true);
     this.disburseErrors.set([]);
-    
+
     this.financialService.directDisbursement(this.projectId, this.disburseForm.value).subscribe({
       next: (res) => {
         this.isDisbursing.set(false);
@@ -3365,10 +3470,10 @@ export class ProjectDetailsComponent implements OnInit {
   onSettlementLineFileSelected(event: any, index: number): void {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) {
         this.confirmService.alert({
-          title: 'حجم الملف كبير جداً',
-          message: 'الحد الأقصى للمرفقات 2 ميجابايت.',
+          title: 'حجم الملف كبير جداً / File Size Too Large',
+          message: 'حجم الملف كبير جداً! الحد الأقصى للملفات 5 ميجا. / The maximum file size is 5MB.',
           type: 'error'
         });
         return;
@@ -3596,7 +3701,7 @@ export class ProjectDetailsComponent implements OnInit {
   onWhatsAppAlert(pettyCash: PettyCashMobileDto, customMessage?: string): void {
     const defaultMsg = `مرحباً ${pettyCash.issuedTo}، تم اعتماد وتحديث طلب العهدة الخاص بك بقيمة ${pettyCash.amount} EGP لـ ${pettyCash.projectName} - ${pettyCash.reason}.`;
     const message = customMessage || defaultMsg;
-    this.userService.getUsers().subscribe({
+    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           const userObj = res.data.find(u => `${u.firstName} ${u.lastName}`.trim() === pettyCash.issuedTo.trim());

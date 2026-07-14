@@ -9,3 +9,22 @@
 [dir="rtl"] {
   font-family: 'Cairo', system-ui, sans-serif !important;
 }
+
+@media print {
+  /* Hide every element on the page */
+  body * {
+    visibility: hidden;
+  }
+  /* Except our print container and all its children */
+  .print-only, .print-only * {
+    visibility: visible;
+  }
+  /* Position the print container at the top left */
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+  }
+}

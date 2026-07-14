@@ -18,7 +18,18 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An unhandled exception occurred.");
+            logger.LogError(ex, "An unhandled exception occurred for {Method} {Path}",
+                context.Request.Method, context.Request.Path);
+
+            // If the response has already started (e.g., streaming), we cannot write headers.
+            // Abort the connection to prevent a corrupt response from reaching the client.
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("Response already started — aborting connection to prevent corrupt response.");
+                context.Abort();
+                return;
+            }
+
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -32,18 +43,16 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             Success = false
         };
 
-        if (exception switch
+        context.Response.StatusCode = exception switch
         {
-            BusinessRuleException e => (int)StatusCodes.Status400BadRequest,
-            UnauthorizedAccessException e => (int)StatusCodes.Status403Forbidden,
-            _ => (int)StatusCodes.Status500InternalServerError
-        } is var statusCode)
-        {
-            context.Response.StatusCode = statusCode;
-            response.Message = exception is BusinessRuleException || exception is UnauthorizedAccessException 
-                ? exception.Message 
-                : "An unexpected internal server error occurred.";
-        }
+            BusinessRuleException => StatusCodes.Status400BadRequest,
+            UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        response.Message = exception is BusinessRuleException || exception is UnauthorizedAccessException
+            ? exception.Message
+            : "An unexpected internal server error occurred.";
 
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         return context.Response.WriteAsync(JsonSerializer.Serialize(response, options));

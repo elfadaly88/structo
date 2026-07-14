@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -680,7 +681,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     }
   `]
 })
-export class FinancialsComponent {
+export class FinancialsComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly projectService = inject(ProjectService);
   readonly pettyCashService = inject(PettyCashService);
@@ -688,6 +689,7 @@ export class FinancialsComponent {
   readonly imageUploadService = inject(ImageUploadService);
   private readonly confirmService = inject(ConfirmModalService);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isEditTransactionModalOpen = signal(false);
   readonly isSavingTransaction = signal(false);
@@ -758,7 +760,7 @@ export class FinancialsComponent {
   }
 
   loadProjects(): void {
-    this.projectService.getProjects().subscribe({
+    this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         if (response.data) {
           this.projects.set(response.data);
@@ -770,12 +772,12 @@ export class FinancialsComponent {
 
           // Preload expenses for all projects to compute burn rates
           response.data.forEach(p => {
-            this.financialService.getProjectTransactions(p.id).subscribe({
+            this.financialService.getProjectTransactions(p.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
               next: (res) => {
                 if (res.data) {
                   const totalExp = res.data.items
-                    .filter(t => t.type === 'Expense')
-                    .reduce((sum, t) => sum + t.amount, 0);
+                     .filter(t => t.type === 'Expense')
+                     .reduce((sum, t) => sum + t.amount, 0);
 
                   this.projectExpenses.update(map => {
                     map.set(p.id, totalExp);
@@ -844,7 +846,7 @@ export class FinancialsComponent {
     this.loading.set(true);
 
     // Fetch petty cash requests
-    this.pettyCashService.getProjectPettyCash(projectId).subscribe({
+    this.pettyCashService.getProjectPettyCash(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           const items = response.data.items;
@@ -862,7 +864,7 @@ export class FinancialsComponent {
     });
 
     // Fetch transactions
-    this.financialService.getProjectTransactions(projectId).subscribe({
+    this.financialService.getProjectTransactions(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.loading.set(false);
         if (response.success && response.data) {
@@ -942,7 +944,7 @@ export class FinancialsComponent {
       category: this.pettyCashForm.category
     };
 
-    this.pettyCashService.requestPettyCash(this.pettyCashForm.projectId, dto).subscribe({
+    this.pettyCashService.requestPettyCash(this.pettyCashForm.projectId, dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.closePettyCashModal();
         this.loadProjects(); // Reload pools & burn rates
@@ -997,7 +999,7 @@ export class FinancialsComponent {
 
     // First upload the file if selected
     if (this.selectedFile()) {
-      this.imageUploadService.uploadProjectGallery(request.projectId, this.selectedFile()!).subscribe({
+      this.imageUploadService.uploadProjectGallery(request.projectId, this.selectedFile()!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           const photoUrl = res.data?.url || '';
           this.submitSettleDto(request, photoUrl);
@@ -1020,7 +1022,7 @@ export class FinancialsComponent {
       receiptPhotoUrl: photoUrl
     };
 
-    this.pettyCashService.settlePettyCash(request.projectId, request.id, dto).subscribe({
+    this.pettyCashService.settlePettyCash(request.projectId, request.id, dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.closeSettleModal();
         this.loadProjects(); // Update project budgets
@@ -1040,7 +1042,7 @@ export class FinancialsComponent {
     this.confirmService.toggleBodyScroll(true);
     
     this.loading.set(true);
-    this.financialService.getCashPools(request.projectId).subscribe({
+    this.financialService.getCashPools(request.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.currentProjectPools.set(res.data);
@@ -1062,7 +1064,7 @@ export class FinancialsComponent {
     if (!req || !this.approveSourcePoolId) return;
     
     this.loading.set(true);
-    this.pettyCashService.approvePettyCash(req.projectId, req.id, { sourcePoolId: this.approveSourcePoolId }).subscribe({
+    this.pettyCashService.approvePettyCash(req.projectId, req.id, { sourcePoolId: this.approveSourcePoolId }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.closeApproveModal();
         this.loadProjects(); // Update project budgets/pools
@@ -1092,7 +1094,7 @@ export class FinancialsComponent {
     if (!req || !this.rejectComments.trim()) return;
 
     this.loading.set(true);
-    this.pettyCashService.rejectPettyCash(req.projectId, req.id, this.rejectComments).subscribe({
+    this.pettyCashService.rejectPettyCash(req.projectId, req.id, this.rejectComments).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.closeRejectModal();
         this.loadProjects();
@@ -1121,7 +1123,7 @@ export class FinancialsComponent {
     const pid = projectId || this.selectedProjectId();
     if (!pid) return;
     this.isDeletingTx.set(true);
-    this.financialService.deleteTransaction(pid, id).subscribe({
+    this.financialService.deleteTransaction(pid, id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.isDeletingTx.set(false);
         this.loadData();
@@ -1161,7 +1163,7 @@ export class FinancialsComponent {
     const formVal = this.editTransactionForm.value;
     const pid = this.selectedProjectId();
 
-    this.financialService.updateTransaction(pid, this.selectedTransactionToEdit.id, formVal).subscribe({
+    this.financialService.updateTransaction(pid, this.selectedTransactionToEdit.id, formVal).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.isSavingTransaction.set(false);
         this.closeEditTransactionModal();

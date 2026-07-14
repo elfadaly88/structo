@@ -114,34 +114,56 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             catch { }
         }
 
+        var tenant = await context.Set<Tenant>().FirstOrDefaultAsync(t => t.Id == tenantId);
+        var allowedProjects = tenant?.MaxActiveProjects ?? 1;
+        var usedProjects = await context.Set<Project>()
+            .CountAsync(p => p.TenantId == tenantId && p.Status != ProjectStatus.Closed);
+
+        var finalStatus = ProjectStatus.Active;
+        var isActive = true;
+        var creationMessage = "Project created successfully";
+
+        if (usedProjects >= allowedProjects)
+        {
+            finalStatus = ProjectStatus.PendingActivation;
+            isActive = false;
+            creationMessage = "QUOTA_EXCEEDED: Project created under PendingActivation status.";
+        }
+
         var project = new Project
         {
             TenantId = tenantId,
-            Name = dto.Name,
-            Description = innerDesc,
+            Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty,
+            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc),
             Budget = budget,
-            ClientName = !string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client,
+            ClientName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(!string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client),
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             ManagerId = dto.ManagerId,
-            Status = ProjectStatus.Active,
-            Governorate = dto.Governorate,
-            CityOrZone = dto.CityOrZone,
-            SiteAddress = dto.SiteAddress,
-            ClientWhatsApp = dto.ClientWhatsApp,
+            Status = finalStatus,
+            IsActive = isActive,
+            Governorate = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Governorate),
+            CityOrZone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CityOrZone),
+            SiteAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.SiteAddress),
+            ClientWhatsApp = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ClientWhatsApp),
             PropertyType = Enum.TryParse<PropertyType>(dto.PropertyType, true, out var pType) ? pType : PropertyType.Residential
         };
 
         context.Set<Project>().Add(project);
         await context.SaveChangesAsync();
 
-        return (true, MapToDto(project), "Project created successfully");
+        return (true, MapToDto(project), creationMessage);
     }
 
     public async Task<(bool Success, ProjectDto? Data, string Message)> UpdateProjectAsync(Guid id, ProjectCreateDto dto, string userRole)
     {
         var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return (false, null, "Project not found.");
+
+        if (project.Status == ProjectStatus.PendingActivation && userRole != "SuperAdmin")
+        {
+            return (false, null, "ACCESS_DENIED: Pending activation projects cannot be modified.");
+        }
 
         if (userRole != "SuperAdmin")
         {
@@ -152,7 +174,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             }
         }
 
-        project.Name = dto.Name;
+        project.Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty;
         project.StartDate = dto.StartDate;
         project.EndDate = dto.EndDate;
         project.ManagerId = dto.ManagerId;
@@ -182,15 +204,15 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             catch { }
         }
 
-        project.Description = innerDesc;
+        project.Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc);
         project.Budget = budget;
-        project.ClientName = !string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client;
+        project.ClientName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(!string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client);
         project.IsPublicPortfolio = isPublic;
-        project.Category = category;
-        project.Governorate = dto.Governorate;
-        project.CityOrZone = dto.CityOrZone;
-        project.SiteAddress = dto.SiteAddress;
-        project.ClientWhatsApp = dto.ClientWhatsApp;
+        project.Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(category);
+        project.Governorate = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Governorate);
+        project.CityOrZone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CityOrZone);
+        project.SiteAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.SiteAddress);
+        project.ClientWhatsApp = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ClientWhatsApp);
         project.PropertyType = Enum.TryParse<PropertyType>(dto.PropertyType, true, out var pType) ? pType : PropertyType.Residential;
 
         await context.SaveChangesAsync();
@@ -409,7 +431,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             return (false, "Rating must be between 1 and 5.");
 
         if (dto.Rating.HasValue) project.ClientRating = dto.Rating;
-        if (!string.IsNullOrWhiteSpace(dto.Notes)) project.ClientReviewNotes = dto.Notes;
+        if (!string.IsNullOrWhiteSpace(dto.Notes)) project.ClientReviewNotes = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Notes);
 
         await context.SaveChangesAsync();
         return (true, "شكراً لك! تم تسجيل تقييمك بنجاح.");

@@ -9,17 +9,17 @@ export class LanguageService {
   private readonly translate = inject(TranslateService);
   private readonly document = inject(DOCUMENT);
 
-  readonly currentLang = signal<'en' | 'ar'>('en');
+  readonly currentLang = signal<'en' | 'ar'>('ar');
 
   initLanguage() {
-    const saved = localStorage.getItem('structo_lang') as 'en' | 'ar';
-    const defaultLang = saved || 'en';
+    const saved = localStorage.getItem('ousos_lang') as 'en' | 'ar';
+    const defaultLang = saved || 'ar';
     this.setLanguage(defaultLang);
   }
 
   setLanguage(lang: 'en' | 'ar') {
     this.currentLang.set(lang);
-    localStorage.setItem('structo_lang', lang);
+    localStorage.setItem('ousos_lang', lang);
     this.translate.use(lang);
 
     const dir = lang === 'ar' ? 'rtl' : 'ltr';

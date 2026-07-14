@@ -5,11 +5,12 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
 import { NotificationBellComponent } from '../../core/components/notification-bell.component';
 import { NotificationService } from '../../core/services/notification.service';
-
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { TenantProfileService } from '../../core/services/tenant-profile.service';
 interface NavItem {
   label: string;
   route: string;
-  icon: string;
+  icon: SafeHtml;
 }
 
 @Component({
@@ -33,9 +34,9 @@ interface NavItem {
 
           <div class="flex items-center gap-2">
             <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span class="text-white font-extrabold text-sm">S</span>
+              <span class="text-white font-extrabold text-sm">أ</span>
             </div>
-            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block">Structo</span>
+            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block">أُسُس / Ousos</span>
           </div>
         </div>
 
@@ -121,7 +122,8 @@ interface NavItem {
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-slate-950 p-6 md:p-8">
-          @if (authService.currentUser()?.isApproved && !authService.currentUser()?.isProfileComplete) {
+          <!-- @if (authService.currentUser()?.isApproved && !authService.currentUser()?.isProfileComplete) { -->
+           @if (authService.currentUser()?.isApproved && authService.currentUser()?.isProfileComplete === false) {
             <div class="mb-6 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl p-4 flex items-start gap-3 shadow-lg shadow-amber-500/5 font-cairo">
               <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -150,6 +152,8 @@ export class DashboardLayoutComponent {
   protected readonly langService = inject(LanguageService);
   private readonly router = inject(Router);
   private readonly notificationService = inject(NotificationService);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly profileService = inject(TenantProfileService);
 
   readonly isSidebarOpen = signal(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
 
@@ -159,7 +163,24 @@ export class DashboardLayoutComponent {
       this.notificationService.initializeOneSignal(user.userId, user.email);
     }
   }
-
+  ngOnInit(): void {
+    const user = this.authService.currentUser();
+    // الشيك ده للملاك والمديرين فقط اللي ليهم ملف قانوني وعنوان
+    if (user && ['tenantowner', 'admin'].includes(user.role.toLowerCase())) {
+      this.profileService.getProfile().subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            // إذا وجدنا الإحداثيات والعنوان كاملين في قاعدة البيانات الحية
+            if (res.data.latitude && res.data.region) {
+              // 🎯 ادهس الـ State القديمة في الـ Signal وخليها true فوراً
+              const updatedUser = { ...user, isProfileComplete: true };
+              this.authService.currentUser.set(updatedUser);
+            }
+          }
+        }
+      });
+    }
+  }
   // SVG icons for sidebar items
   private readonly icons = {
     overview: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>`,
@@ -177,26 +198,26 @@ export class DashboardLayoutComponent {
     switch (role) {
       case 'SuperAdmin':
         return [
-          { label: 'DASHBOARD.GLOBAL_OVERVIEW', route: '/dashboard/overview', icon: this.icons.overview },
-          { label: 'DASHBOARD.TENANTS_MGMT', route: '/dashboard/tenants', icon: this.icons.tenants }
+          { label: 'DASHBOARD.GLOBAL_OVERVIEW', route: '/dashboard/overview', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.overview) },
+          { label: 'DASHBOARD.TENANTS_MGMT', route: '/dashboard/tenants', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.tenants) }
         ];
       case 'TenantOwner':
         return [
-          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.icons.financials },
-          { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.icons.projects },
-          { label: 'USERS.TAB_USERS', route: '/dashboard/users', icon: this.icons.users },
-          { label: 'PROFILE.TAB_PROFILE', route: '/dashboard/profile', icon: this.icons.profile }
+          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.financials) },
+          { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.projects) },
+          { label: 'USERS.TAB_USERS', route: '/dashboard/users', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.users) },
+          { label: 'PROFILE.TAB_PROFILE', route: '/dashboard/profile', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.profile) }
         ];
       case 'Accountant':
         return [
-          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.icons.financials },
-          { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.icons.projects }
+          { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.financials) },
+          { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.projects) }
         ];
       case 'Manager':
       case 'SiteEngineer':
       case 'DesignEngineer':
         return [
-          { label: 'My Custody / عهدي', route: '/dashboard/projects', icon: this.icons.pettyCash }
+          { label: 'My Custody / عهدي', route: '/dashboard/projects', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.pettyCash) }
         ];
       default:
         return [];

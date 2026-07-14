@@ -13,7 +13,7 @@ namespace Structo.Core.Services;
 
 public class SettlementService(DbContext context) : ISettlementService
 {
-    public async Task<(bool Success, string Message, Guid SettlementId)> CreateSettlementAsync(Guid projectId, SettlementCreateDto dto, Guid tenantId, string userRole)
+    public async Task<(bool Success, string Message, Guid SettlementId)> CreateSettlementAsync(Guid projectId, SettlementCreateDto dto, Guid tenantId, string userRole, Guid userId)
     {
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
@@ -23,6 +23,14 @@ public class SettlementService(DbContext context) : ISettlementService
 
         if (pettyCash == null)
             return (false, "Petty cash record not found.", Guid.Empty);
+
+        if (userRole == "SiteEngineer" || userRole == "DesignEngineer" || userRole == "Manager")
+        {
+            if (pettyCash.IssuedToUserId != userId)
+            {
+                return (false, "ACCESS_DENIED: You are not authorized to settle custody issued to another user.", Guid.Empty);
+            }
+        }
 
         if (pettyCash.IsSettled || pettyCash.Status == "Settled")
             return (false, "This petty cash has already been settled.", Guid.Empty);
@@ -58,10 +66,10 @@ public class SettlementService(DbContext context) : ISettlementService
         {
             newSettlement.Lines.Add(new SettlementLine
             {
-                Category = lineDto.Category,
+                Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.Category) ?? string.Empty,
                 Amount = lineDto.Amount,
-                Description = lineDto.Description,
-                InvoiceUrl = lineDto.InvoiceUrl ?? string.Empty
+                Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.Description) ?? string.Empty,
+                InvoiceUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.InvoiceUrl) ?? string.Empty
             });
         }
 
@@ -288,7 +296,7 @@ public class SettlementService(DbContext context) : ISettlementService
         settlement.Status = SettlementStatus.Rejected;
         settlement.ResolvedAt = DateTime.UtcNow;
         settlement.ResolvedByUserId = resolvedByUserId;
-        settlement.Comments = dto.Comments;
+        settlement.Comments = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Comments);
 
         if (settlement.PettyCash != null)
         {
@@ -344,10 +352,10 @@ public class SettlementService(DbContext context) : ISettlementService
             Lines = s.Lines.Select(l => new SettlementLineMobileDto
             {
                 Id = l.Id,
-                Category = l.Category,
+                Category = l.Category ?? string.Empty,
                 Amount = l.Amount,
-                Description = l.Description,
-                InvoiceUrl = l.InvoiceUrl
+                Description = l.Description ?? string.Empty,
+                InvoiceUrl = l.InvoiceUrl ?? string.Empty
             }).ToList()
         });
     }

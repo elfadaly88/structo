@@ -16,7 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
         <header class="flex justify-between items-center border-b border-slate-800 pb-6 mb-8">
           <div>
             <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Workspace</span>
-            <h1 class="text-3xl font-extrabold tracking-tight mt-1 text-white">Structo Dashboard</h1>
+            <h1 class="text-3xl font-extrabold tracking-tight mt-1 text-white">لوحة تحكم أُسُس / Ousos Dashboard</h1>
           </div>
           <button (click)="logout()" class="px-4 py-2 border border-slate-800 rounded-xl bg-slate-900/50 hover:bg-slate-900 text-sm font-semibold text-slate-300 hover:text-white transition-all duration-200">
             Log Out

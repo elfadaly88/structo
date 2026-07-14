@@ -15,18 +15,18 @@
     "PRICING": "Pricing",
     "LOGIN": "Sign In",
     "GET_STARTED": "Get Started",
-    "LOGO_ALT": "Structo Logo"
+    "LOGO_ALT": "Ousos Logo"
   },
   "HERO": {
-    "LIVE_TAG": "✨ Structo Platform v1.0 is Live",
+    "LIVE_TAG": "✨ Ousos Platform v1.0 is Live",
     "TITLE_START": "Manage Projects, Financials, &",
     "TITLE_HIGHLIGHT": "Petty Cash Fluidly",
     "SUBTITLE": "The premium workspace engineered for modern teams. Streamline project tracking, gain transparent financial analytics, and manage petty cash requests with absolute simplicity.",
     "CTA_START": "Start Structuring Free",
     "CTA_LEARN": "Learn More",
-    "PREVIEW_DOMAIN": "structo-dashboard.app",
+    "PREVIEW_DOMAIN": "ousos-dashboard.app",
     "PREVIEW_PROJECTS_TITLE": "Projects Tracker",
-    "PREVIEW_PROJECTS_NAME": "Structo Expansion",
+    "PREVIEW_PROJECTS_NAME": "Ousos Expansion",
     "PREVIEW_PROJECTS_HINT": "80% Tasks Finished",
     "PREVIEW_FINANCIALS_TITLE": "Real-Time Financials",
     "PREVIEW_FINANCIALS_HINT": "Monthly net cashflow increase +14.2%",
@@ -40,7 +40,7 @@
   },
   "FEATURES": {
     "SECTION_TITLE": "Features Built for Operational Excellence",
-    "SECTION_SUBTITLE": "Structo provides the fundamental infrastructure to manage your day-to-day project portfolios and accounting operations.",
+    "SECTION_SUBTITLE": "Ousos provides the fundamental infrastructure to manage your day-to-day project portfolios and accounting operations.",
     "HUB_TITLE": "Project Hub",
     "HUB_DESC": "Break down projects into manageable tasks, assign duties, set timeline deadlines, and track operational progress in real-time.",
     "FIN_TITLE": "Real-Time Financials",
@@ -50,7 +50,7 @@
   },
   "PRICING": {
     "SECTION_TITLE": "Transparent Pricing Plans",
-    "SECTION_SUBTITLE": "Scale up Structo as your business requirements expand. Start with our basic free offering.",
+    "SECTION_SUBTITLE": "Scale up Ousos as your business requirements expand. Start with our basic free offering.",
     "FREE_TITLE": "Free Plan",
     "FREE_DESC": "Perfect for independent operators trying out our digital ledger system.",
     "FREE_FEAT_1": "3 Active Projects",
@@ -75,10 +75,10 @@
     "PER_MONTH": "/ month"
   },
   "FOOTER": {
-    "COPYRIGHT": "© 2026 Structo. All rights reserved. engineered for efficiency."
+    "COPYRIGHT": "© 2026 Ousos. All rights reserved. engineered for efficiency."
   },
   "LOGIN": {
-    "TITLE": "Welcome to Structo",
+    "TITLE": "Welcome to Ousos",
     "SUBTITLE": "Or",
     "RETURN_HOME": "return to home page",
     "USERNAME_LABEL": "Username / Email",
@@ -259,7 +259,7 @@
   },
   "MARKETPLACE": {
     "SECTION_TITLE": "SaaS Corporate Directory",
-    "SECTION_SUBTITLE": "Search, filter, and inspect verified general contractors, engineering firms, and tenant portfolios on Structo.",
+    "SECTION_SUBTITLE": "Search, filter, and inspect verified general contractors, engineering firms, and tenant portfolios on Ousos.",
     "FILTER_REGION": "Region",
     "FILTER_CATEGORY": "Project Category",
     "FILTER_RATING": "Minimum Rating",

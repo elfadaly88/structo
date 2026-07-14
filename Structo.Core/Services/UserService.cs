@@ -44,11 +44,11 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
 
         var user = new User
         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            PersonalPhone = dto.PersonalPhone,
-            WhatsAppPhone = dto.WhatsAppPhone,
+            FirstName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.FirstName),
+            LastName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.LastName),
+            Email = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Email).ToLower().Trim(),
+            PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
+            WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
             TenantId = tenantId,

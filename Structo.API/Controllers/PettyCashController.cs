@@ -29,6 +29,13 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
         var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
         Guid? tenantId = tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var parsedId) ? parsedId : null;
 
+        // DevSecOps IDOR Guard: Overwrite IssuedToUserId for engineers to prevent requesting custody on behalf of others.
+        var role = CurrentUserRole.ToLowerInvariant();
+        if (role == "siteengineer" || role == "designengineer" || role == "manager")
+        {
+            dto.IssuedToUserId = CurrentUserId;
+        }
+
         var (success, message) = await pettyCashService.CreatePettyCashAsync(projectId, dto, tenantId, CurrentUserRole);
 
         if (!success)
@@ -78,7 +85,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     {
         try
         {
-            var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto, CurrentUserRole);
+            var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto, CurrentUserRole, CurrentUserId);
             return Ok(new ApiResponse<bool>
             {
                 Data = result,

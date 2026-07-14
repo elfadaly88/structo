@@ -1,0 +1,1 @@
+import {D,al as Xe,az as dh,as as N}from'./main-E7K2NSTK.js';function w(t){t||(t=D(Xe));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(dh(i))}export{w};

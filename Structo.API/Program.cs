@@ -99,7 +99,7 @@ builder.Services.AddSwaggerGen(c =>
 // Entity Framework and PostgreSQL
 builder.Services.AddDbContext<StructoDbContext>(options =>
 {
-    var databaseUrl = builder.Configuration["DATABASE_URL"];
+    var databaseUrl = builder.Configuration["DATABASE_URL"] ?? Environment.GetEnvironmentVariable("DATABASE_URL");
     string connectionString = string.Empty;
 
     if (!string.IsNullOrEmpty(databaseUrl) && databaseUrl.StartsWith("postgresql://"))
@@ -115,7 +115,14 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
     
     if (string.IsNullOrEmpty(connectionString))
     {
-        connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (defaultConn == "Host=localhost;Database=StructoDb;Username=postgres;Password=PlaceholderPassword")
+        {
+            defaultConn = null;
+        }
+        connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
+            ?? defaultConn
+            ?? builder.Configuration.GetConnectionString("LocalConnection")
             ?? "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=NewStrongPassword123";
     }
 
@@ -130,13 +137,39 @@ builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
 builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<StructoDbContext>());
 
 // Cloudflare R2 Settings
-builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(builder.Configuration.GetSection("CloudflareR2"));
+builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(options =>
+{
+    var section = builder.Configuration.GetSection("CloudflareR2");
+    
+    var accessKey = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_ACCESS_KEY_ID") 
+        ?? section["AccessKeyId"];
+    options.AccessKeyId = (accessKey == "YOUR_CLOUDFLARE_R2_ACCESS_KEY_ID") ? string.Empty : (accessKey ?? string.Empty);
+    
+    var secretAccessKey = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_SECRET_ACCESS_KEY") 
+        ?? section["SecretAccessKey"];
+    options.SecretAccessKey = (secretAccessKey == "YOUR_CLOUDFLARE_R2_SECRET_ACCESS_KEY") ? string.Empty : (secretAccessKey ?? string.Empty);
+    
+    var bucketName = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_BUCKET_NAME") 
+        ?? section["BucketName"];
+    options.BucketName = bucketName ?? "structo-storage";
+    
+    var serviceUrl = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_SERVICE_URL") 
+        ?? section["ServiceUrl"];
+    options.ServiceUrl = (serviceUrl == "YOUR_CLOUDFLARE_R2_SERVICE_URL") ? string.Empty : (serviceUrl ?? string.Empty);
+    
+    var publicBaseUrl = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_PUBLIC_BASE_URL") 
+        ?? section["PublicBaseUrl"];
+    options.PublicBaseUrl = (publicBaseUrl == "YOUR_CLOUDFLARE_R2_PUBLIC_BASE_URL") ? string.Empty : (publicBaseUrl ?? string.Empty);
+});
 
 // Cloud Storage Service
 builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
-    var serviceUrl = builder.Configuration["CloudflareR2:ServiceUrl"]?.Replace("http://", "https://");
+    var serviceUrl = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_SERVICE_URL")
+        ?? builder.Configuration["CloudflareR2:ServiceUrl"];
+    if (serviceUrl == "YOUR_CLOUDFLARE_R2_SERVICE_URL") serviceUrl = null;
+    serviceUrl = serviceUrl?.Replace("http://", "https://");
     
     var config = new Amazon.S3.AmazonS3Config
     {
@@ -168,7 +201,9 @@ builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["Secret"] ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
+    ?? (jwtSettings["Secret"] == "YOUR_JWT_SECRET_KEY_PLACEHOLDER_AT_LEAST_32_BYTES_LONG" ? null : jwtSettings["Secret"])
+    ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
 var key = Encoding.ASCII.GetBytes(secretKey);
 builder.Services.AddAuthentication(options =>
 {
@@ -397,6 +432,17 @@ else if (File.Exists(browserIndexPath))
 
 // Expose Service Provider for Global Access
 Structo.API.Program.AppServices = app.Services;
+
+// ── Dynamic PORT Binding (Railway / Cloud Deployment) ──────────────────────
+// Railway injects PORT dynamically at runtime. We must bind to it or the
+// process will listen on the wrong port and the health check will fail.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    app.Urls.Clear();
+    app.Urls.Add($"http://0.0.0.0:{port}");
+    Console.WriteLine($"[Startup] Dynamically binding to PORT={port}");
+}
 
 app.Run();
 

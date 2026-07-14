@@ -50,7 +50,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         {
             ProjectId = projectId,
             Amount = dto.Amount,
-            Description = dto.Description,
+            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description),
             Type = dto.Type,
             TransactionDate = dto.TransactionDate,
             IsOverrun = dto.ForceOverrun
@@ -135,7 +135,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             ProjectId = projectId,
             TenantId = tenantId.Value,
             Amount = dto.Amount,
-            Description = $"Capital Injection ({dto.SourceType}) - {dto.Description}",
+            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize($"Capital Injection ({dto.SourceType}) - {dto.Description}"),
             Type = TransactionType.Income,
             TransactionDate = DateTime.UtcNow,
             PaymentDate = dto.PaymentDate ?? DateTime.UtcNow,
@@ -178,7 +178,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         }
 
         transaction.Amount = dto.Amount;
-        transaction.Description = dto.Description;
+        transaction.Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description);
         if (dto.PaymentDate.HasValue)
             transaction.PaymentDate = dto.PaymentDate.Value;
         if (dto.PaymentMethod.HasValue)
@@ -188,7 +188,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         {
             if (!string.IsNullOrEmpty(transaction.ReceiptPhotoUrl))
             {
-                _ = storageService.DeleteFileAsync(transaction.ReceiptPhotoUrl);
+                try { await storageService.DeleteFileAsync(transaction.ReceiptPhotoUrl); }
+                catch (Exception) { /* Storage deletion is best-effort; never block the transaction update */ }
             }
             transaction.ReceiptPhotoUrl = dto.ReceiptPhotoUrl;
         }
@@ -227,7 +228,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         if (!string.IsNullOrEmpty(transaction.ReceiptPhotoUrl))
         {
-            _ = storageService.DeleteFileAsync(transaction.ReceiptPhotoUrl);
+            try { await storageService.DeleteFileAsync(transaction.ReceiptPhotoUrl); }
+            catch (Exception) { /* Storage deletion is best-effort; never block the financial transaction delete */ }
         }
 
         context.Set<FinancialTransaction>().Remove(transaction);
@@ -261,7 +263,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             TenantId = tenantId,
             IssuedToUserId = dto.UserId,
             Amount = dto.Amount,
-            Reason = dto.Description,
+            Reason = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description) ?? string.Empty,
             Status = "Issued",
             Category = "Direct Disbursement",
             SourcePoolId = pool.Id,
@@ -277,7 +279,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             ProjectId = projectId,
             TenantId = tenantId,
             Amount = dto.Amount,
-            Description = $"Direct Disbursement - {dto.Description}",
+            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize($"Direct Disbursement - {dto.Description}"),
             Type = TransactionType.DirectDisbursement,
             TransactionDate = DateTime.UtcNow,
             PaymentDate = DateTime.UtcNow,

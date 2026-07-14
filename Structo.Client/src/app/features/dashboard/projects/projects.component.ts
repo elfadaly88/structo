@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -7,6 +8,7 @@ import { ProjectService } from '../../../core/services/project.service';
 import { ProjectDto, ProjectCreateDto } from '../../../core/models/project.models';
 import { TenantUserService, UserDto, UserCreateDto } from '../../../core/services/tenant-user.service';
 import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/services/tenant-profile.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { OfflineSyncService } from '../../../core/services/offline-sync.service';
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { ImageUploadService } from '../../../core/services/image-upload.service';
@@ -30,7 +32,7 @@ interface GovernorateOption {
 export interface ProjectViewDto extends ProjectDto {
   client: string;
   budget: number;
-  status: 'Active' | 'Delayed' | 'Completed';
+  status: 'Active' | 'Delayed' | 'Completed' | 'PendingActivation' | 'FinancialFreeze' | 'Closed';
   category: string;
   isPublicPortfolio: boolean;
 }
@@ -150,6 +152,38 @@ const GOVERNORATES: GovernorateOption[] = [
 
       <!-- SECTION 1: PROJECTS HUB -->
       @if (activeTab() === 'projects') {
+        <!-- High-end Billing Widget / Project Quota visual counter -->
+        @if (currentUserRole() === 'TenantOwner' || currentUserRole() === 'Manager') {
+          <div class="bg-gradient-to-r from-slate-900 via-indigo-950/20 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 shadow-lg shadow-indigo-500/5 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3.5 w-full md:w-auto">
+              <div class="h-10 w-10 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-white font-cairo text-right rtl:text-left">حصة استخدام المشاريع / Project Subscription Quota</h4>
+                <p class="text-xs text-slate-400 mt-0.5 font-cairo text-right rtl:text-left">
+                  المشاريع المستهلكة: <span class="font-extrabold text-indigo-400 font-mono">{{ usedProjectsCount() }}</span> من أصل <span class="font-extrabold text-slate-200 font-mono">{{ allowedProjectsCount() }}</span>
+                </p>
+              </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full md:w-64 bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800 shrink-0">
+              <div class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" 
+                [style.width.%]="(usedProjectsCount() / allowedProjectsCount()) * 100 > 100 ? 100 : (usedProjectsCount() / allowedProjectsCount()) * 100">
+              </div>
+            </div>
+            @if (usedProjectsCount() >= allowedProjectsCount()) {
+              <button 
+                (click)="isUpgradeModalOpen.set(true)"
+                class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-xs font-semibold rounded-xl text-white font-cairo shadow-lg shadow-orange-500/20 active:scale-95 transition-all duration-200 cursor-pointer text-center">
+                ترقية الباقة / Upgrade Package
+              </button>
+            }
+          </div>
+        }
+
         <!-- Projects Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
@@ -207,10 +241,14 @@ const GOVERNORATES: GovernorateOption[] = [
                   @for (proj of projects(); track proj.id) {
                     <tr 
                       (click)="viewDetails(proj.id)"
-                      class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300 cursor-pointer">
+                      class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300 cursor-pointer"
+                      [class.opacity-60]="proj.status === 'PendingActivation'">
                       <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
-                          <div class="font-bold text-white hover:text-indigo-400 transition-colors duration-200">
+                          <div class="font-bold text-white hover:text-indigo-400 transition-colors duration-200 flex items-center gap-1.5">
+                            @if (proj.status === 'PendingActivation') {
+                              <span class="text-amber-500">🔒</span>
+                            }
                             {{ proj.name }}
                           </div>
                           @if (proj.isPublicPortfolio) {
@@ -236,20 +274,30 @@ const GOVERNORATES: GovernorateOption[] = [
                           <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
                             {{ 'PROJECTS.STATUS.DELAYED' | translate }}
                           </span>
+                        } @else if (proj.status === 'PendingActivation') {
+                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
+                            قيد التفعيل / Pending
+                          </span>
+                        } @else if (proj.status === 'FinancialFreeze') {
+                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
+                            {{ langService.currentLang() === 'ar' ? 'مجمّد' : 'Frozen' }}
+                          </span>
+                        } @else if (proj.status === 'Closed') {
+                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
+                            {{ langService.currentLang() === 'ar' ? 'مغلق' : 'Closed' }}
+                          </span>
                         } @else {
                           <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
                             {{ 'PROJECTS.STATUS.COMPLETED' | translate }}
                           </span>
                         }
                       </td>
-                      <td class="px-6 py-4 text-center">
-                        <span class="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 text-xs border border-slate-700 font-cairo">
-                          @if (proj.propertyType === 'Residential') {
-                            🏠 {{ 'Residential' }}
-                          } @else {
-                            🏢 {{ 'Administrative' }}
-                          }
-                        </span>
+                      <td class="px-6 py-4 text-center font-cairo text-xs font-semibold">
+                        @if (proj.propertyType === 'Residential') {
+                          🏠 {{ langService.currentLang() === 'ar' ? 'سكني' : 'Residential' }}
+                        } @else {
+                          🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
+                        }
                       </td>
                       <td class="px-6 py-4 text-slate-400">{{ proj.startDate | date:'dd/MM/yyyy' }}</td>
                     </tr>
@@ -831,6 +879,96 @@ const GOVERNORATES: GovernorateOption[] = [
       </div>
     }
 
+    <!-- UPGRADE PACKAGE MODAL -->
+    @if (isUpgradeModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div (click)="isUpgradeModalOpen.set(false)" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+
+        <!-- Modal Container -->
+        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col p-0 shadow-2xl z-10 font-sans">
+          
+          <!-- Modal Header -->
+          <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white font-cairo">ترقية الباقة / Upgrade Package</h3>
+              <p class="text-xs text-slate-400 font-cairo mt-1">لقد استهلكت جميع المشاريع المتاحة في باقتك الحالية.</p>
+            </div>
+            <button 
+              (click)="isUpgradeModalOpen.set(false)"
+              class="p-1.5 rounded-lg bg-slate-950/40 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-950/60 transition-colors duration-150 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal Body (with independent inner scroll to avoid clipping) -->
+          <div class="overflow-y-auto min-h-0 p-6 space-y-4 text-right rtl:text-left">
+            
+            <!-- Tier 1: Free -->
+            <div class="p-4 bg-slate-950/40 border border-slate-800 rounded-xl flex justify-between items-center">
+              <div class="text-right">
+                <h4 class="font-bold text-sm text-white font-cairo">المشروع الأول / 1st Project</h4>
+                <p class="text-xs text-slate-400 font-cairo mt-0.5">مجاني بالكامل مدى الحياة للبدء السريع.</p>
+              </div>
+              <span class="text-xs font-bold text-emerald-400 font-cairo">مجاني بالكامل / Free</span>
+            </div>
+
+            <!-- Tier 2: 1 Extra Project -->
+            <div class="p-4 bg-slate-950/40 border border-slate-800 rounded-xl flex justify-between items-center hover:border-indigo-500/30 transition-all duration-200">
+              <div class="text-right">
+                <h4 class="font-bold text-sm text-white font-cairo">إضافة مشروع واحد / +1 Extra Project</h4>
+                <p class="text-xs text-slate-400 font-cairo mt-0.5">تفعيل مشروع إضافي واحد فوري.</p>
+              </div>
+              <div class="text-left rtl:text-right">
+                <span class="text-sm font-bold text-indigo-400 font-mono">2,000 EGP</span>
+                <button (click)="contactSuperAdminForUpgrade(1)" class="block text-[10px] text-indigo-300 hover:underline mt-1 font-cairo w-full text-center">شراء الآن ↗</button>
+              </div>
+            </div>
+
+            <!-- Tier 3: 5 Project Pack -->
+            <div class="p-4 bg-indigo-950/20 border border-indigo-500/30 rounded-xl flex justify-between items-center hover:border-indigo-500/50 transition-all duration-200 relative overflow-hidden">
+              <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-bl font-cairo">وفر 2,500 جنيه!</div>
+              <div class="text-right">
+                <h4 class="font-bold text-sm text-white font-cairo">باقة 5 مشاريع / 5 Project Pack</h4>
+                <p class="text-xs text-slate-400 font-cairo mt-0.5">وفر أكثر وفعّل 5 مشاريع دفعة واحدة.</p>
+              </div>
+              <div class="text-left rtl:text-right">
+                <span class="text-sm font-bold text-indigo-400 font-mono">7,500 EGP</span>
+                <span class="block text-[9px] text-slate-500 line-through font-mono text-center">10,000 EGP</span>
+                <button (click)="contactSuperAdminForUpgrade(5)" class="block text-[10px] text-indigo-300 hover:underline mt-0.5 font-cairo w-full text-center">شراء الآن ↗</button>
+              </div>
+            </div>
+
+            <!-- Custom pack: Contact Admin -->
+            <div class="p-4 bg-slate-950/40 border border-slate-800 rounded-xl flex flex-col gap-3">
+              <div class="text-right">
+                <h4 class="font-bold text-sm text-white font-cairo">أكثر من 5 مشاريع / More than 5 Projects</h4>
+                <p class="text-xs text-slate-400 font-cairo mt-0.5">تحتاج لباقة مخصصة تناسب أعمال شركتك الكبيرة؟</p>
+              </div>
+              <button 
+                (click)="contactSuperAdminForUpgrade('custom')"
+                class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl text-white font-cairo transition-all duration-150 flex items-center justify-center gap-2 active:scale-95 shadow-md cursor-pointer">
+                تواصل مع الإدارة لطلب باقة مخصصة
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 py-4 border-t border-slate-800/80 flex justify-end">
+            <button 
+              (click)="isUpgradeModalOpen.set(false)"
+              class="w-full md:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
+
     <!-- MODAL 2: REGISTER COMPANY USER -->
     @if (isUserModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
@@ -979,12 +1117,14 @@ export class ProjectsComponent implements OnInit {
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly uploadService = inject(ImageUploadService);
   private readonly authService = inject(AuthService);
+  protected readonly langService = inject(LanguageService);
   private readonly translateService = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
   private readonly confirmService = inject(ConfirmModalService);
   private readonly toastService = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
   @ViewChild('profileMapContainer') profileMapContainer?: ElementRef<HTMLDivElement>;
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
   readonly togglingUserId = signal<string | null>(null);
@@ -992,6 +1132,10 @@ export class ProjectsComponent implements OnInit {
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
   readonly isEngineer = computed(() => ['manager', 'siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
+
+  // Quota & Billing Signals
+  readonly isUpgradeModalOpen = signal(false);
+  readonly tenantProfile = signal<any | null>(null);
 
   // Upload Signals
   readonly isUploadingLogo = signal(false);
@@ -1029,6 +1173,8 @@ export class ProjectsComponent implements OnInit {
   // Computed counters
   readonly activeProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
   readonly completedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Completed').length);
+  readonly usedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
+  readonly allowedProjectsCount = computed(() => this.tenantProfile()?.maxActiveProjects ?? 1);
 
   readonly managerCount = computed(() => this.users().filter(u => u.role === 'Manager').length);
   readonly engineerCount = computed(() => this.users().filter(u => u.role === 'SiteEngineer' || u.role === 'DesignEngineer').length);
@@ -1094,9 +1240,9 @@ export class ProjectsComponent implements OnInit {
     }
 
     this.fetchProjects();
+    this.fetchProfile();
     if (this.currentUserRole() === 'TenantOwner') {
       this.fetchUsers();
-      this.fetchProfile();
     }
 
     this.offlineSync.registerHandler<TenantProfileUpdateDto>('tenant-profile-update', (dto) => this.profileService.updateProfile(dto));
@@ -1276,14 +1422,19 @@ export class ProjectsComponent implements OnInit {
   fetchProjects(): void {
     this.isLoadingProjects.set(true);
     this.projectError.set(null);
-    this.projectService.getProjects().subscribe({
+    this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isLoadingProjects.set(false);
         if (response.success && response.data) {
           const mapped = response.data.map((p, index) => {
             let client = index % 2 === 0 ? 'El-Mokawloon El-Arab' : 'Orascom Construction';
             let budget = index % 2 === 0 ? 5400000 : 8900000;
-            let status: 'Active' | 'Delayed' | 'Completed' = p.isActive ? (index % 3 === 0 ? 'Delayed' : 'Active') : 'Completed';
+            let status: 'Active' | 'Delayed' | 'Completed' | 'PendingActivation' | 'FinancialFreeze' | 'Closed' = 'Active';
+            if (p.status) {
+              status = p.status as any;
+            } else {
+              status = p.isActive ? (index % 3 === 0 ? 'Delayed' : 'Active') : 'Completed';
+            }
             let category = 'Residential';
             let isPublicPortfolio = false;
             let description = p.description;
@@ -1335,7 +1486,7 @@ export class ProjectsComponent implements OnInit {
   fetchUsers(): void {
     this.isLoadingUsers.set(true);
     this.userError.set(null);
-    this.userService.getUsers().subscribe({
+    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isLoadingUsers.set(false);
         if (response.success && response.data) {
@@ -1408,6 +1559,7 @@ export class ProjectsComponent implements OnInit {
     this.profileService.getProfile().pipe(take(1)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
+          this.tenantProfile.set(res.data);
           const getCleanUrl = (url: string | null | undefined) => {
             if (!url) return url;
             if (url.startsWith('PRESIGNED_SPLIT')) {
@@ -1547,6 +1699,10 @@ export class ProjectsComponent implements OnInit {
   }
 
   openProjectModal(): void {
+    if (this.usedProjectsCount() >= this.allowedProjectsCount()) {
+      this.isUpgradeModalOpen.set(true);
+      return;
+    }
     this.projectForm.reset({
       name: '',
       client: '',
@@ -1690,7 +1846,22 @@ export class ProjectsComponent implements OnInit {
     this.whatsappLink.openChat(user.whatsAppPhone, message);
   }
 
+  contactSuperAdminForUpgrade(numProjects: number | string): void {
+    const msg = `مرحباً، أود ترقية باقة المشاريع لمنصة أُسُس لعدد ${numProjects} مشروع/مشاريع.`;
+    this.whatsappLink.openChat('201004500766', msg);
+  }
+
   viewDetails(id: string): void {
+    const proj = this.projects().find(p => p.id === id);
+    if (proj && proj.status === 'PendingActivation') {
+      this.toastService.show(
+        'تنبيه / Attention',
+        'هذا المشروع بانتظار التفعيل من قبل الإدارة. يرجى ترقية الباقة لتفعيله.',
+        'warning'
+      );
+      this.isUpgradeModalOpen.set(true);
+      return;
+    }
     this.router.navigate(['/dashboard/projects', id]);
   }
 }

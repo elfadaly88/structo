@@ -34,4 +34,8 @@ export class TenantProfileService {
   updateProfile(dto: TenantProfileUpdateDto): Observable<ApiResponse<TenantDto>> {
     return this.http.put<ApiResponse<TenantDto>>(`${this.apiUrl}/update`, dto);
   }
+
+  getQuota(): Observable<ApiResponse<{ usedProjects: number, allowedProjects: number }>> {
+    return this.http.get<ApiResponse<{ usedProjects: number, allowedProjects: number }>>(`${this.apiUrl}/quota`);
+  }
 }

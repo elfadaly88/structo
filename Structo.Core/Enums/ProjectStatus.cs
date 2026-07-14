@@ -4,5 +4,6 @@ public enum ProjectStatus
 {
     Active,
     FinancialFreeze,
-    Closed
+    Closed,
+    PendingActivation
 }

@@ -36,8 +36,8 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
             TenantId = tenantId.Value,
             IssuedToUserId = dto.IssuedToUserId,
             Amount = dto.Amount,
-            Reason = dto.Reason,
-            Category = dto.Category ?? string.Empty,
+            Reason = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Reason) ?? string.Empty,
+            Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Category) ?? string.Empty,
             Status = "Pending",
             IssuedAt = DateTime.UtcNow,
             IsSettled = false,
@@ -60,12 +60,16 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         context.Set<PettyCash>().Add(pettyCash);
         await context.SaveChangesAsync();
 
-        // Trigger Notification Engine (WORKFLOW A)
-        await notificationEngine.RaiseFinancialRequestNotificationAsync(
-            pettyCash.IssuedToUserId,
-            pettyCash.Amount,
-            pettyCash.Id,
-            pettyCash.TenantId);
+        // Trigger Notification Engine (WORKFLOW A) — best-effort, never rollback on failure
+        try
+        {
+            await notificationEngine.RaiseFinancialRequestNotificationAsync(
+                pettyCash.IssuedToUserId,
+                pettyCash.Amount,
+                pettyCash.Id,
+                pettyCash.TenantId);
+        }
+        catch (Exception) { /* Notification failure must not fail the custody request */ }
 
         return (true, "Petty cash request submitted successfully");
     }
@@ -105,13 +109,17 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         pool.AvailableBalance -= pettyCash.Amount;
         await context.SaveChangesAsync();
 
-        // Trigger Notification to the Engineer
-        await notificationEngine.RaiseFinancialApprovalNotificationAsync(
-            pettyCash.IssuedToUserId,
-            pettyCash.Amount,
-            pettyCash.Id,
-            pettyCash.TenantId,
-            pettyCash.ProjectId);
+        // Trigger Notification to the Engineer — best-effort, never rollback on failure
+        try
+        {
+            await notificationEngine.RaiseFinancialApprovalNotificationAsync(
+                pettyCash.IssuedToUserId,
+                pettyCash.Amount,
+                pettyCash.Id,
+                pettyCash.TenantId,
+                pettyCash.ProjectId);
+        }
+        catch (Exception) { /* Notification failure must not fail the custody approval */ }
 
         return (true, "Petty cash approved and issued successfully.");
     }
@@ -135,7 +143,7 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return (true, "Petty cash request rejected.");
     }
 
-    public async Task<bool> SettlePettyCashAsync(Guid projectId, Guid pettyCashId, PettyCashSettleDto dto, string userRole)
+    public async Task<bool> SettlePettyCashAsync(Guid projectId, Guid pettyCashId, PettyCashSettleDto dto, string userRole, Guid userId)
     {
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
@@ -145,6 +153,14 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
 
         if (pettyCash == null)
             throw new BusinessRuleException("Petty cash record not found.");
+
+        if (userRole == "SiteEngineer" || userRole == "DesignEngineer" || userRole == "Manager")
+        {
+            if (pettyCash.IssuedToUserId != userId)
+            {
+                throw new UnauthorizedAccessException("ACCESS_DENIED: You are not authorized to settle custody issued to another user.");
+            }
+        }
 
         if (pettyCash.IsSettled)
             throw new BusinessRuleException("This petty cash has already been settled.");
@@ -249,8 +265,8 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
             return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
 
         pettyCash.Amount = dto.Amount;
-        pettyCash.Reason = dto.Reason;
-        pettyCash.Category = dto.Category;
+        pettyCash.Reason = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Reason) ?? string.Empty;
+        pettyCash.Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Category);
         await context.SaveChangesAsync();
 
         return (true, "Petty cash updated successfully.");
@@ -283,7 +299,8 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
 
         if (!string.IsNullOrEmpty(pettyCash.ReceiptPhotoUrl))
         {
-            _ = storageService.DeleteFileAsync(pettyCash.ReceiptPhotoUrl);
+            try { await storageService.DeleteFileAsync(pettyCash.ReceiptPhotoUrl); }
+            catch (Exception) { /* Storage deletion is best-effort; never block the custody delete */ }
         }
 
         context.Set<PettyCash>().Remove(pettyCash);

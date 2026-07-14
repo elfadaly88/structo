@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -464,6 +465,7 @@ interface ModeratedProject {
 })
 export class TenantsComponent implements OnInit {
   private readonly tenantsService = inject(TenantsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly tenants = signal<TenantDto[]>([]);
   readonly isLoading = signal(false);
@@ -507,7 +509,7 @@ export class TenantsComponent implements OnInit {
   fetchTenants(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.tenantsService.getAllTenants().subscribe({
+    this.tenantsService.getAllTenants().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         if (res.success && res.data) {
@@ -529,7 +531,7 @@ export class TenantsComponent implements OnInit {
     this.auditProfile.set(null);
     this.moderatedProjects.set([]);
 
-    this.tenantsService.getTenantAuditProfile(tenant.id).subscribe({
+    this.tenantsService.getTenantAuditProfile(tenant.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success) {
           this.auditProfile.set(res.data);
@@ -540,7 +542,7 @@ export class TenantsComponent implements OnInit {
       }
     });
 
-    this.tenantsService.getTenantProjects(tenant.id).subscribe({
+    this.tenantsService.getTenantProjects(tenant.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.moderatedProjects.set(res.data.filter(p => !!p.clientReviewNotes));
@@ -570,7 +572,7 @@ export class TenantsComponent implements OnInit {
     this.successMessage.set(null);
 
     if (actionType === 'Activate') {
-      this.tenantsService.provisionTenant(tenantId).subscribe({
+      this.tenantsService.provisionTenant(tenantId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           this.isActioningId.set(null);
 
@@ -608,7 +610,7 @@ export class TenantsComponent implements OnInit {
       return;
     }
 
-    this.tenantsService.toggleTenantStatus(tenantId).subscribe({
+    this.tenantsService.toggleTenantStatus(tenantId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.isActioningId.set(null);
 
@@ -703,7 +705,7 @@ export class TenantsComponent implements OnInit {
 
   toggleReview(project: ModeratedProject): void {
     this.isModeratingId.set(project.id);
-    this.tenantsService.toggleReviewVisibility(project.id).subscribe({
+    this.tenantsService.toggleReviewVisibility(project.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.isModeratingId.set(null);
         if (res.success) {
