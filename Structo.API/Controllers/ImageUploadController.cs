@@ -74,18 +74,9 @@ public class ImageUploadController : ControllerBase
 
             if (!string.IsNullOrEmpty(tenant.LogoUrl) && tenant.LogoUrl != dbUrl)
             {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await DeleteFileAsync(tenant.LogoUrl);
-                    }
-                    catch (Exception ex)
-                    {
-                        // صمام أمان داخلي لحماية الـ Background Thread من الـ Crash
-                        _logger.LogError(ex, "Background error deleting banner: {Url}", tenant.LogoUrl);
-                    }
-                });
+
+                await DeleteFileAsync(tenant.LogoUrl);
+
 
                 //await DeleteFileAsync(tenant.LogoUrl);
             }
@@ -139,17 +130,9 @@ public class ImageUploadController : ControllerBase
 
             if (!string.IsNullOrEmpty(tenant.BannerUrl) && tenant.BannerUrl != dbUrl)
             {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await DeleteFileAsync(tenant.BannerUrl);
-                    }
-                    catch (Exception ex)
-                    {                        
-                        _logger.LogError(ex, "Background error deleting banner: {Url}", tenant.BannerUrl);
-                    }
-                });
+
+                await DeleteFileAsync(tenant.BannerUrl);
+
                 //await DeleteFileAsync(tenant.BannerUrl);
             }
 
@@ -223,7 +206,7 @@ public class ImageUploadController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload image: {ex.Message}. Inner: {ex.InnerException?.Message}" });
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = "An unexpected error occurred. Please contact support." });
         }
     }
 
