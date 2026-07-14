@@ -23,11 +23,26 @@ public class UploadResultDto
 [ApiController]
 [Route("api/ImageUpload")]
 [Authorize]
-public class ImageUploadController(
-    StructoDbContext context,
-    ICloudStorageService storageService,
-    ITenantContextAccessor tenantAccessor, ILogger<FinancialTransactionsController> _logger) : ControllerBase
+public class ImageUploadController : ControllerBase
 {
+    private readonly StructoDbContext _context;
+    private readonly ICloudStorageService _storageService;
+    private readonly ITenantContextAccessor _tenantAccessor;
+    private readonly ILogger<ImageUploadController> _logger; // 🚀 تعديل نوع الـ Logger المحقون صح
+    private readonly IFinancialTransactionService _transactionService; // 🚀 حقن صمام أمان التحقق من المشروع
+    public ImageUploadController(
+        StructoDbContext context,
+        ICloudStorageService storageService,
+        ITenantContextAccessor tenantAccessor,
+        ILogger<ImageUploadController> logger,
+        IFinancialTransactionService transactionService)
+    {
+        _context = context;
+        _storageService = storageService;
+        _tenantAccessor = tenantAccessor;
+        _logger = logger;
+        _transactionService = transactionService;
+    }
     [HttpPost("tenant-logo")]
     public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadTenantLogo(IFormFile file)
     {
@@ -41,11 +56,11 @@ public class ImageUploadController(
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
-        var tenantId = tenantAccessor.GetCurrentTenantId();
+        var tenantId = _tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
             return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
 
-        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
         if (tenant == null)
             return NotFound(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant not found." });
 
@@ -55,7 +70,7 @@ public class ImageUploadController(
             string customKey = $"{tenantId}/profile/logo{extension}";
 
             using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string dbUrl = await _storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
             if (!string.IsNullOrEmpty(tenant.LogoUrl) && tenant.LogoUrl != dbUrl)
             {
@@ -63,7 +78,7 @@ public class ImageUploadController(
             }
 
             tenant.LogoUrl = dbUrl;
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return Ok(new ApiResponse<UploadResultDto>
             {
@@ -74,7 +89,8 @@ public class ImageUploadController(
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = $"Failed to upload logo: {ex.Message}. Inner: {ex.InnerException?.Message}" });
+            _logger.LogError(ex, "Error uploading tenant logo for tenant {TenantId}", tenantId);
+            return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = "An internal server error occurred." });
         }
     }
 
@@ -92,11 +108,11 @@ public class ImageUploadController(
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
-        var tenantId = tenantAccessor.GetCurrentTenantId();
+        var tenantId = _tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
             return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
 
-        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
         if (tenant == null)
             return NotFound(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant not found." });
 
@@ -106,7 +122,7 @@ public class ImageUploadController(
             string customKey = $"{tenantId}/profile/banner{extension}";
 
             using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string dbUrl = await _storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
             if (!string.IsNullOrEmpty(tenant.BannerUrl) && tenant.BannerUrl != dbUrl)
             {
@@ -114,7 +130,7 @@ public class ImageUploadController(
             }
 
             tenant.BannerUrl = dbUrl;
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return Ok(new ApiResponse<UploadResultDto>
             {
@@ -142,11 +158,11 @@ public class ImageUploadController(
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
-        var tenantId = tenantAccessor.GetCurrentTenantId();
+        var tenantId = _tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
             return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
 
-        var project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
         if (project == null)
             return NotFound(new ApiResponse<UploadResultDto> { Success = false, Message = "Project not found or access denied." });
 
@@ -156,7 +172,7 @@ public class ImageUploadController(
             string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{extension}";
 
             using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string dbUrl = await _storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
             var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             Guid.TryParse(userIdString, out var userId);
@@ -171,8 +187,8 @@ public class ImageUploadController(
                 UploadedAt = DateTime.UtcNow
             };
 
-            context.SitePhotos.Add(photo);
-            await context.SaveChangesAsync();
+            _context.SitePhotos.Add(photo);
+            await _context.SaveChangesAsync();
 
             return Ok(new ApiResponse<UploadResultDto>
             {
@@ -200,11 +216,11 @@ public class ImageUploadController(
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
 
-        var tenantId = tenantAccessor.GetCurrentTenantId();
+        var tenantId = _tenantAccessor.GetCurrentTenantId();
         if (tenantId == null)
             return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
 
-        var project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
         if (project == null)
             return NotFound(new ApiResponse<UploadResultDto> { Success = false, Message = "Project not found or access denied." });
 
@@ -214,7 +230,7 @@ public class ImageUploadController(
             string customKey = $"{tenantId}/projects/{projectId}/files/{Guid.NewGuid()}{extension}";
 
             using var stream = file.OpenReadStream();
-            string dbUrl = await storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+            string dbUrl = await _storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
 
             return Ok(new ApiResponse<UploadResultDto>
             {
@@ -234,12 +250,18 @@ public class ImageUploadController(
         }
     }
 
-    public static async Task<bool> DeleteFileAsync(string fileUrl)
+    private async Task<bool> DeleteFileAsync(string fileUrl)
     {
-        if (Structo.API.Program.AppServices == null) return false;
+        if (string.IsNullOrEmpty(fileUrl)) return false;
 
-        using var scope = Structo.API.Program.AppServices.CreateScope();
-        var storageService = scope.ServiceProvider.GetRequiredService<ICloudStorageService>();
-        return await storageService.DeleteFileAsync(fileUrl);
+        try
+        {
+            return await _storageService.DeleteFileAsync(fileUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete file from cloud storage. File URL: {FileUrl}", fileUrl);
+            return false;
+        }
     }
 }
