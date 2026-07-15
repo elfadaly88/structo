@@ -34,6 +34,17 @@ export class AuthService {
     );
   }
 
+  googleLogin(idToken: string, subscriptionPlan?: string): Observable<ApiResponse<AuthResponse>> {
+    const googleApiUrl = `${environment.apiUrl}/google-auth/google-login`;
+    return this.http.post<ApiResponse<AuthResponse>>(googleApiUrl, { idToken, subscriptionPlan }).pipe(
+      tap(response => {
+        if (response.success && response.data) {
+          this.setSession(response.data);
+        }
+      })
+    );
+  }
+
   logout(): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);

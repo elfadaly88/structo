@@ -197,6 +197,7 @@ builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.C
 // Notification Services
 builder.Services.AddHttpClient("OneSignal");
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo.API.Services.NotificationService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IOneSignalEmailService, Structo.API.Services.OneSignalEmailService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.Core.Services.NotificationEngine>();
 
 // JWT Authentication

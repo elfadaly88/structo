@@ -83,6 +83,11 @@ export const routes: Routes = [
         path: 'tenants',
         loadComponent: () => import('./features/dashboard/tenants/tenants.component').then(m => m.TenantsComponent),
         data: { roles: ['SuperAdmin'] }
+      },
+      {
+        path: 'pending-users',
+        loadComponent: () => import('./features/dashboard/pending-users/pending-users.component').then(m => m.PendingUsersComponent),
+        data: { roles: ['SuperAdmin'] }
       }
     ]
   },

@@ -1032,6 +1032,9 @@ const GOVERNORATES: GovernorateOption[] = [
                 autocomplete="off"
                 class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 placeholder-slate-600"
                 placeholder="e.g. ahmed.ali@company.com">
+              <p class="mt-1.5 text-xs text-indigo-400/80 font-cairo leading-relaxed">
+                💡 Tip: If you enter the employee's Gmail, they can log in instantly using 'Sign in with Google' without needing to enter a password!
+              </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

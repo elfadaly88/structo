@@ -99,7 +99,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("FinancialTransactions");
+                    b.ToTable("FinancialTransactions", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Notification", b =>
@@ -152,7 +152,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.PettyCash", b =>
@@ -232,7 +232,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("PettyCashes");
+                    b.ToTable("PettyCashes", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Project", b =>
@@ -336,7 +336,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.ProjectBudgetLog", b =>
@@ -371,7 +371,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("ProjectBudgetLogs");
+                    b.ToTable("ProjectBudgetLogs", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.ProjectCashPool", b =>
@@ -406,7 +406,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ProjectCashPools");
+                    b.ToTable("ProjectCashPools", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
@@ -459,7 +459,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Settlements");
+                    b.ToTable("Settlements", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.SettlementLine", b =>
@@ -497,7 +497,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("SettlementLines");
+                    b.ToTable("SettlementLines", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.SitePhoto", b =>
@@ -536,7 +536,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("SitePhotos");
+                    b.ToTable("SitePhotos", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Tenant", b =>
@@ -619,7 +619,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.User", b =>
@@ -643,6 +643,11 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -690,7 +695,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.FinancialTransaction", b =>

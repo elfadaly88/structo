@@ -71,6 +71,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(256);
             
             entity.Property(e => e.Role).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.IsApproved).HasDefaultValue(true);
 
             entity.HasOne(e => e.Tenant)
                   .WithMany(t => t.Users)

@@ -39,7 +39,7 @@ export class TenantUserService {
   }
 
   createUser(dto: UserCreateDto): Observable<ApiResponse<UserDto>> {
-    return this.http.post<ApiResponse<UserDto>>(this.apiUrl, dto);
+    return this.http.post<ApiResponse<UserDto>>(`${environment.apiUrl}/employees`, dto);
   }
 
   toggleUserStatus(userId: string): Observable<ApiResponse<boolean>> {

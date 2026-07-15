@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.PettyCash;
 using Structo.Core.DTOs.Transactions;
@@ -81,6 +81,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     }
 
     [HttpPost("{id}/settle")]
+    [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Settle([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashSettleDto dto)
     {
         try

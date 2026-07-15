@@ -199,7 +199,8 @@ export class DashboardLayoutComponent {
       case 'SuperAdmin':
         return [
           { label: 'DASHBOARD.GLOBAL_OVERVIEW', route: '/dashboard/overview', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.overview) },
-          { label: 'DASHBOARD.TENANTS_MGMT', route: '/dashboard/tenants', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.tenants) }
+          { label: 'DASHBOARD.TENANTS_MGMT', route: '/dashboard/tenants', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.tenants) },
+          { label: 'Pending Approvals / تفعيل الحسابات', route: '/dashboard/pending-users', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.users) }
         ];
       case 'TenantOwner':
         return [

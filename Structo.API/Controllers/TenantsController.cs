@@ -127,6 +127,16 @@ public class TenantsController(StructoDbContext context) : ControllerBase
                 break;
         }
 
+        // Fetch and automatically approve the Tenant Owner linked to this tenant
+        var owner = await context.Users.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.TenantId == id && u.Role == UserRole.TenantOwner);
+            
+        if (owner != null)
+        {
+            owner.IsApproved = true;
+            owner.IsActive = true;
+        }
+
         await context.SaveChangesAsync();
 
         return Ok(new ApiResponse<bool>
