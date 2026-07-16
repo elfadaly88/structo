@@ -30,9 +30,9 @@ export class App implements OnInit {
       const google = (window as any).google;
       if (google) {
         clearInterval(interval);
-        
+
         google.accounts.id.initialize({
-          client_id: '676583115594-3rceitq71osie9agcpo4s66k5t8vp367.apps.googleusercontent.com',
+          client_id: '752236038625-sfuglkls4icf5loo8to6gaes9b3kt1h6.apps.googleusercontent.com',
           callback: (response: any) => this.handleGoogleCredential(response.credential)
         });
 
