@@ -300,8 +300,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
     {
         // 1. استخراج الـ TenantId والـ UserId من الـ Token Claims بأمان
         var tenantIdClaim = user.FindFirst("tenantId")?.Value;
-        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value;
+        var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var roleClaim = user.FindFirst("role")?.Value ?? user.FindFirst(ClaimTypes.Role)?.Value;
 
         if (string.IsNullOrEmpty(tenantIdClaim) || string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleClaim))
             return false;
