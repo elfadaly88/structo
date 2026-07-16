@@ -36,7 +36,7 @@ import { DatePipe } from '@angular/common';
       @if (isOpen()) {
         <div
           id="notification-dropdown"
-          class="absolute end-0 top-[calc(100%+10px)] w-[calc(100vw-2rem)] sm:w-[340px] max-w-full max-h-[92vh] flex flex-col
+          class="absolute end-0 top-[calc(100%+10px)] w-[calc(100vw-2rem)] sm:w-[340px] max-h-[92vh] flex flex-col
                  bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-slate-950/80
                  overflow-hidden z-50 animate-slide-in">
 
