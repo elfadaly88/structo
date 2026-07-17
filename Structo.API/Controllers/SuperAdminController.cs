@@ -189,9 +189,14 @@ public class SuperAdminController : ControllerBase
             user.IsApproved = true;
             user.IsActive = true;
 
+            bool isTenantActivated = false;
+            string tenantName = string.Empty;
+
             if (user.Role == UserRole.TenantOwner && user.Tenant != null && user.Tenant.Status == TenantStatus.PendingApproval)
             {
                 user.Tenant.Status = TenantStatus.Active;
+                isTenantActivated = true;
+                tenantName = user.Tenant.Name;
                 
                 switch (user.Tenant.SubscriptionPlan)
                 {
@@ -225,10 +230,15 @@ public class SuperAdminController : ControllerBase
                     using var scope = _scopeFactory.CreateScope();
                     var emailService = scope.ServiceProvider.GetRequiredService<IOneSignalEmailService>();
                     await emailService.SendWelcomeEmailAsync(targetEmail, targetFullName); // 👈 استخدام المتغيرات الآمنة
+                    
+                    if (isTenantActivated && !string.IsNullOrEmpty(tenantName))
+                    {
+                        await emailService.SendTenantActivatedEmailAsync(targetEmail, targetFullName, tenantName);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Background error sending welcome email to {Email}", targetEmail);
+                    _logger.LogError(ex, "Background error sending welcome/activation email to {Email}", targetEmail);
                 }
             });
 

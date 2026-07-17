@@ -11,6 +11,10 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 namespace Structo.API.Controllers
 {
     [ApiController]
@@ -20,11 +24,22 @@ namespace Structo.API.Controllers
     {
         private readonly StructoDbContext _context;
         private readonly ITenantContextAccessor _tenantAccessor;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<EmployeeManagementController> _logger;
 
-        public EmployeeManagementController(StructoDbContext context, ITenantContextAccessor tenantAccessor)
+        public EmployeeManagementController(
+            StructoDbContext context, 
+            ITenantContextAccessor tenantAccessor,
+            IServiceScopeFactory scopeFactory,
+            IConfiguration configuration,
+            ILogger<EmployeeManagementController> logger)
         {
             _context = context;
             _tenantAccessor = tenantAccessor;
+            _scopeFactory = scopeFactory;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
@@ -75,6 +90,36 @@ namespace Structo.API.Controllers
 
             _context.Users.Add(employee);
             await _context.SaveChangesAsync();
+
+            // Send Invitation Email via OneSignal in the background
+            var targetEmail = employee.Email;
+            var targetFullName = $"{employee.FirstName} {employee.LastName}";
+            var targetTenantId = tenantId;
+            var clientBaseUrl = _configuration["OneSignal:ClientBaseUrl"] ?? "https://structo-production.up.railway.app";
+            var inviteLink = $"{clientBaseUrl.TrimEnd('/')}/login";
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var emailService = scope.ServiceProvider.GetRequiredService<IOneSignalEmailService>();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
+                    
+                    string tenantName = string.Empty;
+                    if (targetTenantId.HasValue)
+                    {
+                        var tenant = await dbContext.Tenants.FindAsync(targetTenantId.Value);
+                        tenantName = tenant?.Name ?? string.Empty;
+                    }
+                    
+                    await emailService.SendInvitationEmailAsync(targetEmail, targetFullName, tenantName, inviteLink);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background error sending invitation email to {Email}", targetEmail);
+                }
+            });
 
             var resultDto = new UserDto
             {

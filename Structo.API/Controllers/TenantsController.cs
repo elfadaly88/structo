@@ -11,12 +11,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Structo.Core.Enums;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Structo.Core.Interfaces;
+
 namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "SuperAdmin")]
-public class TenantsController(StructoDbContext context) : ControllerBase
+public class TenantsController(
+    StructoDbContext context,
+    IServiceScopeFactory scopeFactory,
+    ILogger<TenantsController> logger) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<ApiResponse<Guid>>> Create([FromBody] TenantCreateDto dto)
@@ -138,6 +145,27 @@ public class TenantsController(StructoDbContext context) : ControllerBase
         }
 
         await context.SaveChangesAsync();
+
+        if (owner != null)
+        {
+            var targetEmail = owner.Email;
+            var targetFullName = $"{owner.FirstName} {owner.LastName}";
+            var tenantName = tenant.Name;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = scopeFactory.CreateScope();
+                    var emailService = scope.ServiceProvider.GetRequiredService<IOneSignalEmailService>();
+                    await emailService.SendTenantActivatedEmailAsync(targetEmail, targetFullName, tenantName);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Background error sending tenant activation email to {Email}", targetEmail);
+                }
+            });
+        }
 
         return Ok(new ApiResponse<bool>
         {

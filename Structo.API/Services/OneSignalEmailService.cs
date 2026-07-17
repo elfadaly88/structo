@@ -18,6 +18,10 @@ public class OneSignalEmailService : IOneSignalEmailService
     private readonly string _oneSignalAppId;
     private readonly string _oneSignalRestApiKey;
     private readonly string _welcomeTemplateId;
+    private readonly string _invitationTemplateId;
+    private readonly string _tenantActivatedTemplateId;
+    private readonly string _fromName;
+    private readonly string _fromAddress;
 
     public OneSignalEmailService(
         IHttpClientFactory httpClientFactory,
@@ -29,13 +33,47 @@ public class OneSignalEmailService : IOneSignalEmailService
         _oneSignalAppId = configuration["OneSignal:AppId"] ?? string.Empty;
         _oneSignalRestApiKey = configuration["OneSignal:RestApiKey"] ?? string.Empty;
         _welcomeTemplateId = configuration["OneSignal:WelcomeTemplateId"] ?? string.Empty;
+        _invitationTemplateId = configuration["OneSignal:InvitationTemplateId"] ?? string.Empty;
+        _tenantActivatedTemplateId = configuration["OneSignal:TenantActivatedTemplateId"] ?? string.Empty;
+        _fromName = configuration["OneSignal:FromName"] ?? "أُسُس / Ousos (No-Reply)";
+        _fromAddress = configuration["OneSignal:FromAddress"] ?? "no-reply@yourdomain.com";
     }
 
-    public async Task SendWelcomeEmailAsync(string email, string name)
+    public async Task SendWelcomeEmailAsync(string email, string fullName)
     {
-        if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey) || string.IsNullOrEmpty(_welcomeTemplateId))
+        var customData = new Dictionary<string, object?>
         {
-            _logger.LogWarning("OneSignal email configuration is incomplete. Welcome email skipped.");
+            ["fullName"] = fullName
+        };
+        await SendEmailWithTemplateAsync(email, _welcomeTemplateId, "Welcome Email", customData);
+    }
+
+    public async Task SendInvitationEmailAsync(string email, string fullName, string tenantName, string inviteLink)
+    {
+        var customData = new Dictionary<string, object?>
+        {
+            ["fullName"] = fullName,
+            ["tenantName"] = tenantName,
+            ["inviteLink"] = inviteLink
+        };
+        await SendEmailWithTemplateAsync(email, _invitationTemplateId, "Invitation Email", customData);
+    }
+
+    public async Task SendTenantActivatedEmailAsync(string email, string fullName, string tenantName)
+    {
+        var customData = new Dictionary<string, object?>
+        {
+            ["fullName"] = fullName,
+            ["tenantName"] = tenantName
+        };
+        await SendEmailWithTemplateAsync(email, _tenantActivatedTemplateId, "Tenant Activated Email", customData);
+    }
+
+    private async Task SendEmailWithTemplateAsync(string email, string templateId, string templateNameForLogger, Dictionary<string, object?> customData)
+    {
+        if (string.IsNullOrEmpty(_oneSignalAppId) || string.IsNullOrEmpty(_oneSignalRestApiKey) || string.IsNullOrEmpty(templateId))
+        {
+            _logger.LogWarning("OneSignal email configuration is incomplete. {TemplateName} skipped. Check template settings.", templateNameForLogger);
             return;
         }
 
@@ -43,15 +81,21 @@ public class OneSignalEmailService : IOneSignalEmailService
         {
             var client = _httpClientFactory.CreateClient("OneSignal");
             client.Timeout = TimeSpan.FromSeconds(5);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Key", _oneSignalRestApiKey);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", _oneSignalRestApiKey);
 
             var payload = new Dictionary<string, object?>
             {
                 ["app_id"] = _oneSignalAppId,
-                ["template_id"] = _welcomeTemplateId,
-                ["email_to_address"] = new[] { email },
-                ["target_channel"] = "email"
+                ["template_id"] = templateId,
+                ["include_email_tokens"] = new[] { email },
+                ["custom_data"] = customData
             };
+
+            if (!string.IsNullOrEmpty(_fromName))
+                payload["email_from_name"] = _fromName;
+
+            if (!string.IsNullOrEmpty(_fromAddress))
+                payload["email_from_address"] = _fromAddress;
 
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -62,20 +106,20 @@ public class OneSignalEmailService : IOneSignalEmailService
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("OneSignal welcome email failed with status code {StatusCode}. Response: {ResponseBody}", response.StatusCode, body);
+                _logger.LogWarning("OneSignal {TemplateName} failed with status code {StatusCode}. Response: {ResponseBody}", templateNameForLogger, response.StatusCode, body);
             }
             else
             {
-                _logger.LogInformation("Successfully sent welcome email to {Email}", email);
+                _logger.LogInformation("Successfully sent {TemplateName} to {Email}", templateNameForLogger, email);
             }
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("OneSignal email request timed out (5s limit). Request was aborted.");
+            _logger.LogWarning("OneSignal email request for {TemplateName} timed out (5s limit). Request was aborted.", templateNameForLogger);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "OneSignal welcome email failed due to exception.");
+            _logger.LogError(ex, "OneSignal {TemplateName} failed due to exception.", templateNameForLogger);
         }
     }
 }

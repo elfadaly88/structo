@@ -3,7 +3,26 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --color-background-deep: #070A10;
+  --color-background-main: #0B0F19;
+  --color-background-light: #111827;
+
+  --color-surface-card: #1e293b;
+  --color-surface-border: #334155;
+  --color-surface-hover: #374151;
+
+  --color-brand-primary: #1d4ed8;
+  --color-brand-primary-hover: #2563eb;
+  --color-brand-accent: #10b981;
+  --color-brand-accent-hover: #059669;
+
+  --color-status-success: #10b981;
+  --color-status-danger: #be123c;
+  --color-status-warning: #d97706;
+  --color-status-info: #2563eb;
+
+  --font-cairo: 'Cairo', 'Inter', sans-serif;
+  --font-sans: 'Inter', 'Outfit', sans-serif;
 }
 
 [dir="rtl"] {
