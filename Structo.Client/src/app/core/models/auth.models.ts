@@ -13,6 +13,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
+  refreshToken?: string;
   userId: string;
   role: string;
   tenantId: string | null;

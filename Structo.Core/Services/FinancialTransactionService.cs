@@ -64,6 +64,25 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         return (true, "Transaction added successfully");
     }
 
+    private static DateTime ToEgyptLocalTime(DateTime utcTime)
+    {
+        TimeZoneInfo egyptZone;
+        try
+        {
+            egyptZone = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            egyptZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo");
+        }
+        
+        var utc = utcTime.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(utcTime, DateTimeKind.Utc) 
+            : utcTime.ToUniversalTime();
+            
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, egyptZone);
+    }
+
     public async Task<PaginatedList<FinancialTransactionMobileDto>> GetMobileTransactionsAsync(Guid projectId, int pageNumber, int pageSize, string userRole)
     {
         if (userRole == "SuperAdmin")
@@ -75,21 +94,22 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var dbItems = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(t => new FinancialTransactionMobileDto
-            {
-                Id = t.Id,
-                Amount = t.Amount,
-                Type = t.Type.ToString(),
-                Description = t.Description,
-                TransactionDate = t.TransactionDate,
-                PaymentDate = t.PaymentDate,
-                PaymentMethod = t.PaymentMethod.HasValue ? t.PaymentMethod.ToString() : null,
-                ReceiptPhotoUrl = t.ReceiptPhotoUrl
-            })
             .ToListAsync();
+
+        var items = dbItems.Select(t => new FinancialTransactionMobileDto
+        {
+            Id = t.Id,
+            Amount = t.Amount,
+            Type = t.Type.ToString(),
+            Description = t.Description,
+            TransactionDate = ToEgyptLocalTime(t.TransactionDate),
+            PaymentDate = ToEgyptLocalTime(t.PaymentDate),
+            PaymentMethod = t.PaymentMethod.HasValue ? t.PaymentMethod.ToString() : null,
+            ReceiptPhotoUrl = t.ReceiptPhotoUrl
+        }).ToList();
 
         return new PaginatedList<FinancialTransactionMobileDto>
         {

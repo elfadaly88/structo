@@ -99,7 +99,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("FinancialTransactions", (string)null);
+                    b.ToTable("FinancialTransactions");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Notification", b =>
@@ -152,7 +152,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.PettyCash", b =>
@@ -232,7 +232,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("PettyCashes", (string)null);
+                    b.ToTable("PettyCashes");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Project", b =>
@@ -336,7 +336,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Projects", (string)null);
+                    b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.ProjectBudgetLog", b =>
@@ -371,7 +371,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("ProjectBudgetLogs", (string)null);
+                    b.ToTable("ProjectBudgetLogs");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.ProjectCashPool", b =>
@@ -406,7 +406,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ProjectCashPools", (string)null);
+                    b.ToTable("ProjectCashPools");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
@@ -459,7 +459,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Settlements", (string)null);
+                    b.ToTable("Settlements");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.SettlementLine", b =>
@@ -497,7 +497,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("SettlementLines", (string)null);
+                    b.ToTable("SettlementLines");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.SitePhoto", b =>
@@ -536,7 +536,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("SitePhotos", (string)null);
+                    b.ToTable("SitePhotos");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.Tenant", b =>
@@ -619,7 +619,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tenants", (string)null);
+                    b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.User", b =>
@@ -677,6 +677,12 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<string>("PersonalPhone")
                         .HasColumnType("text");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -695,7 +701,7 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Structo.Core.Entities.FinancialTransaction", b =>

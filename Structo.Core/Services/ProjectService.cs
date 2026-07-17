@@ -25,13 +25,33 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         return obj.ToJsonString();
     }
 
+    private static DateTime ToEgyptLocalTime(DateTime utcTime)
+    {
+        TimeZoneInfo egyptZone;
+        try
+        {
+            egyptZone = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            egyptZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo");
+        }
+        
+        // Ensure the input DateTime has Utc Kind before conversion
+        var utc = utcTime.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(utcTime, DateTimeKind.Utc) 
+            : utcTime.ToUniversalTime();
+            
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, egyptZone);
+    }
+
     private ProjectDto MapToDto(Project p, string? userRole = null) => new()
     {
         Id = p.Id,
         Name = p.Name,
         Description = userRole == "SuperAdmin" ? string.Empty : BuildLegacyDescription(p),
-        StartDate = p.StartDate,
-        EndDate = p.EndDate,
+        StartDate = ToEgyptLocalTime(p.StartDate),
+        EndDate = p.EndDate.HasValue ? ToEgyptLocalTime(p.EndDate.Value) : null,
         IsActive = p.IsActive,
         ManagerId = p.ManagerId,
         Status = p.Status.ToString(),
@@ -137,8 +157,8 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc),
             Budget = budget,
             ClientName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(!string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client),
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
+            StartDate = dto.StartDate.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc) : dto.StartDate.ToUniversalTime(),
+            EndDate = dto.EndDate.HasValue ? (dto.EndDate.Value.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dto.EndDate.Value, DateTimeKind.Utc) : dto.EndDate.Value.ToUniversalTime()) : null,
             ManagerId = dto.ManagerId,
             Status = finalStatus,
             IsActive = isActive,
@@ -175,8 +195,8 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         }
 
         project.Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty;
-        project.StartDate = dto.StartDate;
-        project.EndDate = dto.EndDate;
+        project.StartDate = dto.StartDate.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc) : dto.StartDate.ToUniversalTime();
+        project.EndDate = dto.EndDate.HasValue ? (dto.EndDate.Value.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dto.EndDate.Value, DateTimeKind.Utc) : dto.EndDate.Value.ToUniversalTime()) : null;
         project.ManagerId = dto.ManagerId;
 
         // Parse description

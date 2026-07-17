@@ -88,8 +88,8 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
             return (false, "Only pending petty cash requests can be approved.");
 
         var pool = await context.Set<ProjectCashPool>().FirstOrDefaultAsync(p => p.Id == dto.SourcePoolId && p.ProjectId == projectId);
-        if (pool == null)
-            return (false, "Selected cash pool not found.");
+        if (pool == null || pool.TenantId != pettyCash.TenantId)
+            return (false, "Selected cash pool not found or unauthorized.");
 
         if (pettyCash.Amount > pool.AvailableBalance)
             return (false, $"Insufficient funds. Available pool is {pool.AvailableBalance} EGP.");
@@ -199,6 +199,25 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return true;
     }
 
+    private static DateTime ToEgyptLocalTime(DateTime utcTime)
+    {
+        TimeZoneInfo egyptZone;
+        try
+        {
+            egyptZone = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            egyptZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo");
+        }
+        
+        var utc = utcTime.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(utcTime, DateTimeKind.Utc) 
+            : utcTime.ToUniversalTime();
+            
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, egyptZone);
+    }
+
     public async Task<PaginatedList<PettyCashMobileDto>> GetMobilePettyCashAsync(Guid projectId, int pageNumber, int pageSize, Guid userId, string userRole)
     {
         if (userRole == "SuperAdmin")
@@ -218,28 +237,29 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var dbItems = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(t => new PettyCashMobileDto
-            {
-                Id = t.Id,
-                ProjectId = t.ProjectId,
-                ProjectName = t.Project != null ? t.Project.Name : string.Empty,
-                Amount = t.Amount,
-                Reason = t.Reason,
-                IssuedAt = t.IssuedAt,
-                IsSettled = t.IsSettled,
-                IssuedTo = t.IssuedToUser != null ? t.IssuedToUser.FirstName + " " + t.IssuedToUser.LastName : string.Empty,
-                Status = t.Status,
-                Category = t.Category,
-                Comments = t.Comments,
-                ReceiptPhotoUrl = t.ReceiptPhotoUrl,
-                SettlementPaymentMethod = t.SettlementPaymentMethod.HasValue ? t.SettlementPaymentMethod.Value.ToString() : string.Empty,
-                ExpenseDate = t.ExpenseDate,
-                IsReimbursement = t.IsReimbursement
-            })
             .ToListAsync();
+
+        var items = dbItems.Select(t => new PettyCashMobileDto
+        {
+            Id = t.Id,
+            ProjectId = t.ProjectId,
+            ProjectName = t.Project != null ? t.Project.Name : string.Empty,
+            Amount = t.Amount,
+            Reason = t.Reason,
+            IssuedAt = ToEgyptLocalTime(t.IssuedAt),
+            IsSettled = t.IsSettled,
+            IssuedTo = t.IssuedToUser != null ? t.IssuedToUser.FirstName + " " + t.IssuedToUser.LastName : string.Empty,
+            Status = t.Status,
+            Category = t.Category,
+            Comments = t.Comments,
+            ReceiptPhotoUrl = t.ReceiptPhotoUrl,
+            SettlementPaymentMethod = t.SettlementPaymentMethod.HasValue ? t.SettlementPaymentMethod.Value.ToString() : string.Empty,
+            ExpenseDate = t.ExpenseDate.HasValue ? ToEgyptLocalTime(t.ExpenseDate.Value) : null,
+            IsReimbursement = t.IsReimbursement
+        }).ToList();
 
         return new PaginatedList<PettyCashMobileDto>
         {

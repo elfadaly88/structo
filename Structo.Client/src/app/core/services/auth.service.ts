@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { ApiResponse, LoginRequest, AuthResponse, UserSession } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from './notification.service';
@@ -14,7 +14,11 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   
   private readonly tokenKey = 'access_token';
+  private readonly refreshKey = 'refresh_token';
   private readonly userKey = 'user_profile';
+
+  isRefreshingToken = false;
+  refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   // Core signals for state management
   readonly currentUser = signal<UserSession | null>(null);
@@ -47,8 +51,22 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.refreshKey);
     localStorage.removeItem(this.userKey);
     this.currentUser.set(null);
+  }
+
+  refreshToken(): Observable<ApiResponse<AuthResponse>> {
+    const refreshToken = localStorage.getItem(this.refreshKey);
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
+      tap(response => {
+        if (response.success && response.data) {
+          this.setSession(response.data);
+        } else {
+          this.logout();
+        }
+      })
+    );
   }
 
   getToken(): string | null {
@@ -125,12 +143,15 @@ export class AuthService {
   }
 
   private setSession(authData: AuthResponse): void {
-    const { token, ...userData } = authData;
+    const { token, refreshToken, ...userData } = authData;
     const email = this.getEmailFromToken(token);
     const name = userData.name || this.getNameFromToken(token);
     const session: UserSession = { ...userData, email, name };
     
     localStorage.setItem(this.tokenKey, token);
+    if (refreshToken) {
+      localStorage.setItem(this.refreshKey, refreshToken);
+    }
     localStorage.setItem(this.userKey, JSON.stringify(session));
     this.currentUser.set(session);
   }

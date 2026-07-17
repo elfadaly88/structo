@@ -29,6 +29,8 @@ public class User
     public string? MapLocationUrl { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     // Navigation properties
     public Tenant? Tenant { get; set; }

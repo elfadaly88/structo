@@ -11,4 +11,5 @@ public class LoginResponseDto
     public string Name { get; set; } = string.Empty;
     public bool IsApproved { get; set; }
     public bool IsProfileComplete { get; set; }
+    public string RefreshToken { get; set; } = string.Empty;
 }

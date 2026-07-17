@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Structo.Core.DTOs.Auth;
 using Structo.Core.DTOs.Common;
 using Structo.Core.Interfaces;
@@ -20,12 +21,44 @@ public class AuthController : ControllerBase
         _authService = authService;
         _logger = logger;
     }
+    
     [HttpPost("login")]
+    [EnableRateLimiting("loginPolicy")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginDto dto)
     {
         try
         {
             var (success, data, message) = await _authService.LoginAsync(dto);
+
+            if (!success)
+            {
+                return Unauthorized(new ApiResponse<LoginResponseDto> { Success = false, Message = message });
+            }
+
+            return Ok(new ApiResponse<LoginResponseDto>
+            {
+                Data = data,
+                Message = message,
+                Success = true
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new ApiResponse<LoginResponseDto>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+    }
+
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Refresh([FromBody] RefreshTokenDto dto)
+    {
+        try
+        {
+            var (success, data, message) = await _authService.RefreshTokenAsync(dto);
 
             if (!success)
             {

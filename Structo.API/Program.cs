@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.RateLimiting;
 using Structo.API.Services;
 using Structo.Core.Entities;
 using Structo.Core.Enums;
@@ -162,28 +163,42 @@ builder.Services.Configure<Structo.Core.Settings.CloudflareR2Settings>(options =
     options.PublicBaseUrl = (publicBaseUrl == "YOUR_CLOUDFLARE_R2_PUBLIC_BASE_URL") ? string.Empty : (publicBaseUrl ?? string.Empty);
 });
 
-// Cloud Storage Service
-builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
-{
-    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
-    var serviceUrl = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_SERVICE_URL")
-        ?? builder.Configuration["CloudflareR2:ServiceUrl"];
-    if (serviceUrl == "YOUR_CLOUDFLARE_R2_SERVICE_URL") serviceUrl = null;
-    serviceUrl = serviceUrl?.Replace("http://", "https://");
-    
-    var config = new Amazon.S3.AmazonS3Config
-    {
-        ServiceURL = serviceUrl,
-        UseHttp = false,
-        ForcePathStyle = true,
-        AuthenticationRegion = "auto",
-        HttpClientFactory = new CustomAwsHttpClientFactory()
-    };
+// Cloud Storage Service — Conditional Registration
+// If Cloudflare R2 is properly configured, use the real S3/R2 client.
+// Otherwise, fall back to a no-op mock for local development testing.
+var r2ServiceUrl = Environment.GetEnvironmentVariable("CLOUDFLARE_R2_SERVICE_URL")
+    ?? builder.Configuration["CloudflareR2:ServiceUrl"];
+var isR2Configured = !string.IsNullOrWhiteSpace(r2ServiceUrl)
+    && r2ServiceUrl != "YOUR_CLOUDFLARE_R2_SERVICE_URL";
 
-    var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
-    return new Amazon.S3.AmazonS3Client(credentials, config);
-});
-builder.Services.AddScoped<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.CloudflareR2StorageService>();
+if (isR2Configured)
+{
+    builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(sp =>
+    {
+        var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Structo.Core.Settings.CloudflareR2Settings>>().Value;
+        var svcUrl = r2ServiceUrl!.Replace("http://", "https://");
+
+        var config = new Amazon.S3.AmazonS3Config
+        {
+            ServiceURL = svcUrl,
+            UseHttp = false,
+            ForcePathStyle = true,
+            AuthenticationRegion = "auto",
+            HttpClientFactory = new CustomAwsHttpClientFactory()
+        };
+
+        var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
+        return new Amazon.S3.AmazonS3Client(credentials, config);
+    });
+    builder.Services.AddScoped<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.CloudflareR2StorageService>();
+    Console.WriteLine("[STARTUP] Cloud Storage: Cloudflare R2 (Production)");
+}
+else
+{
+    // No-Op fallback — allows financial endpoints to work locally without real R2 keys
+    builder.Services.AddScoped<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.LocalNoOpStorageService>();
+    Console.WriteLine("[STARTUP] Cloud Storage: LocalNoOpStorageService (Development Fallback)");
+}
 
 // Core Business Services
 builder.Services.AddScoped<Structo.Core.Interfaces.ITokenProvider, Structo.Infrastructure.Auth.JwtTokenProvider>();
@@ -199,6 +214,17 @@ builder.Services.AddHttpClient("OneSignal");
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo.API.Services.NotificationService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IOneSignalEmailService, Structo.API.Services.OneSignalEmailService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.Core.Services.NotificationEngine>();
+
+// Rate Limiting Policy
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("loginPolicy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 5;
+        opt.QueueLimit = 0;
+    });
+});
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -411,6 +437,7 @@ else
 
 // CORS, Auth, Authorization
 app.UseCors("AllowAngular");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

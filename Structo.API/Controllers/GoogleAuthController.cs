@@ -191,6 +191,10 @@ var googleClientId = _configuration["Authentication:Google:ClientId"] ?? "752236
             }
 
             var token = _tokenProvider.GenerateToken(user);
+            var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await _context.SaveChangesAsync();
 
             bool isProfileComplete = false;
             if (user.Role == UserRole.SuperAdmin)
@@ -216,6 +220,7 @@ var googleClientId = _configuration["Authentication:Google:ClientId"] ?? "752236
             var responseDto = new LoginResponseDto
             {
                 Token = token,
+                RefreshToken = refreshToken,
                 UserId = user.Id,
                 Role = user.Role.ToString(),
                 TenantId = user.TenantId,
