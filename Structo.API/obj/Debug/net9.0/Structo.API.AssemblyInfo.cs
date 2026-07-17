@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Structo.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5ee8be9029c89740c4b72f52199bf802468e22e6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+374862e8629d8fe0efed1e2508bb889376f9ea85")]
 [assembly: System.Reflection.AssemblyProductAttribute("Structo.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Structo.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
