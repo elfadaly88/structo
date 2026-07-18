@@ -51,7 +51,10 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         [FromQuery] double? minRating = null)
     {
         // Query tenants without default tenant filters
-        var query = context.Tenants.IgnoreQueryFilters().AsQueryable();
+        var query = context.Tenants
+            .IgnoreQueryFilters()
+            .Include(t => t.Projects)
+            .AsQueryable();
 
         // Only show Active tenants in the public directory
         query = query.Where(t => t.Status == TenantStatus.Active);
@@ -61,55 +64,47 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             query = query.Where(t => t.Region.ToLower().Contains(region.ToLower()));
         }
 
-        if (minRating.HasValue)
-        {
-            query = query.Where(t => t.Rating >= minRating.Value);
-        }
-
         var tenants = await query.ToListAsync();
 
         // Filter by project category tag if provided
         if (!string.IsNullOrEmpty(category))
         {
-            var matchingTenants = new List<Tenant>();
-            foreach (var t in tenants)
-            {
-                var projects = await context.Projects
-                    .IgnoreQueryFilters()
-                    .Where(p => p.TenantId == t.Id)
-                    .ToListAsync();
-
-                var hasMatchingProject = projects.Any(p => p.IsPublicPortfolio && string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase));
-
-                if (hasMatchingProject)
-                {
-                    matchingTenants.Add(t);
-                }
-            }
-            tenants = matchingTenants;
+            tenants = tenants.Where(t => t.Projects.Any(p => p.IsPublicPortfolio && string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase))).ToList();
         }
 
-        var dtos = tenants.Select(t => new TenantDto
-        {
-            Id = t.Id,
-            Name = t.Name,
-            SubscriptionPlan = t.SubscriptionPlan.ToString(),
-            MaxActiveProjects = t.MaxActiveProjects,
-            LogoUrl = t.LogoUrl,
-            BannerUrl = t.BannerUrl,
-            Region = t.Region,
-            CompanyDescription = t.CompanyDescription,
-            PersonalPhone = t.PersonalPhone,
-            WhatsAppPhone = t.WhatsAppPhone,
-            ManualAddress = t.ManualAddress,
-            MapLocationUrl = t.MapLocationUrl,
-            Latitude = t.Latitude,
-            Longitude = t.Longitude,
-            Rating = t.Rating,
-            CreatedAt = t.CreatedAt
-        }).ToList();
+        var dtos = tenants.Select(t => {
+            var ratedProjects = t.Projects.Where(p => p.ClientRating.HasValue).Select(p => p.ClientRating!.Value).ToList();
+            double avgRating = ratedProjects.Any() ? ratedProjects.Average() : 0.0;
 
-        return Ok(new ApiResponse<List<TenantDto>> { Data = dtos, Success = true });
+            return new TenantDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                SubscriptionPlan = t.SubscriptionPlan.ToString(),
+                MaxActiveProjects = t.MaxActiveProjects,
+                LogoUrl = t.LogoUrl,
+                BannerUrl = t.BannerUrl,
+                Region = t.Region,
+                CompanyDescription = t.CompanyDescription,
+                PersonalPhone = t.PersonalPhone,
+                WhatsAppPhone = t.WhatsAppPhone,
+                ManualAddress = t.ManualAddress,
+                MapLocationUrl = t.MapLocationUrl,
+                Latitude = t.Latitude,
+                Longitude = t.Longitude,
+                Rating = avgRating,
+                CreatedAt = t.CreatedAt
+            };
+        }).AsQueryable();
+
+        if (minRating.HasValue)
+        {
+            dtos = dtos.Where(dto => dto.Rating >= minRating.Value);
+        }
+
+        var resultList = dtos.OrderByDescending(dto => dto.Rating).ToList();
+
+        return Ok(new ApiResponse<List<TenantDto>> { Data = resultList, Success = true });
     }
 
     [HttpGet("tenants/{id}/portfolio")]
@@ -149,6 +144,9 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             }
         }
 
+        var ratedProjects = projects.Where(p => p.ClientRating.HasValue).Select(p => p.ClientRating!.Value).ToList();
+        double avgRating = ratedProjects.Any() ? ratedProjects.Average() : 0.0;
+
         var portfolio = new PublicTenantPortfolioDto
         {
             Id = tenant.Id,
@@ -157,7 +155,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             BannerUrl = tenant.BannerUrl,
             Region = tenant.Region,
             CompanyDescription = tenant.CompanyDescription,
-            Rating = tenant.Rating,
+            Rating = avgRating,
             Projects = publicProjects
         };
 

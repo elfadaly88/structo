@@ -454,6 +454,25 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         if (!string.IsNullOrWhiteSpace(dto.Notes)) project.ClientReviewNotes = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Notes);
 
         await context.SaveChangesAsync();
+
+        // Recalculate average rating for the tenant
+        var ratings = await context.Set<Project>()
+            .IgnoreQueryFilters()
+            .Where(p => p.TenantId == project.TenantId && p.ClientRating.HasValue)
+            .Select(p => p.ClientRating!.Value)
+            .ToListAsync();
+
+        double averageRating = ratings.Any() ? ratings.Average() : 0.0;
+
+        var tenant = await context.Set<Tenant>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.Id == project.TenantId);
+        if (tenant != null)
+        {
+            tenant.Rating = averageRating;
+            await context.SaveChangesAsync();
+        }
+
         return (true, "شكراً لك! تم تسجيل تقييمك بنجاح.");
     }
 }
