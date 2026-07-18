@@ -84,10 +84,8 @@ interface NavItem {
           [class.w-0]="!isSidebarOpen()"
           [class.border-e]="isSidebarOpen()"
           [class.border-slate-800]="isSidebarOpen()"
-          [class.translate-x-0]="isSidebarOpen()"
-          [class.ltr:-translate-x-full]="!isSidebarOpen()"
-          [class.rtl:translate-x-full]="!isSidebarOpen()"
-          [class.md:translate-x-0]="true">
+          [class.sidebar-open]="isSidebarOpen()"
+          [class.sidebar-closed]="!isSidebarOpen()">
 
           <div class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             <span class="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase px-3 block mb-4">
@@ -105,6 +103,16 @@ interface NavItem {
                 <span>{{ item.label | translate }}</span>
               </a>
             }
+
+            <!-- Sidebar Sign Out Option (Visible inside mobile/desktop sidebar menu list) -->
+            <button
+              (click)="logout()"
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-all duration-200 text-right rtl:text-left cursor-pointer focus:outline-none mt-4 border-t border-slate-800/60 pt-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>{{ 'COMMON.LOGOUT' | translate }}</span>
+            </button>
           </div>
 
           <!-- Bottom Tenant Info -->
@@ -144,6 +152,24 @@ interface NavItem {
     :host {
       display: block;
       height: 100vh;
+    }
+    aside {
+      transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+    }
+    :host ::ng-deep html[dir="ltr"] .sidebar-closed {
+      transform: translateX(-100%);
+    }
+    :host ::ng-deep html[dir="rtl"] .sidebar-closed {
+      transform: translateX(100%);
+    }
+    .sidebar-open {
+      transform: translateX(0) !important;
+    }
+    @media (min-width: 768px) {
+      .sidebar-closed {
+        transform: translateX(0) !important;
+        width: 16rem !important;
+      }
     }
   `]
 })
@@ -230,7 +256,9 @@ export class DashboardLayoutComponent {
   }
 
   closeSidebar(): void {
-    this.isSidebarOpen.set(false);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.isSidebarOpen.set(false);
+    }
   }
 
   logout(): void {

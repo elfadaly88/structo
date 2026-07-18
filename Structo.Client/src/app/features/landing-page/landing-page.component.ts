@@ -15,72 +15,35 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white overflow-x-hidden">
       <!-- Nav Bar -->
-      <nav class="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4 flex justify-between items-center">
+      <nav class="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
-          <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <span class="text-white font-extrabold text-sm">S</span>
-          </div>
-          <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">Structo</span>
-        </div>
-        <div class="flex items-center gap-6">
-          <a href="#marketplace" class="text-sm font-semibold text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
-            {{ 'USERS.TAB_USERS' | translate }}
-          </a>
-          <button 
-            (click)="langService.toggleLanguage()"
-            class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
-            {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
-          </button>
-          @if (authService.isAuthenticated()) {
-            <span class="text-sm text-slate-400 font-medium font-cairo">
-              Welcome back, <span class="text-white font-semibold">{{ authService.currentUser()?.name }}</span>
-            </span>
-            <a routerLink="/dashboard" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-              <span class="relative z-10">Dashboard</span>
-              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </a>
-          } @else {
-            <a routerLink="/login" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
-              {{ 'NAV.LOGIN' | translate }}
-            </a>
-            <button (click)="navigateToLogin()" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-              <span class="relative z-10">{{ 'NAV.GET_STARTED' | translate }}</span>
-              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </button>
-          }
-        </div>
-      </nav>
-
-      <!-- Nav Bar -->
-      <nav class="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
             <span class="text-white font-extrabold text-sm">أ</span>
           </div>
-          <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أُسُس / Ousos</span>
+          <span class="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أُسُس / Ousos</span>
         </div>
-        <div class="flex items-center gap-6">
-          <a href="#marketplace" class="text-sm font-semibold text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
+        <div class="flex items-center gap-2 md:gap-4">
+          <a href="#marketplace" class="hidden sm:inline-block text-xs md:text-sm font-semibold text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
             {{ 'USERS.TAB_USERS' | translate }}
           </a>
           <button 
             (click)="langService.toggleLanguage()"
-            class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
+            class="text-[10px] md:text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
             {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
           </button>
           @if (authService.isAuthenticated()) {
-            <span class="text-sm text-slate-400 font-medium font-cairo">
+            <span class="hidden lg:inline-block text-xs md:text-sm text-slate-400 font-medium font-cairo">
               Welcome back, <span class="text-white font-semibold">{{ authService.currentUser()?.name }}</span>
             </span>
-            <a routerLink="/dashboard" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+            <a routerLink="/dashboard" class="relative group overflow-hidden px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-indigo-600 text-xs md:text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
               <span class="relative z-10">Dashboard</span>
               <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </a>
           } @else {
-            <a routerLink="/login" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
+            <a routerLink="/login" class="text-xs md:text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo px-1">
               {{ 'NAV.LOGIN' | translate }}
             </a>
-            <button (click)="navigateToLogin()" class="relative group overflow-hidden px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+            <button (click)="navigateToLogin()" class="relative group overflow-hidden px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-indigo-600 text-xs md:text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
               <span class="relative z-10">{{ 'NAV.GET_STARTED' | translate }}</span>
               <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
