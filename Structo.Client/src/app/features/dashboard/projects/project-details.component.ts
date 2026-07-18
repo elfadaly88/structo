@@ -115,6 +115,34 @@ import { LanguageService } from '../../../core/services/language.service';
         </div>
       }
 
+      <!-- WhatsApp Client Review Quick-Access Banner (Visible on Closed projects to Tenant Owner) -->
+      @if (project() && project()!.status === 'Closed' && project()!.publicReviewToken && isTenantOwner()) {
+        <div class="bg-gradient-to-r from-emerald-950/20 to-slate-900/80 border border-emerald-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+          <div class="flex items-center gap-3">
+            <div class="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400 shrink-0">
+              <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.472 14.382c-.022-.014-.029-.022-.054-.054l-.405-.405a1.107 1.107 0 0 0-1.565 0l-.364.364c-.162.162-.338.25-.562.15-.365-.163-.739-.372-1.127-.624-.388-.252-.76-.554-1.116-.906-.356-.352-.656-.724-.908-1.112a14.7 14.7 0 0 1-.624-1.127c-.1-.225-.013-.4.15-.563l.363-.363a1.108 1.108 0 0 0 0-1.566l-.405-.405c-.032-.025-.04-.032-.054-.054A1.123 1.123 0 0 0 9.07 8.35c-.412.413-.679.932-.782 1.488-.13.7.072 1.487.608 2.355.536.868 1.258 1.777 2.15 2.668.892.892 1.8 1.614 2.668 2.15.868.536 1.656.738 2.355.608a2.91 2.91 0 0 0 1.488-.782 1.122 1.122 0 0 0 .15-.717 1.096 1.096 0 0 0-.236-.837zM12.004 2c-5.518 0-10 4.482-10 10 0 1.758.46 3.41 1.266 4.858L2.03 21.684a1.002 1.002 0 0 0 1.286 1.286l4.826-1.24A9.957 9.957 0 0 0 12.004 22c5.518 0 10-4.482 10-10s-4.482-10-10-10zm0 18c-1.56 0-3.03-.393-4.323-1.085a1 1 0 0 0-.743-.075l-3.328.855.855-3.328a1 1 0 0 0-.075-.743A7.95 7.95 0 0 1 4.004 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white font-cairo">رابط تقييم المشروع للعميل / Client Review Link</h4>
+              <p class="text-xs text-slate-400 mt-0.5 font-cairo">تم إغلاق المشروع بنجاح. أرسل رابط التقييم للعميل عبر واتساب لقياس مستوى رضاكم.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto shrink-0 justify-end">
+            <input type="text" readonly [value]="getPublicReviewUrl()" class="hidden sm:block bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 font-mono focus:outline-none max-w-[200px]" />
+            <button (click)="copyReviewLink()" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer font-cairo">نسخ الرابط</button>
+            <button (click)="shareReviewOnWhatsApp()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo flex items-center gap-1.5">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.472 14.382c-.022-.014-.029-.022-.054-.054l-.405-.405a1.107 1.107 0 0 0-1.565 0l-.364.364c-.162.162-.338.25-.562.15-.365-.163-.739-.372-1.127-.624-.388-.252-.76-.554-1.116-.906-.356-.352-.656-.724-.908-1.112a14.7 14.7 0 0 1-.624-1.127c-.1-.225-.013-.4.15-.563l.363-.363a1.108 1.108 0 0 0 0-1.566l-.405-.405c-.032-.025-.04-.032-.054-.054A1.123 1.123 0 0 0 9.07 8.35c-.412.413-.679.932-.782 1.488-.13.7.072 1.487.608 2.355.536.868 1.258 1.777 2.15 2.668.892.892 1.8 1.614 2.668 2.15.868.536 1.656.738 2.355.608a2.91 2.91 0 0 0 1.488-.782 1.122 1.122 0 0 0 .15-.717 1.096 1.096 0 0 0-.236-.837zM12.004 2c-5.518 0-10 4.482-10 10 0 1.758.46 3.41 1.266 4.858L2.03 21.684a1.002 1.002 0 0 0 1.286 1.286l4.826-1.24A9.957 9.957 0 0 0 12.004 22c5.518 0 10-4.482 10-10s-4.482-10-10-10zm0 18c-1.56 0-3.03-.393-4.323-1.085a1 1 0 0 0-.743-.075l-3.328.855.855-3.328a1 1 0 0 0-.075-.743A7.95 7.95 0 0 1 4.004 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
+              </svg>
+              ارسال تقييم العميل (واتساب)
+            </button>
+          </div>
+        </div>
+      }
+
+
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 font-sans">
         @if (!isEngineer()) {
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
@@ -148,7 +176,8 @@ import { LanguageService } from '../../../core/services/language.service';
             @if (isOwnerOrAccountant()) {
               <button 
                 (click)="openInjectModal()"
-                class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 hover:scale-105 active:scale-95 shadow-md cursor-pointer font-cairo flex items-center gap-2">
+                [disabled]="project()?.status === 'Closed'"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 hover:scale-105 active:scale-95 shadow-md cursor-pointer font-cairo flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -201,7 +230,8 @@ import { LanguageService } from '../../../core/services/language.service';
                   @if (isOwnerOrAccountant()) {
                     <button
                       (click)="openReviseBudgetModal()"
-                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors cursor-pointer font-cairo">
+                      [disabled]="project()?.status === 'Closed'"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
                       Revise / تعديل
                     </button>
                   }
@@ -381,6 +411,25 @@ import { LanguageService } from '../../../core/services/language.service';
               }
             </div>
           </div>
+
+          <!-- Client Review Link Card (Displayed stably inside Closeout tab when publicReviewToken exists) -->
+          @if (project() && project()!.publicReviewToken) {
+            <div class="bg-slate-900/40 border border-indigo-900/40 rounded-2xl p-5 shadow-xl">
+              <h4 class="text-sm font-bold text-indigo-300 font-cairo flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                رابط تقييم المشروع للعميل / Project Review Link
+              </h4>
+              <p class="text-xs text-slate-400 mb-3 font-cairo">أرسل هذا الرابط للعميل عبر واتساب لتقييم جودة تسليم المشروع — لا يتطلب تسجيل دخول.</p>
+              <div class="flex items-center gap-2">
+                <input type="text" readonly [value]="getPublicReviewUrl()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-300 font-mono focus:outline-none" />
+                <button (click)="copyReviewLink()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo shrink-0">نسخ الرابط</button>
+                <button (click)="shareReviewOnWhatsApp()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo flex items-center gap-1.5 shrink-0">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.022-.014-.029-.022-.054-.054l-.405-.405a1.107 1.107 0 0 0-1.565 0l-.364.364c-.162.162-.338.25-.562.15-.365-.163-.739-.372-1.127-.624-.388-.252-.76-.554-1.116-.906-.356-.352-.656-.724-.908-1.112a14.7 14.7 0 0 1-.624-1.127c-.1-.225-.013-.4.15-.563l.363-.363a1.108 1.108 0 0 0 0-1.566l-.405-.405c-.032-.025-.04-.032-.054-.054A1.123 1.123 0 0 0 9.07 8.35c-.412.413-.679.932-.782 1.488-.13.7.072 1.487.608 2.355.536.868 1.258 1.777 2.15 2.668.892.892 1.8 1.614 2.668 2.15.868.536 1.656.738 2.355.608a2.91 2.91 0 0 0 1.488-.782 1.122 1.122 0 0 0 .15-.717 1.096 1.096 0 0 0-.236-.837zM12.004 2c-5.518 0-10 4.482-10 10 0 1.758.46 3.41 1.266 4.858L2.03 21.684a1.002 1.002 0 0 0 1.286 1.286l4.826-1.24A9.957 9.957 0 0 0 12.004 22c5.518 0 10-4.482 10-10s-4.482-10-10-10zm0 18c-1.56 0-3.03-.393-4.323-1.085a1 1 0 0 0-.743-.075l-3.328.855.855-3.328a1 1 0 0 0-.075-.743A7.95 7.95 0 0 1 4.004 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>
+                  ارسال واتساب
+                </button>
+              </div>
+            </div>
+          }
 
           <!-- Action Buttons -->
           @if (project() && project()!.status !== 'Closed') {
@@ -690,24 +739,6 @@ import { LanguageService } from '../../../core/services/language.service';
                   </div>
                 </div>
               }
-              <!-- Client Review Link -->
-              @if (project()!.publicReviewToken) {
-                <div class="bg-slate-900/40 border border-indigo-900/40 rounded-2xl p-5">
-                  <h4 class="text-sm font-bold text-indigo-300 font-cairo flex items-center gap-2 mb-2">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                    رابط تقييم العميل / Client Review Link
-                  </h4>
-                  <p class="text-xs text-slate-400 mb-3 font-cairo">أرسل هذا الرابط للعميل لتقييم المشروع — لا يتطلب تسجيل دخول.</p>
-                  <div class="flex items-center gap-2">
-                    <input type="text" readonly [value]="getPublicReviewUrl()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 font-mono focus:outline-none" />
-                    <button (click)="copyReviewLink()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo">نسخ الرابط</button>
-                    <button (click)="shareReviewOnWhatsApp()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo flex items-center gap-1.5">
-                      <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.022-.014-.029-.022-.054-.054l-.405-.405a1.107 1.107 0 0 0-1.565 0l-.364.364c-.162.162-.338.25-.562.15-.365-.163-.739-.372-1.127-.624-.388-.252-.76-.554-1.116-.906-.356-.352-.656-.724-.908-1.112a14.7 14.7 0 0 1-.624-1.127c-.1-.225-.013-.4.15-.563l.363-.363a1.108 1.108 0 0 0 0-1.566l-.405-.405c-.032-.025-.04-.032-.054-.054A1.123 1.123 0 0 0 9.07 8.35c-.412.413-.679.932-.782 1.488-.13.7.072 1.487.608 2.355.536.868 1.258 1.777 2.15 2.668.892.892 1.8 1.614 2.668 2.15.868.536 1.656.738 2.355.608a2.91 2.91 0 0 0 1.488-.782 1.122 1.122 0 0 0 .15-.717 1.096 1.096 0 0 0-.236-.837zM12.004 2c-5.518 0-10 4.482-10 10 0 1.758.46 3.41 1.266 4.858L2.03 21.684a1.002 1.002 0 0 0 1.286 1.286l4.826-1.24A9.957 9.957 0 0 0 12.004 22c5.518 0 10-4.482 10-10s-4.482-10-10-10zm0 18c-1.56 0-3.03-.393-4.323-1.085a1 1 0 0 0-.743-.075l-3.328.855.855-3.328a1 1 0 0 0-.075-.743A7.95 7.95 0 0 1 4.004 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>
-                      إرسال واتساب
-                    </button>
-                  </div>
-                </div>
-              }
               <p class="text-[11px] text-slate-600 text-center font-cairo">آخر تدقيق: {{ reconciliationReport()!.generatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</p>
             </div>
           } @else if (!isCloseoutLoading()) {
@@ -809,7 +840,8 @@ import { LanguageService } from '../../../core/services/language.service';
               @if (isEngineer() || isTenantOwner()) {
                 <button
                   (click)="openRequestModal()"
-                  class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
+                  [disabled]="project()?.status === 'Closed'"
+                  class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
                   {{ 'DETAILS.BTN_REQUEST_PETTY' | translate }}
                 </button>
               }
@@ -825,8 +857,8 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <div class="overflow-x-auto font-sans">
-              <table class="w-full text-left rtl:text-right">
+            <div class="w-full overflow-x-auto block font-sans">
+              <table class="w-full text-left rtl:text-right min-w-[800px]">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
                     <th class="px-6 py-4">{{ 'DETAILS.TH_ISSUED_TO' | translate }}</th>
@@ -860,7 +892,8 @@ import { LanguageService } from '../../../core/services/language.service';
                           @if (!item.isSettled && item.status === 'Issued') {
                             <button
                               (click)="openSettlementModal(item)"
-                              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-lg text-white shadow-md shadow-indigo-600/10 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+                              [disabled]="project()?.status === 'Closed'"
+                              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-lg text-white shadow-md shadow-indigo-600/10 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
                               {{ 'DETAILS.BTN_SETTLE' | translate }}
                             </button>
                           }
@@ -906,13 +939,14 @@ import { LanguageService } from '../../../core/services/language.service';
                             } @else {
                               <button
                                 (click)="openEditPettyCashModal(item)"
+                                [disabled]="project()?.status === 'Closed'"
                                 title="Edit pending request"
-                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer">
+                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
                                 Edit
                               </button>
                               <button
                                 (click)="onDeletePettyCash(item.id, item.isSettled)"
-                                [disabled]="isDeletingPettyCash()"
+                                [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
                                 title="Delete voucher and restore pool balance"
                                 class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -954,8 +988,8 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <div class="overflow-x-auto font-sans">
-              <table class="w-full text-left rtl:text-right">
+            <div class="w-full overflow-x-auto block font-sans">
+              <table class="w-full text-left rtl:text-right min-w-[900px]">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
                     <th class="px-6 py-4 font-cairo">صاحب العهدة / Engineer</th>
@@ -1000,19 +1034,22 @@ import { LanguageService } from '../../../core/services/language.service';
                           @if (s.status === 'Pending' && isOwnerOrAccountant()) {
                             <button
                               (click)="onApproveSettlement(s.id)"
-                              class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-lg text-white font-cairo">
+                              [disabled]="project()?.status === 'Closed'"
+                              class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-lg text-white font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:pointer-events-none">
                               اعتماد
                             </button>
                             <button
                               (click)="onRejectSettlement(s.id)"
-                              class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-xs font-semibold rounded-lg text-white font-cairo">
+                              [disabled]="project()?.status === 'Closed'"
+                              class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-xs font-semibold rounded-lg text-white font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:pointer-events-none">
                               رفض
                             </button>
                           }
                           @if (s.status === 'ApprovedPendingRefund' && isOwnerOrAccountant()) {
                             <button
                               (click)="onConfirmRefund(s.id)"
-                              class="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-xs font-semibold rounded-lg text-white font-cairo">
+                              [disabled]="project()?.status === 'Closed'"
+                              class="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-xs font-semibold rounded-lg text-white font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:pointer-events-none">
                               تأكيد استلام المرتجع
                             </button>
                           }
@@ -1069,7 +1106,8 @@ import { LanguageService } from '../../../core/services/language.service';
               @if (isOwnerOrAccountant()) {
                 <button
                   (click)="openDisburseModal()"
-                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
+                  [disabled]="project()?.status === 'Closed'"
+                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
                   تعزيز عهدة مباشر / Direct Disbursement
                 </button>
               }
@@ -1085,8 +1123,8 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <div class="overflow-x-auto font-sans">
-              <table class="w-full text-left rtl:text-right">
+            <div class="w-full overflow-x-auto block font-sans">
+              <table class="w-full text-left rtl:text-right min-w-[800px]">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
                     <th class="px-6 py-4">{{ 'DETAILS.TH_DATE' | translate }}</th>
@@ -1162,13 +1200,14 @@ import { LanguageService } from '../../../core/services/language.service';
                             <div class="flex items-center justify-center gap-1.5">
                               <button
                                 (click)="openEditTransactionModal(t)"
+                                [disabled]="project()?.status === 'Closed'"
                                 title="Edit transaction"
-                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer">
+                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
                                 Edit
                               </button>
                               <button
                                 (click)="onDeleteTransaction(t.id)"
-                                [disabled]="isDeletingTransaction()"
+                                [disabled]="isDeletingTransaction() || project()?.status === 'Closed'"
                                 title="Delete transaction and roll back pool"
                                 class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1201,12 +1240,7 @@ import { LanguageService } from '../../../core/services/language.service';
           <!-- Company profile details edit form -->
           <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-5">
             <h3 class="text-lg font-bold text-white font-cairo">تعديل بيانات الشركة الأساسية / Edit Company Profile</h3>
-            
-            @if (profileSuccessMessage()) {
-              <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-sm text-emerald-400 font-cairo">
-                {{ profileSuccessMessage() }}
-              </div>
-            }
+
 
             <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-5 overflow-y-auto min-h-0 pr-1 flex-1">
               <!-- Banner upload -->
@@ -2229,6 +2263,17 @@ import { LanguageService } from '../../../core/services/language.service';
         </div>
       </div>
     }
+
+    @if (profileSuccessMessage()) {
+      <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-emerald-600 border border-emerald-500 text-white rounded-xl shadow-2xl font-cairo text-sm max-w-sm">
+        <div class="p-1 bg-emerald-700 rounded-lg text-white shrink-0">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <span>{{ profileSuccessMessage() }}</span>
+      </div>
+    }
   `
 })
 export class ProjectDetailsComponent implements OnInit {
@@ -2691,7 +2736,7 @@ export class ProjectDetailsComponent implements OnInit {
         if (res.success) {
           this.profileSuccessMessage.set('تم حفظ بيانات الشركة بنجاح / Profile updated successfully');
           this.fetchCompanyProfile();
-          setTimeout(() => this.profileSuccessMessage.set(null), 5000);
+          setTimeout(() => this.profileSuccessMessage.set(null), 3000);
         }
       },
       error: () => this.isSavingProfile.set(false)
@@ -2822,6 +2867,17 @@ export class ProjectDetailsComponent implements OnInit {
             } catch (e) { }
           }
           this.projectSettingsForm.patchValue({ isPublicPortfolio });
+
+          // Silently load reconciliation report for Closed or Frozen projects
+          if (proj.status === 'Closed' || proj.status === 'FinancialFreeze') {
+            this.projectCloseoutService.getReconciliationReport(this.projectId).subscribe({
+              next: (res) => {
+                if (res.success && res.data) {
+                  this.reconciliationReport.set(res.data);
+                }
+              }
+            });
+          }
         }
       },
       error: () => this.isLoadingProject.set(false)

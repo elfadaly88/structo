@@ -525,11 +525,6 @@ const GOVERNORATES: GovernorateOption[] = [
               </div>
             </div>
 
-            @if (profileSuccessMessage()) {
-              <div class="mb-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-sm text-emerald-400 font-cairo">
-                ✓ {{ profileSuccessMessage() }}
-              </div>
-            }
 
             <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-5">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1105,6 +1100,17 @@ const GOVERNORATES: GovernorateOption[] = [
         </div>
       </div>
     }
+
+    @if (profileSuccessMessage()) {
+      <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-emerald-600 border border-emerald-500 text-white rounded-xl shadow-2xl font-cairo text-sm max-w-sm">
+        <div class="p-1 bg-emerald-700 rounded-lg text-white shrink-0">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <span>{{ profileSuccessMessage() }}</span>
+      </div>
+    }
   `,
   styles: [`
     .font-cairo {
@@ -1624,12 +1630,15 @@ export class ProjectsComponent implements OnInit {
       next: (res) => {
         this.isSavingProfile.set(false);
         if (res.success) {
-          this.profileSuccessMessage.set(res.message || 'PROFILE.SUCCESS');
+          const msg = res.message && res.message !== 'PROFILE.SUCCESS'
+            ? res.message
+            : 'تم حفظ بيانات الشركة بنجاح / Profile updated successfully';
+          this.profileSuccessMessage.set(msg);
           if (navigator.onLine) {
             this.fetchProfile();
           }
           this.queueProfileMapSync();
-          setTimeout(() => this.profileSuccessMessage.set(null), 5000);
+          setTimeout(() => this.profileSuccessMessage.set(null), 3000);
         }
       },
       error: () => {
