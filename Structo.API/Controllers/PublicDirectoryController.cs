@@ -39,6 +39,15 @@ public class PublicTenantPortfolioDto
     public List<PublicProjectDto> Projects { get; set; } = [];
 }
 
+public class PublicReviewDto
+{
+    public string ClientName { get; set; } = string.Empty;
+    public string ProjectName { get; set; } = string.Empty;
+    public int RatingScore { get; set; }
+    public string Comment { get; set; } = string.Empty;
+    public DateTime ReviewDate { get; set; }
+}
+
 [ApiController]
 [Route("api/public")]
 [AllowAnonymous]
@@ -173,6 +182,25 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         };
 
         return Ok(new ApiResponse<PublicTenantPortfolioDto> { Data = portfolio, Success = true });
+    }
+
+    [HttpGet("directory/{tenantId}/reviews")]
+    public async Task<ActionResult<ApiResponse<List<PublicReviewDto>>>> GetTenantReviews([FromRoute] Guid tenantId)
+    {
+        var reviews = await context.Projects
+            .IgnoreQueryFilters()
+            .Where(p => p.TenantId == tenantId && p.ClientRating.HasValue && !p.IsReviewHidden)
+            .Select(p => new PublicReviewDto
+            {
+                ClientName = p.ClientName,
+                ProjectName = p.Name,
+                RatingScore = p.ClientRating!.Value,
+                Comment = p.ClientReviewNotes ?? string.Empty,
+                ReviewDate = p.EndDate ?? p.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<List<PublicReviewDto>> { Data = reviews, Success = true });
     }
 }
 

@@ -79,4 +79,8 @@ export class PublicDirectoryService {
   getTenantPortfolio(id: string): Observable<ApiResponse<PublicTenantPortfolioDto>> {
     return this.http.get<ApiResponse<PublicTenantPortfolioDto>>(`${this.apiUrl}/tenants/${id}/portfolio`);
   }
+
+  getTenantReviews(tenantId: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/directory/${tenantId}/reviews`);
+  }
 }

@@ -298,12 +298,15 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 
                   <div class="flex items-center justify-between border-t border-slate-800/80 pt-4 mt-auto">
                     <!-- Rating Indicator -->
-                    <div class="flex items-center gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <button
+                      (click)="openReviewsModal($event, comp.id, comp.name)"
+                      title="View client reviews"
+                      class="flex items-center gap-1.5 cursor-pointer hover:underline text-amber-400 hover:text-amber-300 font-bold focus:outline-none bg-transparent border-0 p-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
-                      <span class="text-sm font-bold text-slate-200">{{ comp.rating | number:'1.1-1' }}</span>
-                    </div>
+                      <span class="text-sm font-bold">{{ comp.rating | number:'1.1-1' }}</span>
+                    </button>
 
                     <button 
                       (click)="openPortfolioModal(comp.id)"
@@ -366,12 +369,15 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                   <div class="flex items-center gap-4 mt-1">
                     <span class="text-sm text-slate-400 font-mono">{{ selectedCompany()!.region || 'Global' }}</span>
                     <span class="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
-                    <div class="flex items-center gap-1 text-sm font-bold text-slate-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <button
+                      (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
+                      title="View all client reviews"
+                      class="flex items-center gap-1 text-sm font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-transparent border-0 p-0 focus:outline-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                       {{ selectedCompany()!.rating | number:'1.1-1' }}
-                    </div>
+                    </button>
                   </div>
                 </div>
                 <div class="px-5 py-2.5 bg-slate-950/40 border border-slate-800 rounded-xl flex items-center gap-3">
@@ -433,6 +439,70 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
         </div>
       }
 
+      <!-- CLIENT REVIEWS LEDGER MODAL -->
+      @if (isReviewsModalOpen()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+          <div (click)="closeReviewsModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+
+          <div class="relative z-10 w-full max-w-2xl mx-auto my-auto max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl shadow-black/85 font-sans">
+            <!-- Modal Header -->
+            <div class="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-5 py-4 backdrop-blur-sm flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold text-amber-400 tracking-wider uppercase font-cairo">سجل تقييمات العملاء / Client Reviews Ledger</span>
+                <h3 class="text-base font-bold text-white font-cairo mt-1">تقييمات شركة: {{ reviewsModalTenantName() }}</h3>
+              </div>
+              <button
+                (click)="closeReviewsModal()"
+                class="px-3 py-1.5 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-850 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
+                إغلاق / Close
+              </button>
+            </div>
+
+            <!-- Modal Body (Independent Scroll Box) -->
+            <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+              @if (isLoadingReviews()) {
+                <div class="flex flex-col items-center justify-center py-12 gap-3">
+                  <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="text-xs text-slate-400 font-cairo">جاري تحميل سجل التقييمات...</span>
+                </div>
+              } @else {
+                <div class="space-y-4">
+                  @for (rev of reviewsList(); track rev.projectName) {
+                    <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 space-y-2.5">
+                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                          <h4 class="text-sm font-bold text-white font-cairo">{{ rev.clientName || 'العميل الكريم' }}</h4>
+                          <span class="text-[11px] text-slate-500 font-cairo font-medium">مشروع: {{ rev.projectName }}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                          @for (star of [1,2,3,4,5]; track star) {
+                            <span class="text-base" [class.text-amber-400]="star <= rev.ratingScore" [class.text-slate-800]="star > rev.ratingScore">★</span>
+                          }
+                          <span class="text-[10px] font-mono text-slate-500 ml-1">({{ rev.reviewDate | date:'dd/MM/yyyy' }})</span>
+                        </div>
+                      </div>
+                      
+                      @if (rev.comment) {
+                        <div class="text-xs text-slate-300 leading-relaxed font-cairo bg-slate-900/30 border border-slate-850 p-3 rounded-lg max-h-36 overflow-y-auto italic">
+                          {{ rev.comment }}
+                        </div>
+                      } @else {
+                        <p class="text-[11px] text-slate-600 italic font-cairo bg-slate-900/10 border border-slate-850/40 p-2.5 rounded-lg">لم يترك العميل تعليقاً نصياً.</p>
+                      }
+                    </div>
+                  } @empty {
+                    <div class="py-12 text-center text-slate-500 text-sm font-cairo">لا توجد تقييمات مكتوبة مسجلة لهذه الشركة بعد.</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Footer -->
       <footer class="py-12 border-t border-slate-900 text-center text-slate-600 text-sm">
         <p>{{ 'FOOTER.COPYRIGHT' | translate }}</p>
@@ -458,6 +528,38 @@ export class LandingPageComponent implements OnInit {
   readonly selectedCompany = signal<PublicTenantPortfolioDto | null>(null);
   readonly isModalOpen = signal(false);
   readonly isLoading = signal(false);
+
+  // Reviews states
+  readonly isReviewsModalOpen = signal(false);
+  readonly reviewsModalTenantName = signal('');
+  readonly reviewsList = signal<any[]>([]);
+  readonly isLoadingReviews = signal(false);
+
+  openReviewsModal(event: Event, tenantId: string, tenantName: string): void {
+    event.stopPropagation(); // Avoid triggering details modal if clicked inside company card
+    this.reviewsModalTenantName.set(tenantName);
+    this.isReviewsModalOpen.set(true);
+    this.isLoadingReviews.set(true);
+    this.reviewsList.set([]);
+
+    this.directoryService.getTenantReviews(tenantId).subscribe({
+      next: (res) => {
+        this.isLoadingReviews.set(false);
+        if (res.success && res.data) {
+          this.reviewsList.set(res.data);
+        }
+      },
+      error: () => {
+        this.isLoadingReviews.set(false);
+      }
+    });
+  }
+
+  closeReviewsModal(): void {
+    this.isReviewsModalOpen.set(false);
+    this.reviewsModalTenantName.set('');
+    this.reviewsList.set([]);
+  }
 
   // Pricing state
   readonly sliderVal = signal(1);
