@@ -1175,8 +1175,8 @@ export class ProjectsComponent implements OnInit {
 
   // Computed counters
   readonly activeProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
-  readonly completedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Completed').length);
-  readonly usedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
+  readonly completedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Completed' || p.status === 'Closed').length);
+  readonly usedProjectsCount = computed(() => this.projects().length);
   readonly allowedProjectsCount = computed(() => this.tenantProfile()?.maxActiveProjects ?? 1);
 
   readonly managerCount = computed(() => this.users().filter(u => u.role === 'Manager').length);

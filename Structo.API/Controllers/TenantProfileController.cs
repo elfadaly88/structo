@@ -145,7 +145,7 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
 
         var allowedProjects = tenant.MaxActiveProjects;
         var usedProjects = await context.Projects
-            .CountAsync(p => p.TenantId == tenantId && p.Status != Structo.Core.Enums.ProjectStatus.Closed);
+            .CountAsync(p => p.TenantId == tenantId);
 
         var data = new TenantQuotaDto
         {

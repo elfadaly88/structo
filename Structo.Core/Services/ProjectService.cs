@@ -137,7 +137,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         var tenant = await context.Set<Tenant>().FirstOrDefaultAsync(t => t.Id == tenantId);
         var allowedProjects = tenant?.MaxActiveProjects ?? 1;
         var usedProjects = await context.Set<Project>()
-            .CountAsync(p => p.TenantId == tenantId && p.Status != ProjectStatus.Closed);
+            .CountAsync(p => p.TenantId == tenantId);
 
         var finalStatus = ProjectStatus.Active;
         var isActive = true;

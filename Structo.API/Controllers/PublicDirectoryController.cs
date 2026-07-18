@@ -4,6 +4,7 @@ using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.Projects;
 using Structo.Core.DTOs.Tenants;
 using Structo.Core.Entities;
+using Structo.Core.Enums;
 using Structo.Core.Interfaces;
 using Structo.Infrastructure.Data;
 using System;
@@ -52,9 +53,12 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         // Query tenants without default tenant filters
         var query = context.Tenants.IgnoreQueryFilters().AsQueryable();
 
+        // Only show Active tenants in the public directory
+        query = query.Where(t => t.Status == TenantStatus.Active);
+
         if (!string.IsNullOrEmpty(region))
         {
-            query = query.Where(t => t.Region.ToLower() == region.ToLower());
+            query = query.Where(t => t.Region.ToLower().Contains(region.ToLower()));
         }
 
         if (minRating.HasValue)
@@ -75,26 +79,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                     .Where(p => p.TenantId == t.Id)
                     .ToListAsync();
 
-                var hasMatchingProject = false;
-                foreach (var p in projects)
-                {
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(p.Description) && p.Description.StartsWith("{"))
-                        {
-                            var parsed = System.Text.Json.JsonDocument.Parse(p.Description);
-                            var isPublic = parsed.RootElement.TryGetProperty("isPublicPortfolio", out var pubProp) && pubProp.GetBoolean();
-                            var cat = parsed.RootElement.TryGetProperty("category", out var catProp) ? catProp.GetString() : string.Empty;
-
-                            if (isPublic && string.Equals(cat, category, StringComparison.OrdinalIgnoreCase))
-                            {
-                                hasMatchingProject = true;
-                                break;
-                            }
-                        }
-                    }
-                    catch { /* ignore invalid JSON */ }
-                }
+                var hasMatchingProject = projects.Any(p => p.IsPublicPortfolio && string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase));
 
                 if (hasMatchingProject)
                 {
@@ -148,36 +133,17 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
 
         foreach (var p in projects)
         {
-            var isPublic = false;
-            var category = "Other";
-            var parsedDescription = p.Description;
-
-            try
-            {
-                if (!string.IsNullOrEmpty(p.Description) && p.Description.StartsWith("{"))
-                {
-                    var parsed = System.Text.Json.JsonDocument.Parse(p.Description);
-                    isPublic = parsed.RootElement.TryGetProperty("isPublicPortfolio", out var pubProp) && pubProp.GetBoolean();
-                    category = parsed.RootElement.TryGetProperty("category", out var catProp) ? catProp.GetString() ?? "Other" : "Other";
-                    parsedDescription = parsed.RootElement.TryGetProperty("description", out var descProp) ? descProp.GetString() ?? string.Empty : string.Empty;
-                }
-            }
-            catch
-            {
-                // Fallback to defaults
-            }
-
             // Only expose public portfolio projects to the public clients
-            if (isPublic)
+            if (p.IsPublicPortfolio)
             {
                 publicProjects.Add(new PublicProjectDto
                 {
                     Id = p.Id,
                     Name = p.Name,
-                    Description = parsedDescription,
+                    Description = p.Description,
                     StartDate = p.StartDate,
                     EndDate = p.EndDate,
-                    Category = category,
+                    Category = p.Category ?? "Other",
                     SitePhotos = p.SitePhotos.Select(sp => sp.PhotoUrl).ToList()
                 });
             }
