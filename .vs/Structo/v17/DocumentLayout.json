@@ -3,23 +3,60 @@
   "WorkspaceRootPath": "E:\\private\\structo\\structo\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\publicdirectorycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\publicdirectorycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\pettycashcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\pettycashcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\imageuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\imageuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\notificationscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\notificationscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\financialtransactionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\financialtransactionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\models\\sitephotouploaddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\models\\sitephotouploaddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|e:\\private\\structo\\structo\\structo.core\\helpers\\filevalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|solutionrelative:structo.core\\helpers\\filevalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|e:\\private\\structo\\structo\\structo.core\\services\\financialtransactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|solutionrelative:structo.core\\services\\financialtransactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|e:\\private\\structo\\structo\\structo.core\\services\\notificationengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|solutionrelative:structo.core\\services\\notificationengine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|e:\\private\\structo\\structo\\structo.core\\interfaces\\ifinancialtransactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{89D42D0D-C28A-40E4-BC84-B46CB4ECD7E3}|Structo.Core\\Structo.Core.csproj|solutionrelative:structo.core\\interfaces\\ifinancialtransactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\publicdirectorycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|solutionrelative:structo.api\\controllers\\publicdirectorycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5DB13C73-4219-4558-AE38-8EE13B36A27A}|Structo.API\\Structo.API.csproj|e:\\private\\structo\\structo\\structo.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -33,39 +70,171 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PettyCashController.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\PettyCashController.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Controllers\\PettyCashController.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\PettyCashController.cs",
+              "RelativeToolTip": "Structo.API\\Controllers\\PettyCashController.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAADwv1IAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T12:10:22.794Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "NotificationsController.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\NotificationsController.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Controllers\\NotificationsController.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\NotificationsController.cs",
+              "RelativeToolTip": "Structo.API\\Controllers\\NotificationsController.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAIA0wCsAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T09:34:40.839Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "SitePhotoUploadDto.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Models\\SitePhotoUploadDto.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Models\\SitePhotoUploadDto.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Models\\SitePhotoUploadDto.cs",
+              "RelativeToolTip": "Structo.API\\Models\\SitePhotoUploadDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T09:25:23.343Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "FileValidator.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.Core\\Helpers\\FileValidator.cs",
+              "RelativeDocumentMoniker": "Structo.Core\\Helpers\\FileValidator.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.Core\\Helpers\\FileValidator.cs",
+              "RelativeToolTip": "Structo.Core\\Helpers\\FileValidator.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAQwBIAAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T09:23:51.151Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "NotificationEngine.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.Core\\Services\\NotificationEngine.cs",
+              "RelativeDocumentMoniker": "Structo.Core\\Services\\NotificationEngine.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.Core\\Services\\NotificationEngine.cs",
+              "RelativeToolTip": "Structo.Core\\Services\\NotificationEngine.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T08:29:30.893Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "FinancialTransactionService.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.Core\\Services\\FinancialTransactionService.cs",
+              "RelativeDocumentMoniker": "Structo.Core\\Services\\FinancialTransactionService.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.Core\\Services\\FinancialTransactionService.cs",
+              "RelativeToolTip": "Structo.Core\\Services\\FinancialTransactionService.cs",
+              "ViewState": "AgIAAN0AAAAAAAAAAAAAwEgBAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T08:19:39.553Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "IFinancialTransactionService.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.Core\\Interfaces\\IFinancialTransactionService.cs",
+              "RelativeDocumentMoniker": "Structo.Core\\Interfaces\\IFinancialTransactionService.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.Core\\Interfaces\\IFinancialTransactionService.cs",
+              "RelativeToolTip": "Structo.Core\\Interfaces\\IFinancialTransactionService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T08:18:34.967Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "FinancialTransactionsController.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\FinancialTransactionsController.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Controllers\\FinancialTransactionsController.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\FinancialTransactionsController.cs",
+              "RelativeToolTip": "Structo.API\\Controllers\\FinancialTransactionsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T08:18:03.375Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Controllers\\AuthController.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "Structo.API\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAAowGoAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T07:58:04.975Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
             },
             {
               "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "Structo.API\\appsettings.Development.json",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\appsettings.Development.json",
+              "RelativeToolTip": "Structo.API\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-14T06:06:00.279Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Microsoft.Common.CurrentVersion.targets",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ViewState": "AgIAANYTAAAAAAAAAAAqwOQTAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
-              "WhenOpened": "2026-07-09T13:16:01.361Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "PublicDirectoryController.cs",
-              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\PublicDirectoryController.cs",
-              "RelativeDocumentMoniker": "Structo.API\\Controllers\\PublicDirectoryController.cs",
-              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\PublicDirectoryController.cs",
-              "RelativeToolTip": "Structo.API\\Controllers\\PublicDirectoryController.cs",
-              "ViewState": "AgIAACMAAAAAAAAAAAA9wDAAAAAlAAAAAAAAAA==",
+              "Title": "ImageUploadController.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\ImageUploadController.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Controllers\\ImageUploadController.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\ImageUploadController.cs",
+              "RelativeToolTip": "Structo.API\\Controllers\\ImageUploadController.cs",
+              "ViewState": "AgIAAG4AAAAAAAAAAAAvwIkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-09T13:12:38.454Z",
+              "WhenOpened": "2026-06-23T10:30:22.052Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 12,
+              "Title": "Program.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Program.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Program.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Program.cs",
+              "RelativeToolTip": "Structo.API\\Program.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAD4vysAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T09:59:32.336Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
               "Title": "UsersController.cs",
               "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "Structo.API\\Controllers\\UsersController.cs",
@@ -77,40 +246,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Program.cs",
-              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Program.cs",
-              "RelativeDocumentMoniker": "Structo.API\\Program.cs",
-              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Program.cs",
-              "RelativeToolTip": "Structo.API\\Program.cs",
-              "ViewState": "AgIAAI0BAAAAAAAAAAAQwJwBAAAYAAAAAAAAAA==",
+              "DocumentIndex": 13,
+              "Title": "PublicDirectoryController.cs",
+              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\PublicDirectoryController.cs",
+              "RelativeDocumentMoniker": "Structo.API\\Controllers\\PublicDirectoryController.cs",
+              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\PublicDirectoryController.cs",
+              "RelativeToolTip": "Structo.API\\Controllers\\PublicDirectoryController.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAwwEIAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-23T09:59:32.336Z",
+              "WhenOpened": "2026-07-09T13:12:38.454Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 10,
               "Title": "appsettings.json",
               "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\appsettings.json",
               "RelativeDocumentMoniker": "Structo.API\\appsettings.json",
               "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\appsettings.json",
               "RelativeToolTip": "Structo.API\\appsettings.json",
-              "ViewState": "AgIAAAkAAAAAAAAAAAArwBkAAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-27T21:50:06.365Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "ImageUploadController.cs",
-              "DocumentMoniker": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\ImageUploadController.cs",
-              "RelativeDocumentMoniker": "Structo.API\\Controllers\\ImageUploadController.cs",
-              "ToolTip": "E:\\private\\structo\\structo\\Structo.API\\Controllers\\ImageUploadController.cs",
-              "RelativeToolTip": "Structo.API\\Controllers\\ImageUploadController.cs",
-              "ViewState": "AgIAAH4AAAAAAAAAAAAcwJEAAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-23T10:30:22.052Z",
+              "WhenOpened": "2026-06-27T21:50:06.365Z",
               "EditorCaption": ""
             }
           ]

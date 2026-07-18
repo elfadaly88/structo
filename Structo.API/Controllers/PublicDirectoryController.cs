@@ -53,7 +53,6 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         // Query tenants without default tenant filters
         var query = context.Tenants
             .IgnoreQueryFilters()
-            .Include(t => t.Projects)
             .AsQueryable();
 
         // Only show Active tenants in the public directory
@@ -66,14 +65,27 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
 
         var tenants = await query.ToListAsync();
 
+        // Query all projects for these tenants in a single batch query
+        var tenantIds = tenants.Select(t => t.Id).ToList();
+        var projects = await context.Projects
+            .IgnoreQueryFilters()
+            .Where(p => tenantIds.Contains(p.TenantId))
+            .ToListAsync();
+
         // Filter by project category tag if provided
         if (!string.IsNullOrEmpty(category))
         {
-            tenants = tenants.Where(t => t.Projects.Any(p => p.IsPublicPortfolio && string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase))).ToList();
+            var matchingTenantIds = projects
+                .Where(p => p.IsPublicPortfolio && string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase))
+                .Select(p => p.TenantId)
+                .ToHashSet();
+
+            tenants = tenants.Where(t => matchingTenantIds.Contains(t.Id)).ToList();
         }
 
         var dtos = tenants.Select(t => {
-            var ratedProjects = t.Projects.Where(p => p.ClientRating.HasValue).Select(p => p.ClientRating!.Value).ToList();
+            var tenantProjects = projects.Where(p => p.TenantId == t.Id).ToList();
+            var ratedProjects = tenantProjects.Where(p => p.ClientRating.HasValue).Select(p => p.ClientRating!.Value).ToList();
             double avgRating = ratedProjects.Any() ? ratedProjects.Average() : 0.0;
 
             return new TenantDto
@@ -93,6 +105,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                 Latitude = t.Latitude,
                 Longitude = t.Longitude,
                 Rating = avgRating,
+                Status = t.Status.ToString(),
                 CreatedAt = t.CreatedAt
             };
         }).AsQueryable();
