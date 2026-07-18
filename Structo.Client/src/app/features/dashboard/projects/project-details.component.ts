@@ -1959,7 +1959,7 @@ import { LanguageService } from '../../../core/services/language.service';
     @if (isSettlementModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div (click)="closeSettlementModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-3xl mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div class="relative w-full max-w-3xl mx-auto max-h-[92vh] flex flex-col overflow-hidden rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex justify-between items-center mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">تسوية عهدة / Settlement Voucher</h3>
@@ -1983,7 +1983,9 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           }
 
-          <form [formGroup]="settlementForm" class="space-y-4 font-sans">
+          <form [formGroup]="settlementForm" class="flex flex-col flex-1 min-h-0 space-y-4 font-sans">
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
               <span class="text-sm text-slate-400 font-cairo">بنود الفواتير والمصروفات / Invoice Line Items</span>
               @if (!isSettlementLocked()) {
@@ -2007,7 +2009,7 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
 
             <!-- Cards-based FormArray List -->
-            <div formArrayName="lines" class="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+            <div formArrayName="lines" class="space-y-4">
               @for (line of settlementLines.controls; track line; let idx = $index) {
                 <div [formGroupName]="idx" class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-4 relative hover:border-slate-700/60 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_15px_rgba(99,102,241,0.05)] transition-all duration-200">
                   <div class="flex justify-between items-center pb-2 border-b border-slate-800/80">
@@ -2102,6 +2104,7 @@ import { LanguageService } from '../../../core/services/language.service';
                 }
               </div>
             </div>
+            </div> <!-- End of Scrollable Content Area -->
 
             <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-800">
               <button type="button" (click)="closeSettlementModal()" class="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all font-cairo cursor-pointer">إغلاق النافذة / Close</button>
