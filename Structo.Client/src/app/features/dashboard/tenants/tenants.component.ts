@@ -99,6 +99,7 @@ interface ModeratedProject {
                   <th class="px-6 py-4">معرف الشركة / Tenant ID</th>
                   <th class="px-6 py-4">الاشتراك / Plan</th>
                   <th class="px-6 py-4">الموقع / Location</th>
+                  <th class="px-6 py-4 text-center">التقييم / Rating</th>
                   <th class="px-6 py-4">تاريخ الانضمام / Created</th>
                   <th class="px-6 py-4">حالة الحساب / Status</th>
                   <th class="px-6 py-4 text-center">التحكم والعمليات / Controls</th>
@@ -128,6 +129,14 @@ interface ModeratedProject {
                       }
                     </td>
                     <td class="px-6 py-4 font-cairo font-semibold text-slate-400">{{ tenant.region || 'غير محدد' }}</td>
+                    <td class="px-6 py-4 text-center">
+                       <button
+                         (click)="openReviewsModal(tenant.id, tenant.name)"
+                         title="View all client reviews"
+                         class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/25 rounded-lg text-[11px] font-bold transition-all cursor-pointer">
+                         ⭐ {{ (tenant.rating || 0) | number:'1.1-1' }}
+                       </button>
+                    </td>
                     <td class="px-6 py-4 text-slate-400 font-mono">{{ tenant.createdAt | date:'dd/MM/yyyy' }}</td>
                     <td class="px-6 py-4">
                       @if (tenant.status === 'Active') {
@@ -150,7 +159,7 @@ interface ModeratedProject {
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="7" class="px-6 py-12 text-center text-slate-500 text-sm font-cairo">لا توجد شركات مسجلة في المنصة حالياً.</td>
+                    <td colspan="8" class="px-6 py-12 text-center text-slate-500 text-sm font-cairo">لا توجد شركات مسجلة في المنصة حالياً.</td>
                   </tr>
                 }
               </tbody>
@@ -390,7 +399,12 @@ interface ModeratedProject {
                           </div>
                           <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-850">
                             <span class="text-[10px] text-slate-500 uppercase tracking-wider font-cairo">التقييم العام</span>
-                            <div class="text-xl font-bold text-amber-400 mt-0.5">⭐ {{ auditProfile().globalRatingScore | number:'1.1-1' }}</div>
+                            <button
+                              (click)="openReviewsModal(tenant.id, tenant.name)"
+                              title="Click to view detailed customer reviews ledger"
+                              class="w-full text-right flex items-center gap-1.5 text-xl font-bold text-amber-400 mt-0.5 hover:text-amber-300 transition-colors cursor-pointer focus:outline-none">
+                              ⭐ {{ auditProfile().globalRatingScore | number:'1.1-1' }}
+                            </button>
                           </div>
                         </div>
 
@@ -461,6 +475,87 @@ interface ModeratedProject {
         </div>
       }
     </div>
+
+    <!-- Client Reviews Ledger Popup Modal -->
+    @if (showReviewsModal()) {
+      <div class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+        <div (click)="closeReviewsModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+
+        <div class="relative z-10 w-full max-w-3xl mx-auto my-auto max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl shadow-black/85 font-sans">
+          <!-- Modal Header -->
+          <div class="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-5 py-4 backdrop-blur-sm flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-bold text-amber-400 tracking-wider uppercase font-cairo">سجل تقييمات العملاء / Client Ratings Ledger</span>
+              <h3 class="text-base font-bold text-white font-cairo mt-1">تقييمات شركة: {{ reviewsModalTenantName() }}</h3>
+            </div>
+            <button
+              (click)="closeReviewsModal()"
+              class="px-3 py-1.5 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-850 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
+              إغلاق / Close
+            </button>
+          </div>
+
+          <!-- Modal Body (Independent Scroll Box) -->
+          <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+            @if (isLoadingReviews()) {
+              <div class="flex flex-col items-center justify-center py-12 gap-3">
+                <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-xs text-slate-400 font-cairo">جاري تحميل سجل التقييمات...</span>
+              </div>
+            } @else {
+              <div class="w-full overflow-x-auto block">
+                <table class="w-full text-right border-collapse min-w-[650px]">
+                  <thead>
+                    <tr class="border-b border-slate-800 text-slate-400 text-xs font-bold font-cairo">
+                      <th class="pb-3 px-3">المشروع / Project</th>
+                      <th class="pb-3 px-3">العميل / Client</th>
+                      <th class="pb-3 px-3 text-center">التقييم / Rating</th>
+                      <th class="pb-3 px-3">التعليق / Comments</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-850 text-slate-300 text-xs font-sans">
+                    @for (rev of reviewsList(); track rev.id) {
+                      <tr class="hover:bg-slate-950/20 transition-colors">
+                        <td class="py-3.5 px-3 font-semibold text-white font-cairo">{{ rev.name }}</td>
+                        <td class="py-3.5 px-3 text-slate-400 font-cairo">{{ rev.clientName || 'غير مسجل' }}</td>
+                        <td class="py-3.5 px-3 text-center">
+                          <div class="flex items-center justify-center gap-0.5">
+                            @if (rev.clientRating) {
+                              @for (star of [1,2,3,4,5]; track star) {
+                                <span class="text-sm" [class.text-amber-400]="star <= rev.clientRating" [class.text-slate-700]="star > rev.clientRating">★</span>
+                              }
+                              <span class="text-[10px] font-bold text-amber-500/80 font-mono ml-1">({{ rev.clientRating }})</span>
+                            } @else {
+                              <span class="text-slate-500 font-cairo">بدون تقييم نجوم</span>
+                            }
+                          </div>
+                        </td>
+                        <td class="py-3.5 px-3 max-w-[280px] break-words">
+                          @if (rev.clientReviewNotes) {
+                            <div class="text-slate-300 italic font-cairo bg-slate-950/30 border border-slate-850 p-2.5 rounded-lg">
+                              {{ rev.clientReviewNotes }}
+                            </div>
+                          } @else {
+                            <span class="text-slate-550 font-cairo italic">لا يوجد تعليق نصي</span>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="4" class="py-12 text-center text-slate-500 text-sm font-cairo">لا توجد تقييمات مسجلة لهذه الشركة بعد.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class TenantsComponent implements OnInit {
@@ -557,6 +652,39 @@ export class TenantsComponent implements OnInit {
     this.moderatedProjects.set([]);
     this.activeActionContext.set(null);
     this.successMessage.set(null);
+  }
+
+  // Reviews Modal states and methods
+  readonly showReviewsModal = signal(false);
+  readonly reviewsModalTenantName = signal('');
+  readonly reviewsList = signal<any[]>([]);
+  readonly isLoadingReviews = signal(false);
+
+  openReviewsModal(tenantId: string, tenantName: string): void {
+    this.reviewsModalTenantName.set(tenantName);
+    this.showReviewsModal.set(true);
+    this.isLoadingReviews.set(true);
+    this.reviewsList.set([]);
+
+    this.tenantsService.getTenantProjects(tenantId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        this.isLoadingReviews.set(false);
+        if (res.success && res.data) {
+          // Get all projects that have a rating or comments
+          const reviews = res.data.filter(p => p.clientRating !== null || !!p.clientReviewNotes);
+          this.reviewsList.set(reviews);
+        }
+      },
+      error: () => {
+        this.isLoadingReviews.set(false);
+      }
+    });
+  }
+
+  closeReviewsModal(): void {
+    this.showReviewsModal.set(false);
+    this.reviewsModalTenantName.set('');
+    this.reviewsList.set([]);
   }
 
   onAction(tenantId: string, actionType: TenantActionType): void {
