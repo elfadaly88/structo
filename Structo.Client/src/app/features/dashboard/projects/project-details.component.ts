@@ -937,22 +937,51 @@ import { LanguageService } from '../../../core/services/language.service';
                                 🔒 مقفلة
                               </span>
                             } @else {
-                              <button
-                                (click)="openEditPettyCashModal(item)"
-                                [disabled]="project()?.status === 'Closed'"
-                                title="Edit pending request"
-                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
-                                Edit
-                              </button>
-                              <button
-                                (click)="onDeletePettyCash(item.id, item.isSettled)"
-                                [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
-                                title="Delete voucher and restore pool balance"
-                                class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
+                              <div class="flex items-center justify-center gap-2 flex-wrap">
+                                @if (item.status === 'Pending') {
+                                  <div class="flex items-center gap-1.5 bg-slate-950/40 border border-slate-800/80 p-1.5 rounded-xl">
+                                    <select [(ngModel)]="selectedPettyCashPool[item.id]" 
+                                      class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-cairo">
+                                      <option [value]="undefined" disabled selected>-- محفظة الصرف / Source Pool --</option>
+                                      @for (pool of cashPools(); track pool.id) {
+                                        <option [value]="pool.id" [disabled]="pool.availableBalance < item.amount">
+                                          {{ 'FINANCE.' + getPoolSourceTranslationKey(pool.sourceType) | translate }} ({{ pool.availableBalance | number:'1.0-0' }} EGP)
+                                        </option>
+                                      }
+                                    </select>
+                                    <button
+                                      (click)="onApprovePettyCashRequest(item, selectedPettyCashPool[item.id])"
+                                      [disabled]="project()?.status === 'Closed'"
+                                      title="Approve and disburse"
+                                      class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                      Approve / Disburse
+                                    </button>
+                                    <button
+                                      (click)="onRejectPettyCashRequest(item)"
+                                      [disabled]="project()?.status === 'Closed'"
+                                      title="Reject request"
+                                      class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                      Reject
+                                    </button>
+                                  </div>
+                                }
+                                <button
+                                  (click)="openEditPettyCashModal(item)"
+                                  [disabled]="project()?.status === 'Closed'"
+                                  title="Edit pending request"
+                                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
+                                  Edit
+                                </button>
+                                <button
+                                  (click)="onDeletePettyCash(item.id, item.isSettled)"
+                                  [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
+                                  title="Delete voucher and restore pool balance"
+                                  class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
                             }
                           }
                         </div>
@@ -1938,9 +1967,9 @@ import { LanguageService } from '../../../core/services/language.service';
 
           <form [formGroup]="disburseForm" (ngSubmit)="onDisburseSubmit()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المهندس / Engineer <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المهندس / Engineer <span class="text-slate-500 text-[10px] normal-case">(اختياري — إذا فارغ، ستُسجل العهدة لحسابك)</span></label>
               <select formControlName="userId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
-                <option [ngValue]="null" disabled>اختر مهندس / Select Engineer</option>
+                <option [ngValue]="null">-- لنفسي (الأدمن الحالي) / Self --</option>
                 @for (u of usersList(); track u.id) {
                   <option [value]="u.id">{{ u.firstName }} {{ u.lastName }} ({{ u.role }})</option>
                 }
@@ -2308,6 +2337,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isCloseoutLoading = signal(false);
   readonly selectedDrilldown = signal<'unsettled' | 'refunds' | 'reimbursements' | null>(null);
   selectedReimbursementPool: { [key: string]: string } = {};
+  selectedPettyCashPool: { [key: string]: string } = {};
 
   readonly unsettledCustodyList = computed(() =>
     this.pettyCashes().filter(pc => !pc.isSettled && !pc.isReimbursement)
@@ -2374,7 +2404,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly disburseErrors = signal<string[]>([]);
   readonly usersList = signal<any[]>([]); // To populate engineer select in direct disbursement
   readonly disburseForm: FormGroup = this.fb.group({
-    userId: [null, Validators.required],
+    userId: [null],
     amount: [null, [Validators.required, Validators.min(0.01)]],
     description: ['', [Validators.required, Validators.minLength(5)]],
     sourcePoolId: [null, Validators.required],
@@ -3482,7 +3512,7 @@ export class ProjectDetailsComponent implements OnInit {
         if (res.success) {
           this.confirmService.alert({
             title: 'تم التحويل بنجاح',
-            message: 'تم تعزيز عهدة المهندس مباشرة بنجاح وتحديث الرصيد.',
+            message: 'تم تعزيز العهدة وصرفها بنجاح وتحديث الأرصدة.',
             type: 'success'
           });
           this.closeDisburseModal();
@@ -3761,6 +3791,107 @@ export class ProjectDetailsComponent implements OnInit {
     });
   }
 
+  onApprovePettyCashRequest(item: PettyCashMobileDto, poolId: string): void {
+    if (!poolId) {
+      this.confirmService.alert({
+        title: 'اختر محفظة التمويل',
+        message: 'يرجى اختيار محفظة التمويل أولاً لاعتماد وصرف العهدة.',
+        type: 'info'
+      });
+      return;
+    }
+
+    this.confirmService.confirm({
+      title: 'اعتماد وصرف العهدة / Approve & Disburse',
+      message: `هل تؤكد اعتماد وصرف مبلغ العهدة بقيمة ${item.amount} EGP للموظف ${item.issuedTo} من محفظة التمويل المحددة؟`,
+      confirmText: 'تأكيد الصرف / Yes, Disburse',
+      cancelText: 'إلغاء / Cancel'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.isLoadingPettyCash.set(true);
+        this.pettyCashService.approvePettyCash(this.projectId, item.id, { sourcePoolId: poolId }).subscribe({
+          next: (res) => {
+            this.isLoadingPettyCash.set(false);
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم الاعتماد والصرف',
+                message: 'تمت الموافقة على طلب العهدة وصرفها بنجاح وتحديث أرصدة المشروع.',
+                type: 'success'
+              });
+              this.fetchPettyCash();
+              this.fetchSettlements();
+              this.fetchCashPools();
+              this.fetchTransactions();
+              this.onRunReconciliation();
+            } else {
+              this.confirmService.alert({
+                title: 'فشل الاعتماد والصرف',
+                message: res.message || 'حدث خطأ أثناء اعتماد العهدة.',
+                type: 'error'
+              });
+            }
+          },
+          error: (err) => {
+            this.isLoadingPettyCash.set(false);
+            this.confirmService.alert({
+              title: 'خطأ في العملية',
+              message: err.error?.message || err.message || 'فشلت عملية اعتماد العهدة.',
+              type: 'error'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  onRejectPettyCashRequest(item: PettyCashMobileDto): void {
+    this.confirmService.confirm({
+      title: 'رفض طلب العهدة / Reject Petty Cash',
+      message: `هل أنت متأكد من رفض طلب العهدة للموظف ${item.issuedTo} بقيمة ${item.amount} EGP؟ يرجى كتابة سبب الرفض أدناه:`,
+      confirmText: 'نعم، ارفض / Yes, Reject',
+      cancelText: 'إلغاء / Cancel'
+    }).then(confirmed => {
+      if (confirmed) {
+        const comments = prompt('سبب الرفض / Rejection Comments:');
+        if (comments === null) return;
+        if (!comments.trim()) {
+          alert('يجب كتابة سبب الرفض / Rejection comments are required.');
+          return;
+        }
+
+        this.isLoadingPettyCash.set(true);
+        this.pettyCashService.rejectPettyCash(this.projectId, item.id, comments).subscribe({
+          next: (res) => {
+            this.isLoadingPettyCash.set(false);
+            if (res.success) {
+              this.confirmService.alert({
+                title: 'تم الرفض بنجاح',
+                message: 'تم رفض طلب العهدة بنجاح وإرسال التنبيه للموظف.',
+                type: 'success'
+              });
+              this.fetchPettyCash();
+              this.onRunReconciliation();
+            } else {
+              this.confirmService.alert({
+                title: 'فشل رفض العهدة',
+                message: res.message || 'حدث خطأ أثناء رفض العهدة.',
+                type: 'error'
+              });
+            }
+          },
+          error: (err) => {
+            this.isLoadingPettyCash.set(false);
+            this.confirmService.alert({
+              title: 'خطأ في العملية',
+              message: err.error?.message || err.message || 'فشلت عملية رفض العهدة.',
+              type: 'error'
+            });
+          }
+        });
+      }
+    });
+  }
+
   onWhatsAppAlert(pettyCash: PettyCashMobileDto, customMessage?: string): void {
     const defaultMsg = `مرحباً ${pettyCash.issuedTo}، تم اعتماد وتحديث طلب العهدة الخاص بك بقيمة ${pettyCash.amount} EGP لـ ${pettyCash.projectName} - ${pettyCash.reason}.`;
     const message = customMessage || defaultMsg;
@@ -3915,11 +4046,11 @@ export class ProjectDetailsComponent implements OnInit {
     if (!proj) return '#';
     const url = this.getPublicReviewUrl();
     if (!url) return '#';
-    
+
     // Clean and normalize phone number
     let phone = proj.clientWhatsApp || '';
     phone = phone.replace(/\D/g, ''); // Strip non-digits
-    
+
     if (phone.startsWith('01') && phone.length === 11) {
       phone = '2' + phone; // Prefix '2' to Egyptian numbers (010... -> 2010...)
     } else if (phone.startsWith('1') && phone.length === 10) {
@@ -3927,7 +4058,7 @@ export class ProjectDetailsComponent implements OnInit {
     } else if (phone.startsWith('0') && phone.length > 9) {
       phone = '2' + phone.substring(1); // Standard prefixing fallback for other formats
     }
-    
+
     const message = `مرحباً ${proj.clientName || 'العميل الكريم'}، يرجى التكرم بتقييم مستوى رضاكم وجودة تنفيذ مشروعكم "${proj.name}" من خلال الرابط التالي:\n${url}`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   }

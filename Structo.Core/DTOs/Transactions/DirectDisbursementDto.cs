@@ -6,8 +6,10 @@ namespace Structo.Core.DTOs.Transactions;
 
 public class DirectDisbursementDto
 {
-    [Required]
-    public Guid UserId { get; set; }
+    /// <summary>
+    /// Optional. If not provided, the system will fallback to the currently logged-in user (TenantOwner).
+    /// </summary>
+    public Guid? UserId { get; set; }
 
     [Required]
     [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]

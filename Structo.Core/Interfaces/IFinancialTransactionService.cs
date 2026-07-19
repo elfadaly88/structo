@@ -16,7 +16,7 @@ public interface IFinancialTransactionService
     Task<IEnumerable<ProjectCashPool>> GetCashPoolsAsync(Guid projectId, string userRole);
     Task<(bool Success, string Message)> UpdateTransactionAsync(Guid projectId, Guid id, FinancialTransactionUpdateDto dto, string userRole);
     Task<(bool Success, string Message)> DeleteTransactionAsync(Guid projectId, Guid id, string userRole);
-    Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole);
+    Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole, Guid currentUserId);
     Task<bool> UserHasAccessToProjectAsync(ClaimsPrincipal user, Guid projectId);
 }
 

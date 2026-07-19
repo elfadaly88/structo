@@ -260,12 +260,17 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         return (true, "Transaction deleted and pool balance corrected.");
     }
 
-    public async Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole)
+    public async Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole, Guid currentUserId)
     {
         if (userRole != "TenantOwner" && userRole != "Accountant")
         {
             throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to perform direct disbursements.");
         }
+
+        // Fallback: if no engineer selected, assign to the current logged-in user (TenantOwner/Accountant)
+        var targetUserId = dto.UserId.HasValue && dto.UserId.Value != Guid.Empty
+            ? dto.UserId.Value
+            : currentUserId;
 
         var pool = await context.Set<ProjectCashPool>()
             .FirstOrDefaultAsync(p => p.Id == dto.SourcePoolId && p.ProjectId == projectId);
@@ -283,7 +288,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         {
             ProjectId = projectId,
             TenantId = tenantId,
-            IssuedToUserId = dto.UserId,
+            IssuedToUserId = targetUserId,
             Amount = dto.Amount,
             Reason = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description) ?? string.Empty,
             Status = "Issued",

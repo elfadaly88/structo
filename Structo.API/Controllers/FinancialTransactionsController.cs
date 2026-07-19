@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.Transactions;
 using Structo.Core.Entities;
@@ -29,6 +29,10 @@ public class FinancialTransactionsController : ControllerBase
         _logger = logger;
     }
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private Guid CurrentUserId => Guid.Parse(
+        User.FindFirstValue("sub") ??
+        User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+        Guid.Empty.ToString());
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] FinancialTransactionCreateDto dto)
@@ -209,7 +213,7 @@ public class FinancialTransactionsController : ControllerBase
                 return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant ID claim missing or invalid." });
             }
 
-            var (success, message) = await _financialTransactionService.DirectDisbursementAsync(projectId, dto, tenantId, CurrentUserRole);
+            var (success, message) = await _financialTransactionService.DirectDisbursementAsync(projectId, dto, tenantId, CurrentUserRole, CurrentUserId);
 
             if (!success)
             {

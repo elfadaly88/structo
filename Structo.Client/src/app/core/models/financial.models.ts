@@ -57,7 +57,7 @@ export interface SettlementMobileDto {
 }
 
 export interface DirectDisbursementDto {
-  userId: string;
+  userId?: string;
   amount: number;
   description: string;
   sourcePoolId: string;
