@@ -873,7 +873,11 @@ import { LanguageService } from '../../../core/services/language.service';
                   @for (item of pettyCashes(); track item.id) {
                     <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
                       <td class="px-6 py-4 font-semibold text-white">{{ item.issuedTo || 'Staff' }}</td>
-                      <td class="px-6 py-4 text-slate-400 max-w-xs truncate">{{ item.reason }}</td>
+                      <td class="px-6 py-4 text-slate-400 max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                          [title]="item.reason"
+                          (click)="openPettyCashReasonModal(item)">
+                        {{ item.reason }}
+                      </td>
                       <td class="px-6 py-4 text-slate-400">{{ item.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="px-6 py-4 font-mono font-bold text-amber-400">{{ item.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
                       <td class="px-6 py-4 text-center">
@@ -1185,7 +1189,11 @@ import { LanguageService } from '../../../core/services/language.service';
                           <span class="text-xs text-slate-600">-</span>
                         }
                       </td>
-                      <td class="px-6 py-4 font-medium text-white">{{ t.description }}</td>
+                      <td class="px-6 py-4 font-medium text-white max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                          [title]="t.description"
+                          (click)="openTransactionInspectionModal(t)">
+                        {{ t.description }}
+                      </td>
                       <td class="px-6 py-4">
                         @if (t.type === 'Income') {
                           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400">
@@ -2303,10 +2311,70 @@ import { LanguageService } from '../../../core/services/language.service';
         <span>{{ profileSuccessMessage() }}</span>
       </div>
     }
+
+    <!-- Quick Inspection Modal for Truncated Text -->
+    @if (activeTextInspection()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in font-sans">
+        <div (click)="closeTextInspectionModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/80 p-5 sm:p-6 shadow-2xl z-10 transition-all">
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-cairo">{{ activeTextInspection()!.title }}</h3>
+                @if (activeTextInspection()!.subtitle) {
+                  <p class="text-xs text-slate-400 font-cairo mt-0.5">{{ activeTextInspection()!.subtitle }}</p>
+                }
+              </div>
+            </div>
+            <button (click)="closeTextInspectionModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="overflow-y-auto min-h-0 pr-1 space-y-3 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-cairo bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 selection:bg-sky-500/30 selection:text-sky-200">
+            {{ activeTextInspection()!.content }}
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+            <button (click)="closeTextInspectionModal()" class="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer font-cairo">
+              إغلاق / Close
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class ProjectDetailsComponent implements OnInit {
   readonly activePrintSettlement = signal<SettlementMobileDto | null>(null);
+  readonly activeTextInspection = signal<{ title: string; content: string; subtitle?: string } | null>(null);
+
+  openTextInspectionModal(title: string, content: string, subtitle?: string): void {
+    if (!content) return;
+    this.activeTextInspection.set({ title, content, subtitle });
+  }
+
+  closeTextInspectionModal(): void {
+    this.activeTextInspection.set(null);
+  }
+
+  openPettyCashReasonModal(item: PettyCashMobileDto): void {
+    if (!item.reason) return;
+    const dateStr = item.issuedAt ? new Date(item.issuedAt).toLocaleString('en-GB') : '';
+    const subtitle = (item.issuedTo || 'Staff') + (dateStr ? ` • ${dateStr}` : '');
+    this.openTextInspectionModal('البيان / السبب', item.reason, subtitle);
+  }
+
+  openTransactionInspectionModal(t: FinancialTransactionMobileDto): void {
+    if (!t.description) return;
+    const dateStr = t.transactionDate ? new Date(t.transactionDate).toLocaleString('en-GB') : '';
+    this.openTextInspectionModal('تفاصيل المعاملة المالية', t.description, dateStr);
+  }
 
   printSettlementReport(s: SettlementMobileDto): void {
     this.activePrintSettlement.set(s);

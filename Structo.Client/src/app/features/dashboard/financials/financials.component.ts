@@ -143,7 +143,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                     <td class="py-4 text-white font-semibold">{{ request.issuedTo }}</td>
                     <td class="py-4 text-slate-300 font-medium">{{ getProjectName(request) }}</td>
                     <td class="py-4 text-amber-400 font-bold font-mono">{{ request.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
-                    <td class="py-4 text-slate-400 max-w-xs truncate">{{ request.reason }}</td>
+                    <td class="py-4 text-slate-400 max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                        [title]="request.reason"
+                        (click)="openPendingApprovalReasonModal(request)">
+                      {{ request.reason }}
+                    </td>
                     <td class="py-4 text-slate-400 font-mono">{{ request.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td class="py-4">
                       <div class="flex items-center gap-2 justify-center">
@@ -196,7 +200,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                   <tr class="hover:bg-slate-950/20">
                     <td class="py-4 text-white font-medium">{{ getProjectName(request) }}</td>
                     <td class="py-4 text-amber-400 font-bold font-mono">{{ request.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
-                    <td class="py-4 text-slate-400 max-w-xs truncate">{{ request.reason }}</td>
+                    <td class="py-4 text-slate-400 max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                        [title]="request.reason"
+                        (click)="openMyPettyCashReasonModal(request)">
+                      {{ request.reason }}
+                    </td>
                     <td class="py-4 text-slate-400 font-mono">{{ request.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td class="py-4 text-center">
                       <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
@@ -296,7 +304,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 @for (transaction of transactions(); track transaction.id) {
                   <tr class="hover:bg-slate-950/20">
                     <td class="py-4 text-slate-400 font-mono">{{ transaction.transactionDate | date:'dd/MM/yyyy HH:mm' }}</td>
-                    <td class="py-4 text-white font-medium">{{ transaction.description }}</td>
+                    <td class="py-4 text-white font-medium max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                        [title]="transaction.description"
+                        (click)="openTransactionInspectionModal(transaction)">
+                      {{ transaction.description }}
+                    </td>
                     <td class="py-4">
                       <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
                         [class.bg-emerald-500/10]="transaction.type === 'Income'" 
@@ -675,6 +687,43 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
         غير مسموح للمسؤول العام بعرض التفاصيل المالية للمستأجرين.
       </div>
     }
+
+    <!-- Quick Inspection Modal for Truncated Text -->
+    @if (activeTextInspection()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in font-sans">
+        <div (click)="closeTextInspectionModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/80 p-5 sm:p-6 shadow-2xl z-10 transition-all">
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-cairo">{{ activeTextInspection()!.title }}</h3>
+                @if (activeTextInspection()!.subtitle) {
+                  <p class="text-xs text-slate-400 font-cairo mt-0.5">{{ activeTextInspection()!.subtitle }}</p>
+                }
+              </div>
+            </div>
+            <button (click)="closeTextInspectionModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="overflow-y-auto min-h-0 pr-1 space-y-3 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-cairo bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 selection:bg-sky-500/30 selection:text-sky-200">
+            {{ activeTextInspection()!.content }}
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+            <button (click)="closeTextInspectionModal()" class="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer font-cairo">
+              إغلاق / Close
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .font-cairo {
@@ -683,6 +732,38 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   `]
 })
 export class FinancialsComponent implements OnInit {
+  readonly activeTextInspection = signal<{ title: string; content: string; subtitle?: string } | null>(null);
+
+  openTextInspectionModal(title: string, content: string, subtitle?: string): void {
+    if (!content) return;
+    this.activeTextInspection.set({ title, content, subtitle });
+  }
+
+  closeTextInspectionModal(): void {
+    this.activeTextInspection.set(null);
+  }
+
+  openPendingApprovalReasonModal(request: any): void {
+    if (!request.reason) return;
+    const dateStr = request.issuedAt ? new Date(request.issuedAt).toLocaleString('en-GB') : '';
+    const projName = this.getProjectName(request);
+    const subtitle = request.issuedTo + ' • ' + projName + (dateStr ? ` • ${dateStr}` : '');
+    this.openTextInspectionModal('البيان / السبب', request.reason, subtitle);
+  }
+
+  openMyPettyCashReasonModal(request: any): void {
+    if (!request.reason) return;
+    const dateStr = request.issuedAt ? new Date(request.issuedAt).toLocaleString('en-GB') : '';
+    const projName = this.getProjectName(request);
+    const subtitle = projName + (dateStr ? ` • ${dateStr}` : '');
+    this.openTextInspectionModal('البيان / السبب', request.reason, subtitle);
+  }
+
+  openTransactionInspectionModal(transaction: FinancialTransactionMobileDto): void {
+    if (!transaction.description) return;
+    const dateStr = transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleString('en-GB') : '';
+    this.openTextInspectionModal('تفاصيل المعاملة المالية', transaction.description, dateStr);
+  }
   readonly authService = inject(AuthService);
   readonly projectService = inject(ProjectService);
   readonly pettyCashService = inject(PettyCashService);
