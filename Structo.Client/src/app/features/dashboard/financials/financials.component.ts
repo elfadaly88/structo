@@ -69,7 +69,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           @if (isSiteEngineer()) {
             <button 
               (click)="openPettyCashModal()"
-              class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo text-sm w-full sm:w-auto text-center"
+              [disabled]="isClosedProjectSelected()"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo text-sm w-full sm:w-auto text-center disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
             >
               {{ 'FINANCE.REQUEST_PETTY_CASH' | translate }}
             </button>
@@ -917,8 +918,20 @@ export class FinancialsComponent implements OnInit {
     return project?.name || 'Project';
   }
 
+  isClosedProjectSelected(): boolean {
+    const selectedProjId = this.selectedProjectId();
+    if (!selectedProjId) return false;
+    const proj = this.projects().find((p) => p.id === selectedProjId);
+    return proj?.status === 'Closed';
+  }
+
   openPettyCashModal(): void {
-    this.pettyCashForm.projectId = this.selectedProjectId() || '';
+    const selectedProjId = this.selectedProjectId();
+    if (selectedProjId) {
+      const proj = this.projects().find((p) => p.id === selectedProjId);
+      if (proj?.status === 'Closed') return;
+    }
+    this.pettyCashForm.projectId = selectedProjId || '';
     this.pettyCashForm.amount = 0;
     this.pettyCashForm.category = '';
     this.pettyCashForm.reason = '';

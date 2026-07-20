@@ -98,7 +98,7 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         {
             pettyCash.Status = "Settled";
             pettyCash.IsSettled = true;
-            pettyCash.SpentAmount = pettyCash.Amount;
+            pettyCash.SpentAmount = 0;
         }
         else
         {

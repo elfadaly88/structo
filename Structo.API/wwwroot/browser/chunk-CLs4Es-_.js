@@ -1,0 +1,2 @@
+import {X}from'./main-5GNJDTGE.js';var o=class r{buildLink(t,n){let e=this.normalizePhone(t);return e?`https://wa.me/${e}?text=${encodeURIComponent(n)}`:null}openChat(t,n){let e=this.buildLink(t,n);!e||typeof window>"u"||window.open(e,"_blank","noopener,noreferrer");}normalizePhone(t){if(!t)return null;let n=t.replace(/\D/g,"");return n?n.startsWith("20")?n:n.startsWith("01")&&n.length===11?`20${n.slice(1)}`:n:null}static \u0275fac=function(n){return new(n||r)};static \u0275prov=X({token:r,factory:r.\u0275fac,providedIn:"root"})};
+export{o};

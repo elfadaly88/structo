@@ -837,7 +837,7 @@ import { LanguageService } from '../../../core/services/language.service';
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.VOUCHERS_TITLE' | translate }}</h3>
             <div class="flex items-center gap-3">
-              @if (isEngineer() || isTenantOwner()) {
+              @if ((isEngineer() || isTenantOwner()) && project()?.status !== 'Closed') {
                 <button
                   (click)="openRequestModal()"
                   [disabled]="project()?.status === 'Closed'"
@@ -3064,6 +3064,7 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   openRequestModal(): void {
+    if (this.project()?.status === 'Closed') return;
     this.requestErrors.set([]);
     this.requestForm.reset({
       amount: null,
@@ -3486,6 +3487,7 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   openDisburseModal(): void {
+    if (this.project()?.status === 'Closed') return;
     this.disburseForm.reset({
       userId: null,
       amount: null,

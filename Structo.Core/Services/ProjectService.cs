@@ -327,8 +327,8 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         var totalIncome = transactions.Where(t => incomeTypes.Contains(t.Type)).Sum(t => t.Amount);
         var totalExpenses = transactions.Where(t => expenseTypes.Contains(t.Type)).Sum(t => t.Amount);
 
-        var totalCustodyIssued = pettyCashes.Sum(pc => pc.Amount);
-        var totalCustodySettled = pettyCashes.Where(pc => pc.IsSettled).Sum(pc => pc.Amount);
+        var totalCustodyIssued = pettyCashes.Where(pc => pc.Status != "Pending" || !pc.IsReimbursement).Sum(pc => pc.Amount);
+        var totalCustodySettled = pettyCashes.Where(pc => pc.IsSettled).Sum(pc => pc.IsReimbursement ? 0 : pc.SpentAmount);
         var unsettledCustody = pettyCashes.Where(pc => !pc.IsSettled).ToList();
 
         // Build per-employee balance ledger
@@ -340,12 +340,13 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
                 var name = first.IssuedToUser != null
                     ? $"{first.IssuedToUser.FirstName} {first.IssuedToUser.LastName}"
                     : g.Key.ToString();
-                var issued = g.Sum(pc => pc.Amount);
-                var settled = g.Where(pc => pc.IsSettled).Sum(pc => pc.SpentAmount); // actual spent
+
+                var issued = g.Where(pc => pc.Status != "Pending" || !pc.IsReimbursement).Sum(pc => pc.Amount);
+                var settled = g.Where(pc => pc.IsSettled).Sum(pc => pc.IsReimbursement ? 0 : pc.SpentAmount); // actual spent
+                var returnAmount = g.Where(pc => pc.IsSettled).Sum(pc => pc.ReturnAmount);
                 var unsettledCount = g.Count(pc => !pc.IsSettled);
-                // Balance > 0: employee still holds unaccounted cash
-                // Balance == 0: fully clean
-                var balance = issued - settled - g.Where(pc => pc.IsSettled).Sum(pc => pc.ReturnAmount);
+                var balance = issued - settled - returnAmount;
+
                 return new EmployeeBalanceDto
                 {
                     UserId = g.Key,
