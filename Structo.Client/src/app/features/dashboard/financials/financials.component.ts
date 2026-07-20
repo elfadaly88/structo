@@ -386,7 +386,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </svg>
             </button>
           </div>
-          <form (ngSubmit)="submitPettyCashRequest()" class="space-y-4 font-sans">
+          <form (ngSubmit)="submitPettyCashRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.PROJECT' | translate }}</label>
               <select 
@@ -471,7 +471,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </svg>
             </button>
           </div>
-          <form (ngSubmit)="submitSettleRequest()" class="space-y-4 font-sans">
+          <form (ngSubmit)="submitSettleRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
               <div class="text-sm text-slate-400 mb-1 font-cairo">{{ 'FINANCE.ISSUED_AMOUNT' | translate }}</div>
               <div class="text-xl font-bold text-white font-mono">{{ settleRequest()?.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</div>
