@@ -34,7 +34,7 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         {
             ProjectId = projectId,
             TenantId = tenantId.Value,
-            IssuedToUserId = dto.IssuedToUserId,
+            IssuedToUserId = (dto.IssuedToUserId.HasValue && dto.IssuedToUserId.Value != Guid.Empty) ? dto.IssuedToUserId.Value : Guid.Empty,
             Amount = dto.Amount,
             Reason = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Reason) ?? string.Empty,
             Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Category) ?? string.Empty,

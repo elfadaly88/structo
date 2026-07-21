@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.PettyCash;
 using Structo.Core.DTOs.Transactions;
@@ -31,7 +31,7 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
 
         // DevSecOps IDOR Guard: Overwrite IssuedToUserId for engineers to prevent requesting custody on behalf of others.
         var role = CurrentUserRole.ToLowerInvariant();
-        if (role == "siteengineer" || role == "designengineer" || role == "manager")
+        if (role == "siteengineer" || role == "designengineer" || role == "manager" || dto.IssuedToUserId == null || dto.IssuedToUserId == Guid.Empty)
         {
             dto.IssuedToUserId = CurrentUserId;
         }

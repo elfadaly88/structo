@@ -327,9 +327,19 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         var totalIncome = transactions.Where(t => incomeTypes.Contains(t.Type)).Sum(t => t.Amount);
         var totalExpenses = transactions.Where(t => expenseTypes.Contains(t.Type)).Sum(t => t.Amount);
 
-        var totalCustodyIssued = pettyCashes.Where(pc => pc.Status != "Pending" || !pc.IsReimbursement).Sum(pc => pc.Amount);
-        var totalCustodySettled = pettyCashes.Where(pc => pc.IsSettled).Sum(pc => pc.IsReimbursement ? 0 : pc.SpentAmount);
-        var unsettledCustody = pettyCashes.Where(pc => !pc.IsSettled).ToList();
+        var validStatuses = new[] { "Issued", "Settled", "ApprovedPendingRefund", "SettlePending" };
+
+        var totalCustodyIssued = pettyCashes
+            .Where(pc => validStatuses.Contains(pc.Status))
+            .Sum(pc => pc.Amount);
+
+        var totalCustodySettled = pettyCashes
+            .Where(pc => pc.IsSettled && !pc.IsReimbursement)
+            .Sum(pc => pc.SpentAmount);
+
+        var unsettledCustody = pettyCashes
+            .Where(pc => !pc.IsSettled && pc.Status != "Rejected")
+            .ToList();
 
         // Build per-employee balance ledger
         var employeeGroups = pettyCashes
@@ -341,11 +351,20 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
                     ? $"{first.IssuedToUser.FirstName} {first.IssuedToUser.LastName}"
                     : g.Key.ToString();
 
-                var issued = g.Where(pc => pc.Status != "Pending" || !pc.IsReimbursement).Sum(pc => pc.Amount);
-                var settled = g.Where(pc => pc.IsSettled).Sum(pc => pc.IsReimbursement ? 0 : pc.SpentAmount); // actual spent
-                var returnAmount = g.Where(pc => pc.IsSettled).Sum(pc => pc.ReturnAmount);
-                var unsettledCount = g.Count(pc => !pc.IsSettled);
-                var balance = issued - settled - returnAmount;
+                var issued = g
+                    .Where(pc => validStatuses.Contains(pc.Status))
+                    .Sum(pc => pc.Amount);
+
+                var settled = g
+                    .Where(pc => pc.IsSettled && !pc.IsReimbursement)
+                    .Sum(pc => pc.SpentAmount); // actual spent
+
+                var returnAmount = g
+                    .Where(pc => pc.IsSettled && !pc.IsReimbursement)
+                    .Sum(pc => pc.ReturnAmount);
+
+                var unsettledCount = g.Count(pc => !pc.IsSettled && pc.Status != "Rejected");
+                var balance = Math.Round(issued - settled - returnAmount, 2);
 
                 return new EmployeeBalanceDto
                 {
