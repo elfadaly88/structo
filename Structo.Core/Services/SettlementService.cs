@@ -180,10 +180,18 @@ public class SettlementService(DbContext context) : ISettlementService
             }
         }
 
-        await context.SaveChangesAsync();
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return (false, "CONCURRENCY_ERROR: تمت معالجة أو تعديل هذه التسوية بواسطة مستخدم آخر في نفس الوقت.");
+        }
+
         return (true, settlement.Status == SettlementStatus.ApprovedPendingRefund 
             ? "Settlement approved. Status set to ApprovedPendingRefund. Awaiting accountant refund confirmation."
-            : "Settlement approved and settled successfully.");
+            : "Settlement approved successfully.");
     }
 
     public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole)
@@ -237,21 +245,9 @@ public class SettlementService(DbContext context) : ISettlementService
         pettyCash.SpentAmount = settlement.TotalAmount;
         pettyCash.ReturnAmount = returnedCash;
 
-        // Register the actual spent amount as project expense
-        var expense = new FinancialTransaction
-        {
-            ProjectId = projectId,
-            TenantId = settlement.TenantId,
-            Type = TransactionType.Expense,
-            Amount = settlement.TotalAmount,
-            Description = $"Petty Cash Settlement - Spent Amount: {pettyCash.Reason}",
-            PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
-            TransactionDate = DateTime.UtcNow,
-            PaymentDate = DateTime.UtcNow,
-            IsSystemGenerated = true,
-            SettlementId = settlement.Id
-        };
-        context.Set<FinancialTransaction>().Add(expense);
+        // NOTE: The Expense transaction for settlement.TotalAmount was already registered
+        // in ApproveSettlementAsync (when status transitioned to ApprovedPendingRefund).
+        // We must NOT register it again here to avoid double-counting expenses.
 
         // Register the refunded amount back to the treasury pool
         var refundTx = new FinancialTransaction

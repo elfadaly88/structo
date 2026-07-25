@@ -52,8 +52,18 @@ public class GoogleAuthController : ControllerBase
 
         try
         {
-            // 💡 التعديل الصح والمأمن بالملي:
-var googleClientId = _configuration["Authentication:Google:ClientId"] ?? "752236038625-sfuglkls4icf5loo8to6gaes9b3kt1h6.apps.googleusercontent.com";
+            var googleClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+                ?? _configuration["Authentication:Google:ClientId"];
+
+            if (string.IsNullOrWhiteSpace(googleClientId))
+            {
+                _logger.LogError("Google Client ID configuration is missing.");
+                return StatusCode(500, new ApiResponse<LoginResponseDto>
+                {
+                    Success = false,
+                    Message = "GOOGLE_AUTH_NOT_CONFIGURED"
+                });
+            }
             
             GoogleJsonWebSignature.Payload payload;
             try
@@ -246,10 +256,4 @@ var googleClientId = _configuration["Authentication:Google:ClientId"] ?? "752236
             });
         }
     }
-}
-
-public class GoogleLoginRequestDto
-{
-    public string IdToken { get; set; } = string.Empty;
-    public string? SubscriptionPlan { get; set; }
 }

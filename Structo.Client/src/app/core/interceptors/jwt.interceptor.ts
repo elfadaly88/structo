@@ -1,11 +1,13 @@
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../../environments/environment';
 import { catchError, switchMap, filter, take, throwError, Observable } from 'rxjs';
 
 export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
+  const router = inject(Router);
   const token = authService.getToken();
 
   let authReq = req;
@@ -26,14 +28,14 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
         !req.url.includes('/auth/refresh') &&
         !req.url.includes('/auth/login')
       ) {
-        return handle401Error(authReq, next, authService);
+        return handle401Error(authReq, next, authService, router);
       }
       return throwError(() => error);
     })
   );
 };
 
-function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, authService: AuthService): Observable<HttpEvent<unknown>> {
+function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, authService: AuthService, router: Router): Observable<HttpEvent<unknown>> {
   if (!authService.isRefreshingToken) {
     authService.isRefreshingToken = true;
     authService.refreshTokenSubject.next(null);
@@ -52,12 +54,14 @@ function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, authServ
           );
         } else {
           authService.logout();
+          router.navigate(['/login']);
           return throwError(() => new Error('Refresh token expired or invalid'));
         }
       }),
       catchError((err) => {
         authService.isRefreshingToken = false;
         authService.logout();
+        router.navigate(['/login']);
         return throwError(() => err);
       })
     );

@@ -60,6 +60,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.MaxActiveProjects).IsRequired();
             entity.Property(e => e.SubscriptionPlan).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+            entity.HasIndex(e => e.Status);
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -72,6 +73,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             
             entity.Property(e => e.Role).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.IsApproved).HasDefaultValue(true);
+            entity.HasIndex(e => e.Email).IsUnique();
 
             entity.HasOne(e => e.Tenant)
                   .WithMany(t => t.Users)
@@ -106,6 +108,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany(u => u.ManagedProjects)
                   .HasForeignKey(e => e.ManagerId)
                   .OnDelete(DeleteBehavior.SetNull); 
+
+            entity.HasIndex(e => e.TenantId);
         });
 
 
@@ -127,6 +131,9 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany(p => p.FinancialTransactions)
                   .HasForeignKey(e => e.ProjectId)
                   .OnDelete(DeleteBehavior.Cascade); 
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.TenantId);
         });
 
         modelBuilder.Entity<PettyCash>(entity =>
@@ -156,6 +163,9 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany()
                   .HasForeignKey(e => e.SourcePoolId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.IssuedToUserId);
         });
 
         modelBuilder.Entity<SitePhoto>(entity =>

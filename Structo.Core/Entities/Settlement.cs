@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Structo.Core.Enums;
 using Structo.Core.Interfaces;
 
@@ -13,6 +14,8 @@ public class Settlement : ITenantEntity
     public Guid PettyCashId { get; set; }
     
     public decimal TotalAmount { get; set; }
+
+    [ConcurrencyCheck]
     public SettlementStatus Status { get; set; } = SettlementStatus.Draft;
     
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;

@@ -100,7 +100,8 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeletePhoto([FromRoute] Guid projectId, [FromRoute] Guid id)
     {
-        var photo = await context.SitePhotos.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId);
+        var currentTenantId = context.CurrentTenantId;
+        var photo = await context.SitePhotos.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId && (currentTenantId == null || p.TenantId == currentTenantId));
         if (photo == null)
             return NotFound(new ApiResponse<bool> { Success = false, Message = "Photo not found" });
 

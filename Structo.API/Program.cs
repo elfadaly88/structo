@@ -42,10 +42,13 @@ builder.Services.AddControllers(options =>
     });
 
 // CORS Configuration
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:4500", "https://structo-production.up.railway.app" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
-        policy.WithOrigins("http://localhost:4500", "https://structo-production.up.railway.app")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials());
@@ -229,8 +232,19 @@ builder.Services.AddRateLimiter(options =>
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
-    ?? (jwtSettings["Secret"] == "YOUR_JWT_SECRET_KEY_PLACEHOLDER_AT_LEAST_32_BYTES_LONG" ? null : jwtSettings["Secret"])
-    ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
+    ?? (jwtSettings["Secret"] == "YOUR_JWT_SECRET_KEY_PLACEHOLDER_AT_LEAST_32_BYTES_LONG" ? null : jwtSettings["Secret"]);
+
+if (string.IsNullOrWhiteSpace(secretKey))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        secretKey = "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
+    }
+    else
+    {
+        throw new InvalidOperationException("CRITICAL SECURITY ERROR: JWT_SECRET environment variable or configuration must be explicitly configured.");
+    }
+}
 var key = Encoding.ASCII.GetBytes(secretKey);
 builder.Services.AddAuthentication(options =>
 {
@@ -300,12 +314,19 @@ using (var scope = app.Services.CreateScope())
     {
         if (!context.Users.Any(u => u.Role == UserRole.SuperAdmin))
         {
+            var superAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL") 
+                ?? builder.Configuration["SuperAdminSeed:Email"] 
+                ?? "superadmin";
+            var superAdminPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD") 
+                ?? builder.Configuration["SuperAdminSeed:Password"] 
+                ?? "SuperAdmin@123";
+
             var superAdmin = new User
             {
                 FirstName = "Super",
                 LastName = "Admin",
-                Email = "superadmin",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("SuperAdmin@123"),
+                Email = superAdminEmail,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(superAdminPassword),
                 Role = UserRole.SuperAdmin,
                 TenantId = null
             };
@@ -491,7 +512,6 @@ public class CustomAwsHttpClientFactory : Amazon.Runtime.HttpClientFactory
     {
         var handler = new System.Net.Http.HttpClientHandler
         {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
             SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
         };
         return new System.Net.Http.HttpClient(handler);

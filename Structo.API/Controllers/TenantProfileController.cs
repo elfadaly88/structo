@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Structo.Core.Enums;
 
 namespace Structo.API.Controllers;
 
@@ -145,7 +146,7 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
 
         var allowedProjects = tenant.MaxActiveProjects;
         var usedProjects = await context.Projects
-            .CountAsync(p => p.TenantId == tenantId);
+            .CountAsync(p => p.TenantId == tenantId && p.Status != ProjectStatus.Closed);
 
         var data = new TenantQuotaDto
         {

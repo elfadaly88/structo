@@ -125,13 +125,16 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
-        if (tenantId == null)
-            return (false, "Tenant ID missing or invalid.");
+        if (dto.Amount <= 0)
+            return (false, "INVALID_AMOUNT: يجب أن يكون مبلغ الحقن أصل من صفر.");
 
         // --- Financial Freeze Guard ---
         var projectCheck = await context.Set<Project>().FindAsync(projectId);
-        if (projectCheck != null && (projectCheck.Status == ProjectStatus.FinancialFreeze || projectCheck.Status == ProjectStatus.Closed))
-            return (false, $"PROJECT_FROZEN: لا يمكن حقن رأس مال جديد. المشروع في وضع {projectCheck.Status}.");
+        if (projectCheck == null)
+            return (false, "Project not found.");
+
+        if (projectCheck.Status == ProjectStatus.FinancialFreeze || projectCheck.Status == ProjectStatus.Closed)
+            return (false, $"PROJECT_FROZEN: لا يمكن حقن رأس مال جديد. المشروع في حالة {projectCheck.Status}.");
 
         var pool = await context.Set<ProjectCashPool>()
             .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == dto.SourceType);

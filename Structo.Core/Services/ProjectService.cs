@@ -137,7 +137,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         var tenant = await context.Set<Tenant>().FirstOrDefaultAsync(t => t.Id == tenantId);
         var allowedProjects = tenant?.MaxActiveProjects ?? 1;
         var usedProjects = await context.Set<Project>()
-            .CountAsync(p => p.TenantId == tenantId);
+            .CountAsync(p => p.TenantId == tenantId && p.Status != ProjectStatus.Closed);
 
         var finalStatus = ProjectStatus.Active;
         var isActive = true;
@@ -275,6 +275,18 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         if (project == null)
             return (false, "Project not found.");
 
+        if (dto.NewBudget < 0)
+            return (false, "Budget cannot be negative.");
+
+        var totalSpentToDate = await context.Set<FinancialTransaction>()
+            .Where(t => t.ProjectId == id && t.Type == TransactionType.Expense)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        if (dto.NewBudget < totalSpentToDate)
+        {
+            return (false, $"Cannot revise budget to {dto.NewBudget:N2} as it is lower than current total expenses ({totalSpentToDate:N2}).");
+        }
+
         decimal oldBudget = project.Budget;
         project.Budget = dto.NewBudget;
 
@@ -283,8 +295,8 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             ProjectId = id,
             OldBudget = oldBudget,
             NewBudget = dto.NewBudget,
-            ReasonForChange = dto.ReasonForChange,
-            BoqFileUrl = dto.BoqFileUrl
+            ReasonForChange = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ReasonForChange),
+            BoqFileUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BoqFileUrl)
         };
 
         context.Set<ProjectBudgetLog>().Add(log);
@@ -337,9 +349,18 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             .Where(pc => pc.IsSettled && !pc.IsReimbursement)
             .Sum(pc => pc.SpentAmount);
 
+        var totalCustodyReturned = pettyCashes
+            .Where(pc => pc.IsSettled && !pc.IsReimbursement)
+            .Sum(pc => pc.ReturnAmount);
+
         var unsettledCustody = pettyCashes
             .Where(pc => !pc.IsSettled && pc.Status != "Rejected")
             .ToList();
+
+        // TotalCustodyPending = sum of amounts for non-settled, non-reimbursement custodies only
+        var totalCustodyPending = pettyCashes
+            .Where(pc => !pc.IsSettled && pc.Status != "Rejected" && !pc.IsReimbursement)
+            .Sum(pc => pc.Amount);
 
         // Build per-employee balance ledger
         var employeeGroups = pettyCashes
@@ -372,6 +393,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
                     FullName = name,
                     TotalIssued = issued,
                     TotalSettled = settled,
+                    TotalReturnAmount = returnAmount,
                     Balance = balance,
                     UnsettledCount = unsettledCount
                 };
@@ -391,7 +413,8 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             NetBalance = totalIncome - totalExpenses,
             TotalCustodyIssued = totalCustodyIssued,
             TotalCustodySettled = totalCustodySettled,
-            TotalCustodyPending = totalCustodyIssued - totalCustodySettled,
+            TotalCustodyPending = totalCustodyPending,
+            TotalCustodyReturned = totalCustodyReturned,
             UnsettledCustodyCount = unsettledCustody.Count,
             EmployeeBalances = employeeGroups,
             IsFullyReconciled = isFullyReconciled,

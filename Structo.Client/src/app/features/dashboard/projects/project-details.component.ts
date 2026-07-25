@@ -712,6 +712,7 @@ import { LanguageService } from '../../../core/services/language.service';
                           <th class="px-4 py-3 font-cairo">الموظف</th>
                           <th class="px-4 py-3 text-right font-cairo">إجمالي العُهَد</th>
                           <th class="px-4 py-3 text-right font-cairo">المُسوَّى</th>
+                          <th class="px-4 py-3 text-right font-cairo">المرتجع</th>
                           <th class="px-4 py-3 text-right font-cairo">الرصيد</th>
                           <th class="px-4 py-3 text-center font-cairo">الحالة</th>
                         </tr>
@@ -722,6 +723,13 @@ import { LanguageService } from '../../../core/services/language.service';
                             <td class="px-4 py-3 font-semibold text-slate-200 font-cairo">{{ emp.fullName }}</td>
                             <td class="px-4 py-3 text-right font-mono text-amber-300">{{ emp.totalIssued | number:'1.2-2' }}</td>
                             <td class="px-4 py-3 text-right font-mono text-emerald-400">{{ emp.totalSettled | number:'1.2-2' }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-cyan-400">
+                              @if (emp.totalReturnAmount > 0) {
+                                {{ emp.totalReturnAmount | number:'1.2-2' }}
+                              } @else {
+                                <span class="text-slate-600">—</span>
+                              }
+                            </td>
                             <td class="px-4 py-3 text-right font-mono font-bold" [class.text-rose-400]="emp.balance > 0" [class.text-slate-300]="emp.balance === 0" [class.text-blue-400]="emp.balance < 0">{{ emp.balance | number:'1.2-2' }}</td>
                             <td class="px-4 py-3 text-center">
                               @if (emp.isClean) {
@@ -1094,6 +1102,51 @@ import { LanguageService } from '../../../core/services/language.service';
                         </div>
                       </td>
                     </tr>
+                    <!-- Difference Clarification Sub-Row -->
+                    @if (s.netDifference !== 0 && s.status !== 'Pending' && s.status !== 'Draft' && s.status !== 'Rejected') {
+                      <tr class="bg-slate-950/30">
+                        <td colspan="7" class="px-6 py-2.5 border-b border-slate-800/30">
+                          @if (s.netDifference < 0) {
+                            <div class="flex items-center gap-2.5">
+                              <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-500/15 shrink-0">
+                                <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                              </span>
+                              <div>
+                                <span class="text-[11px] font-bold text-rose-300 font-cairo">⚡ المهندس صرف أكثر من العهدة بـ {{ (s.netDifference * -1) | number:'1.2-2' }} EGP</span>
+                                <span class="text-[10px] text-rose-400/70 font-cairo mr-2 rtl:mr-0 rtl:ml-2">— تم توليد طلب تعويض تلقائي (Reimbursement) يتطلب اعتماد المحاسب وصرفه من محفظة الصندوق</span>
+                              </div>
+                            </div>
+                          } @else {
+                            <div class="flex items-center gap-2.5">
+                              @if (s.status === 'ApprovedPendingRefund') {
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/15 shrink-0">
+                                  <svg class="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-[11px] font-bold text-orange-300 font-cairo">💰 مرتجع {{ s.netDifference | number:'1.2-2' }} EGP بانتظار تأكيد استلام المحاسب</span>
+                                  <span class="text-[10px] text-orange-400/70 font-cairo mr-2 rtl:mr-0 rtl:ml-2">— المهندس صرف أقل من العهدة والباقي يجب إرجاعه للصندوق</span>
+                                </div>
+                              } @else if (s.status === 'Refunded') {
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500/15 shrink-0">
+                                  <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-[11px] font-bold text-cyan-300 font-cairo">✅ تم استرداد {{ s.netDifference | number:'1.2-2' }} EGP بنجاح وإعادتها للصندوق</span>
+                                  <span class="text-[10px] text-cyan-400/70 font-cairo mr-2 rtl:mr-0 rtl:ml-2">— المرتجع مُؤَكَّد ومُسجَّل كـ RefundToTreasury</span>
+                                </div>
+                              } @else {
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/15 shrink-0">
+                                  <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-[11px] font-bold text-emerald-300 font-cairo">المهندس صرف أقل من العهدة — فائض {{ s.netDifference | number:'1.2-2' }} EGP</span>
+                                </div>
+                              }
+                            </div>
+                          }
+                        </td>
+                      </tr>
+                    }
                     <!-- Nested Lines View -->
                     <tr class="bg-slate-950/20">
                       <td colspan="7" class="px-6 py-3 border-b border-slate-800/40">

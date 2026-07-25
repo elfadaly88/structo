@@ -14,6 +14,7 @@ public class EmployeeBalanceDto
     /// Zero = fully reconciled.
     /// </summary>
     public decimal Balance { get; set; }
+    public decimal TotalReturnAmount { get; set; }
     public bool IsClean => Balance == 0;
     public int UnsettledCount { get; set; }
 }
@@ -30,6 +31,7 @@ public class ProjectReconciliationReportDto
     public decimal TotalCustodyIssued { get; set; }
     public decimal TotalCustodySettled { get; set; }
     public decimal TotalCustodyPending { get; set; }
+    public decimal TotalCustodyReturned { get; set; }
     public int UnsettledCustodyCount { get; set; }
     public List<EmployeeBalanceDto> EmployeeBalances { get; set; } = [];
     /// <summary>

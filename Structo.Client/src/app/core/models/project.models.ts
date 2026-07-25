@@ -56,6 +56,7 @@ export interface EmployeeBalanceDto {
   fullName: string;
   totalIssued: number;
   totalSettled: number;
+  totalReturnAmount: number;
   balance: number;
   isClean: boolean;
   unsettledCount: number;
@@ -72,6 +73,7 @@ export interface ProjectReconciliationReportDto {
   totalCustodyIssued: number;
   totalCustodySettled: number;
   totalCustodyPending: number;
+  totalCustodyReturned: number;
   unsettledCustodyCount: number;
   employeeBalances: EmployeeBalanceDto[];
   isFullyReconciled: boolean;

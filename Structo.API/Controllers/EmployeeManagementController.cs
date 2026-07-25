@@ -68,12 +68,9 @@ namespace Structo.API.Controllers
                 });
             }
 
-            // TODO [SECURITY - PRE-PRODUCTION]: Replace this static password with a secure random password generator.
-            // Current: hardcoded "Password@123" for QA/E2E testing convenience.
-            // Target:  Use a cryptographically-secure random password (e.g., RandomNumberGenerator + Base64)
-            //          and send the password to the user via the OneSignal invitation email.
-            // MUST be reverted before ANY production deployment to real clients.
-            var secureTempPassword = "Password@123";
+            // Generate a cryptographically secure temporary password
+            var randomBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(12);
+            var secureTempPassword = Convert.ToBase64String(randomBytes) + "!1aA";
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(secureTempPassword);
 
             var tenantId = _tenantAccessor.GetCurrentTenantId();

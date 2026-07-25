@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +14,6 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Structo.API.Controllers;
-
-public class UploadResultDto
-{
-    public string Url { get; set; } = string.Empty;
-}
 
 [ApiController]
 [Route("api/ImageUpload")]
@@ -74,11 +69,7 @@ public class ImageUploadController : ControllerBase
 
             if (!string.IsNullOrEmpty(tenant.LogoUrl) && tenant.LogoUrl != dbUrl)
             {
-
                 await DeleteFileAsync(tenant.LogoUrl);
-
-
-                //await DeleteFileAsync(tenant.LogoUrl);
             }
 
             tenant.LogoUrl = dbUrl;
@@ -130,10 +121,7 @@ public class ImageUploadController : ControllerBase
 
             if (!string.IsNullOrEmpty(tenant.BannerUrl) && tenant.BannerUrl != dbUrl)
             {
-
                 await DeleteFileAsync(tenant.BannerUrl);
-
-                //await DeleteFileAsync(tenant.BannerUrl);
             }
 
             tenant.BannerUrl = dbUrl;
