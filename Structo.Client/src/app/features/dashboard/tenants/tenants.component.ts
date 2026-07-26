@@ -31,7 +31,7 @@ interface ModeratedProject {
   standalone: true,
   imports: [CommonModule, TranslatePipe, FormsModule, DatePipe, DecimalPipe],
   template: `
-    <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
+    <div class="space-y-6 w-full max-w-7xl mx-auto">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/60 pb-5">
         <div>
           <h1 class="text-3xl font-extrabold tracking-tight text-white font-cairo">
@@ -41,18 +41,18 @@ interface ModeratedProject {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">إجمالي الشركات / Total Companies</span>
-          <h3 class="text-3xl font-extrabold text-white mt-1">{{ tenants().length }}</h3>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي الشركات / Total Companies</span>
+          <h3 class="text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">{{ tenants().length }}</h3>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">الشركات النشطة / Active Companies</span>
-          <h3 class="text-3xl font-extrabold text-emerald-400 mt-1">{{ activeCount() }}</h3>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">الشركات النشطة / Active Companies</span>
+          <h3 class="text-3xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ activeCount() }}</h3>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">الحسابات المعلقة / Suspended Accounts</span>
-          <h3 class="text-3xl font-extrabold text-rose-400 mt-1">{{ suspendedCount() }}</h3>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">الحسابات المعلقة / Suspended Accounts</span>
+          <h3 class="text-3xl font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ suspendedCount() }}</h3>
         </div>
       </div>
 

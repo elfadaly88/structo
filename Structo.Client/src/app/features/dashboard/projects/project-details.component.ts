@@ -143,28 +143,28 @@ import { LanguageService } from '../../../core/services/language.service';
       }
 
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 font-sans">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 font-sans">
         @if (!isEngineer()) {
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
-            <h3 class="text-2xl font-extrabold text-emerald-400 mt-1">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
+            <h3 class="text-2xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
           </div>
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
-            <h3 class="text-2xl font-extrabold text-rose-400 mt-1">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
+            <h3 class="text-2xl font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
           </div>
           <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
+            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
             @if (netBalance() >= 0) {
-              <h3 class="text-2xl font-extrabold text-emerald-400 mt-1">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+              <h3 class="text-2xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
             } @else {
-              <h3 class="text-2xl font-extrabold text-rose-400 mt-1">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+              <h3 class="text-2xl font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
             }
           </div>
         }
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5" [class.col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
-          <h3 class="text-2xl font-extrabold text-amber-400 mt-1">{{ totalUnsettledPettyCash() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5" [class.col-span-1]="isEngineer()" [class.sm:col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
+          <h3 class="text-2xl font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ totalUnsettledPettyCash() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
         </div>
       </div>
 

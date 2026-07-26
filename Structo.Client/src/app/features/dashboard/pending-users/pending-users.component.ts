@@ -25,7 +25,7 @@ export interface PendingUser {
   standalone: true,
   imports: [CommonModule, DatePipe],
   template: `
-    <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
+    <div class="space-y-6 w-full max-w-7xl mx-auto">
       <!-- Title -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/60 pb-5">
         <div>
@@ -39,14 +39,15 @@ export interface PendingUser {
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-lg shadow-indigo-500/5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">بانتظار التفعيل / Awaiting Approval</span>
-          <h3 class="text-3xl font-extrabold text-white mt-1">{{ pendingUsers().length }}</h3>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">بانتظار التفعيل / Awaiting Approval</span>
+          <h3 class="text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">{{ pendingUsers().length }}</h3>
         </div>
       </div>
 
       <!-- Main Container with custom scrolls -->
       <div class="bg-slate-900/20 border border-slate-800/60 rounded-2xl overflow-hidden shadow-xl">
-        <div class="overflow-x-auto min-h-0">
+        <!-- Desktop Table (md+) -->
+        <div class="hidden md:block overflow-x-auto min-h-0">
           <table class="w-full text-left border-collapse font-cairo">
             <thead>
               <tr class="border-b border-slate-800 bg-slate-950/40 text-slate-400 text-xs font-bold uppercase tracking-wider">
@@ -75,12 +76,12 @@ export interface PendingUser {
                   <tr class="hover:bg-slate-900/30 transition-colors duration-150">
                     <td class="py-4 px-6">
                       <div class="font-bold text-white text-sm">{{ user.firstName }} {{ user.lastName }}</div>
-                      <div class="text-xs text-slate-400 mt-0.5">{{ user.email }}</div>
+                      <div class="text-xs text-slate-400 mt-0.5 font-mono tabular-nums">{{ user.email }}</div>
                     </td>
                     <td class="py-4 px-6">
                       @if (user.tenantName) {
                         <div class="font-semibold text-slate-200">{{ user.tenantName }}</div>
-                        <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID: {{ user.tenantId }}</div>
+                        <div class="text-[10px] text-slate-500 font-mono tabular-nums mt-0.5">ID: {{ user.tenantId }}</div>
                       } @else {
                         <span class="text-xs text-slate-500 font-semibold">—</span>
                       }
@@ -99,14 +100,14 @@ export interface PendingUser {
                         <span class="text-xs text-slate-500 font-semibold">—</span>
                       }
                     </td>
-                    <td class="py-4 px-6 text-xs text-slate-400">
+                    <td class="py-4 px-6 text-xs text-slate-400 font-mono tabular-nums">
                       {{ user.createdAt | date: 'dd/MM/yyyy h:mm a' }}
                     </td>
                     <td class="py-4 px-6 text-right">
                       <button
                         (click)="approve(user)"
                         [disabled]="processingId() === user.id"
-                        class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/10 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/10 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-cairo"
                       >
                         @if (processingId() === user.id) {
                           Processing...
@@ -120,6 +121,45 @@ export interface PendingUser {
               }
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Cards View (< md) -->
+        <div class="block md:hidden p-4 space-y-3">
+          @if (isLoading()) {
+            <div class="py-8 text-center text-slate-500 text-xs font-cairo animate-pulse">Loading...</div>
+          } @else if (pendingUsers().length === 0) {
+            <div class="py-8 text-center text-slate-500 text-xs font-cairo">لا يوجد مستخدمون بانتظار التفعيل حالياً.</div>
+          } @else {
+            @for (user of pendingUsers(); track user.id) {
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
+                <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                  <div>
+                    <div class="font-bold text-white text-sm font-cairo">{{ user.firstName }} {{ user.lastName }}</div>
+                    <div class="text-xs text-slate-400 font-mono tabular-nums">{{ user.email }}</div>
+                  </div>
+                  @if (user.subscriptionPlan) {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">{{ user.subscriptionPlan }}</span>
+                  }
+                </div>
+                @if (user.tenantName) {
+                  <div class="text-xs text-slate-300 font-cairo flex items-center justify-between">
+                    <span>🏢 {{ user.tenantName }}</span>
+                    <span class="font-mono tabular-nums text-slate-500 text-[10px]">ID: {{ user.tenantId }}</span>
+                  </div>
+                }
+                <div class="text-[11px] text-slate-500 font-mono tabular-nums">
+                  📅 {{ user.createdAt | date: 'dd/MM/yyyy h:mm a' }}
+                </div>
+                <button
+                  (click)="approve(user)"
+                  [disabled]="processingId() === user.id"
+                  class="w-full min-h-[44px] bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold font-cairo shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50"
+                >
+                  {{ processingId() === user.id ? 'Processing...' : 'تفعيل وتنشيط / Activate & Approve' }}
+                </button>
+              </div>
+            }
+          }
         </div>
       </div>
     </div>

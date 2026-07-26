@@ -5,33 +5,33 @@ import { Component } from '@angular/core';
   standalone: true,
   imports: [],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-6 w-full max-w-7xl mx-auto">
       <div>
-        <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Global System Overview</h1>
-        <p class="text-sm text-slate-400 mt-1">Real-time diagnostics and global status reports of all host environments.</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl font-cairo">Global System Overview</h1>
+        <p class="text-sm text-slate-400 mt-1 font-cairo">Real-time diagnostics and global status reports of all host environments.</p>
       </div>
 
       <!-- Quick Metrics -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">Active Tenants</span>
-          <h3 class="text-3xl font-extrabold text-white mt-1">12</h3>
-          <p class="text-xs text-emerald-400 mt-1">↑ 8.3% vs last month</p>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">Active Tenants</span>
+          <h3 class="text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">12</h3>
+          <p class="text-xs text-emerald-400 mt-1 font-mono tabular-nums">↑ 8.3% vs last month</p>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">Global DB Size</span>
-          <h3 class="text-3xl font-extrabold text-indigo-400 mt-1">1.42 GB</h3>
-          <p class="text-xs text-slate-500 mt-1">Daily delta: +22MB</p>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">Global DB Size</span>
+          <h3 class="text-3xl font-extrabold text-indigo-400 mt-1 font-mono tabular-nums">1.42 GB</h3>
+          <p class="text-xs text-slate-500 mt-1 font-mono tabular-nums">Daily delta: +22MB</p>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">API Latency</span>
-          <h3 class="text-3xl font-extrabold text-emerald-400 mt-1">42 ms</h3>
-          <p class="text-xs text-slate-400 mt-1">99th percentile: 120ms</p>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">API Latency</span>
+          <h3 class="text-3xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">42 ms</h3>
+          <p class="text-xs text-slate-400 mt-1 font-mono tabular-nums">99th percentile: 120ms</p>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">System CPU</span>
-          <h3 class="text-3xl font-extrabold text-amber-400 mt-1">14.8%</h3>
-          <p class="text-xs text-slate-500 mt-1">Status: Stable</p>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">System CPU</span>
+          <h3 class="text-3xl font-extrabold text-amber-400 mt-1 font-mono tabular-nums">14.8%</h3>
+          <p class="text-xs text-slate-500 mt-1 font-cairo">Status: Stable</p>
         </div>
       </div>
 

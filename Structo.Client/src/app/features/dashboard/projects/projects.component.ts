@@ -223,101 +223,146 @@ const GOVERNORATES: GovernorateOption[] = [
         <!-- Projects Grid / Table View -->
         @if (!isLoadingProjects()) {
           <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto font-sans">
-              <table class="w-full text-left rtl:text-right">
-                <thead>
-                  <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wider bg-slate-950/40">
-                    <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_NAME' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</th>
-                    @if (!isEngineer()) {
-                      <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</th>
-                    }
-                    <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }}</th>
-                    <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.FIELD_CATEGORY' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_START_DATE' | translate }}</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60 text-sm">
-                  @for (proj of projects(); track proj.id) {
-                    <tr 
-                      (click)="viewDetails(proj.id)"
-                      class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300 cursor-pointer"
-                      [class.opacity-60]="proj.status === 'PendingActivation'">
-                      <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                          <div class="font-bold text-white hover:text-indigo-400 transition-colors duration-200 flex items-center gap-1.5">
-                            @if (proj.status === 'PendingActivation') {
-                              <span class="text-amber-500">🔒</span>
-                            }
-                            {{ proj.name }}
-                          </div>
-                          @if (proj.isPublicPortfolio) {
-                            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Public</span>
-                          }
-                        </div>
-                        <span class="block text-xs font-normal text-slate-500 mt-0.5 max-w-xs truncate">
-                          {{ proj.description || ('PROJECTS.NO_DESCRIPTION' | translate) }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-slate-400 font-medium">{{ proj.client }}</td>
-                      @if (!isEngineer()) {
-                        <td class="px-6 py-4 font-mono text-emerald-400 font-bold">
-                          {{ proj.budget | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}
-                        </td>
-                      }
-                      <td class="px-6 py-4 text-center">
-                        @if (proj.status === 'Active') {
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
-                            {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
-                          </span>
-                        } @else if (proj.status === 'Delayed') {
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
-                            {{ 'PROJECTS.STATUS.DELAYED' | translate }}
-                          </span>
-                        } @else if (proj.status === 'PendingActivation') {
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
-                            قيد التفعيل / Pending
-                          </span>
-                        } @else if (proj.status === 'FinancialFreeze') {
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
-                            {{ langService.currentLang() === 'ar' ? 'مجمّد' : 'Frozen' }}
-                          </span>
-                        } @else if (proj.status === 'Closed') {
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
-                            {{ langService.currentLang() === 'ar' ? 'مغلق' : 'Closed' }}
-                          </span>
-                        } @else {
-                          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
-                            {{ 'PROJECTS.STATUS.COMPLETED' | translate }}
-                          </span>
-                        }
-                      </td>
-                      <td class="px-6 py-4 text-center font-cairo text-xs font-semibold">
-                        @if (proj.propertyType === 'Residential') {
-                          🏠 {{ langService.currentLang() === 'ar' ? 'سكني' : 'Residential' }}
-                        } @else {
-                          🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
-                        }
-                      </td>
-                      <td class="px-6 py-4 text-slate-400">{{ proj.startDate | date:'dd/MM/yyyy' }}</td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="6" class="px-6 py-16 text-center text-slate-500 text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-700 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                        </svg>
-                        <p class="font-bold text-slate-400 font-cairo">{{ 'PROJECTS.NO_PROJECTS' | translate }}</p>
-                        <p class="text-xs text-slate-500 mt-1 font-cairo">{{ 'PROJECTS.CREATE_FIRST' | translate }}</p>
-                      </td>
-                    </tr>
+            <!-- Desktop Table (md+) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left rtl:text-right font-sans">
+              <thead>
+                <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
+                  <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_NAME' | translate }}</th>
+                  <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</th>
+                  @if (!isEngineer()) {
+                    <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</th>
                   }
-                </tbody>
-              </table>
-            </div>
+                  <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }}</th>
+                  <th class="px-6 py-4 text-center font-cairo">{{ 'PROJECTS.FIELD_CATEGORY' | translate }}</th>
+                  <th class="px-6 py-4 font-cairo">{{ 'PROJECTS.TABLE_START_DATE' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 text-sm">
+                @for (proj of projects(); track proj.id) {
+                  <tr 
+                    (click)="viewDetails(proj.id)"
+                    class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300 cursor-pointer"
+                    [class.opacity-60]="proj.status === 'PendingActivation'">
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <div class="font-bold text-white hover:text-indigo-400 transition-colors duration-200 flex items-center gap-1.5 font-cairo">
+                          @if (proj.status === 'PendingActivation') {
+                            <span class="text-amber-500">🔒</span>
+                          }
+                          {{ proj.name }}
+                        </div>
+                        @if (proj.isPublicPortfolio) {
+                          <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Public</span>
+                        }
+                      </div>
+                      <span class="block text-xs font-normal text-slate-500 mt-0.5 max-w-xs truncate font-cairo">
+                        {{ proj.description || ('PROJECTS.NO_DESCRIPTION' | translate) }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-400 font-medium font-cairo">{{ proj.client }}</td>
+                    @if (!isEngineer()) {
+                      <td class="px-6 py-4 font-mono tabular-nums text-emerald-400 font-bold">
+                        {{ proj.budget | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}
+                      </td>
+                    }
+                    <td class="px-6 py-4 text-center">
+                      @if (proj.status === 'Active') {
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
+                          {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
+                        </span>
+                      } @else if (proj.status === 'Delayed') {
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
+                          {{ 'PROJECTS.STATUS.DELAYED' | translate }}
+                        </span>
+                      } @else if (proj.status === 'PendingActivation') {
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
+                          قيد التفعيل / Pending
+                        </span>
+                      } @else if (proj.status === 'FinancialFreeze') {
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
+                          {{ langService.currentLang() === 'ar' ? 'مجمّد' : 'Frozen' }}
+                        </span>
+                      } @else if (proj.status === 'Closed') {
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
+                          {{ langService.currentLang() === 'ar' ? 'مغلق' : 'Closed' }}
+                        </span>
+                      } @else {
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
+                          {{ 'PROJECTS.STATUS.COMPLETED' | translate }}
+                        </span>
+                      }
+                    </td>
+                    <td class="px-6 py-4 text-center font-cairo text-xs font-semibold">
+                      @if (proj.propertyType === 'Residential') {
+                        🏠 {{ langService.currentLang() === 'ar' ? 'سكني' : 'Residential' }}
+                      } @else {
+                        🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
+                      }
+                    </td>
+                    <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ proj.startDate | date:'dd/MM/yyyy' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="px-6 py-16 text-center text-slate-500 text-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-700 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                      </svg>
+                      <p class="font-bold text-slate-400 font-cairo">{{ 'PROJECTS.NO_PROJECTS' | translate }}</p>
+                      <p class="text-xs text-slate-500 mt-1 font-cairo">{{ 'PROJECTS.CREATE_FIRST' | translate }}</p>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
-        }
+
+          <!-- Mobile Cards View (< md) -->
+          <div class="block md:hidden space-y-3">
+            @for (proj of projects(); track proj.id) {
+              <div 
+                (click)="viewDetails(proj.id)"
+                class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md cursor-pointer hover:border-indigo-500/50 transition-all"
+                [class.opacity-60]="proj.status === 'PendingActivation'">
+                <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                  <div class="font-bold text-white flex items-center gap-1.5 font-cairo">
+                    @if (proj.status === 'PendingActivation') {
+                      <span class="text-amber-500">🔒</span>
+                    }
+                    {{ proj.name }}
+                  </div>
+                  @if (proj.status === 'Active') {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">Active</span>
+                  } @else if (proj.status === 'PendingActivation') {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">Pending</span>
+                  } @else if (proj.status === 'FinancialFreeze') {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">Frozen</span>
+                  } @else if (proj.status === 'Closed') {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 font-cairo">Closed</span>
+                  } @else {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 font-cairo">{{ proj.status }}</span>
+                  }
+                </div>
+                <div class="text-xs text-slate-400 font-cairo flex items-center justify-between">
+                  <span>👤 {{ proj.client }}</span>
+                  @if (!isEngineer()) {
+                    <span class="font-mono tabular-nums text-emerald-400 font-bold">{{ proj.budget | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</span>
+                  }
+                </div>
+                <div class="text-[11px] text-slate-500 font-cairo flex items-center justify-between pt-1 border-t border-slate-900">
+                  <span>{{ proj.propertyType === 'Residential' ? '🏠 Residential' : '🏢 Administrative' }}</span>
+                  <span class="font-mono tabular-nums">📅 {{ proj.startDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-8 text-center text-slate-500 font-cairo text-sm">
+                {{ 'PROJECTS.NO_PROJECTS' | translate }}
+              </div>
+            }
+          </div>
+        </div>
       }
+    }
 
       <!-- SECTION 2: COMPANY USERS MANAGEMENT -->
       @if (activeTab() === 'users' && currentUserRole() === 'TenantOwner') {
@@ -337,10 +382,10 @@ const GOVERNORATES: GovernorateOption[] = [
           </div>
         </div>
 
-        <!-- Users Table View -->
+        <!-- Users Table View (Desktop md+) -->
         @if (!isLoadingUsers()) {
           <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto font-sans">
+            <div class="hidden md:block overflow-x-auto font-sans">
               <table class="w-full text-left rtl:text-right">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wider bg-slate-950/40">
@@ -413,9 +458,9 @@ const GOVERNORATES: GovernorateOption[] = [
                         </div>
                       </td>
                       <td class="px-6 py-4 font-medium text-slate-300">{{ usr.lastName }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.email }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.personalPhone || '—' }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono">{{ usr.whatsAppPhone || '—' }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.email }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.personalPhone || '—' }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.whatsAppPhone || '—' }}</td>
                       <td class="px-6 py-4 text-center">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-cairo"
                           [class.bg-indigo-500/10]="usr.role === 'Manager'"
@@ -433,7 +478,7 @@ const GOVERNORATES: GovernorateOption[] = [
                           {{ 'USERS.ROLES.' + usr.role | translate }}
                         </span>
                       </td>
-                      <td class="px-6 py-4 text-slate-400">{{ usr.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="px-6 py-4 text-center">
                         @if (usr.whatsAppPhone) {
                           <button
@@ -449,10 +494,7 @@ const GOVERNORATES: GovernorateOption[] = [
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="8" class="px-6 py-16 text-center text-slate-500 text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-700 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
+                      <td colspan="8" class="px-6 py-12 text-center text-slate-500 font-cairo text-sm">
                         <p class="font-bold text-slate-400 font-cairo">{{ 'USERS.NO_USERS' | translate }}</p>
                         <p class="text-xs text-slate-500 mt-1 font-cairo">{{ 'USERS.CREATE_FIRST' | translate }}</p>
                       </td>
@@ -626,14 +668,35 @@ const GOVERNORATES: GovernorateOption[] = [
       }
     </div>
 
+    <!-- Sticky Mobile Action Bar for TenantOwner -->
+    @if (currentUserRole() === 'TenantOwner') {
+      <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 z-30 flex items-center justify-around gap-2 shadow-2xl">
+        @if (activeTab() === 'projects') {
+          <button
+            (click)="openProjectModal()"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold font-cairo text-sm shadow-lg shadow-indigo-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            ➕ {{ 'PROJECTS.NEW_PROJECT' | translate }}
+          </button>
+        } @else if (activeTab() === 'users') {
+          <button
+            (click)="openUserModal()"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold font-cairo text-sm shadow-lg shadow-indigo-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            ➕ {{ 'USERS.NEW_USER' | translate }}
+          </button>
+        }
+      </div>
+    }
+
     <!-- MODAL 1: CREATE PROJECT -->
     @if (isProjectModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
+      <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 sm:p-4">
         <!-- Backdrop -->
         <div (click)="closeProjectModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal container -->
-        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
           <div class="flex items-start justify-between mb-6">
             <div>
               <h3 class="text-xl font-bold text-white font-cairo">{{ 'PROJECTS.MODAL_TITLE' | translate }}</h3>
