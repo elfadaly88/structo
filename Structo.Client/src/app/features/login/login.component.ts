@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { RateLimitService } from '../../core/services/rate-limit.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../environments/environment';
 
@@ -147,16 +148,24 @@ import { environment } from '../../../environments/environment';
               <div>
                 <button
                   type="submit"
-                  [disabled]="loginForm.invalid || isLoading()"
+                  [disabled]="loginForm.invalid || isLoading() || rateLimitService.isLockedOut()"
                   class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
-                  @if (isLoading()) {
+                  @if (rateLimitService.isLockedOut()) {
+                    <div class="flex items-center space-x-2 rtl:space-x-reverse text-amber-300 font-bold">
+                      <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>يرجى الانتظار ({{ rateLimitService.cooldownSeconds() }} ثانية)</span>
+                    </div>
+                  } @else if (isLoading()) {
                     <svg class="animate-spin -ml-1 mr-3 rtl:ml-3 rtl:mr-1 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     {{ 'LOGIN.SIGNING_IN' | translate }}
-                  @} @else {
+                  } @else {
                     {{ 'LOGIN.SIGN_IN' | translate }}
                   }
                 </button>
@@ -221,6 +230,7 @@ import { environment } from '../../../environments/environment';
 export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  readonly rateLimitService = inject(RateLimitService);
   private readonly translateService = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -324,13 +334,21 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        const code = err.error?.message || err.message || '';
-        if (code === 'ACCOUNT_PENDING_APPROVAL') {
+        if (err.status === 429 || err.status === 503) {
+          this.errorMessage.set(null);
+          this.rateLimitService.startCooldown(60);
+          return;
+        }
+
+        const rawMsg = err.error?.message || err.message || '';
+        if (rawMsg === 'ACCOUNT_PENDING_APPROVAL') {
           this.errorMessage.set(null);
           this.registrationPending.set(true);
+        } else if (typeof rawMsg === 'string' && (rawMsg.includes('Http failure') || rawMsg.includes('status 503') || rawMsg.includes('status 429'))) {
+          this.errorMessage.set(null);
         } else {
           this.errorMessage.set(
-            this.translateService.instant(err.error?.message || err.message || 'LOGIN.FAILED')
+            this.translateService.instant(rawMsg || 'LOGIN.FAILED')
           );
         }
       }
@@ -362,7 +380,7 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.loginForm.invalid) {
+    if (this.loginForm.invalid || this.rateLimitService.isLockedOut()) {
       return;
     }
 
@@ -381,13 +399,20 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(
-          this.translateService.instant(
-            err.error?.message ||
-            err.message ||
-            'LOGIN.BACKEND_UNAVAILABLE'
-          )
-        );
+        if (err.status === 429 || err.status === 503) {
+          this.errorMessage.set(null);
+          this.rateLimitService.startCooldown(60);
+          return;
+        }
+
+        const rawMsg = err.error?.message || err.message || '';
+        if (typeof rawMsg === 'string' && (rawMsg.includes('Http failure') || rawMsg.includes('status 503') || rawMsg.includes('status 429'))) {
+          this.errorMessage.set(null);
+        } else {
+          this.errorMessage.set(
+            this.translateService.instant(rawMsg || 'LOGIN.BACKEND_UNAVAILABLE')
+          );
+        }
       }
     });
   }

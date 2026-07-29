@@ -221,6 +221,23 @@ builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.
 // Rate Limiting Policy
 builder.Services.AddRateLimiter(options =>
 {
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        var response = new Structo.Core.DTOs.Common.ApiResponse<object>
+        {
+            Success = false,
+            Message = "لقد تجاوزت عدد المحاولات المسموحة. يرجى الانتظار دقيقة قبل المحاولة مجدداً."
+        };
+        var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        });
+        await context.HttpContext.Response.WriteAsync(json, token);
+    };
+
     options.AddFixedWindowLimiter("loginPolicy", opt =>
     {
         opt.Window = TimeSpan.FromMinutes(1);

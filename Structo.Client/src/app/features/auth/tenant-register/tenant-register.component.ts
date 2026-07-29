@@ -543,7 +543,7 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
     this.marker = L.marker(this.currentLatLng, { draggable: true }).addTo(this.map);
     
     // Listen to drag events
-    this.marker.on('dragend', (e) => {
+    this.marker.on('dragend', (e: any) => {
       this.currentLatLng = this.marker!.getLatLng();
     });
     
