@@ -421,6 +421,55 @@ using (var scope = app.Services.CreateScope())
         {
             Console.WriteLine($"[PATCH ERROR] Failed to run database alignment patch: {ex.Message}");
         }
+
+        // Database Security Cleanup Routine: Remove/Sanitize existing records containing SQLi or XSS payloads
+        try
+        {
+            var taintRegex = new System.Text.RegularExpressions.Regex(
+                @"(;\s*--|--|/\*|\*/|DROP\s+TABLE|UNION\s+SELECT|OR\s+['""]?1['""]?\s*=\s*['""]?1|<script|javascript:|onerror\s*=|onload\s*=)",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            var dirtyUsers = context.Users.IgnoreQueryFilters()
+                .Where(u => u.FirstName.Contains("DROP TABLE") || u.FirstName.Contains("--;") || u.LastName.Contains("DROP TABLE") || u.Email.Contains("DROP TABLE"))
+                .ToList();
+
+            foreach (var user in dirtyUsers)
+            {
+                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing user record {user.Id}");
+                user.FirstName = taintRegex.Replace(user.FirstName, "").Trim();
+                user.LastName = taintRegex.Replace(user.LastName, "").Trim();
+            }
+
+            var dirtyTenants = context.Tenants.IgnoreQueryFilters()
+                .Where(t => t.Name.Contains("DROP TABLE") || t.Name.Contains("--;"))
+                .ToList();
+
+            foreach (var tenant in dirtyTenants)
+            {
+                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing tenant record {tenant.Id}");
+                tenant.Name = taintRegex.Replace(tenant.Name, "").Trim();
+            }
+
+            var dirtyProjects = context.Projects.IgnoreQueryFilters()
+                .Where(p => p.Name.Contains("DROP TABLE") || p.Name.Contains("--;"))
+                .ToList();
+
+            foreach (var proj in dirtyProjects)
+            {
+                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing project record {proj.Id}");
+                proj.Name = taintRegex.Replace(proj.Name, "").Trim();
+            }
+
+            if (dirtyUsers.Any() || dirtyTenants.Any() || dirtyProjects.Any())
+            {
+                context.SaveChanges();
+                Console.WriteLine("[SECURITY CLEANUP] Tainted records sanitized successfully.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SECURITY CLEANUP ERROR] Failed to run database cleanup: {ex.Message}");
+        }
     }
     catch { /* Ignore if table doesn't exist yet */ }
 }
@@ -431,6 +480,9 @@ using (var scope = app.Services.CreateScope())
 
 // Exception Handling First
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Request Sanitization & Taint Check Middleware
+app.UseMiddleware<RequestSanitizationMiddleware>();
 
 // Swagger (always enabled for this project)
 app.UseSwagger();

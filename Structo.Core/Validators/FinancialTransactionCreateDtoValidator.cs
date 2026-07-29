@@ -10,5 +10,6 @@ public class FinancialTransactionCreateDtoValidator : AbstractValidator<Financia
     {
         RuleFor(x => x.Amount).GreaterThan(0).WithMessage("Amount must be greater than zero.");
         RuleFor(x => x.TransactionDate).LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Transaction date cannot be in the future.");
+        RuleFor(x => x.Description).SafeText();
     }
 }
