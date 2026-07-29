@@ -53,6 +53,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [HttpPost("refresh-token")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Refresh([FromBody] RefreshTokenDto dto)
     {
