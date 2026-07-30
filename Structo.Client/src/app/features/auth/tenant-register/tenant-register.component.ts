@@ -998,7 +998,16 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
           if (res.success) {
             this.isSuccess.set(true);
           } else {
-            this.errorMessage.set(res.message || 'Registration failed.');
+            const msg = res.message || 'Registration failed.';
+            if (msg.toLowerCase().includes('email') || msg.includes('مُسجل') || msg.includes('مسجل') || msg.toLowerCase().includes('taken')) {
+              const friendlyEmailMsg = 'البريد الإلكتروني مُسجل مسبقاً، يرجى استخدام بريد آخر أو تسجيل الدخول.';
+              this.emailError.set(friendlyEmailMsg);
+              this.errorMessage.set(friendlyEmailMsg);
+              this.toastService.show('تنبيه البريد الإلكتروني', friendlyEmailMsg, 'warning');
+              this.goToStep(1);
+            } else {
+              this.errorMessage.set(msg);
+            }
           }
         },
         error: (err) => {
@@ -1035,6 +1044,7 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
               const friendlyEmailMsg = 'البريد الإلكتروني مُسجل مسبقاً، يرجى استخدام بريد آخر أو تسجيل الدخول.';
               this.emailError.set(friendlyEmailMsg);
               this.errorMessage.set(friendlyEmailMsg);
+              this.toastService.show('تنبيه البريد الإلكتروني', friendlyEmailMsg, 'warning');
               this.goToStep(1);
             } else {
               this.errorMessage.set(rawMsg || 'حدث خطأ في البيانات المدخلة. يرجى مراجعة الحقول والمحاولة مجدداً.');
