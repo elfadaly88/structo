@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, AfterViewInit, OnDestroy, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
+import { Component, inject, signal, computed, effect, AfterViewInit, OnDestroy, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -210,9 +210,11 @@ interface NominatimResult {
                       </label>
                       <input id="email" type="email" formControlName="email" placeholder="admin@company.com"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
-                        [class.border-rose-500]="isFieldInvalid('email')"
-                        [class.border-slate-800]="!isFieldInvalid('email')">
-                      @if (isFieldInvalid('email')) {
+                        [class.border-rose-500]="isFieldInvalid('email') || !!emailError()"
+                        [class.border-slate-800]="!isFieldInvalid('email') && !emailError()">
+                      @if (emailError()) {
+                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ {{ emailError() }}</p>
+                      } @else if (isFieldInvalid('email')) {
                         <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ يرجى أدخال بريد إلكتروني صحيح.</p>
                       }
                     </div>
@@ -638,6 +640,7 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
   readonly isSuccess = signal(false);
   readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly emailError = signal<string | null>(null);
 
   readonly passwordValue = signal('');
 
@@ -678,6 +681,44 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
   constructor() {
     this.registerForm.get('password')?.valueChanges.subscribe(value => {
       this.passwordValue.set(value || '');
+    });
+
+    // Auto-Clear error state on any input change (On Input Change)
+    this.registerForm.valueChanges.subscribe(() => {
+      this.clearErrorState();
+    });
+
+    // Auto-Clear error state when Cooldown Timer reaches 0
+    effect(() => {
+      if (this.rateLimitService.cooldownSeconds() === 0) {
+        this.clearErrorState();
+      }
+    });
+  }
+
+  clearErrorState(): void {
+    if (this.emailError()) {
+      this.emailError.set(null);
+    }
+    if (this.errorMessage()) {
+      this.errorMessage.set(null);
+    }
+    if (this.showSummaryBanner()) {
+      this.showSummaryBanner.set(false);
+    }
+    if (this.toastService.toasts().length > 0) {
+      this.toastService.clearAll();
+    }
+    Object.keys(this.registerForm.controls).forEach(key => {
+      const control = this.registerForm.get(key);
+      if (control) {
+        if (control.touched) {
+          control.markAsUntouched({ onlySelf: true });
+        }
+        if (control.dirty) {
+          control.markAsPristine({ onlySelf: true });
+        }
+      }
     });
   }
 
@@ -964,14 +1005,40 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
           this.isLoading.set(false);
 
           if (err.status === 400) {
-            // Security Rejection (RequestSanitizationMiddleware / FluentValidation Taint)
-            this.toastService.show(
-              'تنبيه أمني',
-              'تنبيه أمني: تم رصد مُدخلات غير مسموح بها لأسباب أمنية. يرجى تصحيح البيانات والمحاولة مجدداً.',
-              'error'
-            );
-            this.rateLimitService.startCooldown(60);
-            this.errorMessage.set(null);
+            const rawMsg = err.error?.message || err.error?.title || (typeof err.error === 'string' ? err.error : '') || err.message || '';
+            const errorCode = err.error?.code || '';
+
+            const isSecurityRejection = errorCode === 'SECURITY_REJECTION' ||
+              errorCode === 'XSS_DETECTED' ||
+              errorCode === 'TAINT_DETECTED' ||
+              rawMsg.includes('Sanitization') ||
+              rawMsg.includes('Security Rejection') ||
+              rawMsg.includes('Invalid Characters') ||
+              rawMsg.includes('Payload Error') ||
+              rawMsg.includes('مُدخلات غير مسموح بها لأسباب أمنية');
+
+            if (isSecurityRejection) {
+              // Security Rejection (RequestSanitizationMiddleware / FluentValidation Taint)
+              this.toastService.show(
+                'تنبيه أمني',
+                'تنبيه أمني: تم رصد مُدخلات غير مسموح بها لأسباب أمنية. يرجى تصحيح البيانات والمحاولة مجدداً.',
+                'error'
+              );
+              this.rateLimitService.startCooldown(60);
+              this.errorMessage.set(null);
+              return;
+            }
+
+            // Business Validation 400 Bad Request (Duplicate Email / Duplicate Tenant / Phone Exists / Weak Password)
+            // DO NOT start Cooldown Timer! Keep form and submit button immediately active for editing.
+            if (rawMsg.toLowerCase().includes('email') || rawMsg.includes('مُسجل') || rawMsg.includes('مسجل') || rawMsg.toLowerCase().includes('taken')) {
+              const friendlyEmailMsg = 'البريد الإلكتروني مُسجل مسبقاً، يرجى استخدام بريد آخر أو تسجيل الدخول.';
+              this.emailError.set(friendlyEmailMsg);
+              this.errorMessage.set(friendlyEmailMsg);
+              this.goToStep(1);
+            } else {
+              this.errorMessage.set(rawMsg || 'حدث خطأ في البيانات المدخلة. يرجى مراجعة الحقول والمحاولة مجدداً.');
+            }
             return;
           }
 

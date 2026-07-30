@@ -28,4 +28,9 @@ export class ToastService {
     console.log('[ToastService] dismiss() called for ID:', id);
     this.toasts.update(current => current.filter(t => t.id !== id));
   }
+
+  clearAll() {
+    console.log('[ToastService] clearAll() called');
+    this.toasts.set([]);
+  }
 }

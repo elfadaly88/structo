@@ -136,6 +136,7 @@ public class ImageUploadController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while uploading tenant banner.");
             return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = "An unexpected error occurred while processing your request." });
         }
     }
@@ -194,6 +195,7 @@ public class ImageUploadController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while uploading project gallery image.");
             return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = "An unexpected error occurred. Please contact support." });
         }
     }
@@ -236,12 +238,12 @@ public class ImageUploadController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while uploading project document.");
             return StatusCode(500, new ApiResponse<UploadResultDto>
             {
                 Success = false,
                 Message = "An internal error occurred while processing your file. Please try again later."
-            }
-        );
+            });
         }
     }
 
