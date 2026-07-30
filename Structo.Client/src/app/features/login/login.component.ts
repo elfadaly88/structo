@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { RateLimitService } from '../../core/services/rate-limit.service';
+import { ToastService } from '../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../environments/environment';
 
@@ -232,6 +233,7 @@ export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
   readonly rateLimitService = inject(RateLimitService);
   private readonly translateService = inject(TranslateService);
+  private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -329,7 +331,7 @@ export class LoginComponent implements OnInit {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'];
           this.redirectUser(response.data.role, returnUrl);
         } else {
-          this.errorMessage.set(this.translateService.instant(response.message || 'LOGIN.FAILED'));
+          this.handleAuthErrorMessage(response.message || 'LOGIN.FAILED');
         }
       },
       error: (err) => {
@@ -340,19 +342,74 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        const rawMsg = err.error?.message || err.message || '';
-        if (rawMsg === 'ACCOUNT_PENDING_APPROVAL') {
-          this.errorMessage.set(null);
-          this.registrationPending.set(true);
-        } else if (typeof rawMsg === 'string' && (rawMsg.includes('Http failure') || rawMsg.includes('status 503') || rawMsg.includes('status 429'))) {
-          this.errorMessage.set(null);
-        } else {
-          this.errorMessage.set(
-            this.translateService.instant(rawMsg || 'LOGIN.FAILED')
-          );
-        }
+        const rawMsg = err.error?.message || err.error?.Message || (typeof err.error === 'string' ? err.error : '') || err.message || '';
+        this.handleAuthErrorMessage(rawMsg);
       }
     });
+  }
+
+  private handleAuthErrorMessage(rawMsg: string): void {
+    if (!rawMsg) {
+      this.errorMessage.set(this.translateService.instant('LOGIN.FAILED'));
+      return;
+    }
+
+    if (rawMsg === 'ACCOUNT_PENDING_APPROVAL') {
+      this.errorMessage.set(null);
+      this.registrationPending.set(true);
+      return;
+    }
+
+    if (rawMsg === 'ACCOUNT_DEACTIVATED' || rawMsg === 'AUTH.ACCOUNT_DEACTIVATED') {
+      const translated = this.translateService.instant('AUTH.ACCOUNT_DEACTIVATED');
+      const friendlyMsg = (translated && translated !== 'AUTH.ACCOUNT_DEACTIVATED')
+        ? translated
+        : '⚠️ تم تعطيل هذا الحساب بواسطة مسؤول الشركة. يرجى التواصل مع الإدارة.';
+      this.errorMessage.set(friendlyMsg);
+      this.toastService.show('تنبيه الحساب', friendlyMsg, 'error');
+      return;
+    }
+
+    if (rawMsg === 'ACCOUNT_PENDING_OR_INACTIVE' || rawMsg === 'AUTH.ACCOUNT_PENDING_OR_INACTIVE') {
+      const translated = this.translateService.instant('AUTH.ACCOUNT_PENDING_OR_INACTIVE');
+      const friendlyMsg = (translated && translated !== 'AUTH.ACCOUNT_PENDING_OR_INACTIVE')
+        ? translated
+        : '⚠️ حسابك قيد الموافقة أو غير نشط حالياً.';
+      this.errorMessage.set(friendlyMsg);
+      this.toastService.show('تنبيه الحساب', friendlyMsg, 'warning');
+      return;
+    }
+
+    if (rawMsg === 'INVALID_CREDENTIALS' || rawMsg === 'AUTH.INVALID_CREDENTIALS') {
+      const msg = this.translateService.instant('AUTH.INVALID_CREDENTIALS');
+      this.errorMessage.set(msg);
+      return;
+    }
+
+    if (typeof rawMsg === 'string' && rawMsg.startsWith('⚠️')) {
+      this.errorMessage.set(rawMsg);
+      this.toastService.show('تنبيه الحساب', rawMsg, 'warning');
+      return;
+    }
+
+    if (typeof rawMsg === 'string' && (rawMsg.includes('Http failure') || rawMsg.includes('status 503') || rawMsg.includes('status 429'))) {
+      this.errorMessage.set(null);
+      return;
+    }
+
+    let translated = this.translateService.instant(rawMsg);
+    if (translated === rawMsg && typeof rawMsg === 'string' && !rawMsg.includes('.')) {
+      const authPrefixed = this.translateService.instant(`AUTH.${rawMsg}`);
+      if (authPrefixed !== `AUTH.${rawMsg}`) {
+        translated = authPrefixed;
+      }
+    }
+
+    const finalMsg = (translated && translated !== rawMsg) ? translated : rawMsg;
+    this.errorMessage.set(finalMsg);
+    if (finalMsg && typeof finalMsg === 'string' && finalMsg.length < 150) {
+      this.toastService.show('تنبيه تسجيل الدخول', finalMsg, 'warning');
+    }
   }
 
   private redirectUser(role: string, returnUrl?: string): void {
@@ -394,7 +451,7 @@ export class LoginComponent implements OnInit {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'];
           this.redirectUser(response.data.role, returnUrl);
         } else {
-          this.errorMessage.set(this.translateService.instant(response.message || 'LOGIN.FAILED'));
+          this.handleAuthErrorMessage(response.message || 'LOGIN.FAILED');
         }
       },
       error: (err) => {
@@ -405,14 +462,8 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        const rawMsg = err.error?.message || err.message || '';
-        if (typeof rawMsg === 'string' && (rawMsg.includes('Http failure') || rawMsg.includes('status 503') || rawMsg.includes('status 429'))) {
-          this.errorMessage.set(null);
-        } else {
-          this.errorMessage.set(
-            this.translateService.instant(rawMsg || 'LOGIN.BACKEND_UNAVAILABLE')
-          );
-        }
+        const rawMsg = err.error?.message || err.error?.Message || (typeof err.error === 'string' ? err.error : '') || err.message || '';
+        this.handleAuthErrorMessage(rawMsg);
       }
     });
   }

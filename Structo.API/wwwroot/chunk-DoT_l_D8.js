@@ -1,1 +1,0 @@
-import {D,an as Xe,aD as fh,au as N}from'./main-TKXNZRVL.js';function w(t){t||(t=D(Xe));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(fh(i))}export{w};
