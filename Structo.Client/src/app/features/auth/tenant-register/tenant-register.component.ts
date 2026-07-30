@@ -688,9 +688,14 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
       this.clearErrorState();
     });
 
-    // Auto-Clear error state when Cooldown Timer reaches 0
+    // Auto-Clear error state ONLY when a running Cooldown Timer finishes (transitions from >0 to 0)
+    let wasLockedOut = false;
     effect(() => {
-      if (this.rateLimitService.cooldownSeconds() === 0) {
+      const cd = this.rateLimitService.cooldownSeconds();
+      if (cd > 0) {
+        wasLockedOut = true;
+      } else if (wasLockedOut && cd === 0) {
+        wasLockedOut = false;
         this.clearErrorState();
       }
     });
