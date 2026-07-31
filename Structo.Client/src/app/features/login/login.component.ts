@@ -213,7 +213,7 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
                   </svg>
                   <span>تسجيل الدخول باستخدام Google</span>
                 </button>
-                <div id="googleBtn" class="absolute inset-0 opacity-0 cursor-pointer overflow-hidden z-10 [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-w-full"></div>
+                <div id="googleBtn" class="absolute inset-0 opacity-0 cursor-pointer overflow-hidden z-10 flex items-center justify-center [&_iframe]:!w-[200%] [&_iframe]:!h-[200%] [&_iframe]:!max-w-none [&_iframe]:!scale-150 [&_iframe]:!cursor-pointer"></div>
               </div>
             </div>
 
