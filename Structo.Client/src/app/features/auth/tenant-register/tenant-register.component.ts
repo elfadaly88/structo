@@ -165,7 +165,7 @@ interface NominatimResult {
                     <label for="tenantName" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
                       اسم المستأجر / الشركة <span class="text-rose-400">*</span>
                     </label>
-                    <input id="tenantName" type="text" formControlName="tenantName" placeholder="مثال: شركة المقاولات الحديثة"
+                    <input id="tenantName" type="text" formControlName="tenantName" placeholder="مثال: شركة المقاولات الحديثة" autocomplete="off" aria-autocomplete="none"
                       class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                       [class.border-rose-500]="isFieldInvalid('tenantName')"
                       [class.border-slate-800]="!isFieldInvalid('tenantName')">
@@ -180,7 +180,7 @@ interface NominatimResult {
                       <label for="adminFirstName" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
                         الاسم الأول لمدير النظام <span class="text-rose-400">*</span>
                       </label>
-                      <input id="adminFirstName" type="text" formControlName="adminFirstName" placeholder="أحمد"
+                      <input id="adminFirstName" type="text" formControlName="adminFirstName" placeholder="أحمد" autocomplete="off" aria-autocomplete="none"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                         [class.border-rose-500]="isFieldInvalid('adminFirstName')"
                         [class.border-slate-800]="!isFieldInvalid('adminFirstName')">
@@ -192,7 +192,7 @@ interface NominatimResult {
                       <label for="adminLastName" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
                         اسم العائلة لمدير النظام <span class="text-rose-400">*</span>
                       </label>
-                      <input id="adminLastName" type="text" formControlName="adminLastName" placeholder="محمود"
+                      <input id="adminLastName" type="text" formControlName="adminLastName" placeholder="محمود" autocomplete="off" aria-autocomplete="none"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                         [class.border-rose-500]="isFieldInvalid('adminLastName')"
                         [class.border-slate-800]="!isFieldInvalid('adminLastName')">
@@ -208,7 +208,7 @@ interface NominatimResult {
                       <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
                         البريد الإلكتروني الرسمي <span class="text-rose-400">*</span>
                       </label>
-                      <input id="email" type="email" formControlName="email" placeholder="admin@company.com"
+                      <input id="email" type="email" formControlName="email" placeholder="admin@company.com" autocomplete="off" aria-autocomplete="none"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                         [class.border-rose-500]="isFieldInvalid('email') || !!emailError()"
                         [class.border-slate-800]="!isFieldInvalid('email') && !emailError()">
@@ -238,7 +238,7 @@ interface NominatimResult {
                       كلمة المرور / Password <span class="text-rose-400">*</span>
                     </label>
                     <div class="relative">
-                      <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••"
+                      <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" autocomplete="new-password"
                         class="w-full pl-3.5 pr-10 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                         [class.border-rose-500]="isFieldInvalid('password')"
                         [class.border-slate-800]="!isFieldInvalid('password')">
