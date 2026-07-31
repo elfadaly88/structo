@@ -201,7 +201,7 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
                 </select>
               </div>
 
-              <div class="relative w-full flex justify-center mt-2">
+              <div class="relative w-full flex justify-center mt-2 overflow-hidden rounded-lg">
                 <button type="button" 
                         (click)="onGoogleLogin()"
                         class="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-slate-800/80 hover:bg-slate-800 text-white font-medium text-sm rounded-lg border border-slate-700 transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-600 active:scale-[0.99]">
@@ -213,15 +213,17 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
                   </svg>
                   <span>تسجيل الدخول باستخدام Google</span>
                 </button>
-                <div id="googleBtn" class="absolute inset-0 opacity-0 cursor-pointer overflow-hidden z-10 [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-w-full [&_iframe]:!scale-150"></div>
+                <div id="googleBtn" class="absolute inset-0 opacity-0 cursor-pointer overflow-hidden z-10 [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-w-full"></div>
               </div>
             </div>
 
             <!-- Public Registration Link -->
-            <div class="mt-6 text-center">
+            <div class="mt-6 text-center relative z-20">
               <p class="text-sm text-slate-400">
                 Don't have an account? 
-                <a routerLink="/register" class="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200">
+                <a routerLink="/register"
+                   (click)="goToRegister()"
+                   class="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200 cursor-pointer">
                   Register your tenant/company here
                 </a>
               </p>
@@ -306,6 +308,10 @@ export class LoginComponent implements OnInit {
     if (google && google.accounts && google.accounts.id) {
       google.accounts.id.prompt();
     }
+  }
+
+  goToRegister(): void {
+    this.router.navigate(['/register']);
   }
 
   private renderGoogleButton(): void {
