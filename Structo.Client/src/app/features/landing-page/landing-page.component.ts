@@ -16,8 +16,10 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white overflow-x-hidden">
       <!-- Nav Bar -->
       <nav class="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-10 w-auto object-contain">
+        <div class="flex items-center gap-2">
+          <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+            <span class="text-white font-extrabold text-sm">أ</span>
+          </div>
           <span class="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أُسُس / Osos</span>
         </div>
         <div class="flex items-center gap-2 md:gap-4">
@@ -62,7 +64,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
           @if (langService.currentLang() === 'ar') {
             أُسُس | اضبط عُهد مشاريعك، وراقب مصاريف موقعك <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">في ثانية وبدون محاسب</span>
           } @else {
-            Ousos | Track your project cash & monitor site expenses <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">instantly without an accountant</span>
+            Osos | Track your project cash & monitor site expenses <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">instantly without an accountant</span>
           }
         </h1>
 
