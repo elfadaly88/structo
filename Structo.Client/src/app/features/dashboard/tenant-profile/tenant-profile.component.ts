@@ -224,260 +224,254 @@ interface MapSearchResult {
       <form [formGroup]="profileForm" (ngSubmit)="saveCurrentTab()" class="space-y-6">
 
         <!-- TAB 1: COMPANY & ACCOUNT DATA -->
-        @if (activeTab() === 1) {
-          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl font-cairo">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  بيانات الشركة والحساب الأساسية / Company & Account Details
-                </h3>
-                <p class="text-[11px] text-slate-400">إدارة معلومات الكيان، اسم المؤسسة والاتصال الأساسي</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Company Name -->
-              <div>
-                <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  اسم الشركة / Company Name <span class="text-rose-400">*</span>
-                </label>
-                <input id="prof-name" type="text" formControlName="name" placeholder="أدخل اسم الشركة"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all">
-              </div>
-
-              <!-- Admin Email (Readonly) -->
-              <div>
-                <label for="prof-email" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-                  البريد الإلكتروني للآدمن / Admin Email
-                </label>
-                <input id="prof-email" type="email" [value]="tenantData()?.adminEmail || auth.currentUser()?.email || 'N/A'" readonly disabled
-                  class="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-slate-400 text-xs cursor-not-allowed">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Personal Phone -->
-              <div>
-                <label for="prof-personal-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  رقم الهاتف الشخصي / Personal Phone
-                </label>
-                <input id="prof-personal-phone" type="tel" formControlName="personalPhone" maxlength="11" placeholder="01xxxxxxxxx"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-              </div>
-
-              <!-- WhatsApp Phone -->
-              <div>
-                <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  رقم الواتساب / WhatsApp Phone
-                </label>
-                <input id="prof-whatsapp-phone" type="tel" formControlName="whatsAppPhone" maxlength="11" placeholder="01xxxxxxxxx"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Subscription Plan info badge -->
-              <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-                <div>
-                  <span class="block text-[10px] font-bold text-slate-400 uppercase">باقة الاشتراك الحالية</span>
-                  <span class="text-sm font-bold text-indigo-400">{{ tenantData()?.subscriptionPlan || 'Free' }}</span>
-                </div>
-                <span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg">
-                  أقصى مشاريع: {{ tenantData()?.maxActiveProjects ?? 2 }}
-                </span>
-              </div>
-
-              <!-- Account Type -->
-              <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-                <div>
-                  <span class="block text-[10px] font-bold text-slate-400 uppercase">نوع الحساب</span>
-                  <span class="text-sm font-bold text-emerald-400">{{ tenantData()?.accountType || 'Company' }}</span>
-                </div>
-                <span class="text-xs text-slate-400">مسجل بالمنظومة</span>
-              </div>
-            </div>
-
-            <!-- Company Description -->
+        <div [hidden]="activeTab() !== 1" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl font-cairo">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
-              <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                وصف الشركة والنشاط / Company Description
-              </label>
-              <textarea id="prof-desc" formControlName="companyDescription" rows="3" placeholder="نبذة مختصرة عن نشاط الشركة وخدماتها..."
-                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all resize-none"></textarea>
-            </div>
-
-            <!-- Tab 1 Footer Actions -->
-            <div class="flex items-center justify-end pt-3 border-t border-slate-800">
-              <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
-                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
-                <span>حفظ بيانات الحساب / Save Tab 1</span>
-              </button>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                بيانات الشركة والحساب الأساسية / Company & Account Details
+              </h3>
+              <p class="text-[11px] text-slate-400">إدارة معلومات الكيان، اسم المؤسسة والاتصال الأساسي</p>
             </div>
           </div>
-        }
 
-        <!-- TAB 2: LEGAL & CONTACT DATA -->
-        @if (activeTab() === 2) {
-          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl font-cairo">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  البيانات القانونية والوثائق / Legal Information & Documents
-                </h3>
-                <p class="text-[11px] text-slate-400">تحديث المحافظة والمستندات الرسمية والسجلات</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Governorate Dropdown (Strict Binding Fix) -->
-              <div>
-                <label for="prof-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  المحافظة / Governorate <span class="text-rose-400">*</span>
-                </label>
-                <select id="prof-gov" formControlName="governorateId"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-                  <option value="">-- اختر المحافظة / Select Governorate --</option>
-                  @for (gov of governorates; track gov.id) {
-                    <option [value]="gov.id">{{ gov.label }}</option>
-                  }
-                </select>
-              </div>
-
-              <!-- Commercial Register -->
-              <div>
-                <label for="prof-cr" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  رقم السجل التجاري / Commercial Register
-                </label>
-                <input id="prof-cr" type="text" formControlName="commercialRegister" placeholder="مثال: 102030"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <!-- Tax Card -->
-              <div>
-                <label for="prof-tax" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  البطاقة الضريبية / Tax Card
-                </label>
-                <input id="prof-tax" type="text" formControlName="taxCard" placeholder="مثال: 334-556-789"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-              </div>
-
-              <!-- National ID -->
-              <div>
-                <label for="prof-nat" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  الرقم القومي للمالك / National ID
-                </label>
-                <input id="prof-nat" type="text" formControlName="nationalId" maxlength="14" placeholder="14 رقم قومي"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-              </div>
-
-              <!-- Syndicate ID -->
-              <div>
-                <label for="prof-syn" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                  رقم كارنيه النقابة / Syndicate ID
-                </label>
-                <input id="prof-syn" type="text" formControlName="syndicateId" placeholder="رقم القيد النقابي"
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-              </div>
-            </div>
-
-            <!-- Tab 2 Footer Actions -->
-            <div class="flex items-center justify-end pt-3 border-t border-slate-800">
-              <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
-                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
-                <span>حفظ البيانات القانونية / Save Tab 2</span>
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- TAB 3: LOCATION & GEOGRAPHY -->
-        @if (activeTab() === 3) {
-          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl font-cairo">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  الموقع والجغرافيا / Location & Geolocation
-                </h3>
-                <p class="text-[11px] text-slate-400">تحديد العنوان الدقيق وموقع المكاتب والفروع عبر الخريطة</p>
-              </div>
-            </div>
-
-            <!-- Manual Address Field -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Company Name -->
             <div>
-              <label for="prof-address" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                العنوان التفصيلي / Manual Address
+              <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                اسم الشركة / Company Name <span class="text-rose-400">*</span>
               </label>
-              <input id="prof-address" type="text" formControlName="manualAddress" placeholder="اسم الشارع، المبنى، رقم الدور، الحي..."
+              <input id="prof-name" type="text" formControlName="name" placeholder="أدخل اسم الشركة"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all">
             </div>
 
-            <!-- Interactive Map Header & Search -->
-            <div class="space-y-2">
-              <div class="flex items-center justify-between">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                  تحديد الموقع على الخريطة / Drop Pin Map Selector
-                </label>
-                @if (profileForm.get('latitude')?.value && profileForm.get('longitude')?.value) {
-                  <span class="text-[11px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                    Lat: {{ profileForm.get('latitude')?.value | number:'1.4-6' }} | Lng: {{ profileForm.get('longitude')?.value | number:'1.4-6' }}
-                  </span>
-                }
-              </div>
-
-              <!-- Map Search Input -->
-              <div class="relative">
-                <input type="text" [value]="mapSearchQuery" (input)="onMapSearchChange($event)" (keydown.enter)="onMapSearchSubmit()"
-                  placeholder="ابحث عن منطقة أو عنوان لتحديد الخريطة (مثال: المعادي، التجمع)..."
-                  class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all pr-10">
-                <button type="button" (click)="onMapSearchSubmit()" class="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-white flex items-center justify-center">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-
-              <!-- Search Results Dropdown -->
-              @if (mapSearchResults().length > 0) {
-                <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto">
-                  @for (result of mapSearchResults(); track result.display_name) {
-                    <button type="button" (click)="selectMapSearchResult(result)" 
-                      class="w-full text-left px-3.5 py-2 text-xs text-slate-300 hover:bg-slate-900 border-b border-slate-800/80 last:border-b-0 transition-colors font-cairo flex items-center gap-2">
-                      <svg class="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                      <span class="truncate">{{ result.display_name }}</span>
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Leaflet Container -->
-            <div #profileMapContainer id="profile-map-container" class="w-full h-72 sm:h-80 rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-950"></div>
-
-            <!-- Map Location URL -->
+            <!-- Admin Email (Readonly) -->
             <div>
-              <label for="prof-map-url" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                رابط خرائط جوجل (اختر اختياري) / Google Maps Link
+              <label for="prof-email" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                البريد الإلكتروني للآدمن / Admin Email
               </label>
-              <input id="prof-map-url" type="url" formControlName="mapLocationUrl" placeholder="https://maps.google.com/..."
+              <input id="prof-email" type="email" [value]="tenantData()?.adminEmail || auth.currentUser()?.email || 'N/A'" readonly disabled
+                class="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-slate-400 text-xs cursor-not-allowed">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Personal Phone -->
+            <div>
+              <label for="prof-personal-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                رقم الهاتف الشخصي / Personal Phone
+              </label>
+              <input id="prof-personal-phone" type="tel" formControlName="personalPhone" maxlength="11" placeholder="01xxxxxxxxx"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
             </div>
 
-            <!-- Tab 3 Footer Actions -->
-            <div class="flex items-center justify-end pt-3 border-t border-slate-800">
-              <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
-                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
-                <span>حفظ بيانات الموقع والجغرافيا / Save Tab 3</span>
-              </button>
+            <!-- WhatsApp Phone -->
+            <div>
+              <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                رقم الواتساب / WhatsApp Phone
+              </label>
+              <input id="prof-whatsapp-phone" type="tel" formControlName="whatsAppPhone" maxlength="11" placeholder="01xxxxxxxxx"
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
             </div>
           </div>
-        }
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Subscription Plan info badge -->
+            <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="block text-[10px] font-bold text-slate-400 uppercase">باقة الاشتراك الحالية</span>
+                <span class="text-sm font-bold text-indigo-400">{{ tenantData()?.subscriptionPlan || 'Free' }}</span>
+              </div>
+              <span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg">
+                أقصى مشاريع: {{ tenantData()?.maxActiveProjects ?? 2 }}
+              </span>
+            </div>
+
+            <!-- Account Type -->
+            <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="block text-[10px] font-bold text-slate-400 uppercase">نوع الحساب</span>
+                <span class="text-sm font-bold text-emerald-400">{{ tenantData()?.accountType || 'Company' }}</span>
+              </div>
+              <span class="text-xs text-slate-400">مسجل بالمنظومة</span>
+            </div>
+          </div>
+
+          <!-- Company Description -->
+          <div>
+            <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+              وصف الشركة والنشاط / Company Description
+            </label>
+            <textarea id="prof-desc" formControlName="companyDescription" rows="3" placeholder="نبذة مختصرة عن نشاط الشركة وخدماتها..."
+              class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all resize-none"></textarea>
+          </div>
+
+          <!-- Tab 1 Footer Actions -->
+          <div class="flex items-center justify-end pt-3 border-t border-slate-800">
+            <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
+              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
+              <span>حفظ بيانات الحساب / Save Tab 1</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: LEGAL & CONTACT DATA -->
+        <div [hidden]="activeTab() !== 2" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl font-cairo">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                البيانات القانونية والوثائق / Legal Information & Documents
+              </h3>
+              <p class="text-[11px] text-slate-400">تحديث المحافظة والمستندات الرسمية والسجلات</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Governorate Dropdown (Strict Binding Fix) -->
+            <div>
+              <label for="prof-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                المحافظة / Governorate <span class="text-rose-400">*</span>
+              </label>
+              <select id="prof-gov" formControlName="governorateId"
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                <option value="">-- اختر المحافظة / Select Governorate --</option>
+                @for (gov of governorates; track gov.id) {
+                  <option [value]="gov.id">{{ gov.label }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Commercial Register -->
+            <div>
+              <label for="prof-cr" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                رقم السجل التجاري / Commercial Register
+              </label>
+              <input id="prof-cr" type="text" formControlName="commercialRegister" placeholder="مثال: 102030"
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Tax Card -->
+            <div>
+              <label for="prof-tax" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                البطاقة الضريبية / Tax Card
+              </label>
+              <input id="prof-tax" type="text" formControlName="taxCard" placeholder="مثال: 334-556-789"
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+            </div>
+
+            <!-- National ID -->
+            <div>
+              <label for="prof-nat" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                الرقم القومي للمالك / National ID
+              </label>
+              <input id="prof-nat" type="text" formControlName="nationalId" maxlength="14" placeholder="14 رقم قومي"
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+            </div>
+
+            <!-- Syndicate ID -->
+            <div>
+              <label for="prof-syn" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                رقم كارنيه النقابة / Syndicate ID
+              </label>
+              <input id="prof-syn" type="text" formControlName="syndicateId" placeholder="رقم القيد النقابي"
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+            </div>
+          </div>
+
+          <!-- Tab 2 Footer Actions -->
+          <div class="flex items-center justify-end pt-3 border-t border-slate-800">
+            <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
+              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
+              <span>حفظ البيانات القانونية / Save Tab 2</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 3: LOCATION & GEOGRAPHY -->
+        <div [hidden]="activeTab() !== 3" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl font-cairo">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                الموقع والجغرافيا / Location & Geolocation
+              </h3>
+              <p class="text-[11px] text-slate-400">تحديد العنوان الدقيق وموقع المكاتب والفروع عبر الخريطة</p>
+            </div>
+          </div>
+
+          <!-- Manual Address Field -->
+          <div>
+            <label for="prof-address" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+              العنوان التفصيلي / Manual Address
+            </label>
+            <input id="prof-address" type="text" formControlName="manualAddress" placeholder="اسم الشارع، المبنى، رقم الدور، الحي..."
+              class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all">
+          </div>
+
+          <!-- Interactive Map Header & Search -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                تحديد الموقع على الخريطة / Drop Pin Map Selector
+              </label>
+              @if (profileForm.get('latitude')?.value && profileForm.get('longitude')?.value) {
+                <span class="text-[11px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                  Lat: {{ profileForm.get('latitude')?.value | number:'1.4-6' }} | Lng: {{ profileForm.get('longitude')?.value | number:'1.4-6' }}
+                </span>
+              }
+            </div>
+
+            <!-- Map Search Input -->
+            <div class="relative">
+              <input type="text" [value]="mapSearchQuery" (input)="onMapSearchChange($event)" (keydown.enter)="onMapSearchSubmit()"
+                placeholder="ابحث عن منطقة أو عنوان لتحديد الخريطة (مثال: المعادي، التجمع)..."
+                class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all pr-10">
+              <button type="button" (click)="onMapSearchSubmit()" class="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-white flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Search Results Dropdown -->
+            @if (mapSearchResults().length > 0) {
+              <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto">
+                @for (result of mapSearchResults(); track result.display_name) {
+                  <button type="button" (click)="selectMapSearchResult(result)" 
+                    class="w-full text-left px-3.5 py-2 text-xs text-slate-300 hover:bg-slate-900 border-b border-slate-800/80 last:border-b-0 transition-colors font-cairo flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                    <span class="truncate">{{ result.display_name }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Leaflet Container -->
+          <div #profileMapContainer id="profile-map-container" id="map" [style.height.px]="360" class="w-full h-[360px] min-h-[360px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-950 block"></div>
+
+          <!-- Map Location URL -->
+          <div>
+            <label for="prof-map-url" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+              رابط خرائط جوجل (اختر اختياري) / Google Maps Link
+            </label>
+            <input id="prof-map-url" type="url" formControlName="mapLocationUrl" placeholder="https://maps.google.com/..."
+              class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+          </div>
+
+          <!-- Tab 3 Footer Actions -->
+          <div class="flex items-center justify-end pt-3 border-t border-slate-800">
+            <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
+              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
+              <span>حفظ بيانات الموقع والجغرافيا / Save Tab 3</span>
+            </button>
+          </div>
+        </div>
       </form>
     </div>
 
@@ -715,58 +709,63 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // --- MAP FUNCTIONS ---
   private initMap(): void {
-    if (!this.profileMapContainer?.nativeElement) return;
-    if (typeof L === 'undefined') return;
+    try {
+      if (!this.profileMapContainer?.nativeElement) return;
+      if (typeof L === 'undefined') return;
 
-    const lat = this.profileForm.get('latitude')?.value || this.currentLatLng.lat;
-    const lng = this.profileForm.get('longitude')?.value || this.currentLatLng.lng;
+      const lat = this.profileForm.get('latitude')?.value || this.currentLatLng.lat;
+      const lng = this.profileForm.get('longitude')?.value || this.currentLatLng.lng;
 
-    // Leaflet Icon Fix for Marker
-    const iconDefault = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      tooltipAnchor: [16, -28],
-      shadowSize: [41, 41]
-    });
-    if (L.Marker && L.Marker.prototype) {
-      L.Marker.prototype.options.icon = iconDefault;
-    }
-
-    if (!this.profileMap) {
-      this.profileMap = L.map(this.profileMapContainer.nativeElement).setView([lat, lng], 12);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors',
-        crossOrigin: true
-      }).addTo(this.profileMap);
-
-      this.profileMarker = L.marker([lat, lng], { draggable: true, icon: iconDefault }).addTo(this.profileMap);
-
-      this.profileMarker.on('dragend', () => {
-        const pos = this.profileMarker.getLatLng();
-        this.updateCoords(pos.lat, pos.lng);
+      // Leaflet Icon Fix for Marker
+      const iconDefault = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [16, -28],
+        shadowSize: [41, 41]
       });
-
-      this.profileMap.on('click', (e: any) => {
-        this.profileMarker.setLatLng(e.latlng);
-        this.updateCoords(e.latlng.lat, e.latlng.lng);
-      });
-    }
-
-    setTimeout(() => {
-      if (this.profileMap) {
-        this.profileMap.invalidateSize();
-        this.profileMap.setView([lat, lng], 12);
-        if (this.profileMarker) {
-          this.profileMarker.setLatLng([lat, lng]);
-        }
+      if (L.Marker && L.Marker.prototype) {
+        L.Marker.prototype.options.icon = iconDefault;
       }
-    }, 150);
+
+      if (!this.profileMap) {
+        this.profileMap = L.map(this.profileMapContainer.nativeElement).setView([lat, lng], 12);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          subdomains: 'abcd',
+          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+          crossOrigin: true
+        }).addTo(this.profileMap);
+
+        this.profileMarker = L.marker([lat, lng], { draggable: true, icon: iconDefault }).addTo(this.profileMap);
+
+        this.profileMarker.on('dragend', () => {
+          const pos = this.profileMarker.getLatLng();
+          this.updateCoords(pos.lat, pos.lng);
+        });
+
+        this.profileMap.on('click', (e: any) => {
+          this.profileMarker.setLatLng(e.latlng);
+          this.updateCoords(e.latlng.lat, e.latlng.lng);
+        });
+      }
+
+      setTimeout(() => {
+        if (this.profileMap) {
+          this.profileMap.invalidateSize();
+          this.profileMap.setView([lat, lng], 12);
+          if (this.profileMarker) {
+            this.profileMarker.setLatLng([lat, lng]);
+          }
+        }
+      }, 150);
+    } catch (err) {
+      console.error('Leaflet Map Init Error:', err);
+    }
   }
 
   private updateCoords(lat: number, lng: number): void {
