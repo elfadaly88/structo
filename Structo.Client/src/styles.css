@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
-
+@import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
 
 @theme {
@@ -76,4 +76,19 @@
     width: 100%;
     display: block !important;
   }
+}
+
+/* Leaflet Container & Tile Rendering Enforcement */
+#profile-map-container, #profile-map, #map, .leaflet-container {
+  height: 350px !important;
+  min-height: 350px !important;
+  width: 100% !important;
+  display: block !important;
+  z-index: 1 !important;
+  background-color: #0b0f19 !important;
+}
+
+.leaflet-tile-container img {
+  max-width: none !important;
+  max-height: none !important;
 }
