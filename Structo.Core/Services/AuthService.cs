@@ -175,7 +175,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
     {
         if (dto == null || string.IsNullOrWhiteSpace(dto.RefreshToken))
         {
-            return (false, null, "AUTH.REFRESH_TOKEN_REQUIRED");
+            return (false, null, "INVALID_REFRESH_TOKEN");
         }
 
         var usersDbSet = context.Set<User>();
@@ -183,9 +183,14 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             .Include(u => u.Tenant)
             .FirstOrDefaultAsync(u => u.RefreshToken == dto.RefreshToken);
 
-        if (user == null || !user.RefreshTokenExpiryTime.HasValue || user.RefreshTokenExpiryTime.Value <= DateTime.UtcNow)
+        if (user == null || string.IsNullOrEmpty(user.RefreshToken) || !string.Equals(user.RefreshToken, dto.RefreshToken, StringComparison.Ordinal))
         {
-            return (false, null, "AUTH.INVALID_OR_EXPIRED_REFRESH_TOKEN");
+            return (false, null, "INVALID_REFRESH_TOKEN");
+        }
+
+        if (!user.RefreshTokenExpiryTime.HasValue || user.RefreshTokenExpiryTime.Value <= DateTime.UtcNow)
+        {
+            return (false, null, "REFRESH_TOKEN_EXPIRED");
         }
 
         if (!user.IsActive)

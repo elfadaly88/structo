@@ -3,7 +3,7 @@ import { appConfig } from './app/app.config';
 import { App } from './app/app';
 import { environment } from './environments/environment';
 
-console.log('%c🚀 أُسُس / Ousos App Environment Config:', 'color: #00ff00; font-weight: bold; font-size: 14px;');
+console.log('%c🚀 Osos App Environment Config:', 'color: #00ff00; font-weight: bold; font-size: 14px;');
 console.log('Is Production:', environment.production);
 console.log('API URL Absolute:', environment.apiUrl);
 bootstrapApplication(App, appConfig)

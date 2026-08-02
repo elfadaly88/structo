@@ -2283,7 +2283,7 @@ import { LanguageService } from '../../../core/services/language.service';
         <!-- Report Header -->
         <div class="text-center border-b-2 border-slate-900 pb-4 mb-6">
           <h1 class="text-2xl font-extrabold font-cairo">تقرير تسوية عهدة مشروع</h1>
-          <h2 class="text-lg font-bold text-slate-600 font-cairo mt-1">منصة أُسُس لإدارة المشاريع / Ousos</h2>
+          <h2 class="text-lg font-bold text-slate-600 font-cairo mt-1">منصة أُسُس لإدارة المشاريع / Osos</h2>
         </div>
 
         <!-- Project & Custody details -->
@@ -2348,7 +2348,7 @@ import { LanguageService } from '../../../core/services/language.service';
             <p><strong>تاريخ الاعتماد / Resolved At:</strong> {{ activePrintSettlement()!.resolvedAt ? (activePrintSettlement()!.resolvedAt | date:'dd/MM/yyyy HH:mm') : '—' }}</p>
           </div>
           <div class="text-center p-3 border border-slate-300 rounded-xl bg-slate-50 min-w-[120px] text-slate-700 font-semibold font-mono">
-            VERIFIED BY OUSOS
+            VERIFIED BY OSOS
           </div>
         </div>
       </div>

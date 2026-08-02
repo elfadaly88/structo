@@ -128,6 +128,9 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (dto.Amount <= 0)
             return (false, "INVALID_AMOUNT: يجب أن يكون مبلغ الحقن أصل من صفر.");
 
+        if (!tenantId.HasValue)
+            return (false, "TENANT_REQUIRED: المعرف الخاص بالشركة مطلوب.");
+
         // --- Financial Freeze Guard ---
         var projectCheck = await context.Set<Project>().FindAsync(projectId);
         if (projectCheck == null)

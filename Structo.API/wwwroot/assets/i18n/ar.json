@@ -24,7 +24,7 @@
     "SUBTITLE": "مساحة العمل المتميزة المصممة للفرق الحديثة. قم بتبسيط تتبع المشاريع، والحصول على تحليلات مالية شفافة، وإدارة طلبات العهد ببساطة متناهية.",
     "CTA_START": "ابدأ الهيكلة مجاناً",
     "CTA_LEARN": "معرفة المزيد",
-    "PREVIEW_DOMAIN": "ousos-dashboard.app",
+    "PREVIEW_DOMAIN": "osos-dashboard.app",
     "PREVIEW_PROJECTS_TITLE": "متتبع المشاريع",
     "PREVIEW_PROJECTS_NAME": "توسعة أُسُس",
     "PREVIEW_PROJECTS_HINT": "تم إنجاز 80% من المهام",
@@ -153,7 +153,6 @@
       "Industrial": "صناعي"
     }
   },
-
   "DETAILS": {
     "WORKSPACE": "بيئة عمل المشروع",
     "LOADING_PROJECT": "جاري تحميل المشروع...",

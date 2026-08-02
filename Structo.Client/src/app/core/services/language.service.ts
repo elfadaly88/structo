@@ -12,14 +12,14 @@ export class LanguageService {
   readonly currentLang = signal<'en' | 'ar'>('ar');
 
   initLanguage() {
-    const saved = localStorage.getItem('ousos_lang') as 'en' | 'ar';
+    const saved = localStorage.getItem('osos_lang') as 'en' | 'ar';
     const defaultLang = saved || 'ar';
     this.setLanguage(defaultLang);
   }
 
   setLanguage(lang: 'en' | 'ar') {
     this.currentLang.set(lang);
-    localStorage.setItem('ousos_lang', lang);
+    localStorage.setItem('osos_lang', lang);
     this.translate.use(lang);
 
     const dir = lang === 'ar' ? 'rtl' : 'ltr';

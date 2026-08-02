@@ -12,7 +12,7 @@ import { AuthService } from './core/services/auth.service';
   styleUrl: './app.css'
 })
 export class App implements OnInit {
-  protected readonly title = signal('أُسُس / Ousos');
+  protected readonly title = signal('أُسُس / Osos');
   private readonly langService = inject(LanguageService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);

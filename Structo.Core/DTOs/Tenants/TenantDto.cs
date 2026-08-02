@@ -22,13 +22,18 @@ public class TenantDto
     public string? AdminFirstName { get; set; }
     public string? AdminLastName { get; set; }
     public string? Location { get; set; }
+    public string? GovernorateId { get; set; }
+    public string? GovernorateName { get; set; }
     public string? CommercialRegister { get; set; }
     public string? TaxCard { get; set; }
     public string? NationalId { get; set; }
     public string? SyndicateId { get; set; }
     public string? ManualAddress { get; set; }
+    public string? Address { get; set; }
     public string? MapLocationUrl { get; set; }
     public string? AccountType { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+    public double? Lat { get; set; }
+    public double? Lng { get; set; }
 }

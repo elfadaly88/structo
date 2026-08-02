@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { RateLimitService } from '../../core/services/rate-limit.service';
+import { ToastService } from '../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../environments/environment';
+import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-translations';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +22,7 @@ import { environment } from '../../../environments/environment';
       <div class="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <!-- Logo -->
         <div class="flex justify-center">
-          <img src="structo_logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-12 w-auto">
+          <img src="assets/images/default-tenant-logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-14 w-auto object-contain">
         </div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
           {{ 'LOGIN.TITLE' | translate }}
@@ -147,16 +150,24 @@ import { environment } from '../../../environments/environment';
               <div>
                 <button
                   type="submit"
-                  [disabled]="loginForm.invalid || isLoading()"
+                  [disabled]="loginForm.invalid || isLoading() || rateLimitService.isLockedOut()"
                   class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
-                  @if (isLoading()) {
+                  @if (rateLimitService.isLockedOut()) {
+                    <div class="flex items-center space-x-2 rtl:space-x-reverse text-amber-300 font-bold">
+                      <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>يرجى الانتظار ({{ rateLimitService.cooldownSeconds() }} ثانية)</span>
+                    </div>
+                  } @else if (isLoading()) {
                     <svg class="animate-spin -ml-1 mr-3 rtl:ml-3 rtl:mr-1 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     {{ 'LOGIN.SIGNING_IN' | translate }}
-                  @} @else {
+                  } @else {
                     {{ 'LOGIN.SIGN_IN' | translate }}
                   }
                 </button>
@@ -190,8 +201,8 @@ import { environment } from '../../../environments/environment';
                 </select>
               </div>
 
-              <div class="w-full flex justify-center mt-2">
-                <div id="googleBtn" class="w-full min-h-[44px]"></div>
+              <div class="w-full flex justify-center mt-2 min-h-[44px]">
+                <div id="googleBtn" class="w-full flex justify-center"></div>
               </div>
             </div>
 
@@ -221,7 +232,9 @@ import { environment } from '../../../environments/environment';
 export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  readonly rateLimitService = inject(RateLimitService);
   private readonly translateService = inject(TranslateService);
+  private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -277,11 +290,17 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  onGoogleLogin(): void {
+    const google = (window as any).google;
+    if (google && google.accounts && google.accounts.id) {
+      google.accounts.id.prompt();
+    }
+  }
+
   private renderGoogleButton(): void {
     const google = (window as any).google;
     if (!google || !google.accounts || !google.accounts.id) return;
 
-    // محاولة رسم الزرار والتأكد من وجود العنصر في الـ DOM
     const btn = document.getElementById('googleBtn');
     if (btn) {
       google.accounts.id.renderButton(btn, {
@@ -319,22 +338,87 @@ export class LoginComponent implements OnInit {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'];
           this.redirectUser(response.data.role, returnUrl);
         } else {
-          this.errorMessage.set(this.translateService.instant(response.message || 'LOGIN.FAILED'));
+          this.handleAuthErrorMessage(response.message || 'LOGIN.FAILED');
         }
       },
       error: (err) => {
         this.isLoading.set(false);
-        const code = err.error?.message || err.message || '';
-        if (code === 'ACCOUNT_PENDING_APPROVAL') {
+        if (err.status === 429 || err.status === 503) {
           this.errorMessage.set(null);
-          this.registrationPending.set(true);
-        } else {
-          this.errorMessage.set(
-            this.translateService.instant(err.error?.message || err.message || 'LOGIN.FAILED')
-          );
+          this.rateLimitService.startCooldown(60);
+          return;
         }
+
+        const apiMessage = extractApiMessage(err);
+        this.handleAuthErrorMessage(apiMessage);
       }
     });
+  }
+
+  private handleAuthErrorMessage(rawMsg: string): void {
+    if (!rawMsg) {
+      this.errorMessage.set(this.translateService.instant('LOGIN.FAILED'));
+      return;
+    }
+
+    if (rawMsg === 'ACCOUNT_PENDING_APPROVAL') {
+      this.errorMessage.set(null);
+      this.registrationPending.set(true);
+      return;
+    }
+
+    const mappedMsg = ERROR_TRANSLATIONS[rawMsg];
+    if (mappedMsg) {
+      this.errorMessage.set(mappedMsg);
+      this.toastService.show(
+        'تنبيه الحساب',
+        mappedMsg,
+        (rawMsg === 'ACCOUNT_DEACTIVATED' || rawMsg === 'REFRESH_TOKEN_EXPIRED') ? 'error' : 'warning'
+      );
+
+      if (rawMsg === 'ACCOUNT_DEACTIVATED' || rawMsg === 'REFRESH_TOKEN_EXPIRED') {
+        this.authService.logout();
+        if (this.router.url !== '/login') {
+          this.router.navigate(['/login']);
+        }
+      }
+      return;
+    }
+
+    if (rawMsg === 'ACCOUNT_PENDING_OR_INACTIVE' || rawMsg === 'AUTH.ACCOUNT_PENDING_OR_INACTIVE') {
+      const translated = this.translateService.instant('AUTH.ACCOUNT_PENDING_OR_INACTIVE');
+      const friendlyMsg = (translated && translated !== 'AUTH.ACCOUNT_PENDING_OR_INACTIVE')
+        ? translated
+        : '⚠️ حسابك قيد الموافقة أو غير نشط حالياً.';
+      this.errorMessage.set(friendlyMsg);
+      this.toastService.show('تنبيه الحساب', friendlyMsg, 'warning');
+      return;
+    }
+
+    if (typeof rawMsg === 'string' && rawMsg.startsWith('⚠️')) {
+      this.errorMessage.set(rawMsg);
+      this.toastService.show('تنبيه الحساب', rawMsg, 'warning');
+      return;
+    }
+
+    if (typeof rawMsg === 'string' && (rawMsg.includes('Http failure') || rawMsg.includes('status 503') || rawMsg.includes('status 429'))) {
+      this.errorMessage.set(null);
+      return;
+    }
+
+    let translated = this.translateService.instant(rawMsg);
+    if (translated === rawMsg && typeof rawMsg === 'string' && !rawMsg.includes('.')) {
+      const authPrefixed = this.translateService.instant(`AUTH.${rawMsg}`);
+      if (authPrefixed !== `AUTH.${rawMsg}`) {
+        translated = authPrefixed;
+      }
+    }
+
+    const finalMsg = (translated && translated !== rawMsg) ? translated : rawMsg;
+    this.errorMessage.set(finalMsg);
+    if (finalMsg && typeof finalMsg === 'string' && finalMsg.length < 150) {
+      this.toastService.show('تنبيه تسجيل الدخول', finalMsg, 'warning');
+    }
   }
 
   private redirectUser(role: string, returnUrl?: string): void {
@@ -362,7 +446,7 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.loginForm.invalid) {
+    if (this.loginForm.invalid || this.rateLimitService.isLockedOut()) {
       return;
     }
 
@@ -376,18 +460,19 @@ export class LoginComponent implements OnInit {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'];
           this.redirectUser(response.data.role, returnUrl);
         } else {
-          this.errorMessage.set(this.translateService.instant(response.message || 'LOGIN.FAILED'));
+          this.handleAuthErrorMessage(response.message || 'LOGIN.FAILED');
         }
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(
-          this.translateService.instant(
-            err.error?.message ||
-            err.message ||
-            'LOGIN.BACKEND_UNAVAILABLE'
-          )
-        );
+        if (err.status === 429 || err.status === 503) {
+          this.errorMessage.set(null);
+          this.rateLimitService.startCooldown(60);
+          return;
+        }
+
+        const apiMessage = extractApiMessage(err);
+        this.handleAuthErrorMessage(apiMessage);
       }
     });
   }

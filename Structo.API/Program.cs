@@ -221,6 +221,23 @@ builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.
 // Rate Limiting Policy
 builder.Services.AddRateLimiter(options =>
 {
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        var response = new Structo.Core.DTOs.Common.ApiResponse<object>
+        {
+            Success = false,
+            Message = "لقد تجاوزت عدد المحاولات المسموحة. يرجى الانتظار دقيقة قبل المحاولة مجدداً."
+        };
+        var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        });
+        await context.HttpContext.Response.WriteAsync(json, token);
+    };
+
     options.AddFixedWindowLimiter("loginPolicy", opt =>
     {
         opt.Window = TimeSpan.FromMinutes(1);
@@ -404,6 +421,55 @@ using (var scope = app.Services.CreateScope())
         {
             Console.WriteLine($"[PATCH ERROR] Failed to run database alignment patch: {ex.Message}");
         }
+
+        // Database Security Cleanup Routine: Remove/Sanitize existing records containing SQLi or XSS payloads
+        try
+        {
+            var taintRegex = new System.Text.RegularExpressions.Regex(
+                @"(;\s*--|--|/\*|\*/|DROP\s+TABLE|UNION\s+SELECT|OR\s+['""]?1['""]?\s*=\s*['""]?1|<script|javascript:|onerror\s*=|onload\s*=)",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            var dirtyUsers = context.Users.IgnoreQueryFilters()
+                .Where(u => u.FirstName.Contains("DROP TABLE") || u.FirstName.Contains("--;") || u.LastName.Contains("DROP TABLE") || u.Email.Contains("DROP TABLE"))
+                .ToList();
+
+            foreach (var user in dirtyUsers)
+            {
+                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing user record {user.Id}");
+                user.FirstName = taintRegex.Replace(user.FirstName, "").Trim();
+                user.LastName = taintRegex.Replace(user.LastName, "").Trim();
+            }
+
+            var dirtyTenants = context.Tenants.IgnoreQueryFilters()
+                .Where(t => t.Name.Contains("DROP TABLE") || t.Name.Contains("--;"))
+                .ToList();
+
+            foreach (var tenant in dirtyTenants)
+            {
+                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing tenant record {tenant.Id}");
+                tenant.Name = taintRegex.Replace(tenant.Name, "").Trim();
+            }
+
+            var dirtyProjects = context.Projects.IgnoreQueryFilters()
+                .Where(p => p.Name.Contains("DROP TABLE") || p.Name.Contains("--;"))
+                .ToList();
+
+            foreach (var proj in dirtyProjects)
+            {
+                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing project record {proj.Id}");
+                proj.Name = taintRegex.Replace(proj.Name, "").Trim();
+            }
+
+            if (dirtyUsers.Any() || dirtyTenants.Any() || dirtyProjects.Any())
+            {
+                context.SaveChanges();
+                Console.WriteLine("[SECURITY CLEANUP] Tainted records sanitized successfully.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SECURITY CLEANUP ERROR] Failed to run database cleanup: {ex.Message}");
+        }
     }
     catch { /* Ignore if table doesn't exist yet */ }
 }
@@ -414,6 +480,9 @@ using (var scope = app.Services.CreateScope())
 
 // Exception Handling First
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Request Sanitization & Taint Check Middleware
+app.UseMiddleware<RequestSanitizationMiddleware>();
 
 // Swagger (always enabled for this project)
 app.UseSwagger();
@@ -434,11 +503,29 @@ var angularOutputPath = Path.Combine(app.Environment.WebRootPath, "browser");
 var browserIndexPath = Path.Combine(angularOutputPath, "index.html");
 var rootIndexPath = Path.Combine(app.Environment.WebRootPath, "index.html");
 
+Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> staticFilePrepareResponse = ctx =>
+{
+    if (ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase))
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        ctx.Context.Response.Headers["Pragma"] = "no-cache";
+        ctx.Context.Response.Headers["Expires"] = "0";
+    }
+    else
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+    }
+};
+
 // Serve from correct location (prefer wwwroot/ if you manually copied files there, otherwise wwwroot/browser/)
 if (File.Exists(rootIndexPath))
 {
     // Serve directly from wwwroot/ (manual copy case)
-    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+    app.UseStaticFiles(new StaticFileOptions 
+    { 
+        ContentTypeProvider = provider,
+        OnPrepareResponse = staticFilePrepareResponse
+    });
 }
 else if (File.Exists(browserIndexPath))
 {
@@ -447,13 +534,18 @@ else if (File.Exists(browserIndexPath))
     {
         ContentTypeProvider = provider,
         FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath),
-        RequestPath = ""
+        RequestPath = "",
+        OnPrepareResponse = staticFilePrepareResponse
     });
 }
 else
 {
     // Fallback: Serve whatever is in wwwroot
-    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+    app.UseStaticFiles(new StaticFileOptions 
+    { 
+        ContentTypeProvider = provider,
+        OnPrepareResponse = staticFilePrepareResponse
+    });
 }
 
 // CORS, Auth, Authorization
@@ -467,15 +559,26 @@ app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
 // MAP SPA FALLBACK: Serve index.html from correct location
+Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> fallbackPrepareResponse = ctx =>
+{
+    ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    ctx.Context.Response.Headers["Pragma"] = "no-cache";
+    ctx.Context.Response.Headers["Expires"] = "0";
+};
+
 if (File.Exists(rootIndexPath))
 {
-    app.MapFallbackToFile("index.html");
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        OnPrepareResponse = fallbackPrepareResponse
+    });
 }
 else if (File.Exists(browserIndexPath))
 {
     app.MapFallbackToFile("index.html", new StaticFileOptions
     {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath)
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath),
+        OnPrepareResponse = fallbackPrepareResponse
     });
 }
 
