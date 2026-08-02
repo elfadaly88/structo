@@ -453,7 +453,7 @@ interface MapSearchResult {
           </div>
 
           <!-- Leaflet Container -->
-          <div #profileMapContainer id="profile-map-container" id="map" [style.height.px]="360" class="w-full h-[360px] min-h-[360px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-950 block"></div>
+          <div #profileMapContainer id="profile-map-container" id="map" style="height: 360px; width: 100%; min-height: 360px; display: block;" [hidden]="activeTab() !== 3" class="w-full h-[360px] min-h-[360px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-800 block"></div>
 
           <!-- Map Location URL -->
           <div>
