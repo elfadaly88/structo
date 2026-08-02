@@ -32,11 +32,9 @@ interface NavItem {
             </svg>
           </button>
 
-          <div class="flex items-center gap-2">
-            <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span class="text-white font-extrabold text-sm">أ</span>
-            </div>
-            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block">أُسُس / Ousos</span>
+          <div class="flex items-center gap-3">
+            <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-9 w-auto object-contain">
+            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block">أُسُس / Osos</span>
           </div>
         </div>
 

@@ -79,18 +79,23 @@ public class TenantsController(
                 Status = t.Status.ToString(),
                 CreatedAt = t.CreatedAt,
                 AdminEmail = tenantOwnerLookup.TryGetValue(t.Id, out var owner) ? owner.Email : null,
-                AdminFirstName = tenantOwnerLookup.TryGetValue(t.Id, out var ownerFirst) ? ownerFirst.FirstName : null,
-                AdminLastName = tenantOwnerLookup.TryGetValue(t.Id, out var ownerLast) ? ownerLast.LastName : null,
+                AdminFirstName = owner?.FirstName,
+                AdminLastName = owner?.LastName,
                 Location = t.Location,
+                GovernorateId = !string.IsNullOrWhiteSpace(t.Location) ? t.Location : t.Region,
+                GovernorateName = !string.IsNullOrWhiteSpace(t.Location) ? t.Location : t.Region,
                 CommercialRegister = t.CommercialRegister,
                 TaxCard = t.TaxCard,
-                NationalId = t.AccountType == "Freelancer" ? t.Users.Where(u => u.Role == UserRole.TenantOwner).Select(u => u.NationalId).FirstOrDefault() : null,
-                SyndicateId = t.AccountType == "Freelancer" ? t.Users.Where(u => u.Role == UserRole.TenantOwner).Select(u => u.SyndicateId).FirstOrDefault() : null,
+                NationalId = owner?.NationalId,
+                SyndicateId = owner?.SyndicateId,
                 ManualAddress = t.ManualAddress,
+                Address = t.ManualAddress,
                 MapLocationUrl = t.MapLocationUrl,
                 AccountType = t.AccountType,
                 Latitude = t.Latitude,
-                Longitude = t.Longitude
+                Longitude = t.Longitude,
+                Lat = t.Latitude,
+                Lng = t.Longitude
             })
             .ToList();
 

@@ -39,10 +39,8 @@ interface NominatimResult {
 
         <div class="relative z-10">
           <div class="flex items-center gap-3 mb-10">
-            <div class="h-10 w-10 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span class="text-white font-extrabold text-lg">S</span>
-            </div>
-            <span class="text-2xl font-bold tracking-tight text-white font-cairo">Structo</span>
+            <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-10 w-auto object-contain">
+            <span class="text-2xl font-bold tracking-tight text-white font-cairo">أُسُس / Osos</span>
           </div>
 
           <h1 class="text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-4 font-cairo">

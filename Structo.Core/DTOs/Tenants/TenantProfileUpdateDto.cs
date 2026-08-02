@@ -17,8 +17,19 @@ public class TenantProfileUpdateDto
     [RegularExpression(@"^01\d{9}$", ErrorMessage = "WhatsApp phone must match 01xxxxxxxxx")]
     public string? WhatsAppPhone { get; set; }
 
+    public string? Location { get; set; }
+    public string? GovernorateId { get; set; }
+
+    public string? CommercialRegister { get; set; }
+    public string? TaxCard { get; set; }
+    public string? NationalId { get; set; }
+    public string? SyndicateId { get; set; }
+
     public string? ManualAddress { get; set; }
+    public string? Address { get; set; }
     public string? MapLocationUrl { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+    public double? Lat { get; set; }
+    public double? Lng { get; set; }
 }

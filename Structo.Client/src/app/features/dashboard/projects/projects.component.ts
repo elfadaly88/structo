@@ -18,6 +18,7 @@ import { ConfirmModalService } from '../../../core/services/confirm-modal.servic
 import { ToastService } from '../../../core/services/toast.service';
 import { take } from 'rxjs';
 import * as L from 'leaflet';
+import { TenantProfileComponent } from '../tenant-profile/tenant-profile.component';
 
 interface MapSearchResult {
   lat: string;
@@ -61,7 +62,7 @@ const GOVERNORATES: GovernorateOption[] = [
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, TenantProfileComponent],
   template: `
     <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
@@ -509,162 +510,7 @@ const GOVERNORATES: GovernorateOption[] = [
 
       <!-- SECTION 3: CORPORATE PROFILE EDITOR -->
       @if (activeTab() === 'profile' && currentUserRole() === 'TenantOwner') {
-        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl shadow-2xl max-w-3xl overflow-hidden">
-
-          <!-- Banner Preview Header -->
-          <div class="w-full h-36 sm:h-44 bg-slate-800 relative overflow-hidden group">
-            @if (profileForm.get('bannerUrl')?.value) {
-              <img [src]="profileForm.get('bannerUrl')?.value" alt="Banner" class="w-full h-full object-cover">
-            } @else {
-              <div class="w-full h-full bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950 flex items-center justify-center">
-                <svg class="w-10 h-10 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </div>
-            }
-            <!-- Banner Upload Overlay -->
-            <button type="button" (click)="bannerFileInput.click()" class="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
-              <span class="flex items-center gap-2 text-white text-xs font-bold font-cairo bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700 backdrop-blur-sm">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                تغيير البانر
-              </span>
-            </button>
-            <input #bannerFileInput type="file" class="hidden" (change)="onBannerFileSelected($event)" accept="image/*">
-            <input type="hidden" [formControl]="$any(profileForm.get('bannerUrl'))">
-            <!-- Banner Uploading Overlay -->
-            @if (isUploadingBanner()) {
-              <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                <svg class="animate-spin h-8 w-8 text-indigo-400 mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span class="text-xs text-indigo-300 font-cairo font-bold">جاري الرفع...</span>
-              </div>
-            }
-          </div>
-
-          <!-- Logo + Form Body -->
-          <div class="p-6 md:p-8 -mt-12 relative z-10">
-            <!-- Logo Circle -->
-            <div class="flex items-end gap-4 mb-6">
-              <div class="w-24 h-24 rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden relative group shadow-xl shrink-0">
-                @if (profileForm.get('logoUrl')?.value) {
-                  <img [src]="profileForm.get('logoUrl')?.value" alt="Logo" class="w-full h-full object-cover">
-                } @else {
-                  <span class="text-3xl font-extrabold text-slate-600 select-none">{{ (profileForm.get('name')?.value || 'S').charAt(0).toUpperCase() }}</span>
-                }
-                <!-- Logo Upload Overlay -->
-                <button type="button" (click)="logoFileInput.click()" class="absolute inset-0 rounded-full bg-slate-950/0 group-hover:bg-slate-950/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
-                  <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                </button>
-                <input #logoFileInput type="file" class="hidden" (change)="onLogoFileSelected($event)" accept="image/*">
-                <input type="hidden" [formControl]="$any(profileForm.get('logoUrl'))">
-                <!-- Logo Uploading Overlay -->
-                @if (isUploadingLogo()) {
-                  <div class="absolute inset-0 rounded-full bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                    <svg class="animate-spin h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  </div>
-                }
-              </div>
-              <div class="pb-1">
-                <h3 class="text-lg font-bold text-white font-cairo">{{ profileForm.get('name')?.value || 'Company Profile' }}</h3>
-                <p class="text-xs text-slate-500 font-cairo">{{ resolveGovernorateLabel(profileForm.get('governorateId')?.value || profileForm.get('region')?.value) || 'Region not set' }}</p>
-              </div>
-            </div>
-
-
-            <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()" class="space-y-5">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
-                  <input id="prof-name" type="text" formControlName="name" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="Company Name">
-                </div>
-                <div>
-                  <label for="prof-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Governorate</label>
-                  <select id="prof-gov" formControlName="governorateId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                    <option value="">-- Select governorate --</option>
-                    @for (gov of governorates; track gov.id) {
-                      <option [value]="gov.id">{{ gov.label }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label for="prof-personal-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Personal Phone</label>
-                  <input id="prof-personal-phone" type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
-                </div>
-                <div>
-                  <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M12 2C6.48 2 2 6.48 2 12c0 1.86.52 3.58 1.42 5.06L2 22l4.99-1.39A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm5.2 14.2c-.22.63-1.28 1.2-1.76 1.25-.47.05-1.05.07-1.7-.14-.4-.13-.91-.31-1.57-.59-2.77-1.19-4.58-3.98-4.72-4.17-.13-.19-1.13-1.52-1.13-2.9 0-1.38.72-2.06.97-2.34.25-.28.55-.35.74-.35h.53c.17 0 .42-.06.66.5.25.59.85 2.04.93 2.19.07.15.12.33.02.53-.1.2-.15.32-.3.49-.15.17-.32.38-.46.51-.15.15-.3.31-.13.61.17.29.76 1.26 1.63 2.05 1.12 1 2.05 1.31 2.36 1.46.3.15.48.13.66-.08.18-.2.77-.9.98-1.21.2-.31.4-.26.67-.15.27.1 1.72.81 2.02.96.3.14.5.22.57.34.07.12.07.71-.16 1.34z"/>
-                    </svg>
-                    WhatsApp Phone
-                  </label>
-                  <input id="prof-whatsapp-phone" type="tel" formControlName="whatsAppPhone" inputmode="numeric" maxlength="11" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="01xxxxxxxxx">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 gap-5">
-                <div>
-                  <label for="prof-address" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Manual Address</label>
-                  <input id="prof-address" type="text" formControlName="manualAddress" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200" placeholder="Enter or update the corporate site address">
-                </div>
-              </div>
-
-              <div class="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 space-y-3">
-                <div class="flex items-center justify-between gap-3">
-                  <div>
-                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider font-cairo">Interactive Location</span>
-                    <p class="text-[11px] text-slate-500 font-cairo mt-1">Search an address, drag the pin, or restore the saved corporate site.</p>
-                  </div>
-                </div>
-
-                <div class="relative">
-                  <input
-                    type="text"
-                    [value]="profileMapSearchQuery"
-                    (input)="onProfileMapSearchChange($event)"
-                    (keydown.enter)="onProfileMapSearchSubmit()"
-                    placeholder="Search by city, street, or landmark"
-                    class="w-full px-3 py-2.5 pr-10 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                  <button type="button" (click)="onProfileMapSearchSubmit()" class="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-white">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.2-5.2m1.2-4.8a6.8 6.8 0 11-13.6 0 6.8 6.8 0 0113.6 0z" /></svg>
-                  </button>
-                </div>
-
-                @if (profileMapSearchResults().length > 0) {
-                  <div class="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden max-h-44 overflow-y-auto">
-                    @for (result of profileMapSearchResults(); track result.display_name) {
-                      <button type="button" (click)="selectProfileMapSearchResult(result)" class="w-full text-left px-3 py-2.5 text-xs text-slate-300 hover:bg-slate-900 border-b border-slate-800 last:border-b-0 transition-colors font-cairo">
-                        {{ result.display_name }}
-                      </button>
-                    }
-                  </div>
-                }
-
-                <div #profileMapContainer id="profile-map" class="w-full h-72 rounded-2xl border border-slate-800"></div>
-
-                @if (profileForm.get('latitude')?.value && profileForm.get('longitude')?.value) {
-                  <div class="text-[11px] text-slate-500 font-mono">
-                    Coordinates: {{ profileForm.get('latitude')?.value }} , {{ profileForm.get('longitude')?.value }}
-                  </div>
-                }
-              </div>
-
-              <div>
-                <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROFILE.FIELD_COMP_DESC' | translate }}</label>
-                <textarea id="prof-desc" formControlName="companyDescription" rows="5" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none" placeholder="Write a brief overview of your business..."></textarea>
-              </div>
-
-              <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full pt-2">
-                <button type="submit" [disabled]="profileForm.invalid || isSavingProfile()" class="w-full md:w-auto px-6 py-3 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo font-bold">
-                  @if (isSavingProfile()) {
-                    {{ 'PROFILE.SAVING' | translate }}
-                  } @else {
-                    {{ 'PROFILE.BTN_UPDATE' | translate }}
-                  }
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <app-tenant-profile></app-tenant-profile>
       }
     </div>
 

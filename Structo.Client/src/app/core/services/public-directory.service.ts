@@ -32,6 +32,10 @@ export interface TenantDto {
   adminFirstName?: string | null;
   adminLastName?: string | null;
   governorateId?: string | null;
+  governorateName?: string | null;
+  address?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export interface PublicProjectDto {

@@ -27,38 +27,50 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
         }
 
         var tenant = await context.Tenants
+            .Include(t => t.Users)
             .Where(t => t.Id == tenantId)
-            .Select(t => new TenantDto
-            {
-                Id = t.Id,
-                Name = t.Name,
-                SubscriptionPlan = t.SubscriptionPlan.ToString(),
-                MaxActiveProjects = t.MaxActiveProjects,
-                LogoUrl = t.LogoUrl,
-                BannerUrl = t.BannerUrl,
-                Region = t.Region,
-                CompanyDescription = t.CompanyDescription,
-                PersonalPhone = t.PersonalPhone,
-                WhatsAppPhone = t.WhatsAppPhone,
-                Location = t.Location,
-                CommercialRegister = t.CommercialRegister,
-                TaxCard = t.TaxCard,
-                NationalId = t.Users.Where(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner).Select(u => u.NationalId).FirstOrDefault(),
-                SyndicateId = t.Users.Where(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner).Select(u => u.SyndicateId).FirstOrDefault(),
-                ManualAddress = t.ManualAddress,
-                MapLocationUrl = t.MapLocationUrl,
-                AccountType = t.AccountType,
-                Latitude = t.Latitude,
-                Longitude = t.Longitude,
-                Rating = t.Rating,
-                CreatedAt = t.CreatedAt
-            })
             .FirstOrDefaultAsync();
 
         if (tenant == null)
             return NotFound(new ApiResponse<TenantDto> { Success = false, Message = "Tenant not found" });
 
-        return Ok(new ApiResponse<TenantDto> { Data = tenant, Success = true });
+        var owner = tenant.Users.FirstOrDefault(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner);
+
+        var dto = new TenantDto
+        {
+            Id = tenant.Id,
+            Name = tenant.Name,
+            SubscriptionPlan = tenant.SubscriptionPlan.ToString(),
+            MaxActiveProjects = tenant.MaxActiveProjects,
+            LogoUrl = tenant.LogoUrl,
+            BannerUrl = tenant.BannerUrl,
+            Region = tenant.Region,
+            CompanyDescription = tenant.CompanyDescription,
+            PersonalPhone = tenant.PersonalPhone,
+            WhatsAppPhone = tenant.WhatsAppPhone,
+            Location = tenant.Location,
+            GovernorateId = !string.IsNullOrWhiteSpace(tenant.Location) ? tenant.Location : tenant.Region,
+            GovernorateName = !string.IsNullOrWhiteSpace(tenant.Location) ? tenant.Location : tenant.Region,
+            CommercialRegister = tenant.CommercialRegister,
+            TaxCard = tenant.TaxCard,
+            NationalId = owner?.NationalId,
+            SyndicateId = owner?.SyndicateId,
+            AdminEmail = owner?.Email,
+            AdminFirstName = owner?.FirstName,
+            AdminLastName = owner?.LastName,
+            ManualAddress = tenant.ManualAddress,
+            Address = tenant.ManualAddress,
+            MapLocationUrl = tenant.MapLocationUrl,
+            AccountType = tenant.AccountType,
+            Latitude = tenant.Latitude,
+            Longitude = tenant.Longitude,
+            Lat = tenant.Latitude,
+            Lng = tenant.Longitude,
+            Rating = tenant.Rating,
+            CreatedAt = tenant.CreatedAt
+        };
+
+        return Ok(new ApiResponse<TenantDto> { Data = dto, Success = true });
     }
 
     [HttpPut("update")]
@@ -71,33 +83,56 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
             return Unauthorized(new ApiResponse<TenantDto> { Success = false, Message = "Tenant ID missing from claims" });
         }
 
-        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        var tenant = await context.Tenants
+            .Include(t => t.Users)
+            .FirstOrDefaultAsync(t => t.Id == tenantId);
+
         if (tenant == null)
             return NotFound(new ApiResponse<TenantDto> { Success = false, Message = "Tenant not found" });
 
-        tenant.Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty;
-        tenant.LogoUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.LogoUrl) ?? string.Empty;
-        tenant.BannerUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BannerUrl) ?? string.Empty;
-        tenant.Region = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Region) ?? string.Empty;
-        tenant.CompanyDescription = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CompanyDescription) ?? string.Empty;
-        tenant.PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone);
-        tenant.WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone);
-
-        if (!string.IsNullOrWhiteSpace(dto.ManualAddress))
+        if (!string.IsNullOrWhiteSpace(dto.Name)) tenant.Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty;
+        if (dto.LogoUrl != null) tenant.LogoUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.LogoUrl) ?? string.Empty;
+        if (dto.BannerUrl != null) tenant.BannerUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BannerUrl) ?? string.Empty;
+        
+        var locationVal = dto.GovernorateId ?? dto.Location ?? dto.Region;
+        if (!string.IsNullOrWhiteSpace(locationVal))
         {
-            tenant.ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress);
+            var sanitizedLocation = Structo.Core.Helpers.HtmlSanitizer.Sanitize(locationVal) ?? string.Empty;
+            tenant.Location = sanitizedLocation;
+            tenant.Region = sanitizedLocation;
         }
-        if (!string.IsNullOrWhiteSpace(dto.MapLocationUrl))
+
+        if (dto.CompanyDescription != null) tenant.CompanyDescription = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CompanyDescription) ?? string.Empty;
+        if (dto.PersonalPhone != null) tenant.PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone);
+        if (dto.WhatsAppPhone != null) tenant.WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone);
+
+        if (dto.CommercialRegister != null) tenant.CommercialRegister = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CommercialRegister);
+        if (dto.TaxCard != null) tenant.TaxCard = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.TaxCard);
+
+        var addressVal = dto.Address ?? dto.ManualAddress;
+        if (addressVal != null)
+        {
+            tenant.ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(addressVal);
+        }
+
+        if (dto.MapLocationUrl != null)
         {
             tenant.MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl);
         }
-        if (dto.Latitude.HasValue && dto.Latitude.Value != 0)
+
+        // Geographic Data Integrity Rule: retain/update high precision Lat/Lng
+        if (dto.Latitude.HasValue) tenant.Latitude = dto.Latitude.Value;
+        else if (dto.Lat.HasValue) tenant.Latitude = dto.Lat.Value;
+
+        if (dto.Longitude.HasValue) tenant.Longitude = dto.Longitude.Value;
+        else if (dto.Lng.HasValue) tenant.Longitude = dto.Lng.Value;
+
+        // Update linked TenantOwner user properties
+        var ownerUser = tenant.Users.FirstOrDefault(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner);
+        if (ownerUser != null)
         {
-            tenant.Latitude = dto.Latitude;
-        }
-        if (dto.Longitude.HasValue && dto.Longitude.Value != 0)
-        {
-            tenant.Longitude = dto.Longitude;
+            if (dto.NationalId != null) ownerUser.NationalId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.NationalId);
+            if (dto.SyndicateId != null) ownerUser.SyndicateId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.SyndicateId);
         }
 
         await context.SaveChangesAsync();
@@ -115,15 +150,23 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
             PersonalPhone = tenant.PersonalPhone,
             WhatsAppPhone = tenant.WhatsAppPhone,
             Location = tenant.Location,
+            GovernorateId = !string.IsNullOrWhiteSpace(tenant.Location) ? tenant.Location : tenant.Region,
+            GovernorateName = !string.IsNullOrWhiteSpace(tenant.Location) ? tenant.Location : tenant.Region,
             CommercialRegister = tenant.CommercialRegister,
             TaxCard = tenant.TaxCard,
-            NationalId = tenant.Users.Where(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner).Select(u => u.NationalId).FirstOrDefault(),
-            SyndicateId = tenant.Users.Where(u => u.Role == Structo.Core.Enums.UserRole.TenantOwner).Select(u => u.SyndicateId).FirstOrDefault(),
+            NationalId = ownerUser?.NationalId,
+            SyndicateId = ownerUser?.SyndicateId,
+            AdminEmail = ownerUser?.Email,
+            AdminFirstName = ownerUser?.FirstName,
+            AdminLastName = ownerUser?.LastName,
             ManualAddress = tenant.ManualAddress,
+            Address = tenant.ManualAddress,
             MapLocationUrl = tenant.MapLocationUrl,
             AccountType = tenant.AccountType,
             Latitude = tenant.Latitude,
             Longitude = tenant.Longitude,
+            Lat = tenant.Latitude,
+            Lng = tenant.Longitude,
             Rating = tenant.Rating,
             CreatedAt = tenant.CreatedAt
         };

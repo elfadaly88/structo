@@ -22,7 +22,7 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
       <div class="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <!-- Logo -->
         <div class="flex justify-center">
-          <img src="structo_logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-12 w-auto">
+          <img src="assets/images/default-tenant-logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-14 w-auto object-contain">
         </div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
           {{ 'LOGIN.TITLE' | translate }}

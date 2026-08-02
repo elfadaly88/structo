@@ -6,18 +6,26 @@ import { TenantDto } from './public-directory.service';
 import { environment } from '../../../environments/environment';
 
 export interface TenantProfileUpdateDto {
-  name: string;
-  logoUrl: string;
-  bannerUrl: string;
-  region: string;
-  companyDescription: string;
+  name?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  region?: string;
+  companyDescription?: string;
   governorateId?: string | null;
-  personalPhone: string | null;
-  whatsAppPhone: string | null;
+  location?: string | null;
+  personalPhone?: string | null;
+  whatsAppPhone?: string | null;
+  commercialRegister?: string | null;
+  taxCard?: string | null;
+  nationalId?: string | null;
+  syndicateId?: string | null;
   manualAddress?: string | null;
+  address?: string | null;
   mapLocationUrl?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 @Injectable({

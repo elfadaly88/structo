@@ -35,7 +35,7 @@ public class OneSignalEmailService : IOneSignalEmailService
         _welcomeTemplateId = configuration["OneSignal:WelcomeTemplateId"] ?? string.Empty;
         _invitationTemplateId = configuration["OneSignal:InvitationTemplateId"] ?? string.Empty;
         _tenantActivatedTemplateId = configuration["OneSignal:TenantActivatedTemplateId"] ?? string.Empty;
-        _fromName = configuration["OneSignal:FromName"] ?? "أُسُس / Ousos (No-Reply)";
+        _fromName = configuration["OneSignal:FromName"] ?? "أُسُس / Osos (No-Reply)";
         _fromAddress = configuration["OneSignal:FromAddress"] ?? "no-reply@yourdomain.com";
     }
 
