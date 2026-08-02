@@ -639,7 +639,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   </div>
                 }
 
-                <div #profileMapContainer id="profile-map" class="w-full h-72 rounded-2xl border border-slate-800"></div>
+                <div #profileMapContainer id="profile-map" class="w-full h-[350px] min-h-[350px] rounded-2xl border border-slate-800 block"></div>
 
                 @if (profileForm.get('latitude')?.value && profileForm.get('longitude')?.value) {
                   <div class="text-[11px] text-slate-500 font-mono">
@@ -1165,19 +1165,32 @@ const GOVERNORATES: GovernorateOption[] = [
     }
 
     @if (profileSuccessMessage()) {
-      <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-emerald-600 border border-emerald-500 text-white rounded-xl shadow-2xl font-cairo text-sm max-w-sm">
-        <div class="p-1 bg-emerald-700 rounded-lg text-white shrink-0">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+      <div class="fixed bottom-6 left-6 z-[9999] flex items-center gap-3 px-5 py-3.5 bg-emerald-600/95 backdrop-blur-md border border-emerald-400/30 text-white rounded-2xl shadow-2xl font-cairo text-sm max-w-md animate-slide-in">
+        <div class="p-1.5 bg-emerald-500/30 rounded-xl text-white shrink-0">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <span>{{ profileSuccessMessage() }}</span>
+        <span class="font-bold">{{ profileSuccessMessage() }}</span>
       </div>
     }
   `,
   styles: [`
     .font-cairo {
       font-family: 'Cairo', 'Inter', sans-serif;
+    }
+    #profile-map, #map {
+      height: 350px !important;
+      min-height: 350px !important;
+      width: 100% !important;
+      display: block !important;
+    }
+    @keyframes slide-in-toast {
+      from { opacity: 0; transform: translateY(12px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-slide-in {
+      animation: slide-in-toast 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
   `]
 })
@@ -1321,6 +1334,18 @@ export class ProjectsComponent implements OnInit {
     this.offlineSync.registerHandler<UserCreateDto>('user-create', (dto) => this.userService.createUser(dto));
   }
 
+  selectTab(tabName: string): void {
+    const mappedTab = (tabName === 'location' || tabName === 'profile') ? 'profile' : (tabName as 'projects' | 'users' | 'profile');
+    this.navigateToTab(mappedTab);
+    if (tabName === 'location' || mappedTab === 'profile') {
+      setTimeout(() => {
+        if (this.profileMap) {
+          this.profileMap.invalidateSize();
+        }
+      }, 150);
+    }
+  }
+
   navigateToTab(tab: 'projects' | 'users' | 'profile'): void {
     this.activeTab.set(tab);
     if (tab === 'projects') {
@@ -1328,7 +1353,7 @@ export class ProjectsComponent implements OnInit {
     } else {
       this.router.navigate([`/dashboard/${tab}`]);
       if (tab === 'profile') {
-        setTimeout(() => this.syncProfileMapFromForm(), 0);
+        setTimeout(() => this.syncProfileMapFromForm(), 150);
       }
     }
   }
@@ -1358,7 +1383,7 @@ export class ProjectsComponent implements OnInit {
   }
 
   private queueProfileMapSync(): void {
-    setTimeout(() => this.syncProfileMapFromForm(), 0);
+    setTimeout(() => this.syncProfileMapFromForm(), 150);
   }
 
   private syncProfileMapFromForm(): void {
@@ -1380,11 +1405,15 @@ export class ProjectsComponent implements OnInit {
       return;
     }
 
-    this.profileMap.invalidateSize();
-    this.profileMap.setView(this.profileMapLatLng, hasCoordinates ? 15 : 12);
-    if (this.profileMarker) {
-      this.profileMarker.setLatLng(this.profileMapLatLng);
-    }
+    setTimeout(() => {
+      if (this.profileMap) {
+        this.profileMap.invalidateSize();
+        this.profileMap.setView(this.profileMapLatLng, hasCoordinates ? 15 : 12);
+        if (this.profileMarker) {
+          this.profileMarker.setLatLng(this.profileMapLatLng);
+        }
+      }
+    }, 150);
   }
 
   private initProfileMap(): void {
@@ -1424,7 +1453,11 @@ export class ProjectsComponent implements OnInit {
       });
     });
 
-    this.profileMap.invalidateSize();
+    setTimeout(() => {
+      if (this.profileMap) {
+        this.profileMap.invalidateSize();
+      }
+    }, 150);
   }
 
   onProfileMapSearchChange(event: Event): void {
@@ -1696,16 +1729,27 @@ export class ProjectsComponent implements OnInit {
           const msg = res.message && res.message !== 'PROFILE.SUCCESS'
             ? res.message
             : 'تم حفظ بيانات الشركة بنجاح / Profile updated successfully';
+          
+          this.toastService.show('نجاح / Success', msg, 'success');
           this.profileSuccessMessage.set(msg);
+
           if (navigator.onLine) {
             this.fetchProfile();
           }
           this.queueProfileMapSync();
-          setTimeout(() => this.profileSuccessMessage.set(null), 3000);
+
+          try {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } catch {
+            // Fallback for non-browser environment
+          }
+
+          setTimeout(() => this.profileSuccessMessage.set(null), 4000);
         }
       },
-      error: () => {
+      error: (err) => {
         this.isSavingProfile.set(false);
+        this.toastService.show('خطأ / Error', err?.error?.message || 'فشل حفظ بيانات الشركة / Failed to update profile', 'error');
       }
     });
   }
