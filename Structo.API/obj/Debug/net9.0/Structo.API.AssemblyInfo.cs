@@ -14,11 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Structo.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-<<<<<<< HEAD
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+820439828fde5b4b7eb1e2b122fb0d979987cf0e")]
-=======
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1751e73ffb28bd16d502c4721666fdade718e77d")]
->>>>>>> 251457a4db72883db50dabd9f65cd09c05541d89
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e7dd6c61c777fdfefcc98a4a9822b0406efd4b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("Structo.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Structo.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
