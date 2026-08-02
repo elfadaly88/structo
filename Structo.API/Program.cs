@@ -503,11 +503,29 @@ var angularOutputPath = Path.Combine(app.Environment.WebRootPath, "browser");
 var browserIndexPath = Path.Combine(angularOutputPath, "index.html");
 var rootIndexPath = Path.Combine(app.Environment.WebRootPath, "index.html");
 
+Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> staticFilePrepareResponse = ctx =>
+{
+    if (ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase))
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        ctx.Context.Response.Headers["Pragma"] = "no-cache";
+        ctx.Context.Response.Headers["Expires"] = "0";
+    }
+    else
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+    }
+};
+
 // Serve from correct location (prefer wwwroot/ if you manually copied files there, otherwise wwwroot/browser/)
 if (File.Exists(rootIndexPath))
 {
     // Serve directly from wwwroot/ (manual copy case)
-    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+    app.UseStaticFiles(new StaticFileOptions 
+    { 
+        ContentTypeProvider = provider,
+        OnPrepareResponse = staticFilePrepareResponse
+    });
 }
 else if (File.Exists(browserIndexPath))
 {
@@ -516,13 +534,18 @@ else if (File.Exists(browserIndexPath))
     {
         ContentTypeProvider = provider,
         FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath),
-        RequestPath = ""
+        RequestPath = "",
+        OnPrepareResponse = staticFilePrepareResponse
     });
 }
 else
 {
     // Fallback: Serve whatever is in wwwroot
-    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+    app.UseStaticFiles(new StaticFileOptions 
+    { 
+        ContentTypeProvider = provider,
+        OnPrepareResponse = staticFilePrepareResponse
+    });
 }
 
 // CORS, Auth, Authorization
@@ -536,15 +559,26 @@ app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
 // MAP SPA FALLBACK: Serve index.html from correct location
+Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> fallbackPrepareResponse = ctx =>
+{
+    ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    ctx.Context.Response.Headers["Pragma"] = "no-cache";
+    ctx.Context.Response.Headers["Expires"] = "0";
+};
+
 if (File.Exists(rootIndexPath))
 {
-    app.MapFallbackToFile("index.html");
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        OnPrepareResponse = fallbackPrepareResponse
+    });
 }
 else if (File.Exists(browserIndexPath))
 {
     app.MapFallbackToFile("index.html", new StaticFileOptions
     {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath)
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath),
+        OnPrepareResponse = fallbackPrepareResponse
     });
 }
 
