@@ -1,5 +1,5 @@
-import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, signal, computed, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, signal, computed, AfterViewInit, ViewEncapsulation, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/services/tenant-profile.service';
@@ -56,6 +56,7 @@ interface MapSearchResult {
 @Component({
   selector: 'app-tenant-profile',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   template: `
     <div class="w-full max-w-5xl mx-auto space-y-6">
@@ -453,7 +454,11 @@ interface MapSearchResult {
           </div>
 
           <!-- Leaflet Container -->
-          <div #profileMapContainer id="profile-map-container" id="map" style="height: 360px; width: 100%; min-height: 360px; display: block;" [hidden]="activeTab() !== 3" class="w-full h-[360px] min-h-[360px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-800 block"></div>
+          <div #profileMapContainer 
+     style="height: 380px; width: 100%; min-height: 380px;" 
+     [hidden]="activeTab() !== 3" 
+     class="w-full h-[380px] min-h-[380px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-900 block relative">
+</div>
 
           <!-- Map Location URL -->
           <div>
@@ -489,15 +494,27 @@ interface MapSearchResult {
     }
   `,
   styles: [`
+    /* 🛑 استيراد ملف Leaflet CSS مباشرة عشان يشتغل مع ViewEncapsulation.None */
+    @import 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+
     .font-cairo {
       font-family: 'Cairo', 'Inter', sans-serif;
     }
-    #profile-map-container, #profile-map, #map {
-      height: 350px !important;
-      min-height: 350px !important;
+    
+    /* 🛑 تجبير الـ Leaflet Container والـ Tiles على الظهور */
+    .leaflet-container {
+      height: 380px !important;
+      min-height: 380px !important;
       width: 100% !important;
-      display: block !important;
+      background-color: #0f172a !important;
+      z-index: 1 !important;
     }
+
+    .leaflet-tile-container img {
+      width: 256px !important;
+      height: 256px !important;
+    }
+
     @keyframes slide-in-toast {
       from { opacity: 0; transform: translateY(12px) scale(0.95); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -508,6 +525,7 @@ interface MapSearchResult {
   `]
 })
 export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy {
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly profileService = inject(TenantProfileService);
   public readonly auth = inject(AuthService);
   private readonly imageUploadService = inject(ImageUploadService);
@@ -622,7 +640,7 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   resolveGovernorateId(rawValue: string | null | undefined): string {
     if (!rawValue) return '';
     const clean = rawValue.trim().toLowerCase();
-    const match = EGYPT_GOVERNORATES.find(gov => 
+    const match = EGYPT_GOVERNORATES.find(gov =>
       gov.id.toLowerCase() === clean ||
       gov.nameEn.toLowerCase() === clean ||
       gov.nameAr.toLowerCase() === clean ||
@@ -710,13 +728,14 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   // --- MAP FUNCTIONS ---
   private initMap(): void {
     try {
+      if (!isPlatformBrowser(this.platformId)) return;
       if (!this.profileMapContainer?.nativeElement) return;
       if (typeof L === 'undefined') return;
 
       const lat = this.profileForm.get('latitude')?.value || this.currentLatLng.lat;
       const lng = this.profileForm.get('longitude')?.value || this.currentLatLng.lng;
 
-      // Leaflet Icon Fix for Marker
+      // Icon Setup
       const iconDefault = L.icon({
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -724,21 +743,22 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
-        tooltipAnchor: [16, -28],
         shadowSize: [41, 41]
       });
-      if (L.Marker && L.Marker.prototype) {
-        L.Marker.prototype.options.icon = iconDefault;
-      }
 
       if (!this.profileMap) {
-        this.profileMap = L.map(this.profileMapContainer.nativeElement).setView([lat, lng], 12);
-        
+        // إنشاء الماب باستخدام nativeElement المباشر
+        this.profileMap = L.map(this.profileMapContainer.nativeElement, {
+          center: [lat, lng],
+          zoom: 13,
+          zoomControl: true
+        });
+
+        // 🛑 استخدام Tile Provider عالي الاعتمادية والسريعة (CartoDB Voyager)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
           maxZoom: 19,
           subdomains: 'abcd',
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-          crossOrigin: true
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(this.profileMap);
 
         this.profileMarker = L.marker([lat, lng], { draggable: true, icon: iconDefault }).addTo(this.profileMap);
@@ -754,15 +774,17 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
         });
       }
 
+      // الإنعاش السحري لإعادة رسم الأبعاد
       setTimeout(() => {
         if (this.profileMap) {
           this.profileMap.invalidateSize();
-          this.profileMap.setView([lat, lng], 12);
+          this.profileMap.setView([lat, lng], 13);
           if (this.profileMarker) {
             this.profileMarker.setLatLng([lat, lng]);
           }
         }
-      }, 150);
+      }, 200);
+
     } catch (err) {
       console.error('Leaflet Map Init Error:', err);
     }
