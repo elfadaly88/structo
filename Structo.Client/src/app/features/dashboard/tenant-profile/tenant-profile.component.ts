@@ -453,12 +453,11 @@ interface MapSearchResult {
             }
           </div>
 
-          <!-- Leaflet Container -->
           <div #profileMapContainer 
-     style="height: 380px; width: 100%; min-height: 380px;" 
-     [hidden]="activeTab() !== 3" 
-     class="w-full h-[380px] min-h-[380px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-900 block relative">
-</div>
+               style="height: 380px; width: 100%; min-height: 380px;" 
+               [hidden]="activeTab() !== 3" 
+               class="w-full h-[380px] min-h-[380px] rounded-xl border border-slate-800 overflow-hidden shadow-inner bg-slate-900 block relative">
+          </div>
 
           <!-- Map Location URL -->
           <div>
@@ -494,14 +493,12 @@ interface MapSearchResult {
     }
   `,
   styles: [`
-    /* 🛑 استيراد ملف Leaflet CSS مباشرة عشان يشتغل مع ViewEncapsulation.None */
     @import 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 
     .font-cairo {
       font-family: 'Cairo', 'Inter', sans-serif;
     }
     
-    /* 🛑 تجبير الـ Leaflet Container والـ Tiles على الظهور */
     .leaflet-container {
       height: 380px !important;
       min-height: 380px !important;
@@ -735,7 +732,6 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       const lat = this.profileForm.get('latitude')?.value || this.currentLatLng.lat;
       const lng = this.profileForm.get('longitude')?.value || this.currentLatLng.lng;
 
-      // Icon Setup
       const iconDefault = L.icon({
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -747,18 +743,16 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       });
 
       if (!this.profileMap) {
-        // إنشاء الماب باستخدام nativeElement المباشر
         this.profileMap = L.map(this.profileMapContainer.nativeElement, {
           center: [lat, lng],
           zoom: 13,
           zoomControl: true
         });
 
-        // 🛑 استخدام Tile Provider عالي الاعتمادية والسريعة (CartoDB Voyager)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
           maxZoom: 19,
           subdomains: 'abcd',
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution: '&copy; OpenStreetMap & CartoDB'
         }).addTo(this.profileMap);
 
         this.profileMarker = L.marker([lat, lng], { draggable: true, icon: iconDefault }).addTo(this.profileMap);
@@ -774,7 +768,6 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
         });
       }
 
-      // الإنعاش السحري لإعادة رسم الأبعاد
       setTimeout(() => {
         if (this.profileMap) {
           this.profileMap.invalidateSize();
