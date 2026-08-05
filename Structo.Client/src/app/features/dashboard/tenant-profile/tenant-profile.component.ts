@@ -1,8 +1,8 @@
 import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, signal, computed, AfterViewInit, ViewEncapsulation, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/services/tenant-profile.service';
+import { TenantProfileService, TenantProfileUpdateDto, SubscriptionPlanInfo, SubscriptionTopUpInfo, SubscriptionUpgradeResponse } from '../../../core/services/tenant-profile.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ImageUploadService, UploadResult } from '../../../core/services/image-upload.service';
 import { TenantDto } from '../../../core/services/public-directory.service';
@@ -57,7 +57,7 @@ interface MapSearchResult {
   selector: 'app-tenant-profile',
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule],
   template: `
     <div class="w-full max-w-5xl mx-auto space-y-6">
       
@@ -276,27 +276,69 @@ interface MapSearchResult {
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Subscription Plan info badge -->
-            <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-              <div>
-                <span class="block text-[10px] font-bold text-slate-400 uppercase">باقة الاشتراك الحالية</span>
-                <span class="text-sm font-bold text-indigo-400">{{ tenantData()?.subscriptionPlan || 'Free' }}</span>
-              </div>
-              <span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg">
-                أقصى مشاريع: {{ tenantData()?.maxActiveProjects ?? 2 }}
-              </span>
-            </div>
+          <div class="col-span-1 sm:col-span-2">
+            <!-- ═══════════ SUBSCRIPTION PREMIUM CARD ═══════════ -->
+            <div class="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-950 p-5 shadow-2xl">
+              <!-- Background glow -->
+              <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-indigo-600/20 blur-2xl pointer-events-none"></div>
+              <div class="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-violet-600/20 blur-2xl pointer-events-none"></div>
 
-            <!-- Account Type -->
-            <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-              <div>
-                <span class="block text-[10px] font-bold text-slate-400 uppercase">نوع الحساب</span>
-                <span class="text-sm font-bold text-emerald-400">{{ tenantData()?.accountType || 'Company' }}</span>
+              <div class="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <!-- Plan Info -->
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-indigo-500/20">
+                      <svg class="w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/>
+                      </svg>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">الاشتراك الحالي / Subscription</span>
+                  </div>
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-black text-white">{{ tenantData()?.subscriptionPlan || 'Free' }}</span>
+                    <span class="text-xs font-bold text-slate-400">Plan</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1 text-xs text-slate-300">
+                      <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
+                      </svg>
+                      @if ((tenantData()?.maxActiveProjects ?? 2) === -1) {
+                        <span>مشاريع غير محدودة</span>
+                      } @else {
+                        <span>{{ tenantData()?.maxActiveProjects ?? 2 }} مشاريع نشطة</span>
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <!-- Upgrade Plan Button -->
+                  @if ((tenantData()?.subscriptionPlan || 'Free') !== 'Enterprise') {
+                    <button type="button" id="btn-upgrade-plan" (click)="openPlanModal()"
+                      class="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                      </svg>
+                      ترقية الباقة / Upgrade Plan
+                    </button>
+                  }
+                  <!-- Add Extra Projects Button -->
+                  @if ((tenantData()?.maxActiveProjects ?? 2) !== -1) {
+                    <button type="button" id="btn-add-extra" (click)="openTopUpModal()"
+                      class="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                      </svg>
+                      شحن مشاريع إضافية / +Add Projects
+                    </button>
+                  }
+                </div>
               </div>
-              <span class="text-xs text-slate-400">مسجل بالمنظومة</span>
             </div>
           </div>
+
 
           <!-- Company Description -->
           <div>
@@ -492,6 +534,276 @@ interface MapSearchResult {
         <button type="button" (click)="toastMessage.set(null)" class="text-white/80 hover:text-white text-base font-bold ml-2">×</button>
       </div>
     }
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- MODAL 1 — PLAN SELECTION MODAL                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    @if (showPlanModal()) {
+      <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" (click)="closePlanModal()">
+        <div class="relative w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800">
+            <div>
+              <h3 class="text-base font-black text-white font-cairo">اختر الباقة المناسبة / Choose Your Plan</h3>
+              <p class="text-[11px] text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري شاملة ضريبة القيمة المضافة 14%</p>
+            </div>
+            <button type="button" (click)="closePlanModal()" id="btn-close-plan-modal"
+              class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Plan Cards -->
+          <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-y-auto min-h-0">
+            @for (plan of availablePlans(); track plan.id) {
+              <div (click)="selectPlan(plan)"
+                [class.ring-2]="selectedPlan()?.id === plan.id"
+                [class.ring-indigo-500]="selectedPlan()?.id === plan.id"
+                [class.bg-indigo-950]="selectedPlan()?.id === plan.id"
+                [class.border-indigo-500]="selectedPlan()?.id === plan.id"
+                [class.opacity-40]="isCurrentPlan(plan.id)"
+                [class.cursor-not-allowed]="isCurrentPlan(plan.id)"
+                [class.cursor-pointer]="!isCurrentPlan(plan.id)"
+                class="relative p-4 bg-slate-950 border border-slate-800 rounded-xl transition-all duration-200 hover:border-slate-600">
+
+                <!-- Current Plan Badge -->
+                @if (isCurrentPlan(plan.id)) {
+                  <span class="absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 bg-emerald-500 text-white rounded-full">الباقة الحالية</span>
+                }
+                @if (plan.id === 'Enterprise') {
+                  <span class="absolute -top-2 right-3 text-[10px] font-bold px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full">⭐ الأفضل</span>
+                }
+
+                <div class="mb-3">
+                  <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
+                    [class.bg-slate-700]="plan.id === 'Free'"
+                    [class.bg-indigo-600]="plan.id === 'Pro'"
+                    [class.bg-gradient-to-br]="plan.id === 'Enterprise'"
+                    [class.from-amber-500]="plan.id === 'Enterprise'"
+                    [class.to-orange-600]="plan.id === 'Enterprise'">
+                    @if (plan.id === 'Free') {
+                      <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    } @else if (plan.id === 'Pro') {
+                      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    } @else {
+                      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
+                    }
+                  </div>
+                  <h4 class="text-sm font-black text-white">{{ plan.nameEn }}</h4>
+                  <p class="text-[10px] text-slate-400 mt-0.5">{{ plan.nameAr }}</p>
+                </div>
+
+                <div class="mb-3">
+                  @if (plan.priceEgp === 0) {
+                    <span class="text-lg font-black text-emerald-400">مجاني</span>
+                  } @else {
+                    <div>
+                      <span class="text-lg font-black text-white">{{ plan.priceWithVat | number:'1.0-0' }}</span>
+                      <span class="text-xs text-slate-400 mr-1">ج.م / شهر</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500">(شامل 14% ضريبة)</span>
+                  }
+                </div>
+
+                <p class="text-[11px] text-slate-400 leading-relaxed">{{ plan.description }}</p>
+              </div>
+            }
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between p-5 border-t border-slate-800">
+            <button type="button" (click)="closePlanModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors font-cairo cursor-pointer">إلغاء</button>
+            <button type="button" id="btn-proceed-checkout" (click)="proceedToCheckout('upgrade')"
+              [disabled]="!selectedPlan() || isCurrentPlan(selectedPlan()?.id || '')"
+              class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              متابعة للدفع / Continue to Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- MODAL 2 — ADD-ON TOP-UP MODAL                                   -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    @if (showTopUpModal()) {
+      <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" (click)="closeTopUpModal()">
+        <div class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800">
+            <div>
+              <h3 class="text-base font-black text-white font-cairo">شحن مشاريع إضافية / Add Extra Projects</h3>
+              <p class="text-[11px] text-slate-400 font-cairo mt-0.5">تُضاف فوراً فوق سعتك الحالية ({{ tenantData()?.maxActiveProjects ?? 2 }} مشروع)</p>
+            </div>
+            <button type="button" (click)="closeTopUpModal()" id="btn-close-topup-modal"
+              class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Top-Up Options -->
+          <div class="p-5 space-y-3 overflow-y-auto min-h-0">
+            @for (opt of availableTopUps(); track opt.extra) {
+              <div (click)="selectTopUp(opt)"
+                [class.ring-2]="selectedTopUp()?.extra === opt.extra"
+                [class.ring-emerald-500]="selectedTopUp()?.extra === opt.extra"
+                [class.bg-emerald-950]="selectedTopUp()?.extra === opt.extra"
+                [class.border-emerald-500]="selectedTopUp()?.extra === opt.extra"
+                class="p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer transition-all duration-200 hover:border-slate-600 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span class="text-sm font-black text-white">{{ opt.label }}</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">يصبح الإجمالي: {{ (tenantData()?.maxActiveProjects ?? 2) + opt.extra }} مشاريع</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-base font-black text-white">{{ opt.priceWithVat | number:'1.0-0' }}</div>
+                  <div class="text-[10px] text-slate-400">ج.م</div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between p-5 border-t border-slate-800">
+            <button type="button" (click)="closeTopUpModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors font-cairo cursor-pointer">إلغاء</button>
+            <button type="button" id="btn-proceed-topup" (click)="proceedToCheckout('topup')"
+              [disabled]="!selectedTopUp()"
+              class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              متابعة للدفع / Continue to Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- MODAL 3 — MOCK CHECKOUT SCREEN                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    @if (showCheckoutModal()) {
+      <div class="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-lg">
+        <div class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-indigo-600">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-black text-white font-cairo">بوابة الدفع التجريبية / Mock Checkout</h3>
+                <p class="text-[10px] text-slate-400 font-cairo">آمن ومشفر • SSL Encrypted</p>
+              </div>
+            </div>
+            @if (!isProcessingPayment()) {
+              <button type="button" (click)="closeCheckoutModal()" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            }
+          </div>
+
+          <!-- Checkout Body -->
+          <div class="p-5 space-y-5 overflow-y-auto min-h-0">
+
+            <!-- Order Summary -->
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 space-y-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">ملخص الطلب / Order Summary</h4>
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-300">{{ checkoutSummary().description }}</span>
+                <span class="text-white font-bold">{{ checkoutSummary().amount | number:'1.0-2' }} ج.م</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">ضريبة القيمة المضافة (14%)</span>
+                <span class="text-slate-300">{{ checkoutSummary().taxAmount | number:'1.0-2' }} ج.م</span>
+              </div>
+              <div class="border-t border-slate-700 pt-2 flex justify-between">
+                <span class="text-sm font-black text-white">الإجمالي</span>
+                <span class="text-sm font-black text-indigo-300">{{ checkoutSummary().totalAmount | number:'1.0-2' }} ج.م</span>
+              </div>
+            </div>
+
+            <!-- Mock Card Fields -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">بيانات الكارت (تجريبي) / Card Details (Test Mode)</h4>
+
+              <!-- Card Number -->
+              <div>
+                <label for="mock-card-num" class="block text-[10px] font-bold text-slate-400 uppercase mb-1">رقم الكارت / Card Number</label>
+                <div class="relative">
+                  <input id="mock-card-num" type="text" [value]="mockCardNumber" (input)="onMockCardInput($event)"
+                    maxlength="19" placeholder="4242 4242 4242 4242"
+                    class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-mono tracking-wider pr-10"
+                    [disabled]="isProcessingPayment()">
+                  <div class="absolute inset-y-0 right-3 flex items-center">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                  </div>
+                </div>
+                <p class="text-[10px] text-indigo-400 mt-1">💡 استخدم: 4242 4242 4242 4242</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <!-- Expiry -->
+                <div>
+                  <label for="mock-expiry" class="block text-[10px] font-bold text-slate-400 uppercase mb-1">تاريخ الانتهاء</label>
+                  <input id="mock-expiry" type="text" [value]="mockExpiry" (input)="onMockExpiryInput($event)"
+                    maxlength="5" placeholder="MM/YY"
+                    class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-mono"
+                    [disabled]="isProcessingPayment()">
+                </div>
+                <!-- CVC -->
+                <div>
+                  <label for="mock-cvc" class="block text-[10px] font-bold text-slate-400 uppercase mb-1">CVC</label>
+                  <input id="mock-cvc" type="password" [(ngModel)]="mockCvc" maxlength="4" placeholder="•••"
+                    class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-mono"
+                    [disabled]="isProcessingPayment()">
+                </div>
+              </div>
+            </div>
+
+            <!-- Test Mode Badge -->
+            <div class="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+              <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-[10px] text-amber-300 font-cairo">هذه بوابة دفع تجريبية — لن يتم خصم أي مبالغ حقيقية</span>
+            </div>
+          </div>
+
+          <!-- Checkout Footer -->
+          <div class="p-5 border-t border-slate-800">
+            <button type="button" id="btn-process-payment" (click)="processPayment()"
+              [disabled]="isProcessingPayment()"
+              class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-60 text-white font-black text-sm rounded-xl shadow-2xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-3 cursor-pointer">
+              @if (isProcessingPayment()) {
+                <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>جاري المعالجة... / Processing...</span>
+              } @else {
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>إتمام الدفع التجريبي / Process Test Payment</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     /* 🛑 استيراد ملف Leaflet CSS مباشرة عشان يشتغل مع ViewEncapsulation.None */
@@ -573,6 +885,44 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   private profileMarker: any = null;
   private currentLatLng = { lat: 30.0444, lng: 31.2357 };
 
+  // ── Subscription Modal Signals ──────────────────────────────
+  readonly showPlanModal      = signal(false);
+  readonly showTopUpModal     = signal(false);
+  readonly showCheckoutModal  = signal(false);
+  readonly isProcessingPayment = signal(false);
+  readonly selectedPlan       = signal<SubscriptionPlanInfo | null>(null);
+  readonly selectedTopUp      = signal<SubscriptionTopUpInfo | null>(null);
+  readonly availablePlans     = signal<SubscriptionPlanInfo[]>([]);
+  readonly availableTopUps    = signal<SubscriptionTopUpInfo[]>([]);
+  private checkoutMode: 'upgrade' | 'topup' = 'upgrade';
+
+  // Mock card fields (tightly scoped to checkout)
+  mockCardNumber = '4242 4242 4242 4242';
+  mockExpiry     = '12/29';
+  mockCvc        = '123';
+
+  readonly checkoutSummary = computed(() => {
+    if (this.checkoutMode === 'upgrade' && this.selectedPlan()) {
+      const p = this.selectedPlan()!;
+      return {
+        description: `ترقية إلى باقة ${p.nameEn} / Upgrade to ${p.nameEn}`,
+        amount:      p.priceEgp,
+        taxAmount:   Math.round(p.priceEgp * 0.14 * 100) / 100,
+        totalAmount: p.priceWithVat
+      };
+    }
+    if (this.checkoutMode === 'topup' && this.selectedTopUp()) {
+      const t = this.selectedTopUp()!;
+      return {
+        description: `إضافة ${t.extra} مشاريع / Add ${t.extra} Extra Projects`,
+        amount:      t.priceEgp,
+        taxAmount:   Math.round(t.priceEgp * 0.14 * 100) / 100,
+        totalAmount: t.priceWithVat
+      };
+    }
+    return { description: '', amount: 0, taxAmount: 0, totalAmount: 0 };
+  });
+
   profileForm: FormGroup = this.fb.group({
     name: ['', [Validators.required]],
     logoUrl: [''],
@@ -594,6 +944,7 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnInit(): void {
     this.loadProfile();
+    this.loadSubscriptionPlans();
   }
 
   ngAfterViewInit(): void {
@@ -949,5 +1300,147 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       },
       error: () => this.isUploadingBanner.set(false)
     });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // SUBSCRIPTION UPGRADE & MOCK PAYMENT METHODS
+  // ─────────────────────────────────────────────────────────────
+
+  private loadSubscriptionPlans(): void {
+    this.profileService.getSubscriptionPlans().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.availablePlans.set(res.data.plans);
+          this.availableTopUps.set(res.data.topups);
+        }
+      },
+      error: () => {
+        // Fallback hardcoded pricing if API unreachable
+        this.availablePlans.set([
+          { id: 'Free',       nameAr: 'المجانية',   nameEn: 'Free',       maxProjects: 2,  priceEgp: 0,   priceWithVat: 0,      description: '2 مشاريع نشطة — مجاني للأبد' },
+          { id: 'Pro',        nameAr: 'الاحترافية', nameEn: 'Pro',        maxProjects: 10, priceEgp: 299, priceWithVat: 340.86, description: '10 مشاريع نشطة + الميزات المتقدمة' },
+          { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799, priceWithVat: 910.86, description: 'مشاريع غير محدودة + الأولوية والدعم' }
+        ]);
+        this.availableTopUps.set([
+          { extra: 5,  priceEgp: 99,  priceWithVat: 112.86, label: '+5 مشاريع' },
+          { extra: 10, priceEgp: 179, priceWithVat: 204.06, label: '+10 مشاريع' }
+        ]);
+      }
+    });
+  }
+
+  isCurrentPlan(planId: string): boolean {
+    const current = (this.tenantData()?.subscriptionPlan || 'Free').toLowerCase();
+    return current === planId.toLowerCase();
+  }
+
+  openPlanModal(): void {
+    this.selectedPlan.set(null);
+    this.showPlanModal.set(true);
+  }
+
+  closePlanModal(): void {
+    this.showPlanModal.set(false);
+  }
+
+  openTopUpModal(): void {
+    this.selectedTopUp.set(null);
+    this.showTopUpModal.set(true);
+  }
+
+  closeTopUpModal(): void {
+    this.showTopUpModal.set(false);
+  }
+
+  closeCheckoutModal(): void {
+    this.showCheckoutModal.set(false);
+  }
+
+  selectPlan(plan: SubscriptionPlanInfo): void {
+    if (this.isCurrentPlan(plan.id)) return;
+    this.selectedPlan.set(plan);
+  }
+
+  selectTopUp(opt: SubscriptionTopUpInfo): void {
+    this.selectedTopUp.set(opt);
+  }
+
+  proceedToCheckout(mode: 'upgrade' | 'topup'): void {
+    this.checkoutMode = mode;
+    if (mode === 'upgrade') this.showPlanModal.set(false);
+    else this.showTopUpModal.set(false);
+    // Reset mock card fields
+    this.mockCardNumber = '4242 4242 4242 4242';
+    this.mockExpiry     = '12/29';
+    this.mockCvc        = '123';
+    this.showCheckoutModal.set(true);
+  }
+
+  processPayment(): void {
+    // Show processing spinner for 1.5s (mock processing delay)
+    this.isProcessingPayment.set(true);
+
+    setTimeout(() => {
+      const req = this.checkoutMode === 'upgrade'
+        ? { targetPlanId: this.selectedPlan()?.id, paymentMethod: 'TestCard' }
+        : { extraProjectsCount: this.selectedTopUp()?.extra, paymentMethod: 'TestCard' };
+
+      this.profileService.upgradeSubscription(req).subscribe({
+        next: (res) => {
+          this.isProcessingPayment.set(false);
+          if (res.success && res.data) {
+            // Close checkout modal
+            this.showCheckoutModal.set(false);
+
+            // Update tenant data immediately without reload
+            const current = this.tenantData();
+            if (current) {
+              this.tenantData.set({
+                ...current,
+                subscriptionPlan:  res.data.newPlan,
+                maxActiveProjects: res.data.newMaxActiveProjects
+              });
+            }
+
+            // Show success toast
+            const successMsg = this.checkoutMode === 'upgrade'
+              ? `🎉 تمت الترقية إلى ${res.data.newPlan} بنجاح! REF: ${res.data.referenceNumber}`
+              : `✅ تمت إضافة ${res.data.extraProjectsAdded} مشاريع! الإجمالي: ${res.data.newMaxActiveProjects} مشروع`;
+
+            this.showToast(successMsg);
+            this.toastService.show('نجاح / Success', successMsg, 'success');
+
+            // Reset selections
+            this.selectedPlan.set(null);
+            this.selectedTopUp.set(null);
+          } else {
+            const errMsg = res.message || 'فشلت عملية الدفع — يرجى المحاولة مرة أخرى';
+            this.showToast(errMsg);
+            this.toastService.show('خطأ / Error', errMsg, 'error');
+          }
+        },
+        error: (err) => {
+          this.isProcessingPayment.set(false);
+          const errMsg = 'تعذر إتمام العملية — تأكد من الاتصال بالشبكة';
+          this.showToast(errMsg);
+          this.toastService.show('خطأ / Error', errMsg, 'error');
+        }
+      });
+    }, 1500); // 1.5s mock processing spinner
+  }
+
+  // Mock card input formatters
+  onMockCardInput(event: Event): void {
+    let val = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    val = val.match(/.{1,4}/g)?.join(' ') ?? val;
+    this.mockCardNumber = val;
+    (event.target as HTMLInputElement).value = val;
+  }
+
+  onMockExpiryInput(event: Event): void {
+    let val = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2, 4);
+    this.mockExpiry = val;
+    (event.target as HTMLInputElement).value = val;
   }
 }

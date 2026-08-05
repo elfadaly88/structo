@@ -34,6 +34,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<SettlementLine> SettlementLines => Set<SettlementLine>();
+    public DbSet<SubscriptionTransaction> SubscriptionTransactions => Set<SubscriptionTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -273,6 +274,28 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany(s => s.Lines)
                   .HasForeignKey(e => e.SettlementId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SubscriptionTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TransactionType).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.PlanName).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.PaymentGateway).HasMaxLength(50);
+            entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+            entity.Property(e => e.Status).HasMaxLength(30);
+            entity.Property(e => e.ReferenceNumber).HasMaxLength(50);
+            entity.Property(e => e.Amount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.TaxAmount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.TotalAmount).HasColumnType("numeric(18,2)");
+
+            entity.HasOne(e => e.Tenant)
+                  .WithMany()
+                  .HasForeignKey(e => e.TenantId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.Status);
         });
     }
 

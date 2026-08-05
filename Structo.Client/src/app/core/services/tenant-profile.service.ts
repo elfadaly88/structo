@@ -28,13 +28,61 @@ export interface TenantProfileUpdateDto {
   lng?: number | null;
 }
 
+// ─────────────────────────────────────────────────────────
+// Subscription Interfaces — designed for Paymob/Stripe swap
+// ─────────────────────────────────────────────────────────
+
+export interface SubscriptionPlanInfo {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  maxProjects: number;
+  priceEgp: number;
+  priceWithVat: number;
+  description: string;
+}
+
+export interface SubscriptionTopUpInfo {
+  extra: number;
+  priceEgp: number;
+  priceWithVat: number;
+  label: string;
+}
+
+export interface SubscriptionPlansResponse {
+  plans: SubscriptionPlanInfo[];
+  topups: SubscriptionTopUpInfo[];
+  vatRate: number;
+}
+
+/** Mode 1: Plan Upgrade — set targetPlanId */
+export interface SubscriptionUpgradeRequest {
+  targetPlanId?: string;
+  extraProjectsCount?: number;
+  paymentMethod?: string; // 'TestCard' for mock; 'Paymob' / 'Stripe' for real gateways
+}
+
+export interface SubscriptionUpgradeResponse {
+  transactionType: string;      // 'PlanUpgrade' | 'AddOnTopUp'
+  newPlan: string;
+  newMaxActiveProjects: number;
+  extraProjectsAdded: number;
+  amount: number;
+  taxAmount: number;
+  totalAmount: number;
+  referenceNumber: string;
+  status: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class TenantProfileService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/tenant-profile`;
+  private readonly subscriptionUrl = `${environment.apiUrl}/subscription`;
 
+  // ── Profile ──────────────────────────────────────────────
   getProfile(): Observable<ApiResponse<TenantDto>> {
     return this.http.get<ApiResponse<TenantDto>>(this.apiUrl);
   }
@@ -45,5 +93,34 @@ export class TenantProfileService {
 
   getQuota(): Observable<ApiResponse<{ usedProjects: number, allowedProjects: number }>> {
     return this.http.get<ApiResponse<{ usedProjects: number, allowedProjects: number }>>(`${this.apiUrl}/quota`);
+  }
+
+  // ── Subscription ─────────────────────────────────────────
+  /**
+   * Fetches available subscription plans and add-on top-up options with pricing.
+   */
+  getSubscriptionPlans(): Observable<ApiResponse<SubscriptionPlansResponse>> {
+    return this.http.get<ApiResponse<SubscriptionPlansResponse>>(`${this.subscriptionUrl}/plans`);
+  }
+
+  /**
+   * Performs a mock plan upgrade or add-on top-up.
+   *
+   * Extensibility note:
+   *   To integrate Paymob or Stripe, replace the URL and/or add a payment token
+   *   to the request body. The backend controller is designed for this swap.
+   *
+   * @param req - { targetPlanId } for plan upgrade OR { extraProjectsCount } for add-on top-up
+   */
+  upgradeSubscription(req: SubscriptionUpgradeRequest): Observable<ApiResponse<SubscriptionUpgradeResponse>> {
+    const payload = {
+      targetPlanId: req.targetPlanId ?? null,
+      extraProjectsCount: req.extraProjectsCount ?? null,
+      paymentMethod: req.paymentMethod ?? 'TestCard',
+    };
+    return this.http.post<ApiResponse<SubscriptionUpgradeResponse>>(
+      `${this.subscriptionUrl}/upgrade-mock`,
+      payload
+    );
   }
 }

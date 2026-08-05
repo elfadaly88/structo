@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net9.0": {
       "AWSSDK.Core/3.7.400.79": {
@@ -5034,23 +5034,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\mostafa.sayed\\.nuget\\packages\\": {},
+    "C:\\Users\\ElFadaly\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\private\\structo\\structo\\Structo.API\\Structo.API.csproj",
+      "projectUniqueName": "F:\\PrivateWork\\structo\\project\\Structo.API\\Structo.API.csproj",
       "projectName": "Structo.API",
-      "projectPath": "E:\\private\\structo\\structo\\Structo.API\\Structo.API.csproj",
-      "packagesPath": "C:\\Users\\mostafa.sayed\\.nuget\\packages\\",
-      "outputPath": "E:\\private\\structo\\structo\\Structo.API\\obj\\",
+      "projectPath": "F:\\PrivateWork\\structo\\project\\Structo.API\\Structo.API.csproj",
+      "packagesPath": "C:\\Users\\ElFadaly\\.nuget\\packages\\",
+      "outputPath": "F:\\PrivateWork\\structo\\project\\Structo.API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\mostafa.sayed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ElFadaly\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -5059,19 +5059,17 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
-          "framework": "net9.0",
           "targetAlias": "net9.0",
           "projectReferences": {
-            "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj": {
-              "projectPath": "E:\\private\\structo\\structo\\Structo.Core\\Structo.Core.csproj"
+            "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj": {
+              "projectPath": "F:\\PrivateWork\\structo\\project\\Structo.Core\\Structo.Core.csproj"
             },
-            "E:\\private\\structo\\structo\\Structo.Infrastructure\\Structo.Infrastructure.csproj": {
-              "projectPath": "E:\\private\\structo\\structo\\Structo.Infrastructure\\Structo.Infrastructure.csproj"
+            "F:\\PrivateWork\\structo\\project\\Structo.Infrastructure\\Structo.Infrastructure.csproj": {
+              "projectPath": "F:\\PrivateWork\\structo\\project\\Structo.Infrastructure\\Structo.Infrastructure.csproj"
             }
           }
         }
@@ -5089,11 +5087,10 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
-        "framework": "net9.0",
         "targetAlias": "net9.0",
         "dependencies": {
           "AWSSDK.S3": {
@@ -5150,7 +5147,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300-preview.0.26177.108/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
