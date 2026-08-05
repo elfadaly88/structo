@@ -188,12 +188,15 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
             return NotFound(new ApiResponse<TenantQuotaDto> { Success = false, Message = "Tenant not found" });
 
         var allowedProjects = tenant.MaxActiveProjects;
+
+        // ─── Total Lifetime Slot Logic ─────────────────────────────────────────────
+        // Count ALL projects ever created — closed projects do NOT free up slots.
         var usedProjects = await context.Projects
-            .CountAsync(p => p.TenantId == tenantId && p.Status != ProjectStatus.Closed);
+            .CountAsync(p => p.TenantId == tenantId);
 
         var data = new TenantQuotaDto
         {
-            UsedProjects = usedProjects,
+            UsedProjects  = usedProjects,
             AllowedProjects = allowedProjects
         };
 
