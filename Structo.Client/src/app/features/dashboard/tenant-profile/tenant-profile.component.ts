@@ -515,6 +515,29 @@ interface MapSearchResult {
       height: 256px !important;
     }
 
+    /* 🛰️ تنسيق زر التبديل بين الشوارع والقمر الصناعي */
+    .leaflet-control-layers {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+      border: 1px solid #334155 !important;
+      border-radius: 0.75rem !important;
+      padding: 6px 12px !important;
+      font-family: 'Cairo', sans-serif !important;
+      font-size: 12px !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    }
+    .leaflet-control-layers-expanded {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    .leaflet-control-layers-base label {
+      display: flex !important;
+      items-center: center !important;
+      gap: 6px !important;
+      margin-bottom: 4px !important;
+      cursor: pointer !important;
+    }
+
     @keyframes slide-in-toast {
       from { opacity: 0; transform: translateY(12px) scale(0.95); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -762,12 +785,27 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
           zoomControl: true
         });
 
-        // 🛑 استخدام Tile Provider عالي الاعتمادية والسريعة (CartoDB Voyager)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        // Tile layers (Street Map & Satellite View)
+        const streetMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
           maxZoom: 19,
           subdomains: 'abcd',
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(this.profileMap);
+        });
+
+        const satelliteMap = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: '&copy; Google Maps'
+        });
+
+        streetMap.addTo(this.profileMap);
+
+        const baseMaps = {
+          "🗺️ شوارع / Street": streetMap,
+          "🛰️ قمر صناعي / Satellite": satelliteMap
+        };
+
+        L.control.layers(baseMaps, undefined, { position: 'topright' }).addTo(this.profileMap);
 
         this.profileMarker = L.marker([lat, lng], { draggable: true, icon: iconDefault }).addTo(this.profileMap);
 
