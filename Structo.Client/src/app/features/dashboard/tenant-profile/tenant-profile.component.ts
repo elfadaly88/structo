@@ -465,7 +465,7 @@ interface MapSearchResult {
             <label for="prof-map-url" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
               رابط خرائط جوجل (اختر اختياري) / Google Maps Link
             </label>
-            <input id="prof-map-url" type="url" formControlName="mapLocationUrl" placeholder="https://maps.google.com/..."
+            <input id="prof-map-url" type="url" formControlName="mapLocationUrl" (input)="onMapUrlInputChange($event)" placeholder="https://maps.google.com/..."
               class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
           </div>
 
@@ -624,7 +624,7 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
             nationalId: tenant.nationalId || '',
             syndicateId: tenant.syndicateId || '',
             manualAddress: tenant.manualAddress || tenant.address || '',
-            mapLocationUrl: tenant.mapLocationUrl || '',
+            mapLocationUrl: tenant.mapLocationUrl || ((tenant.latitude || tenant.lat) && (tenant.longitude || tenant.lng) ? `https://www.google.com/maps/search/?api=1&query=${tenant.latitude ?? tenant.lat},${tenant.longitude ?? tenant.lng}` : ''),
             latitude: tenant.latitude ?? tenant.lat ?? null,
             longitude: tenant.longitude ?? tenant.lng ?? null
           });
@@ -799,10 +799,35 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private updateCoords(lat: number, lng: number): void {
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
     this.profileForm.patchValue({
       latitude: lat,
-      longitude: lng
+      longitude: lng,
+      mapLocationUrl: googleMapsUrl
     });
+  }
+
+  onMapUrlInputChange(event: Event): void {
+    const url = (event.target as HTMLInputElement).value;
+    if (!url) return;
+
+    const regex = /(?:q=|query=|@)(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const match = url.match(regex);
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        this.profileForm.patchValue({
+          latitude: lat,
+          longitude: lng
+        });
+        this.currentLatLng = { lat, lng };
+        if (this.profileMap && this.profileMarker) {
+          this.profileMap.setView([lat, lng], 14);
+          this.profileMarker.setLatLng([lat, lng]);
+        }
+      }
+    }
   }
 
   onMapSearchChange(event: Event): void {
