@@ -805,6 +805,7 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       longitude: lng,
       mapLocationUrl: googleMapsUrl
     });
+    this.cdr.detectChanges();
   }
 
   onMapUrlInputChange(event: Event): void {
@@ -826,6 +827,7 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
           this.profileMap.setView([lat, lng], 14);
           this.profileMarker.setLatLng([lat, lng]);
         }
+        this.cdr.detectChanges();
       }
     }
   }
