@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, signal, computed, AfterViewInit, ViewEncapsulation, PLATFORM_ID } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, signal, computed, AfterViewInit, ViewEncapsulation, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -531,8 +531,9 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   private readonly imageUploadService = inject(ImageUploadService);
   private readonly fb = inject(FormBuilder);
   private readonly toastService = inject(ToastService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  @ViewChild('profileMapContainer') profileMapContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('profileMapContainer', { static: false }) profileMapContainer?: ElementRef<HTMLDivElement>;
 
   readonly governorates = EGYPT_GOVERNORATES;
   readonly activeTab = signal<1 | 2 | 3>(1);
@@ -574,7 +575,8 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngAfterViewInit(): void {
     if (this.activeTab() === 3) {
-      setTimeout(() => this.initMap(), 150);
+      this.cdr.detectChanges();
+      setTimeout(() => this.initMap(), 200);
     }
   }
 
@@ -589,12 +591,13 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
     const targetTab = typeof tab === 'string' ? (tab === 'location' ? 3 : (parseInt(tab, 10) || 1)) : tab;
     this.activeTab.set(targetTab as 1 | 2 | 3);
     if (targetTab === 3 || tab === 'location') {
+      this.cdr.detectChanges(); // 🛑 إجبار Angular على رندر الـ HTML Element الخاص بالـ Tab 3
       setTimeout(() => {
         this.initMap();
         if (this.profileMap) {
           this.profileMap.invalidateSize();
         }
-      }, 150);
+      }, 200);
     }
   }
 
@@ -728,6 +731,11 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   // --- MAP FUNCTIONS ---
   private initMap(): void {
     try {
+      console.log('1. initMap Called');
+      console.log('2. isPlatformBrowser:', isPlatformBrowser(this.platformId));
+      console.log('3. profileMapContainer:', this.profileMapContainer?.nativeElement);
+      console.log('4. typeof L:', typeof L);
+
       if (!isPlatformBrowser(this.platformId)) return;
       if (!this.profileMapContainer?.nativeElement) return;
       if (typeof L === 'undefined') return;
