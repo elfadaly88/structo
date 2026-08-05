@@ -7,8 +7,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ImageUploadService, UploadResult } from '../../../core/services/image-upload.service';
 import { TenantDto } from '../../../core/services/public-directory.service';
 import { ToastService } from '../../../core/services/toast.service';
+import * as L from 'leaflet';
 
-declare const L: any;
 
 interface GovernorateOption {
   id: string;
