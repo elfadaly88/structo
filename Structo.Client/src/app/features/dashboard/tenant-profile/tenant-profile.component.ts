@@ -617,9 +617,12 @@ interface MapSearchResult {
             <button type="button" (click)="closePlanModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors font-cairo cursor-pointer">إلغاء</button>
             <button type="button" id="btn-proceed-checkout" (click)="proceedToCheckout('upgrade')"
               [disabled]="!selectedPlan() || isCurrentPlan(selectedPlan()?.id || '')"
-              class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              متابعة للدفع / Continue to Payment
+              class="px-7 py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-sm rounded-xl shadow-lg shadow-indigo-600/40 transition-all flex items-center gap-2 cursor-pointer">
+              <!-- Cart / Buy Icon -->
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              شراء الباقة / Buy Plan
             </button>
           </div>
         </div>
@@ -646,6 +649,18 @@ interface MapSearchResult {
             </button>
           </div>
 
+          <!-- Free Plan Info Badge -->
+          <div class="mx-5 mt-4 flex items-center gap-2.5 p-3 bg-slate-800/60 border border-slate-700 rounded-xl">
+            <div class="p-1.5 rounded-lg bg-slate-700">
+              <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <p class="text-[10px] text-slate-300 font-cairo leading-relaxed">
+              الباقة المجانية تشمل مشروعين مدى الحياة. المشروع المنتهي أو المغلق يستهلك الرصيد بشكل دائم.
+            </p>
+          </div>
+
           <!-- Top-Up Options -->
           <div class="p-5 space-y-3 overflow-y-auto min-h-0">
             @for (opt of availableTopUps(); track opt.extra) {
@@ -668,10 +683,34 @@ interface MapSearchResult {
                 </div>
                 <div class="text-right">
                   <div class="text-base font-black text-white">{{ opt.priceWithVat | number:'1.0-0' }}</div>
-                  <div class="text-[10px] text-slate-400">ج.م</div>
+                  <div class="text-[10px] text-slate-400">ج.م شامل ضريبة</div>
                 </div>
               </div>
             }
+
+            <!-- Contact Admin Card (for > 5 projects) -->
+            <a href="mailto:admin@structo.app" target="_blank"
+              class="block p-4 bg-slate-950 border border-dashed border-amber-500/40 hover:border-amber-400/70 rounded-xl transition-all duration-200 group">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span class="text-sm font-black text-amber-300">أكثر من 5 مشاريع / Need More?</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">تواصل مع الإدارة للحصول على عرض مخصص</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 text-[10px] text-amber-400 font-bold group-hover:gap-2 transition-all">
+                  اتصل بنا
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
           </div>
 
           <!-- Footer -->
@@ -679,9 +718,12 @@ interface MapSearchResult {
             <button type="button" (click)="closeTopUpModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors font-cairo cursor-pointer">إلغاء</button>
             <button type="button" id="btn-proceed-topup" (click)="proceedToCheckout('topup')"
               [disabled]="!selectedTopUp()"
-              class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              متابعة للدفع / Continue to Payment
+              class="px-7 py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/40 transition-all flex items-center gap-2 cursor-pointer">
+              <!-- Cart / Buy Icon -->
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              شراء الحزمة / Buy Package
             </button>
           </div>
         </div>
@@ -1315,15 +1357,15 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
         }
       },
       error: () => {
-        // Fallback hardcoded pricing if API unreachable
+        // Fallback hardcoded pricing (mirrors SubscriptionController.GetPlans)
         this.availablePlans.set([
-          { id: 'Free',       nameAr: 'المجانية',   nameEn: 'Free',       maxProjects: 2,  priceEgp: 0,   priceWithVat: 0,      description: '2 مشاريع نشطة — مجاني للأبد' },
-          { id: 'Pro',        nameAr: 'الاحترافية', nameEn: 'Pro',        maxProjects: 10, priceEgp: 299, priceWithVat: 340.86, description: '10 مشاريع نشطة + الميزات المتقدمة' },
-          { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799, priceWithVat: 910.86, description: 'مشاريع غير محدودة + الأولوية والدعم' }
+          { id: 'Free',       nameAr: 'المجانية',   nameEn: 'Free',       maxProjects: 2,  priceEgp: 0,    priceWithVat: 0,       description: '2 مشاريع مدى الحياة — مجاني للأبد / 2 Lifetime Projects Free' },
+          { id: 'Pro',        nameAr: 'الاحترافية', nameEn: 'Pro',        maxProjects: 10, priceEgp: 299,  priceWithVat: 340.86,  description: '10 مشاريع + الميزات المتقدمة / 10 Projects + Advanced Features' },
+          { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799,  priceWithVat: 910.86,  description: 'مشاريع غير محدودة + الأولوية / Unlimited + Priority Support' }
         ]);
         this.availableTopUps.set([
-          { extra: 5,  priceEgp: 99,  priceWithVat: 112.86, label: '+5 مشاريع' },
-          { extra: 10, priceEgp: 179, priceWithVat: 204.06, label: '+10 مشاريع' }
+          { extra: 2, priceEgp: 500,  priceWithVat: 570,   label: '+2 مشاريع' },
+          { extra: 5, priceEgp: 2500, priceWithVat: 2850,  label: '+5 مشاريع' }
         ]);
       }
     });
