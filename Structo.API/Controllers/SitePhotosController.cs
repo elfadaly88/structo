@@ -27,10 +27,15 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
         if (dto.File == null || dto.File.Length == 0)
             return BadRequest(new ApiResponse<bool> { Success = false, Message = "No file uploaded" });
 
+        var (isValid, errorMessage) = Structo.Core.Helpers.FileValidator.ValidateUploadedFile(dto.File);
+        if (!isValid)
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = errorMessage });
+
         var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         Directory.CreateDirectory(uploadFolder);
         
-        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.File.FileName);
+        var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+        var fileName = $"{Guid.NewGuid()}{ext}";
         var filePath = Path.Combine(uploadFolder, fileName);
 
         using (var stream = new FileStream(filePath, FileMode.Create))

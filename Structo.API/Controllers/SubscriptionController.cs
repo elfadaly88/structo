@@ -137,7 +137,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         var totalAmount = amount + taxAmount;
 
         // ── Build Reference Number ──
-        var refNumber = $"TXN-TEST-{new Random().Next(100000, 999999)}";
+        var refNumber = $"TXN-TEST-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000)}";
 
         // ── Record Transaction ──
         var txn = new SubscriptionTransaction

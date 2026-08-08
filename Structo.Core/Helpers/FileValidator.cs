@@ -8,10 +8,10 @@ namespace Structo.Core.Helpers;
 public static class FileValidator
 {
     // 🛡️ القائمة البيضاء المعتمدة للامتدادات الآمنة في السيستم (Images & PDFs)
-    private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
+    private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".pdf"];
 
     // 🛡️ القائمة البيضاء المقابلة للـ MIME Types لضمان عدم تزييف الامتداد
-    private static readonly string[] AllowedMimeTypes = ["image/jpeg", "image/png", "application/pdf"];
+    private static readonly string[] AllowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
     // الحد الأقصى للملف (مثلاً 5 ميجا بايت لحماية مساحة التخزين)
     private const long MaxFileSizeInBytes = 5 * 1024 * 1024;
@@ -33,7 +33,7 @@ public static class FileValidator
         var extension = Path.GetExtension(file.FileName)?.ToLower();
         if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension))
         {
-            return (false, $"INVALID_EXTENSION: الامتداد {extension} غير مسموح به. الامتدادات المدعومة هي فقط: JPG, PNG, PDF.");
+            return (false, $"INVALID_EXTENSION: الامتداد {extension} غير مسموح به. الامتدادات المدعومة هي فقط: JPG, PNG, WEBP, PDF.");
         }
 
         // 3. فحص الـ Content-Type/Mime-Type القادم من الـ Request
@@ -57,6 +57,7 @@ public static class FileValidator
             {
                 ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
                 ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47,
+                ".webp" => header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46,
                 ".pdf" => header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46,
                 _ => false
             };

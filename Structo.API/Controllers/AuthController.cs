@@ -84,6 +84,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register-tenant")]
+    [EnableRateLimiting("registrationPolicy")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> RegisterTenant([FromBody] TenantRegisterDto dto)
     {

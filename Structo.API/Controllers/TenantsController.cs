@@ -268,7 +268,7 @@ public class TenantsController(
 
         var taxAmount = 0.0m;
         var totalAmount = dto.Amount;
-        var refNumber = $"INV-ADMIN-{new Random().Next(100000, 999999)}";
+        var refNumber = $"INV-ADMIN-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000)}";
 
         var txn = new SubscriptionTransaction
         {

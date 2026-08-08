@@ -48,6 +48,21 @@ public class NotificationHub : Hub
         await base.OnConnectedAsync();
     }
 
+    public async Task JoinTenantGroup(string requestedTenantId)
+    {
+        var tenantIdClaim = Context.User?.FindFirstValue("tenantId");
+        var role = Context.User?.FindFirstValue(ClaimTypes.Role) ?? Context.User?.FindFirstValue("role");
+
+        bool isSuperAdmin = string.Equals(role, "SuperAdmin", System.StringComparison.OrdinalIgnoreCase);
+
+        if (!isSuperAdmin && !string.Equals(requestedTenantId, tenantIdClaim, System.StringComparison.OrdinalIgnoreCase))
+        {
+            throw new HubException("UNAUTHORIZED_TENANT_GROUP_JOIN: Cannot join real-time notification groups of another tenant.");
+        }
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, requestedTenantId);
+    }
+
     public override async Task OnDisconnectedAsync(System.Exception? exception)
     {
         await base.OnDisconnectedAsync(exception);
