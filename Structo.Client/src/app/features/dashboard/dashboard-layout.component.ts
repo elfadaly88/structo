@@ -39,7 +39,21 @@ interface NavItem {
         </div>
 
         <!-- User info, Language & Logout -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 sm:gap-4">
+          
+          <!-- Clickable Subscription Upgrade Badge for Tenant Users -->
+          @if (authService.currentUser()?.role !== 'SuperAdmin') {
+            <button 
+              (click)="openUpgradeModal()"
+              title="انقر لترقية الباقة وزيادة سعة المشاريع / Upgrade Capacity"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-purple-500/15 hover:from-amber-500/25 hover:via-indigo-500/25 hover:to-purple-500/25 border border-amber-500/35 text-amber-300 hover:text-amber-200 text-xs font-bold font-cairo transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer">
+              <span class="text-amber-400 animate-pulse text-sm">💎</span>
+              <span class="hidden sm:inline">شراء / ترقية مشاريع</span>
+              <span class="sm:hidden">ترقية</span>
+              <span class="text-[10px] bg-amber-500/30 text-amber-200 px-1.5 py-0.5 rounded font-mono font-bold">+إضافة</span>
+            </button>
+          }
+
           <button 
             (click)="langService.toggleLanguage()"
             class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
@@ -264,6 +278,10 @@ export class DashboardLayoutComponent {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);
+  }
+
+  openUpgradeModal(): void {
+    this.router.navigate(['/dashboard/projects'], { queryParams: { upgrade: 'true' } });
   }
 }
 

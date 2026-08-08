@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { ProjectDto, ProjectCreateDto } from '../../../core/models/project.models';
 import { TenantUserService, UserDto, UserCreateDto } from '../../../core/services/tenant-user.service';
@@ -155,33 +155,44 @@ const GOVERNORATES: GovernorateOption[] = [
       @if (activeTab() === 'projects') {
         <!-- High-end Billing Widget / Project Quota visual counter -->
         @if (currentUserRole() === 'TenantOwner' || currentUserRole() === 'Manager') {
-          <div class="bg-gradient-to-r from-slate-900 via-indigo-950/20 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 shadow-lg shadow-indigo-500/5 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-purple-950/30 border border-indigo-500/30 rounded-2xl p-5 shadow-xl shadow-indigo-500/10 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3.5 w-full md:w-auto">
-              <div class="h-10 w-10 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="h-11 w-11 bg-indigo-500/15 rounded-2xl flex items-center justify-center border border-indigo-500/30 text-indigo-400 shrink-0 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
               <div>
-                <h4 class="font-bold text-sm text-white font-cairo text-right rtl:text-left">حصة استخدام المشاريع / Project Subscription Quota</h4>
-                <p class="text-xs text-slate-400 mt-0.5 font-cairo text-right rtl:text-left">
-                  المشاريع المستهلكة: <span class="font-extrabold text-indigo-400 font-mono">{{ usedProjectsCount() }}</span> من أصل <span class="font-extrabold text-slate-200 font-mono">{{ allowedProjectsCount() }}</span>
+                <h4 class="font-black text-sm text-white font-cairo text-right rtl:text-left flex items-center gap-2">
+                  <span>سعة واستهلاك المشاريع</span>
+                  <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
+                    {{ usedProjectsCount() }} / {{ allowedProjectsCount() }}
+                  </span>
+                </h4>
+                <p class="text-xs text-slate-400 mt-1 font-cairo text-right rtl:text-left">
+                  المشاريع المستهلكة: <strong class="text-indigo-300 font-mono">{{ usedProjectsCount() }}</strong> من أصل <strong class="text-white font-mono">{{ allowedProjectsCount() }}</strong> متاح في باقتك الحالية.
                 </p>
               </div>
             </div>
-            <!-- Progress Bar -->
-            <div class="w-full md:w-64 bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800 shrink-0">
-              <div class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" 
-                [style.width.%]="(usedProjectsCount() / allowedProjectsCount()) * 100 > 100 ? 100 : (usedProjectsCount() / allowedProjectsCount()) * 100">
+
+            <!-- Progress Bar & Permanent CTA Button -->
+            <div class="flex items-center gap-4 w-full md:w-auto">
+              <div class="w-full md:w-48 bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800 shrink-0">
+                <div class="bg-gradient-to-r from-emerald-500 via-indigo-500 to-amber-500 h-3 rounded-full transition-all duration-500" 
+                  [style.width.%]="(usedProjectsCount() / allowedProjectsCount()) * 100 > 100 ? 100 : (usedProjectsCount() / allowedProjectsCount()) * 100">
+                </div>
               </div>
-            </div>
-            @if (usedProjectsCount() >= allowedProjectsCount()) {
+
+              <!-- Permanent CTA Upgrade Button -->
               <button 
                 (click)="isUpgradeModalOpen.set(true)"
-                class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-xs font-semibold rounded-xl text-white font-cairo shadow-lg shadow-orange-500/20 active:scale-95 transition-all duration-200 cursor-pointer text-center">
-                ترقية الباقة / Upgrade Package
+                class="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-xs font-black rounded-xl text-white font-cairo shadow-lg shadow-indigo-600/25 active:scale-95 transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2 ring-2 ring-amber-500/30 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>+ شراء مشاريع إضافية</span>
               </button>
-            }
+            </div>
           </div>
         }
 
@@ -1332,6 +1343,7 @@ export class ProjectsComponent implements OnInit {
   protected readonly langService = inject(LanguageService);
   private readonly translateService = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
   private readonly confirmService = inject(ConfirmModalService);
@@ -1462,6 +1474,12 @@ export class ProjectsComponent implements OnInit {
       this.router.navigate(['/dashboard/projects'], { replaceUrl: true });
       return;
     }
+
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      if (params['upgrade'] === 'true') {
+        this.isUpgradeModalOpen.set(true);
+      }
+    });
 
     if (url.includes('/dashboard/users')) {
       this.activeTab.set('users');
@@ -1966,6 +1984,11 @@ export class ProjectsComponent implements OnInit {
 
   openProjectModal(): void {
     if (this.usedProjectsCount() >= this.allowedProjectsCount()) {
+      this.toastService.show(
+        'استهلكت سعة باقتك / Quota Limit Reached',
+        'لقد استهلكت جميع المشاريع المتاحة في باقتك، يمكنك إضافة مشاريع جديدة فوراً لمتابعة العمل.',
+        'warning'
+      );
       this.isUpgradeModalOpen.set(true);
       return;
     }
