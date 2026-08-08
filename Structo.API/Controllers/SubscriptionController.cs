@@ -32,12 +32,11 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         { "Enterprise", (-1,  799m) }, // -1 = unlimited
     };
 
-    // +1 → 2,000 EGP | +2 → 3,500 EGP | +5 → 7,500 EGP
+    // +1 → 250 EGP | +5 → 950 EGP
     private static readonly Dictionary<int, decimal> TopUpPricing = new()
     {
-        { 1,  2000m  },
-        { 2,  3500m  },
-        { 5,  7500m  },
+        { 1,  250m  },
+        { 5,  950m  },
     };
 
     // ─────────────────────────────────────────────────────────
@@ -81,7 +80,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
             var extra = dto.ExtraProjectsCount!.Value;
             if (!TopUpPricing.ContainsKey(extra))
                 return BadRequest(new ApiResponse<SubscriptionUpgradeResponseDto>
-                    { Success = false, Message = "عدد المشاريع الإضافية يجب أن يكون 1 أو 2 أو 5 مشاريع" });
+                    { Success = false, Message = "عدد المشاريع الإضافية يجب أن يكون 1 أو 5 مشاريع" });
 
             // Enterprise (unlimited) cannot purchase add-ons
             if (tenant.MaxActiveProjects == -1)
@@ -197,9 +196,8 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
 
         var topups = new[]
         {
-            new { extra = 1, priceEgp = 2000m, priceWithVat = Math.Round(2000m * 1.14m, 2), label = "+1 مشروع" },
-            new { extra = 2, priceEgp = 3500m, priceWithVat = Math.Round(3500m * 1.14m, 2), label = "+2 مشاريع" },
-            new { extra = 5, priceEgp = 7500m, priceWithVat = Math.Round(7500m * 1.14m, 2), label = "+5 مشاريع" },
+            new { extra = 1, priceEgp = 250m, priceWithVat = Math.Round(250m * 1.14m, 2), label = "+1 مشروع" },
+            new { extra = 5, priceEgp = 950m, priceWithVat = Math.Round(950m * 1.14m, 2), label = "+5 مشاريع" },
         };
 
         return Ok(new ApiResponse<object>

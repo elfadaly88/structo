@@ -4,6 +4,7 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TenantsService } from '../../../core/services/tenants.service';
+import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { TenantDto } from '../../../core/services/public-directory.service';
 import { ProjectDto } from '../../../core/models/project.models';
 
@@ -153,6 +154,12 @@ interface ModeratedProject {
                           (click)="inspectTenant(tenant)"
                           class="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-indigo-400 border border-indigo-900/30 rounded-xl text-[10px] font-bold font-cairo transition-all duration-200 active:scale-95 cursor-pointer">
                           مراجعة / Inspect
+                        </button>
+
+                        <button
+                          (click)="openManualUpgradeModal(tenant)"
+                          class="px-2.5 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/30 rounded-xl text-[10px] font-bold font-cairo transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1">
+                          <span>💳 ترقية وإيصال</span>
                         </button>
                       </div>
                     </td>
@@ -556,10 +563,184 @@ interface ModeratedProject {
         </div>
       </div>
     }
+
+    <!-- SUPER ADMIN MANUAL UPGRADE & RECEIPT MODAL -->
+    @if (isManualUpgradeModalOpen() && selectedTenantForUpgrade(); as t) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div (click)="closeManualUpgradeModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+
+        <div class="relative z-10 w-full max-w-lg bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <!-- Modal Header -->
+          <div class="px-6 py-4 border-b border-slate-850 flex items-center justify-between bg-slate-900/60">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">💳</span>
+              <div>
+                <h3 class="font-bold text-base text-white font-cairo">إدارة الاشتراك والإيصالات يدويًا</h3>
+                <p class="text-xs text-slate-400 font-cairo">شركة: <strong class="text-indigo-400">{{ t.name }}</strong></p>
+              </div>
+            </div>
+            <button (click)="closeManualUpgradeModal()" class="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition-colors cursor-pointer">
+              ✕
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          @if (!adminReceiptData()) {
+            <!-- FORM STATE -->
+            <div class="p-6 space-y-4 text-right font-cairo">
+              
+              <div class="p-3 bg-indigo-950/40 border border-indigo-500/20 rounded-xl text-xs text-indigo-300 flex items-center justify-between">
+                <span>حد المشاريع الحالي للشركة:</span>
+                <span class="font-mono font-bold text-amber-400 text-sm">{{ t.maxActiveProjects }} مشاريع</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">عدد المشاريع الإضافية المراد إضافتها *</label>
+                <input 
+                  type="number" 
+                  [ngModel]="manualProjectsCount()" 
+                  (ngModelChange)="manualProjectsCount.set($event)"
+                  min="1" 
+                  class="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500 font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">المبلغ المحصّل يدويًا (EGP) *</label>
+                <input 
+                  type="number" 
+                  [ngModel]="manualAmountEgp()" 
+                  (ngModelChange)="manualAmountEgp.set($event)"
+                  min="0" 
+                  class="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500 font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">طريقة الدفع *</label>
+                <select 
+                  [ngModel]="manualPaymentMethod()" 
+                  (ngModelChange)="manualPaymentMethod.set($event)"
+                  class="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500 font-cairo">
+                  <option value="Cash">نقداً / كاش (Cash)</option>
+                  <option value="BankTransfer">تحويل بنكي / حساب الشركة (Bank Transfer)</option>
+                  <option value="VodafoneCash">فودافون كاش / محفظة إلكترونية (Vodafone Cash)</option>
+                  <option value="InstaPay">تطبيق إنستاباي (InstaPay)</option>
+                  <option value="Other">طريقة أخرى / مخصصة</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">ملاحظات الإيصال (اختياري)</label>
+                <input 
+                  type="text" 
+                  [ngModel]="manualNotes()" 
+                  (ngModelChange)="manualNotes.set($event)"
+                  placeholder="مثال: تم تحصيل المبلغ بحوالة بنكية رقم 84920" 
+                  class="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 font-cairo" />
+              </div>
+
+              <div class="pt-2 flex items-center justify-end gap-3">
+                <button 
+                  (click)="closeManualUpgradeModal()" 
+                  class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer">
+                  إلغاء
+                </button>
+
+                <button 
+                  [disabled]="isSubmittingManualUpgrade()"
+                  (click)="submitManualUpgrade()"
+                  class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer">
+                  @if (isSubmittingManualUpgrade()) {
+                    <span>جاري التفعيل وتوليد الإيصال...</span>
+                  } @else {
+                    <span>⚡ تفعيل وإصدار إيصال رسمياً</span>
+                  }
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- OFFICIAL PRINTABLE ADMIN RECEIPT -->
+            <div class="p-6 space-y-5 text-right font-cairo">
+              
+              <div class="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl relative shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-indigo-500/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400 text-xl font-bold">
+                      📜
+                    </div>
+                    <div>
+                      <h4 class="font-black text-base text-white">إيصال سداد وتفعيل إداري محصّل</h4>
+                      <span class="text-[10px] text-indigo-400 font-mono">SUPER ADMIN OFFICIAL INVOICE</span>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 rounded-lg">مكتمل ومفعل</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">رقم الإيصال المرجعي الإداري</span>
+                    <span class="font-mono font-bold text-indigo-400 text-sm">{{ adminReceiptData()?.referenceNumber }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">اسم الشركة والمؤسسة</span>
+                    <span class="font-bold text-white truncate block">{{ t.name }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">الرصيد المضاف</span>
+                    <span class="font-bold text-emerald-400">+{{ adminReceiptData()?.extraProjectsAdded }} مشاريع إضافية</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">السعة الكلية الجديدة</span>
+                    <span class="font-bold text-amber-400 font-mono text-sm">{{ adminReceiptData()?.newMaxActiveProjects }} مشاريع</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">المبلغ المحصل + الضريبة</span>
+                    <span class="font-mono font-black text-amber-400 text-sm">{{ adminReceiptData()?.totalAmount | number }} EGP</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">طريقة الدفع المسجلة</span>
+                    <span class="font-bold text-white">{{ manualPaymentMethod() }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <button 
+                  (click)="sendAdminReceiptWhatsApp()"
+                  class="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>📲 إرسال الإيصال عبر الواتساب</span>
+                </button>
+
+                <button 
+                  (click)="printAdminReceipt()"
+                  class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <span>🖨️ طباعة الإيصال / Print PDF</span>
+                </button>
+              </div>
+
+              <div class="pt-2">
+                <button 
+                  (click)="closeManualUpgradeModal()"
+                  class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/30 cursor-pointer">
+                  تم الإغلاق والعودة لقائمة الشركات
+                </button>
+              </div>
+
+            </div>
+          }
+
+        </div>
+      </div>
+    }
   `
 })
 export class TenantsComponent implements OnInit {
   private readonly tenantsService = inject(TenantsService);
+  private readonly whatsAppLink = inject(WhatsAppLinkService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly tenants = signal<TenantDto[]>([]);
@@ -576,6 +757,16 @@ export class TenantsComponent implements OnInit {
   readonly isLoadingAudit = signal(false);
   readonly moderatedProjects = signal<ModeratedProject[]>([]);
   readonly isModeratingId = signal<string | null>(null);
+
+  // Super Admin Manual Upgrade Signals
+  readonly isManualUpgradeModalOpen = signal(false);
+  readonly selectedTenantForUpgrade = signal<TenantDto | null>(null);
+  readonly manualProjectsCount = signal<number>(5);
+  readonly manualAmountEgp = signal<number>(950);
+  readonly manualPaymentMethod = signal<string>('Cash');
+  readonly manualNotes = signal<string>('');
+  readonly isSubmittingManualUpgrade = signal<boolean>(false);
+  readonly adminReceiptData = signal<any | null>(null);
 
   readonly filteredTenants = computed(() => {
     const query = this.searchQuery.toLowerCase().trim();
@@ -847,5 +1038,79 @@ export class TenantsComponent implements OnInit {
         this.isModeratingId.set(null);
       }
     });
+  }
+
+  openManualUpgradeModal(tenant: TenantDto): void {
+    this.selectedTenantForUpgrade.set(tenant);
+    this.manualProjectsCount.set(5);
+    this.manualAmountEgp.set(950);
+    this.manualPaymentMethod.set('Cash');
+    this.manualNotes.set('');
+    this.adminReceiptData.set(null);
+    this.isManualUpgradeModalOpen.set(true);
+  }
+
+  closeManualUpgradeModal(): void {
+    this.isManualUpgradeModalOpen.set(false);
+    this.selectedTenantForUpgrade.set(null);
+    this.adminReceiptData.set(null);
+  }
+
+  submitManualUpgrade(): void {
+    const tenant = this.selectedTenantForUpgrade();
+    if (!tenant) return;
+
+    if (this.manualProjectsCount() <= 0) {
+      this.errorMessage.set('عدد المشاريع الإضافية يجب أن يكون أكبر من 0.');
+      return;
+    }
+
+    this.isSubmittingManualUpgrade.set(true);
+    this.errorMessage.set(null);
+
+    const payload = {
+      extraProjectsCount: this.manualProjectsCount(),
+      amount: this.manualAmountEgp(),
+      paymentMethod: this.manualPaymentMethod(),
+      notes: this.manualNotes()
+    };
+
+    this.tenantsService.manualUpgradeTenant(tenant.id, payload).subscribe({
+      next: (res) => {
+        this.isSubmittingManualUpgrade.set(false);
+        if (res.success && res.data) {
+          this.adminReceiptData.set(res.data);
+          this.tenants.update(list => list.map(t => t.id === tenant.id ? { ...t, maxActiveProjects: res.data.newMaxActiveProjects } : t));
+          this.successMessage.set(`تم إضافة ${payload.extraProjectsCount} مشاريع وتوليد الإيصال رقم ${res.data.referenceNumber} بنجاح!`);
+        } else {
+          this.errorMessage.set(res.message || 'فشلت عملية الترقية اليدوية.');
+        }
+      },
+      error: (err) => {
+        this.isSubmittingManualUpgrade.set(false);
+        this.errorMessage.set(err.error?.message || 'خطأ في تفعيل الترقية اليدوية.');
+      }
+    });
+  }
+
+  sendAdminReceiptWhatsApp(): void {
+    const receipt = this.adminReceiptData();
+    const tenant = this.selectedTenantForUpgrade();
+    if (!receipt || !tenant) return;
+
+    const phone = tenant.whatsAppPhone || tenant.personalPhone;
+    if (!phone) {
+      this.errorMessage.set('لم يتم إرسال الإيصال عبر الواتساب لعدم وجود رقم واتساب مسجل في بروفايل الشركة.');
+      return;
+    }
+
+    const msg = `مرحباً ${tenant.name}، تم إضافة مشاريع جديدة إلى رصيد حسابكم وسداد الرسم رقم (${receipt.referenceNumber}) بمبلغ ${receipt.totalAmount} EGP لعدد +${receipt.extraProjectsAdded} مشاريع إضافية (إجمالي المتاح: ${receipt.newMaxActiveProjects} مشروع). شكراً لاستخدامكم أُسُس!`;
+
+    this.whatsAppLink.openChat(phone, msg);
+    this.successMessage.set('تم فتح الواتساب لإرسال الإيصال بنجاح.');
+  }
+
+  printAdminReceipt(): void {
+    window.print();
   }
 }

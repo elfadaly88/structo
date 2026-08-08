@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Structo.Core.DTOs.Common;
+using Structo.Core.DTOs.Subscription;
 using Structo.Core.DTOs.Tenants;
 using Structo.Core.Entities;
 using Structo.Infrastructure.Data;
@@ -231,6 +232,82 @@ public class TenantsController(
             Data = result,
             Success = true,
             Message = "Tenant audit profile retrieved successfully."
+        });
+    }
+
+    [HttpPost("{id}/manual-upgrade")]
+    [HttpPost("/api/admin/tenants/{id}/manual-upgrade")]
+    public async Task<ActionResult<ApiResponse<SubscriptionUpgradeResponseDto>>> ManualUpgrade(
+        Guid id,
+        [FromBody] ManualUpgradeRequestDto dto)
+    {
+        var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+        if (tenant == null)
+        {
+            return NotFound(new ApiResponse<SubscriptionUpgradeResponseDto>
+            {
+                Success = false,
+                Message = "Tenant not found."
+            });
+        }
+
+        if (dto.ExtraProjectsCount <= 0)
+        {
+            return BadRequest(new ApiResponse<SubscriptionUpgradeResponseDto>
+            {
+                Success = false,
+                Message = "عدد المشاريع الإضافية يجب أن يكون أكبر من 0."
+            });
+        }
+
+        int newMaxProjects = tenant.MaxActiveProjects == -1 
+            ? -1 
+            : tenant.MaxActiveProjects + dto.ExtraProjectsCount;
+
+        tenant.MaxActiveProjects = newMaxProjects;
+
+        var taxAmount = Math.Round(dto.Amount * 0.14m, 2);
+        var totalAmount = dto.Amount + taxAmount;
+        var refNumber = $"INV-ADMIN-{new Random().Next(100000, 999999)}";
+
+        var txn = new SubscriptionTransaction
+        {
+            TenantId = id,
+            TransactionType = "ManualAdminTopUp",
+            PlanName = tenant.SubscriptionPlan.ToString(),
+            ExtraProjectsAdded = dto.ExtraProjectsCount,
+            ResultingMaxProjects = newMaxProjects,
+            Amount = dto.Amount,
+            TaxAmount = taxAmount,
+            TotalAmount = totalAmount,
+            PaymentGateway = "SuperAdminManual",
+            PaymentMethod = dto.PaymentMethod ?? "Cash",
+            Status = "Paid",
+            ReferenceNumber = refNumber,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.SubscriptionTransactions.Add(txn);
+        await context.SaveChangesAsync();
+
+        var response = new SubscriptionUpgradeResponseDto
+        {
+            TransactionType = "ManualAdminTopUp",
+            NewPlan = tenant.SubscriptionPlan.ToString(),
+            NewMaxActiveProjects = newMaxProjects,
+            ExtraProjectsAdded = dto.ExtraProjectsCount,
+            Amount = dto.Amount,
+            TaxAmount = taxAmount,
+            TotalAmount = totalAmount,
+            ReferenceNumber = refNumber,
+            Status = "Paid"
+        };
+
+        return Ok(new ApiResponse<SubscriptionUpgradeResponseDto>
+        {
+            Success = true,
+            Message = $"تم إضافة {dto.ExtraProjectsCount} مشاريع إضافية وتوليد إيصال رقم {refNumber} بنجاح!",
+            Data = response
         });
     }
 }

@@ -823,67 +823,70 @@ const GOVERNORATES: GovernorateOption[] = [
               <div class="p-5 bg-slate-950/50 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-slate-700 transition-all duration-200">
                 <div>
                   <div class="flex items-center justify-between mb-2">
-                    <span class="px-2.5 py-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-lg font-cairo">مجاني مدى الحياة</span>
+                    <span class="px-2.5 py-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-lg font-cairo">مجاناً مدى الحياة</span>
                     <span class="text-xs font-mono font-bold text-slate-400">0 EGP</span>
                   </div>
-                  <h4 class="font-bold text-base text-white font-cairo">المشروع الأول / 1st Project</h4>
-                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">باقة التجربة المجانية مدى الحياة للبدء السريع وإنشاء مشروعك الأول.</p>
+                  <h4 class="font-bold text-base text-white font-cairo">الباقة المجانية / Free Plan</h4>
+                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">2 مشاريع كلياً مجاناً مدى الحياة (تُمنح تلقائياً عند التسجيل للبدء السريع).</p>
                 </div>
                 <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-emerald-400 font-cairo font-semibold">
-                  <span>مضمّن في حسابك حالياً</span>
-                  <span>✓ مفعل</span>
+                  <span>مضمّن في حسابك تلقائياً</span>
+                  <span>✓ 2 مشاريع</span>
                 </div>
               </div>
 
-              <!-- Tier 2: 1 Extra Project -->
-              <div class="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/30 border border-indigo-500/30 rounded-2xl flex flex-col justify-between hover:border-indigo-500/60 transition-all duration-200 shadow-lg relative group">
+              <!-- Tier 2: 1 Extra Project (250 EGP) -->
+              <div class="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/30 border border-emerald-500/40 rounded-2xl flex flex-col justify-between hover:border-emerald-500/70 transition-all duration-200 shadow-lg relative group">
                 <div>
                   <div class="flex items-center justify-between mb-2">
-                    <span class="px-2.5 py-1 text-[11px] font-bold text-indigo-300 bg-indigo-950/80 border border-indigo-500/30 rounded-lg font-cairo">+1 مشروع إضافي</span>
-                    <span class="text-base font-black text-indigo-400 font-mono">2,000 EGP</span>
+                    <span class="px-2.5 py-1 text-[11px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg font-cairo">+1 مشروع إضافي</span>
+                    <span class="text-xl font-black text-emerald-400 font-mono">250 EGP</span>
                   </div>
-                  <h4 class="font-bold text-base text-white font-cairo">إضافة مشروع واحد / +1 Project</h4>
-                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">تفعيل مشروع إضافي واحد فوري في حسابك مع جميع الميزات المتقدمة.</p>
+                  <h4 class="font-bold text-base text-white font-cairo">حزمة مشروع واحد / +1 Extra Project</h4>
+                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">تفعيل مشروع إضافي واحد فوري في حسابك مع جميع ميزات المنصة الكاملة.</p>
                 </div>
                 <div class="mt-4 pt-3 border-t border-slate-800/60">
                   <button 
-                    (click)="openCheckout({ extraProjectsCount: 1, titleAr: 'إضافة مشروع واحد (+1 Project)', titleEn: 'Extra 1 Project', priceEgp: 2000, badge: 'تفعيل فوري' })"
-                    class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 active:scale-[0.98] cursor-pointer">
-                    <span>شراء وتفعيل الآن</span>
+                    (click)="openCheckout({ extraProjectsCount: 1, titleAr: 'حزمة مشروع واحد (+1 Extra Project)', titleEn: 'Extra 1 Project', priceEgp: 250, badge: 'تفعيل فوري' })"
+                    class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-[0.98] ring-2 ring-emerald-500/30 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                     </svg>
+                    <span>شراء وتفعيل مشروع (250 EGP) 💳</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Tier 3: 5 Project Pack (FEATURED) -->
-              <div class="p-5 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-purple-950/40 border-2 border-indigo-500/60 rounded-2xl flex flex-col justify-between hover:border-indigo-400 transition-all duration-200 shadow-xl shadow-indigo-500/10 relative overflow-hidden md:col-span-2">
-                <div class="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-indigo-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl font-cairo shadow-md">
-                  ⭐ الأكثر طلباً — وفر 2,500 جنيه!
+              <!-- Tier 3: 5 Project Pack (950 EGP - FEATURED) -->
+              <div class="p-5 bg-gradient-to-br from-indigo-950/50 via-slate-900 to-amber-950/30 border-2 border-amber-500/70 rounded-2xl flex flex-col justify-between hover:border-amber-400 transition-all duration-200 shadow-xl shadow-amber-500/10 relative overflow-hidden md:col-span-2">
+                <div class="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-indigo-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl font-cairo shadow-md">
+                  ⭐ الأكثر طلباً — وفر 300 جنيه!
                 </div>
                 <div class="pt-2">
                   <div class="flex items-center justify-between mb-2">
-                    <span class="px-2.5 py-1 text-[11px] font-bold text-amber-300 bg-amber-950/60 border border-amber-500/30 rounded-lg font-cairo">باقة 5 مشاريع</span>
+                    <span class="px-2.5 py-1 text-[11px] font-bold text-amber-300 bg-amber-950/80 border border-amber-500/40 rounded-lg font-cairo">حزمة 5 مشاريع</span>
                     <div class="text-left rtl:text-right">
-                      <span class="text-xl font-black text-indigo-300 font-mono">7,500 EGP</span>
-                      <span class="block text-[11px] text-slate-500 line-through font-mono">10,000 EGP</span>
+                      <span class="text-2xl font-black text-amber-400 font-mono">950 EGP</span>
+                      <span class="block text-[11px] text-slate-500 line-through font-mono">1,250 EGP</span>
                     </div>
                   </div>
-                  <h4 class="font-bold text-lg text-white font-cairo">باقة 5 مشاريع / 5 Project Pack</h4>
-                  <p class="text-xs text-slate-300 font-cairo mt-1 leading-relaxed">وفر أكثر وفعّل 5 مشاريع كاملة دفعة واحدة بقيمة 1,500 ج.م فقط للمشروع بدلاً من 2,000 ج.م.</p>
+                  <h4 class="font-bold text-lg text-white font-cairo">حزمة 5 مشاريع / +5 Projects Pack</h4>
+                  <p class="text-xs text-slate-300 font-cairo mt-1 leading-relaxed">تفعيل 5 مشاريع إضافية فورية بقيمة 190 ج.م فقط للمشروع بدلاً من 250 ج.م.</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="text-xs text-indigo-300 font-cairo flex items-center gap-1.5">
+                <div class="mt-4 pt-3 border-t border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs text-amber-300 font-cairo flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    خصم 25% فوري ومشاريع جاهزة للتفعيل
+                    تفعيل 5 مشاريع فورية + توفير 24% خصم
                   </span>
                   <button 
-                    (click)="openCheckout({ extraProjectsCount: 5, titleAr: 'باقة 5 مشاريع (5 Project Pack)', titleEn: '5 Project Pack', priceEgp: 7500, badge: 'توفير 2,500 EGP' })"
-                    class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-[0.98] cursor-pointer">
-                    <span>شراء وتفعيل الباقة الآن 💳</span>
+                    (click)="openCheckout({ extraProjectsCount: 5, titleAr: 'حزمة 5 مشاريع (+5 Projects Pack)', titleEn: '+5 Projects Pack', priceEgp: 950, badge: 'توفير 300 EGP' })"
+                    class="w-full sm:w-auto px-7 py-3 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/30 active:scale-[0.98] ring-2 ring-amber-500/40 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                    </svg>
+                    <span>شراء وتفعيل 5 مشاريع (950 EGP) 🛒</span>
                   </button>
                 </div>
               </div>
@@ -1068,27 +1071,81 @@ const GOVERNORATES: GovernorateOption[] = [
               </button>
             </div>
           } @else {
-            <!-- SUCCESS STATE -->
-            <div class="p-8 text-center space-y-4">
-              <div class="w-16 h-16 bg-emerald-500/20 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto text-emerald-400 text-2xl animate-bounce">
-                ✓
-              </div>
-              <h3 class="text-xl font-black text-white font-cairo">تمت عملية الدفع والتفعيل بنجاح! 🎉</h3>
-              <p class="text-xs text-slate-300 font-cairo max-w-sm mx-auto leading-relaxed">
-                تم إضافة <strong class="text-emerald-400 font-bold">+{{ paymentSuccessData()?.extraProjectsAdded }} مشاريع</strong> جديدة إلى حسابك. إجمالي حد المشاريع المتاح الآن: <strong class="text-white font-bold">{{ paymentSuccessData()?.newMaxActiveProjects }} مشاريع</strong>.
-              </p>
+            <!-- SUCCESS STATE / OFFICIAL PAYMENT RECEIPT MODAL -->
+            <div class="p-6 space-y-5 text-right rtl:text-left font-cairo">
+              
+              <!-- Receipt Card Header -->
+              <div class="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-2xl relative overflow-hidden shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-emerald-400 text-xl font-bold">
+                      ✓
+                    </div>
+                    <div>
+                      <h4 class="font-black text-base text-white">إيصال سداد رسم اشتراك رسمياً</h4>
+                      <span class="text-[10px] text-emerald-400 font-mono">OFFICIAL PAYMENT RECEIPT</span>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 rounded-lg">مدفوع / PAID</span>
+                </div>
 
-              <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-400 max-w-xs mx-auto">
-                الرقم المرجعي: <span class="text-indigo-400 font-bold">{{ paymentSuccessData()?.referenceNumber }}</span>
+                <!-- Receipt Fields Breakdown -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">رقم الإيصال المرجعي</span>
+                    <span class="font-mono font-bold text-indigo-400 text-sm">{{ paymentSuccessData()?.referenceNumber || 'TXN-SUCCESS' }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">شركة العميل</span>
+                    <span class="font-bold text-white truncate block">{{ tenantProfile()?.name || 'شركة معتمدة' }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">الباقة والحزمة</span>
+                    <span class="font-bold text-white">{{ selectedCheckoutPackage()?.titleAr || 'ترقية سعة الحساب' }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">الرصيد المضاف / السعة الكلية</span>
+                    <span class="font-bold text-emerald-400">+{{ paymentSuccessData()?.extraProjectsAdded }} مشاريع (إجمالي: {{ paymentSuccessData()?.newMaxActiveProjects }})</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">طريقة الدفع</span>
+                    <span class="font-bold text-white">{{ selectedPaymentMethod() === 'CreditCard' ? 'بطاقة بنكية 💳' : 'محفظة إلكترونية / إنستاباي 📱' }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">المبلغ الكلي المدفوع</span>
+                    <span class="font-mono font-black text-amber-400 text-sm">{{ paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount | number }} EGP</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="pt-4">
+              <!-- Dispatch Action Buttons -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <button 
-                  (click)="closeCheckoutModal(); openProjectModal()"
-                  class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl font-cairo transition-all shadow-lg shadow-indigo-600/30 cursor-pointer">
-                  إنشاء مشروع جديد الآن 🚀
+                  (click)="sendReceiptWhatsApp()"
+                  class="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>📲 إرسال الإيصال عبر الواتساب</span>
+                </button>
+
+                <button 
+                  (click)="printReceipt()"
+                  class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <span>🖨️ طباعة الإيصال / Print PDF</span>
                 </button>
               </div>
+
+              <div class="pt-2">
+                <button 
+                  (click)="closeCheckoutModal(); openProjectModal()"
+                  class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl transition-all shadow-xl shadow-indigo-600/30 cursor-pointer">
+                  العودة للمشاريع وإنشاء مشروع جديد 🚀
+                </button>
+              </div>
+
             </div>
           }
 
@@ -2129,6 +2186,35 @@ export class ProjectsComponent implements OnInit {
         this.toastService.show('خطأ / Error', msg, 'error');
       }
     });
+  }
+
+  sendReceiptWhatsApp(): void {
+    const successData = this.paymentSuccessData();
+    const pkg = this.selectedCheckoutPackage();
+    const tenantPhone = this.tenantProfile()?.whatsAppPhone || this.tenantProfile()?.personalPhone || (this.authService.currentUser() as any)?.whatsAppPhone;
+
+    if (!tenantPhone) {
+      this.toastService.show(
+        'تنبيه الواتساب / WhatsApp Alert',
+        'لم يتم إرسال الإيصال عبر الواتساب لعدم وجود رقم واتساب مسجل في بروفايل الشركة.',
+        'warning'
+      );
+      return;
+    }
+
+    const companyName = this.tenantProfile()?.name || this.authService.currentUser()?.name || 'شركة معتمدة';
+    const refNo = successData?.referenceNumber || 'TXN-000000';
+    const totalAmount = successData?.totalAmount || pkg?.totalAmount || 0;
+    const addedProjects = successData?.extraProjectsAdded || pkg?.extraProjectsCount || 1;
+
+    const msg = `مرحباً ${companyName}، تم إصدار إيصال سداد رسوم اشتراك منصة أُسُس/Structo رقم (${refNo}) بمبلغ إجمالي ${totalAmount} EGP لعدد +${addedProjects} مشاريع إضافية. شكراً لاستخدامكم أُسُس!`;
+
+    this.whatsappLink.openChat(tenantPhone, msg);
+    this.toastService.show('نجاح / Success', 'تم فتح الواتساب لإرسال ملخص الإيصال بنجاح.', 'success');
+  }
+
+  printReceipt(): void {
+    window.print();
   }
 
   viewDetails(id: string): void {

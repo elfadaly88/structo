@@ -1364,8 +1364,8 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
           { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799,  priceWithVat: 910.86,  description: 'مشاريع غير محدودة + الأولوية / Unlimited + Priority Support' }
         ]);
         this.availableTopUps.set([
-          { extra: 2, priceEgp: 500,  priceWithVat: 570,   label: '+2 مشاريع' },
-          { extra: 5, priceEgp: 2500, priceWithVat: 2850,  label: '+5 مشاريع' }
+          { extra: 1, priceEgp: 250, priceWithVat: 285,  label: '+1 مشروع' },
+          { extra: 5, priceEgp: 950, priceWithVat: 1083, label: '+5 مشاريع' }
         ]);
       }
     });
