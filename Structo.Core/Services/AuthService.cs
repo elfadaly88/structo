@@ -137,62 +137,77 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             Longitude = dto.Longitude
         };
 
-        var tenantsDbSet = context.Set<Tenant>();
-        tenantsDbSet.Add(tenant);
-
-        var nameParts = dto.OwnerName?.Trim().Split(' ') ?? ["Admin"];
-        var firstName = string.IsNullOrWhiteSpace(nameParts.FirstOrDefault()) ? "Admin" : nameParts.FirstOrDefault();
-        var lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "User";
-
-        var user = new User
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
         {
-            FirstName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(firstName) ?? string.Empty,
-            LastName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lastName) ?? string.Empty,
-            Email = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.AdminEmail).ToLower().Trim(),
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role = UserRole.TenantOwner,
-            TenantId = tenant.Id,
-            IsApproved = true,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
-            WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone),
-            NationalId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.NationalId),
-            SyndicateId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.SyndicateId),
-            ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress),
-            MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl),
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude
-        };
+            var tenantsDbSet = context.Set<Tenant>();
+            tenantsDbSet.Add(tenant);
 
-        usersDbSet.Add(user);
-        await context.SaveChangesAsync();
+            var nameParts = dto.OwnerName?.Trim().Split(' ') ?? ["Admin"];
+            var firstName = string.IsNullOrWhiteSpace(nameParts.FirstOrDefault()) ? "Admin" : nameParts.FirstOrDefault();
+            var lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "User";
 
-        var token = tokenProvider.GenerateToken(user);
-        var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-        await context.SaveChangesAsync();
+            var user = new User
+            {
+                FirstName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(firstName) ?? string.Empty,
+                LastName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lastName) ?? string.Empty,
+                Email = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.AdminEmail).ToLower().Trim(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Role = UserRole.TenantOwner,
+                TenantId = tenant.Id,
+                IsApproved = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
+                WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone),
+                NationalId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.NationalId),
+                SyndicateId = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.SyndicateId),
+                ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress),
+                MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl),
+                Latitude = dto.Latitude,
+                Longitude = dto.Longitude
+            };
 
-        bool isProfileComplete = !string.IsNullOrEmpty(tenant.ManualAddress) && 
-                                tenant.Latitude.HasValue && tenant.Longitude.HasValue;
+            usersDbSet.Add(user);
+            await context.SaveChangesAsync();
 
-        var loginResponse = new LoginResponseDto
+            var token = tokenProvider.GenerateToken(user);
+            var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            bool isProfileComplete = !string.IsNullOrEmpty(tenant.ManualAddress) && 
+                                    tenant.Latitude.HasValue && tenant.Longitude.HasValue;
+
+            var loginResponse = new LoginResponseDto
+            {
+                Token = token,
+                RefreshToken = refreshToken,
+                UserId = user.Id,
+                Role = user.Role.ToString(),
+                TenantId = user.TenantId,
+                Name = $"{user.FirstName} {user.LastName}",
+                IsApproved = true,
+                IsProfileComplete = isProfileComplete
+            };
+
+            // Notify SuperAdmin about the new registration via NotificationEngine — best effort, never fail registration
+            try
+            {
+                await notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName);
+            }
+            catch (Exception) { /* Best-effort notification delivery */ }
+
+            return (true, loginResponse, "Registration successful! Account activated instantly.");
+        }
+        catch (Exception ex)
         {
-            Token = token,
-            RefreshToken = refreshToken,
-            UserId = user.Id,
-            Role = user.Role.ToString(),
-            TenantId = user.TenantId,
-            Name = $"{user.FirstName} {user.LastName}",
-            IsApproved = true,
-            IsProfileComplete = isProfileComplete
-        };
-
-        // Notify SuperAdmin about the new registration via NotificationEngine (WORKFLOW B)
-        await notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName);
-
-        return (true, loginResponse, "Registration successful! Account activated instantly.");
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<(bool Success, LoginResponseDto? Data, string Message)> RefreshTokenAsync(RefreshTokenDto dto)
