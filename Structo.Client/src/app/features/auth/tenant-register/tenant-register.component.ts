@@ -1,11 +1,12 @@
 import { Component, inject, signal, computed, effect, AfterViewInit, OnDestroy, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { RateLimitService } from '../../../core/services/rate-limit.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 import * as L from 'leaflet';
 
 interface ApiResponse<T> {
@@ -607,6 +608,8 @@ interface NominatimResult {
 export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   readonly rateLimitService = inject(RateLimitService);
   readonly toastService = inject(ToastService);
   
@@ -982,12 +985,14 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
       longitude: this.registerForm.value.longitude || null
     };
 
-    this.http.post<ApiResponse<string>>(`${environment.apiUrl}/Auth/register-tenant`, payload)
+    this.http.post<ApiResponse<any>>(`${environment.apiUrl}/Auth/register-tenant`, payload)
       .subscribe({
         next: (res) => {
           this.isLoading.set(false);
-          if (res.success) {
-            this.isSuccess.set(true);
+          if (res.success && res.data) {
+            this.authService.setSession(res.data);
+            this.toastService.show('أهلاً بك في منصة أُسُس', 'تم إنشاء وتفعيل حسابك بنجاح!', 'success');
+            this.router.navigate(['/dashboard']);
           } else {
             const msg = res.message || 'Registration failed.';
             if (msg.toLowerCase().includes('email') || msg.includes('مُسجل') || msg.includes('مسجل') || msg.toLowerCase().includes('taken')) {

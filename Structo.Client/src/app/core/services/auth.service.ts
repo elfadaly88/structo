@@ -166,7 +166,7 @@ export class AuthService {
     }
   }
 
-  private setSession(authData: AuthResponse): void {
+  setSession(authData: AuthResponse): void {
     const { token, refreshToken, ...userData } = authData;
     const email = this.getEmailFromToken(token);
     const name = userData.name || this.getNameFromToken(token);

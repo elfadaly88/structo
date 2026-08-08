@@ -127,7 +127,7 @@ public class GoogleAuthController : ControllerBase
                     Name = companyName,
                     SubscriptionPlan = SubscriptionPlan.Free,
                     MaxActiveProjects = 2,
-                    Status = TenantStatus.PendingApproval,
+                    Status = TenantStatus.Active,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -140,7 +140,7 @@ public class GoogleAuthController : ControllerBase
                     LastName = lastName,
                     Role = UserRole.TenantOwner,
                     TenantId = tenant.Id,
-                    IsApproved = false,
+                    IsApproved = true,
                     IsActive = true,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
                     CreatedAt = DateTime.UtcNow
@@ -149,13 +149,7 @@ public class GoogleAuthController : ControllerBase
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("New tenant owner {Email} successfully registered via Google. Pending approval.", email);
-
-                return Unauthorized(new ApiResponse<LoginResponseDto>
-                {
-                    Success = false,
-                    Message = "ACCOUNT_PENDING_APPROVAL"
-                });
+                _logger.LogInformation("New tenant owner {Email} successfully registered via Google and auto-activated.", email);
             }
 
             if (!user.IsApproved)
