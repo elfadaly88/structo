@@ -1083,7 +1083,7 @@ const GOVERNORATES: GovernorateOption[] = [
             </div>
           } @else {
             <!-- SUCCESS STATE / OFFICIAL PAYMENT RECEIPT MODAL -->
-            <div class="p-6 space-y-5 text-right rtl:text-left font-cairo">
+            <div class="overflow-y-auto min-h-0 p-6 space-y-5 text-right rtl:text-left font-cairo">
               
               <!-- Official Enterprise Printable Receipt Container -->
               <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/60 border border-indigo-500/30 rounded-2xl relative shadow-xl print-only space-y-4 text-right font-cairo" dir="rtl">
