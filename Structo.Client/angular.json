@@ -54,7 +54,10 @@
               "src/styles.css",
               "node_modules/leaflet/dist/leaflet.css"
             ],
-            "outputPath": "../Structo.API/wwwroot"
+            "outputPath": {
+              "base": "../Structo.API/wwwroot",
+              "browser": ""
+            }
           },
           "configurations": {
             "production": {
