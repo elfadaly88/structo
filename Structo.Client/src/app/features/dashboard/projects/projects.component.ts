@@ -1074,57 +1074,57 @@ const GOVERNORATES: GovernorateOption[] = [
             <!-- SUCCESS STATE / OFFICIAL PAYMENT RECEIPT MODAL -->
             <div class="p-6 space-y-5 text-right rtl:text-left font-cairo">
               
-              <!-- Receipt Card Header -->
-              <div class="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-2xl relative overflow-hidden shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-                  <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-emerald-400 text-xl font-bold">
+              <!-- Receipt Card Header (Printable Container) -->
+              <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-2xl relative overflow-hidden shadow-xl print-only">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-emerald-400 text-2xl font-bold">
                       ✓
                     </div>
                     <div>
-                      <h4 class="font-black text-base text-white">إيصال سداد رسم اشتراك رسمياً</h4>
-                      <span class="text-[10px] text-emerald-400 font-mono">OFFICIAL PAYMENT RECEIPT</span>
+                      <h4 class="font-black text-lg text-white">إيصال سداد رسم اشتراك رسمياً</h4>
+                      <span class="text-[11px] text-emerald-400 font-mono tracking-wider">OFFICIAL PAYMENT RECEIPT · STRUCTO PLATFORM</span>
                     </div>
                   </div>
-                  <span class="px-2.5 py-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 rounded-lg">مدفوع / PAID</span>
+                  <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg">مدفوع / PAID</span>
                 </div>
 
                 <!-- Receipt Fields Breakdown -->
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">رقم الإيصال المرجعي</span>
-                    <span class="font-mono font-bold text-indigo-400 text-sm">{{ paymentSuccessData()?.referenceNumber || 'TXN-SUCCESS' }}</span>
+                <div class="grid grid-cols-2 gap-3.5 text-xs">
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">رقم الإيصال المرجعي</span>
+                    <span class="font-mono font-bold text-indigo-400 text-sm tracking-wide">{{ paymentSuccessData()?.referenceNumber || 'TXN-SUCCESS' }}</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">شركة العميل</span>
-                    <span class="font-bold text-white truncate block">{{ tenantProfile()?.name || 'شركة معتمدة' }}</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">شركة العميل</span>
+                    <span class="font-bold text-white truncate block font-cairo text-sm">{{ tenantProfile()?.name || 'شركة معتمدة' }}</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">الباقة والحزمة</span>
-                    <span class="font-bold text-white">{{ selectedCheckoutPackage()?.titleAr || 'ترقية سعة الحساب' }}</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">الباقة والحزمة</span>
+                    <span class="font-bold text-white font-cairo text-sm">{{ selectedCheckoutPackage()?.titleAr || 'ترقية سعة الحساب' }}</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">الرصيد المضاف / السعة الكلية</span>
-                    <span class="font-bold text-emerald-400">+{{ paymentSuccessData()?.extraProjectsAdded }} مشاريع (إجمالي: {{ paymentSuccessData()?.newMaxActiveProjects }})</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">الرصيد المضاف / السعة الكلية</span>
+                    <span class="font-bold text-emerald-400 font-cairo text-sm">+{{ paymentSuccessData()?.extraProjectsAdded }} مشاريع (إجمالي: {{ paymentSuccessData()?.newMaxActiveProjects }})</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">طريقة الدفع</span>
-                    <span class="font-bold text-white">{{ selectedPaymentMethod() === 'CreditCard' ? 'بطاقة بنكية 💳' : 'محفظة إلكترونية / إنستاباي 📱' }}</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">طريقة الدفع</span>
+                    <span class="font-bold text-white font-cairo text-sm">{{ selectedPaymentMethod() === 'CreditCard' ? 'بطاقة بنكية 💳' : 'محفظة إلكترونية / إنستاباي 📱' }}</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">المبلغ الكلي المدفوع</span>
-                    <span class="font-mono font-black text-amber-400 text-sm">{{ paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount | number }} EGP</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">المبلغ الكلي المدفوع</span>
+                    <span class="font-mono font-black text-amber-400 text-base">{{ paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount | number }} EGP</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Dispatch Action Buttons -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <!-- Dispatch Action Buttons (Hidden on PDF Print) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 no-print">
                 <button 
                   (click)="sendReceiptWhatsApp()"
                   class="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
@@ -1138,7 +1138,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 </button>
               </div>
 
-              <div class="pt-2">
+              <div class="pt-2 no-print">
                 <button 
                   (click)="closeCheckoutModal(); openProjectModal()"
                   class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl transition-all shadow-xl shadow-indigo-600/30 cursor-pointer">

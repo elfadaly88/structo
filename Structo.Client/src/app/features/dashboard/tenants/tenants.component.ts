@@ -661,54 +661,56 @@ interface ModeratedProject {
             <!-- OFFICIAL PRINTABLE ADMIN RECEIPT -->
             <div class="p-6 space-y-5 text-right font-cairo">
               
-              <div class="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl relative shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-                  <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 bg-indigo-500/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400 text-xl font-bold">
+              <!-- Printable Receipt Card Container -->
+              <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl relative shadow-xl print-only">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 bg-indigo-500/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400 text-2xl font-bold">
                       📜
                     </div>
                     <div>
-                      <h4 class="font-black text-base text-white">إيصال سداد وتفعيل إداري محصّل</h4>
-                      <span class="text-[10px] text-indigo-400 font-mono">SUPER ADMIN OFFICIAL INVOICE</span>
+                      <h4 class="font-black text-lg text-white font-cairo">إيصال سداد وتفعيل إداري محصّل</h4>
+                      <span class="text-[11px] text-indigo-400 font-mono tracking-wider">SUPER ADMIN OFFICIAL INVOICE · STRUCTO PLATFORM</span>
                     </div>
                   </div>
-                  <span class="px-2.5 py-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 rounded-lg">مكتمل ومفعل</span>
+                  <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg">مكتمل ومفعل</span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">رقم الإيصال المرجعي الإداري</span>
-                    <span class="font-mono font-bold text-indigo-400 text-sm">{{ adminReceiptData()?.referenceNumber }}</span>
+                <div class="grid grid-cols-2 gap-3.5 text-xs">
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">رقم الإيصال المرجعي الإداري</span>
+                    <span class="font-mono font-bold text-indigo-400 text-sm tracking-wide">{{ adminReceiptData()?.referenceNumber }}</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">اسم الشركة والمؤسسة</span>
-                    <span class="font-bold text-white truncate block">{{ t.name }}</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">اسم الشركة والمؤسسة</span>
+                    <span class="font-bold text-white truncate block font-cairo text-sm">{{ t.name }}</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">الرصيد المضاف</span>
-                    <span class="font-bold text-emerald-400">+{{ adminReceiptData()?.extraProjectsAdded }} مشاريع إضافية</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">الرصيد المضاف</span>
+                    <span class="font-bold text-emerald-400 font-cairo text-sm">+{{ adminReceiptData()?.extraProjectsAdded }} مشاريع إضافية</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">السعة الكلية الجديدة</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">السعة الكلية الجديدة</span>
                     <span class="font-bold text-amber-400 font-mono text-sm">{{ adminReceiptData()?.newMaxActiveProjects }} مشاريع</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">المبلغ المحصل + الضريبة</span>
-                    <span class="font-mono font-black text-amber-400 text-sm">{{ adminReceiptData()?.totalAmount | number }} EGP</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">المبلغ المحصل + الضريبة</span>
+                    <span class="font-mono font-black text-amber-400 text-base">{{ adminReceiptData()?.totalAmount | number }} EGP</span>
                   </div>
 
-                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">طريقة الدفع المسجلة</span>
-                    <span class="font-bold text-white">{{ manualPaymentMethod() }}</span>
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">طريقة الدفع المسجلة</span>
+                    <span class="font-bold text-white font-cairo text-sm">{{ manualPaymentMethod() }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <!-- Buttons (Hidden during PDF print) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 no-print">
                 <button 
                   (click)="sendAdminReceiptWhatsApp()"
                   class="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
@@ -722,7 +724,7 @@ interface ModeratedProject {
                 </button>
               </div>
 
-              <div class="pt-2">
+              <div class="pt-2 no-print">
                 <button 
                   (click)="closeManualUpgradeModal()"
                   class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/30 cursor-pointer">
