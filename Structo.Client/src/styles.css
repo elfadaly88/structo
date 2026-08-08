@@ -68,19 +68,41 @@
   html, body {
     background: #ffffff !important;
     color: #0f172a !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Hide every element on the page */
+  /* Hide default screen elements */
   body * {
     visibility: hidden !important;
   }
 
-  /* Except our print container and all its children */
-  .print-only, .print-only * {
+  /* Unclip any modal backdrop or scroll wrapper parent of .print-only */
+  *:has(> .print-only),
+  *:has(> * > .print-only),
+  *:has(> * > * > .print-only),
+  *:has(> * > * > * > .print-only),
+  *:has(> * > * > * > * > .print-only) {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Ensure print container and all inside children are visible */
+  .print-only,
+  .print-only * {
     visibility: visible !important;
   }
 
-  /* Position the print container at the top left */
   .print-only {
     position: absolute !important;
     left: 0 !important;
@@ -89,49 +111,62 @@
     max-width: 100% !important;
     background: #ffffff !important;
     color: #0f172a !important;
-    border: 2px solid #cbd5e1 !important;
+    border: 2px solid #0f172a !important;
     box-shadow: none !important;
     margin: 0 !important;
     padding: 24px !important;
-    border-radius: 16px !important;
+    border-radius: 12px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    box-sizing: border-box !important;
+    display: block !important;
   }
 
-  /* Ensure text colors are high contrast on white paper */
+  /* Ensure text contrast for high-res printing */
   .print-only h4,
   .print-only h3,
+  .print-only h2,
   .print-only p,
   .print-only span,
-  .print-only div {
+  .print-only div,
+  .print-only td,
+  .print-only th {
     color: #0f172a !important;
   }
 
   .print-only .text-emerald-400,
-  .print-only .text-emerald-300 {
-    color: #059669 !important;
+  .print-only .text-emerald-300,
+  .print-only .text-emerald-800,
+  .print-only .text-emerald-900,
+  .print-only .text-emerald-950 {
+    color: #047857 !important;
   }
 
   .print-only .text-indigo-400,
-  .print-only .text-indigo-300 {
+  .print-only .text-indigo-300,
+  .print-only .text-indigo-700,
+  .print-only .text-indigo-900,
+  .print-only .text-indigo-950 {
     color: #1d4ed8 !important;
   }
 
   .print-only .text-amber-400,
-  .print-only .text-amber-300 {
-    color: #d97706 !important;
+  .print-only .text-amber-300,
+  .print-only .text-amber-900,
+  .print-only .text-amber-950 {
+    color: #b45309 !important;
   }
 
   .print-only .bg-slate-950\/60,
   .print-only .bg-slate-950,
   .print-only .bg-slate-900 {
     background-color: #f8fafc !important;
-    border-color: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
   }
 
   .print-only .bg-gradient-to-br {
     background: #ffffff !important;
-    border-color: #cbd5e1 !important;
+    border-color: #0f172a !important;
   }
 
   /* Hide interactive buttons during printing */

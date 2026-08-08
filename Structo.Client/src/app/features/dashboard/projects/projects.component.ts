@@ -1085,53 +1085,115 @@ const GOVERNORATES: GovernorateOption[] = [
             <!-- SUCCESS STATE / OFFICIAL PAYMENT RECEIPT MODAL -->
             <div class="p-6 space-y-5 text-right rtl:text-left font-cairo">
               
-              <!-- Receipt Card Header (Printable Container) -->
-              <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-2xl relative overflow-hidden shadow-xl print-only">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <!-- Official Enterprise Printable Receipt Container -->
+              <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/60 border border-indigo-500/30 rounded-2xl relative shadow-xl print-only space-y-4 text-right font-cairo" dir="rtl">
+                
+                <!-- Receipt Header / Letterhead -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-1">
                   <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 bg-emerald-500/20 border border-emerald-500/40 rounded-xl flex items-center justify-center text-emerald-400 text-2xl font-bold">
-                      ✓
+                    <div class="w-12 h-12 bg-indigo-500/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400 text-2xl font-bold">
+                      💎
                     </div>
                     <div>
-                      <h4 class="font-black text-lg text-white">إيصال سداد رسم اشتراك رسمياً</h4>
-                      <span class="text-[11px] text-emerald-400 font-mono tracking-wider">OFFICIAL PAYMENT RECEIPT · STRUCTO PLATFORM</span>
+                      <h4 class="font-black text-lg text-white">منصة أُسُس لحلول الإنشاءات والتطوير</h4>
+                      <span class="text-[11px] text-indigo-400 font-mono tracking-wider">STRUCTO OSOS PLATFORM · OFFICIAL INVOICING</span>
                     </div>
                   </div>
-                  <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg">مدفوع / PAID</span>
-                </div>
 
-                <!-- Receipt Fields Breakdown -->
-                <div class="grid grid-cols-2 gap-3.5 text-xs">
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">رقم الإيصال المرجعي</span>
-                    <span class="font-mono font-bold text-indigo-400 text-sm tracking-wide">{{ paymentSuccessData()?.referenceNumber || 'TXN-SUCCESS' }}</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">شركة العميل</span>
-                    <span class="font-bold text-white truncate block font-cairo text-sm">{{ tenantProfile()?.name || 'شركة معتمدة' }}</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">الباقة والحزمة</span>
-                    <span class="font-bold text-white font-cairo text-sm">{{ selectedCheckoutPackage()?.titleAr || 'ترقية سعة الحساب' }}</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">الرصيد المضاف / السعة الكلية</span>
-                    <span class="font-bold text-emerald-400 font-cairo text-sm">+{{ paymentSuccessData()?.extraProjectsAdded }} مشاريع (إجمالي: {{ paymentSuccessData()?.newMaxActiveProjects }})</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">طريقة الدفع</span>
-                    <span class="font-bold text-white font-cairo text-sm">{{ selectedPaymentMethod() === 'CreditCard' ? 'بطاقة بنكية 💳' : 'محفظة إلكترونية / إنستاباي 📱' }}</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">المبلغ الكلي المدفوع</span>
-                    <span class="font-mono font-black text-amber-400 text-base">{{ paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount | number }} EGP</span>
+                  <div class="text-left font-mono">
+                    <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/90 border border-emerald-500/40 rounded-lg inline-block mb-1">
+                      ✓ إيصال مدفوع ومكتمل / PAID
+                    </span>
+                    <p class="text-[10px] text-slate-400">رقم الإيصال: <strong class="text-amber-400 font-mono">{{ paymentSuccessData()?.referenceNumber || 'TXN-SUCCESS' }}</strong></p>
                   </div>
                 </div>
+
+                <!-- Subtitle Bar -->
+                <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
+                  <div>
+                    <h5 class="font-black text-xs text-white">📜 إيصال سداد رسوم وتفعيل سعة المشاريع</h5>
+                    <p class="text-[10px] text-slate-400">صادر رسمياً عن منصة أُسُس لإدارة وتقنيات التطوير العقاري والهندسي.</p>
+                  </div>
+                  <span class="text-[10px] font-mono text-indigo-300 bg-indigo-950 border border-indigo-500/30 px-2.5 py-1 rounded">
+                    SEC-VERIFIED
+                  </span>
+                </div>
+
+                <!-- Parties Info Grid -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                    <span class="text-[10px] text-slate-400 block font-cairo">الطرف الأول (الجهة المصدرة):</span>
+                    <span class="font-bold text-white block font-cairo">منصة أُسُس الرقمية / Structo Inc.</span>
+                    <span class="text-[10px] text-slate-400 font-mono block">support@structo.app</span>
+                  </div>
+
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                    <span class="text-[10px] text-slate-400 block font-cairo">الطرف الثاني (العميل المستفيد):</span>
+                    <span class="font-bold text-white block font-cairo truncate">{{ tenantProfile()?.name || authService.currentUser()?.name || 'شركة معتمدة' }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono block truncate">{{ authService.currentUser()?.email }}</span>
+                  </div>
+                </div>
+
+                <!-- Itemized Service Breakdown Table -->
+                <div class="border border-slate-800 rounded-xl overflow-hidden text-xs">
+                  <table class="w-full text-right font-cairo">
+                    <thead class="bg-slate-950 text-slate-300 font-bold border-b border-slate-800 text-[11px]">
+                      <tr>
+                        <th class="p-2.5">بيان الحزمة والخدمة</th>
+                        <th class="p-2.5 text-center">الكمية</th>
+                        <th class="p-2.5 text-center">السعر الصافي</th>
+                        <th class="p-2.5 text-left">الإجمالي</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-850 bg-slate-900/60">
+                      <tr>
+                        <td class="p-2.5">
+                          <span class="font-bold text-white block">{{ selectedCheckoutPackage()?.titleAr || 'ترقية سعة المشاريع الإضافية' }}</span>
+                          <span class="text-[10px] text-slate-400 block">تفعيل فوري لرصيد محفظة المشاريع.</span>
+                        </td>
+                        <td class="p-2.5 text-center font-mono font-bold text-slate-200">1</td>
+                        <td class="p-2.5 text-center font-mono font-bold text-slate-200">{{ (paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount || 0) | number }} EGP</td>
+                        <td class="p-2.5 text-left font-mono font-black text-amber-400 text-sm">{{ (paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount || 0) | number }} EGP</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Summary Breakdown Grid -->
+                <div class="grid grid-cols-3 gap-2.5 text-xs">
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5 font-cairo">طريقة الدفع</span>
+                    <span class="font-bold text-white font-cairo text-xs">{{ selectedPaymentMethod() === 'CreditCard' ? 'بطاقة بنكية 💳' : 'محفظة إلكترونية / إنستاباي 📱' }}</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5 font-cairo">الرصيد المضاف</span>
+                    <span class="font-bold text-emerald-400 font-cairo text-xs">+{{ paymentSuccessData()?.extraProjectsAdded || 1 }} مشاريع</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5 font-cairo">السعة الكلية الجديدة</span>
+                    <span class="font-mono font-bold text-amber-400 text-xs">{{ paymentSuccessData()?.newMaxActiveProjects || 1 }} مشاريع</span>
+                  </div>
+                </div>
+
+                <!-- Total Paid Card -->
+                <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span class="text-xs font-bold text-white font-cairo block">المبلغ الكلي المحصّل (صافي)</span>
+                    <span class="text-[10px] text-slate-400 font-mono">NET AMOUNT PAID · 0% VAT</span>
+                  </div>
+                  <div class="text-xl font-black font-mono text-amber-400">
+                    {{ (paymentSuccessData()?.totalAmount || selectedCheckoutPackage()?.totalAmount || 0) | number }} EGP
+                  </div>
+                </div>
+
+                <!-- Official Footer Disclaimer -->
+                <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-cairo">
+                  <span>🛡️ هذا الإيصال مُصدر إلكترونياً وموثق بالسجل الرقمي لمنصة أُسُس ولا يحتاج إلى توقيع يدوياً.</span>
+                  <span class="font-mono text-slate-500">Structo Platform Invoicing System</span>
+                </div>
+
               </div>
 
               <!-- Dispatch Action Buttons (Hidden on PDF Print) -->
@@ -1338,7 +1400,7 @@ export class ProjectsComponent implements OnInit {
   private readonly offlineSync = inject(OfflineSyncService);
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly uploadService = inject(ImageUploadService);
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private readonly tenantProfileService = inject(TenantProfileService);
   protected readonly langService = inject(LanguageService);
   private readonly translateService = inject(TranslateService);

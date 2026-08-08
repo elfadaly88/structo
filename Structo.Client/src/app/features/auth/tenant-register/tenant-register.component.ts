@@ -216,18 +216,6 @@ interface NominatimResult {
                         <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ يرجى أدخال بريد إلكتروني صحيح.</p>
                       }
                     </div>
-
-                    <div>
-                      <label for="subscriptionPlan" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        خطة الاشتراك / Subscription Plan <span class="text-rose-400">*</span>
-                      </label>
-                      <select id="subscriptionPlan" formControlName="subscriptionPlan"
-                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-                        <option value="Free">Free Plan (2 Projects max)</option>
-                        <option value="Standard">Standard Plan (10 Projects max)</option>
-                        <option value="Premium">Premium Plan (50 Projects max)</option>
-                      </select>
-                    </div>
                   </div>
 
                   <!-- Password & Strength Meter -->
@@ -440,7 +428,7 @@ interface NominatimResult {
                       <div><span class="text-slate-500">البريد الإلكتروني:</span> {{ registerForm.value.email || 'غير محدد' }}</div>
                       <div><span class="text-slate-500">نوع الحساب:</span> {{ registerForm.value.accountType }}</div>
                       <div><span class="text-slate-500">المحافظة:</span> {{ registerForm.value.location || 'غير محدد' }}</div>
-                      <div><span class="text-slate-500">خطة الاشتراك:</span> {{ registerForm.value.subscriptionPlan }}</div>
+                      <div><span class="text-slate-500">خطة الاشتراك:</span> الباقة المجانية (Free Plan - 2 مشاريع مجاناً مدى الحياة)</div>
                     </div>
                   </div>
                 </div>

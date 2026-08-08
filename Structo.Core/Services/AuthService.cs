@@ -117,15 +117,12 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             return (false, null, "Email is already taken.");
         }
 
-        var plan = Enum.TryParse<SubscriptionPlan>(dto.SubscriptionPlan, true, out var parsedPlan) ? parsedPlan : SubscriptionPlan.Free;
-        int maxProjectsQuota = plan == SubscriptionPlan.Premium ? 50 : (plan == SubscriptionPlan.Standard ? 10 : 2);
-
         var tenant = new Tenant
         {
             Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CompanyName) ?? string.Empty,
             CompanyDescription = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BusinessDomain) ?? string.Empty,
-            SubscriptionPlan = plan,
-            MaxActiveProjects = maxProjectsQuota,
+            SubscriptionPlan = SubscriptionPlan.Free,
+            MaxActiveProjects = 2,
             Status = TenantStatus.PendingApproval,
             CreatedAt = DateTime.UtcNow,
             Location = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Location),

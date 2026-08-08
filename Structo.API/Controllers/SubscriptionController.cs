@@ -76,7 +76,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
 
         if (isAddOn)
         {
-            // ── Mode 2: Add-On Top-Up ──
+            // ── Mode 2: Add-On Top-Up (Additive Quota Addition) ──
             var extra = dto.ExtraProjectsCount!.Value;
             if (!TopUpPricing.ContainsKey(extra))
                 return BadRequest(new ApiResponse<SubscriptionUpgradeResponseDto>
@@ -91,6 +91,8 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
             transactionType = "AddOnTopUp";
             planName = tenant.SubscriptionPlan.ToString();
             extraAdded = extra;
+            
+            // Cumulative Additive Addition: new projects are added directly on top of tenant's current total quota
             newMaxProjects = tenant.MaxActiveProjects + extra;
         }
         else

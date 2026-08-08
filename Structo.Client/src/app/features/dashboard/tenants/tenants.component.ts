@@ -661,52 +661,115 @@ interface ModeratedProject {
             <!-- OFFICIAL PRINTABLE ADMIN RECEIPT -->
             <div class="p-6 space-y-5 text-right font-cairo">
               
-              <!-- Printable Receipt Card Container -->
-              <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-2xl relative shadow-xl print-only">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <!-- Official Enterprise Printable Admin Receipt Container -->
+              <div class="p-6 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/60 border border-indigo-500/30 rounded-2xl relative shadow-xl print-only space-y-4 text-right font-cairo" dir="rtl">
+                
+                <!-- Receipt Header / Letterhead -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-1">
                   <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 bg-indigo-500/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400 text-2xl font-bold">
+                    <div class="w-12 h-12 bg-indigo-500/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400 text-2xl font-bold">
                       📜
                     </div>
                     <div>
-                      <h4 class="font-black text-lg text-white font-cairo">إيصال سداد وتفعيل إداري محصّل</h4>
+                      <h4 class="font-black text-lg text-white">إيصال سداد وتفعيل إداري محصّل</h4>
                       <span class="text-[11px] text-indigo-400 font-mono tracking-wider">SUPER ADMIN OFFICIAL INVOICE · STRUCTO PLATFORM</span>
                     </div>
                   </div>
-                  <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg">مكتمل ومفعل</span>
-                </div>
 
-                <div class="grid grid-cols-2 gap-3.5 text-xs">
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">رقم الإيصال المرجعي الإداري</span>
-                    <span class="font-mono font-bold text-indigo-400 text-sm tracking-wide">{{ adminReceiptData()?.referenceNumber }}</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">اسم الشركة والمؤسسة</span>
-                    <span class="font-bold text-white truncate block font-cairo text-sm">{{ t.name }}</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">الرصيد المضاف</span>
-                    <span class="font-bold text-emerald-400 font-cairo text-sm">+{{ adminReceiptData()?.extraProjectsAdded }} مشاريع إضافية</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">السعة الكلية الجديدة</span>
-                    <span class="font-bold text-amber-400 font-mono text-sm">{{ adminReceiptData()?.newMaxActiveProjects }} مشاريع</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">المبلغ المحصل (إجمالي صافي)</span>
-                    <span class="font-mono font-black text-amber-400 text-base">{{ adminReceiptData()?.totalAmount | number }} EGP</span>
-                  </div>
-
-                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">طريقة الدفع المسجلة</span>
-                    <span class="font-bold text-white font-cairo text-sm">{{ manualPaymentMethod() }}</span>
+                  <div class="text-left font-mono">
+                    <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/90 border border-emerald-500/40 rounded-lg inline-block mb-1">
+                      ✓ مكتمل ومفعل إدارياً / CONFIRMED
+                    </span>
+                    <p class="text-[10px] text-slate-400">رقم الإيصال: <strong class="text-indigo-400 font-mono">{{ adminReceiptData()?.referenceNumber }}</strong></p>
                   </div>
                 </div>
+
+                <!-- Subtitle Bar -->
+                <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
+                  <div>
+                    <h5 class="font-black text-xs text-white">إيصال سداد وتحصيل إداري مباشر (Super Admin Manual Receipt)</h5>
+                    <p class="text-[10px] text-slate-400">صادر رسمياً عن الإدارة العليا لمنصة أُسُس لإعادة شحن وتفعيل الحسابات.</p>
+                  </div>
+                  <span class="text-[10px] font-mono text-indigo-300 bg-indigo-950 border border-indigo-500/30 px-2.5 py-1 rounded">
+                    ADMIN-AUTH
+                  </span>
+                </div>
+
+                <!-- Parties Info Grid -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                    <span class="text-[10px] text-slate-400 block font-cairo">الجهة التحصيلية (Super Admin):</span>
+                    <span class="font-bold text-white block font-cairo">إدارة منصة أُسُس / Structo Central Admin</span>
+                    <span class="text-[10px] text-slate-400 font-mono block">admin@structo.app</span>
+                  </div>
+
+                  <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                    <span class="text-[10px] text-slate-400 block font-cairo">الشركة والعميل المستفيد:</span>
+                    <span class="font-bold text-white block font-cairo truncate">{{ t.name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono block truncate">ID: {{ t.id }}</span>
+                  </div>
+                </div>
+
+                <!-- Itemized Service Breakdown Table -->
+                <div class="border border-slate-800 rounded-xl overflow-hidden text-xs">
+                  <table class="w-full text-right font-cairo">
+                    <thead class="bg-slate-950 text-slate-300 font-bold border-b border-slate-800 text-[11px]">
+                      <tr>
+                        <th class="p-2.5">بيان التفعيل والتحصيل الإداري</th>
+                        <th class="p-2.5 text-center">الرصيد المضاف</th>
+                        <th class="p-2.5 text-center">طريقة التحصيل</th>
+                        <th class="p-2.5 text-left">المبلغ المحصل</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-850 bg-slate-900/60">
+                      <tr>
+                        <td class="p-2.5">
+                          <span class="font-bold text-white block">شحن مشاريع إضافية وتفعيل فوري (Manual Top-Up)</span>
+                          <span class="text-[10px] text-slate-400 block">تم التفعيل اليدوي بواسطة السوبر أدمن.</span>
+                        </td>
+                        <td class="p-2.5 text-center font-bold text-emerald-400">+{{ adminReceiptData()?.extraProjectsAdded }} مشاريع</td>
+                        <td class="p-2.5 text-center font-bold text-slate-200">{{ manualPaymentMethod() }}</td>
+                        <td class="p-2.5 text-left font-mono font-black text-amber-400 text-sm">{{ adminReceiptData()?.totalAmount | number }} EGP</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Summary Breakdown Grid -->
+                <div class="grid grid-cols-3 gap-2.5 text-xs">
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5 font-cairo">حالة العملية</span>
+                    <span class="font-bold text-emerald-400 font-cairo text-xs">مكتمل ومحصل 100%</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5 font-cairo">الزيادة المضافة</span>
+                    <span class="font-bold text-emerald-400 font-cairo text-xs">+{{ adminReceiptData()?.extraProjectsAdded }} مشاريع</span>
+                  </div>
+
+                  <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-850">
+                    <span class="text-[10px] text-slate-400 block mb-0.5 font-cairo">السعة الكلية الجديدة</span>
+                    <span class="font-mono font-bold text-amber-400 text-xs">{{ adminReceiptData()?.newMaxActiveProjects }} مشاريع</span>
+                  </div>
+                </div>
+
+                <!-- Total Paid Card -->
+                <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span class="text-xs font-bold text-white font-cairo block">المبلغ الإجمالي المحصّل (صافي)</span>
+                    <span class="text-[10px] text-slate-400 font-mono">TOTAL COLLECTED AMOUNT · NET</span>
+                  </div>
+                  <div class="text-xl font-black font-mono text-amber-400">
+                    {{ adminReceiptData()?.totalAmount | number }} EGP
+                  </div>
+                </div>
+
+                <!-- Official Footer Disclaimer -->
+                <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-cairo">
+                  <span>📜 إيصال تحصيل وسداد إداري رسمي صادر إلكترونياً ومسجل بقاعدة بيانات منصة أُسُس.</span>
+                  <span class="font-mono text-slate-500">Structo Super Admin Authority</span>
+                </div>
+
               </div>
 
               <!-- Buttons (Hidden during PDF print) -->

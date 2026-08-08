@@ -125,8 +125,8 @@ public class GoogleAuthController : ControllerBase
                 var tenant = new Tenant
                 {
                     Name = companyName,
-                    SubscriptionPlan = subscriptionPlan,
-                    MaxActiveProjects = maxProjects,
+                    SubscriptionPlan = SubscriptionPlan.Free,
+                    MaxActiveProjects = 2,
                     Status = TenantStatus.PendingApproval,
                     CreatedAt = DateTime.UtcNow
                 };
