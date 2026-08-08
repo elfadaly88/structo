@@ -389,6 +389,22 @@ using (var scope = app.Services.CreateScope())
             };
             context.Users.Add(owner2);
 
+            // ── Fix Tenants with 0 MaxActiveProjects ───────────────────────
+            var zeroQuotaTenants = context.Tenants.IgnoreQueryFilters().Where(t => t.MaxActiveProjects == 0).ToList();
+            if (zeroQuotaTenants.Any())
+            {
+                foreach (var zt in zeroQuotaTenants)
+                {
+                    zt.MaxActiveProjects = zt.SubscriptionPlan switch
+                    {
+                        SubscriptionPlan.Premium => 50,
+                        SubscriptionPlan.Standard => 10,
+                        _ => 2
+                    };
+                }
+                context.SaveChanges();
+            }
+
             context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();
         }

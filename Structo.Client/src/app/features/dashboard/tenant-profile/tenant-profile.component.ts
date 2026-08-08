@@ -303,10 +303,10 @@ interface MapSearchResult {
                       <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
                       </svg>
-                      @if ((tenantData()?.maxActiveProjects ?? 2) === -1) {
+                      @if ((tenantData()?.maxActiveProjects || 2) === -1) {
                         <span>مشاريع غير محدودة</span>
                       } @else {
-                        <span>{{ tenantData()?.maxActiveProjects ?? 2 }} مشاريع نشطة</span>
+                        <span>{{ tenantData()?.maxActiveProjects || 2 }} مشاريع نشطة</span>
                       }
                     </span>
                   </div>
@@ -325,7 +325,7 @@ interface MapSearchResult {
                     </button>
                   }
                   <!-- Add Extra Projects Button -->
-                  @if ((tenantData()?.maxActiveProjects ?? 2) !== -1) {
+                  @if ((tenantData()?.maxActiveProjects || 2) !== -1) {
                     <button type="button" id="btn-add-extra" (click)="openTopUpModal()"
                       class="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer">
                       <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -639,7 +639,7 @@ interface MapSearchResult {
           <div class="flex items-center justify-between p-5 border-b border-slate-800">
             <div>
               <h3 class="text-base font-black text-white font-cairo">شحن مشاريع إضافية / Add Extra Projects</h3>
-              <p class="text-[11px] text-slate-400 font-cairo mt-0.5">تُضاف فوراً فوق سعتك الحالية ({{ tenantData()?.maxActiveProjects ?? 2 }} مشروع)</p>
+              <p class="text-[11px] text-slate-400 font-cairo mt-0.5">تُضاف فوراً فوق سعتك الحالية ({{ tenantData()?.maxActiveProjects || 2 }} مشروع)</p>
             </div>
             <button type="button" (click)="closeTopUpModal()" id="btn-close-topup-modal"
               class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
@@ -678,7 +678,7 @@ interface MapSearchResult {
                   </div>
                   <div>
                     <span class="text-sm font-black text-white">{{ opt.label }}</span>
-                    <p class="text-[10px] text-slate-400 mt-0.5">يصبح الإجمالي: {{ (tenantData()?.maxActiveProjects ?? 2) + opt.extra }} مشاريع</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">يصبح الإجمالي: {{ (tenantData()?.maxActiveProjects || 2) + opt.extra }} مشاريع</p>
                   </div>
                 </div>
                 <div class="text-right">

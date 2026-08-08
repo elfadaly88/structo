@@ -1418,7 +1418,12 @@ export class ProjectsComponent implements OnInit {
   readonly activeProjectsCount = computed(() => this.projects().filter(p => p.status === 'Active' || p.status === 'Delayed').length);
   readonly completedProjectsCount = computed(() => this.projects().filter(p => p.status === 'Completed' || p.status === 'Closed').length);
   readonly usedProjectsCount = computed(() => this.projects().length);
-  readonly allowedProjectsCount = computed(() => this.tenantProfile()?.maxActiveProjects ?? 1);
+  readonly allowedProjectsCount = computed(() => {
+    const max = this.tenantProfile()?.maxActiveProjects;
+    if (max === -1) return -1;
+    if (max != null && max > 0) return max;
+    return 2; // Default Free plan quota (2 lifetime projects granted on sign-up)
+  });
 
   readonly managerCount = computed(() => this.users().filter(u => u.role === 'Manager').length);
   readonly engineerCount = computed(() => this.users().filter(u => u.role === 'SiteEngineer' || u.role === 'DesignEngineer').length);
