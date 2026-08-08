@@ -32,18 +32,19 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         { "Enterprise", (-1,  799m) }, // -1 = unlimited
     };
 
-    // +2 → 500 EGP | +5 → 2,500 EGP | more → contact admin
+    // +1 → 2,000 EGP | +2 → 3,500 EGP | +5 → 7,500 EGP
     private static readonly Dictionary<int, decimal> TopUpPricing = new()
     {
-        { 2,  500m   },
-        { 5,  2500m  },
+        { 1,  2000m  },
+        { 2,  3500m  },
+        { 5,  7500m  },
     };
 
     // ─────────────────────────────────────────────────────────
     // POST /api/subscription/upgrade-mock
     // Supports two modes:
     //   Mode 1 — Plan Upgrade:   supply TargetPlanId
-    //   Mode 2 — Add-On Top-Up: supply ExtraProjectsCount (5 or 10)
+    //   Mode 2 — Add-On Top-Up: supply ExtraProjectsCount (1, 2, or 5)
     // ─────────────────────────────────────────────────────────
     [HttpPost("upgrade-mock")]
     public async Task<ActionResult<ApiResponse<SubscriptionUpgradeResponseDto>>> UpgradeMock(
@@ -80,7 +81,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
             var extra = dto.ExtraProjectsCount!.Value;
             if (!TopUpPricing.ContainsKey(extra))
                 return BadRequest(new ApiResponse<SubscriptionUpgradeResponseDto>
-                    { Success = false, Message = "عدد المشاريع الإضافية يجب أن يكون 5 أو 10 مشروع" });
+                    { Success = false, Message = "عدد المشاريع الإضافية يجب أن يكون 1 أو 2 أو 5 مشاريع" });
 
             // Enterprise (unlimited) cannot purchase add-ons
             if (tenant.MaxActiveProjects == -1)
@@ -196,8 +197,9 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
 
         var topups = new[]
         {
-            new { extra = 2, priceEgp = 500m,  priceWithVat = Math.Round(500m  * 1.14m, 2), label = "+2 مشاريع" },
-            new { extra = 5, priceEgp = 2500m, priceWithVat = Math.Round(2500m * 1.14m, 2), label = "+5 مشاريع" },
+            new { extra = 1, priceEgp = 2000m, priceWithVat = Math.Round(2000m * 1.14m, 2), label = "+1 مشروع" },
+            new { extra = 2, priceEgp = 3500m, priceWithVat = Math.Round(3500m * 1.14m, 2), label = "+2 مشاريع" },
+            new { extra = 5, priceEgp = 7500m, priceWithVat = Math.Round(7500m * 1.14m, 2), label = "+5 مشاريع" },
         };
 
         return Ok(new ApiResponse<object>
