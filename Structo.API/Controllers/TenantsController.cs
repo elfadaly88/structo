@@ -266,8 +266,8 @@ public class TenantsController(
 
         tenant.MaxActiveProjects = newMaxProjects;
 
-        var taxAmount = Math.Round(dto.Amount * 0.14m, 2);
-        var totalAmount = dto.Amount + taxAmount;
+        var taxAmount = 0.0m;
+        var totalAmount = dto.Amount;
         var refNumber = $"INV-ADMIN-{new Random().Next(100000, 999999)}";
 
         var txn = new SubscriptionTransaction

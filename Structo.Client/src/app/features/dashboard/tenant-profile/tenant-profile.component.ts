@@ -769,8 +769,8 @@ interface MapSearchResult {
                 <span class="text-white font-bold">{{ checkoutSummary().amount | number:'1.0-2' }} ج.م</span>
               </div>
               <div class="flex justify-between text-xs">
-                <span class="text-slate-400">ضريبة القيمة المضافة (14%)</span>
-                <span class="text-slate-300">{{ checkoutSummary().taxAmount | number:'1.0-2' }} ج.م</span>
+                <span class="text-slate-400">ضريبة القيمة المضافة (0%)</span>
+                <span class="text-slate-300">0.00 ج.م (صافي)</span>
               </div>
               <div class="border-t border-slate-700 pt-2 flex justify-between">
                 <span class="text-sm font-black text-white">الإجمالي</span>
@@ -949,8 +949,8 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       return {
         description: `ترقية إلى باقة ${p.nameEn} / Upgrade to ${p.nameEn}`,
         amount:      p.priceEgp,
-        taxAmount:   Math.round(p.priceEgp * 0.14 * 100) / 100,
-        totalAmount: p.priceWithVat
+        taxAmount:   0,
+        totalAmount: p.priceEgp
       };
     }
     if (this.checkoutMode === 'topup' && this.selectedTopUp()) {
@@ -958,8 +958,8 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       return {
         description: `إضافة ${t.extra} مشاريع / Add ${t.extra} Extra Projects`,
         amount:      t.priceEgp,
-        taxAmount:   Math.round(t.priceEgp * 0.14 * 100) / 100,
-        totalAmount: t.priceWithVat
+        taxAmount:   0,
+        totalAmount: t.priceEgp
       };
     }
     return { description: '', amount: 0, taxAmount: 0, totalAmount: 0 };

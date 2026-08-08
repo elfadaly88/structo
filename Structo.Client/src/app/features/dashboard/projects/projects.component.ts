@@ -977,8 +977,8 @@ const GOVERNORATES: GovernorateOption[] = [
                   <span class="font-mono text-indigo-400">{{ selectedCheckoutPackage()?.priceEgp | number }} EGP</span>
                 </div>
                 <div class="flex items-center justify-between text-xs text-slate-400 font-cairo">
-                  <span>ضريبة القيمة المضافة (14% VAT)</span>
-                  <span class="font-mono">{{ selectedCheckoutPackage()?.vatAmount | number }} EGP</span>
+                  <span>ضريبة القيمة المضافة (0% VAT)</span>
+                  <span class="font-mono">0 EGP (صافي)</span>
                 </div>
                 <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-base font-black text-emerald-400 font-cairo">
                   <span>الإجمالي الكلي / Total</span>
@@ -2154,8 +2154,8 @@ export class ProjectsComponent implements OnInit {
     badge?: string;
     descriptionAr?: string;
   }): void {
-    const vat = Math.round(pkg.priceEgp * 0.14);
-    const total = pkg.priceEgp + vat;
+    const vat = 0;
+    const total = pkg.priceEgp;
     this.selectedCheckoutPackage.set({
       ...pkg,
       vatAmount: vat,

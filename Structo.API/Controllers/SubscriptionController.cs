@@ -23,7 +23,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
     // Free plan = 2 projects lifetime (no charge)
     // Add-On Top-Up packages (applied on top of current MaxActiveProjects)
     // ─────────────────────────────────────────────────────────
-    private static readonly decimal VatRate = 0.14m;
+    private static readonly decimal VatRate = 0.0m;
 
     private static readonly Dictionary<string, (int MaxProjects, decimal PriceEgp)> PlanPricing = new()
     {
@@ -32,7 +32,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         { "Enterprise", (-1,  799m) }, // -1 = unlimited
     };
 
-    // +1 → 250 EGP | +5 → 950 EGP
+    // +1 → 250 EGP | +5 → 950 EGP (Flat price, 0% VAT)
     private static readonly Dictionary<int, decimal> TopUpPricing = new()
     {
         { 1,  250m  },
@@ -189,15 +189,15 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
     {
         var plans = new[]
         {
-            new { id = "Free",       nameAr = "المجانية",   nameEn = "Free",       maxProjects = 2,  priceEgp = 0m,   priceWithVat = 0m,                                    description = "2 مشاريع مدى الحياة — مجاني للأبد / 2 Lifetime Projects Free" },
-            new { id = "Pro",        nameAr = "الاحترافية", nameEn = "Pro",        maxProjects = 10, priceEgp = 299m, priceWithVat = Math.Round(299m * 1.14m, 2), description = "10 مشاريع + الميزات المتقدمة / 10 Projects + Advanced Features" },
-            new { id = "Enterprise", nameAr = "المؤسسية",   nameEn = "Enterprise", maxProjects = -1, priceEgp = 799m, priceWithVat = Math.Round(799m * 1.14m, 2), description = "مشاريع غير محدودة + الأولوية والدعم / Unlimited + Priority Support" },
+            new { id = "Free",       nameAr = "المجانية",   nameEn = "Free",       maxProjects = 2,  priceEgp = 0m,   priceWithVat = 0m,    description = "2 مشاريع مدى الحياة — مجاني للأبد / 2 Lifetime Projects Free" },
+            new { id = "Pro",        nameAr = "الاحترافية", nameEn = "Pro",        maxProjects = 10, priceEgp = 299m, priceWithVat = 299m,  description = "10 مشاريع + الميزات المتقدمة / 10 Projects + Advanced Features" },
+            new { id = "Enterprise", nameAr = "المؤسسية",   nameEn = "Enterprise", maxProjects = -1, priceEgp = 799m, priceWithVat = 799m,  description = "مشاريع غير محدودة + الأولوية والدعم / Unlimited + Priority Support" },
         };
 
         var topups = new[]
         {
-            new { extra = 1, priceEgp = 250m, priceWithVat = Math.Round(250m * 1.14m, 2), label = "+1 مشروع" },
-            new { extra = 5, priceEgp = 950m, priceWithVat = Math.Round(950m * 1.14m, 2), label = "+5 مشاريع" },
+            new { extra = 1, priceEgp = 250m, priceWithVat = 250m, label = "+1 مشروع" },
+            new { extra = 5, priceEgp = 950m, priceWithVat = 950m, label = "+5 مشاريع" },
         };
 
         return Ok(new ApiResponse<object>

@@ -698,7 +698,7 @@ interface ModeratedProject {
                   </div>
 
                   <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850">
-                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">المبلغ المحصل + الضريبة</span>
+                    <span class="text-[11px] text-slate-400 block mb-0.5 font-cairo">المبلغ المحصل (إجمالي صافي)</span>
                     <span class="font-mono font-black text-amber-400 text-base">{{ adminReceiptData()?.totalAmount | number }} EGP</span>
                   </div>
 
