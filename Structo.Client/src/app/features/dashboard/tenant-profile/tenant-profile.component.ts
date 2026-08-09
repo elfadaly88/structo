@@ -1,8 +1,8 @@
 import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, signal, computed, AfterViewInit, ViewEncapsulation, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { TenantProfileService, TenantProfileUpdateDto } from '../../../core/services/tenant-profile.service';
+import { TenantProfileService, TenantProfileUpdateDto, SubscriptionPlanInfo, SubscriptionTopUpInfo } from '../../../core/services/tenant-profile.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ImageUploadService, UploadResult } from '../../../core/services/image-upload.service';
 import { TenantDto } from '../../../core/services/public-directory.service';
@@ -57,7 +57,7 @@ interface MapSearchResult {
   selector: 'app-tenant-profile',
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule],
   template: `
     <div class="w-full max-w-5xl mx-auto space-y-6">
       
@@ -276,17 +276,9 @@ interface MapSearchResult {
             </div>
           </div>
 
-<<<<<<< HEAD
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Subscription Plan info badge -->
-            <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
-              <div>
-                <span class="block text-[10px] font-bold text-slate-400 uppercase">باقة الاشتراك الحالية</span>
-                <span class="text-sm font-bold text-indigo-400">{{ tenantData()?.subscriptionPlan || 'Free' }}</span>
-=======
-          <div class="col-span-1 sm:col-span-2">
             <!-- ═══════════ SUBSCRIPTION PREMIUM CARD ═══════════ -->
-            <div class="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-950 p-5 shadow-2xl">
+            <div class="col-span-1 sm:col-span-2 relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-950 p-5 shadow-2xl">
               <!-- Background glow -->
               <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-indigo-600/20 blur-2xl pointer-events-none"></div>
               <div class="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-violet-600/20 blur-2xl pointer-events-none"></div>
@@ -343,11 +335,7 @@ interface MapSearchResult {
                     </button>
                   }
                 </div>
->>>>>>> 90a69cdfc198858606e97b271d6a6b23cf31ac5a
               </div>
-              <span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg">
-                أقصى مشاريع: {{ tenantData()?.maxActiveProjects ?? 2 }}
-              </span>
             </div>
 
             <!-- Account Type -->
@@ -553,8 +541,6 @@ interface MapSearchResult {
         <button type="button" (click)="toastMessage.set(null)" class="text-white/80 hover:text-white text-base font-bold ml-2">×</button>
       </div>
     }
-<<<<<<< HEAD
-=======
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- MODAL 1 — PLAN SELECTION MODAL                                  -->
@@ -867,7 +853,6 @@ interface MapSearchResult {
         </div>
       </div>
     }
->>>>>>> 90a69cdfc198858606e97b271d6a6b23cf31ac5a
   `,
   styles: [`
     @import 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -923,8 +908,6 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
   private profileMarker: any = null;
   private currentLatLng = { lat: 30.0444, lng: 31.2357 };
 
-<<<<<<< HEAD
-=======
   // ── Subscription Modal Signals ──────────────────────────────
   readonly showPlanModal      = signal(false);
   readonly showTopUpModal     = signal(false);
@@ -963,7 +946,6 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
     return { description: '', amount: 0, taxAmount: 0, totalAmount: 0 };
   });
 
->>>>>>> 90a69cdfc198858606e97b271d6a6b23cf31ac5a
   profileForm: FormGroup = this.fb.group({
     name: ['', [Validators.required]],
     logoUrl: [''],
@@ -985,6 +967,7 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnInit(): void {
     this.loadProfile();
+    this.loadSubscriptionPlans();
   }
 
   ngAfterViewInit(): void {
@@ -1288,8 +1271,6 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       error: () => this.isUploadingBanner.set(false)
     });
   }
-<<<<<<< HEAD
-=======
 
   // ─────────────────────────────────────────────────────────────
   // SUBSCRIPTION UPGRADE & MOCK PAYMENT METHODS
@@ -1432,5 +1413,4 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
     this.mockExpiry = val;
     (event.target as HTMLInputElement).value = val;
   }
->>>>>>> 90a69cdfc198858606e97b271d6a6b23cf31ac5a
 }
