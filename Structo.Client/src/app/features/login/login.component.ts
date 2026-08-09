@@ -199,13 +199,6 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
               </p>
             </div>
 
-            <!-- Mock account info tip -->
-            <div class="mt-6 border-t border-slate-800/80 pt-6">
-              <span class="text-xs font-semibold text-indigo-400/80 uppercase tracking-wider block mb-2">{{ 'LOGIN.DEV_INFO' | translate }}</span>
-              <p class="text-xs text-slate-400 leading-relaxed">
-                {{ 'LOGIN.DEV_INFO_TEXT' | translate }}
-              </p>
-            </div>
           }
         </div>
       </div>
