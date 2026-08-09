@@ -186,7 +186,7 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
 
             <!-- Custom Google Sign In Button with Invisible Overlay -->
             <div class="relative w-full mt-2">
-              <button type="button" 
+              <button type="button" (click)="loginWithGoogle()"
                 class="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-slate-100 font-semibold py-3 px-4 rounded-xl border border-slate-700/80 transition-all duration-200 cursor-pointer shadow-md">
                 <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -302,6 +302,13 @@ export class LoginComponent implements OnInit {
   }
 
   loginWithGoogle(): void {
+    const btn = document.getElementById('googleBtn');
+    const iframe = btn?.querySelector('iframe') as HTMLElement | null;
+    if (iframe) {
+      iframe.click();
+      return;
+    }
+
     const google = (window as any).google;
     if (google && google.accounts && google.accounts.id) {
       google.accounts.id.prompt();

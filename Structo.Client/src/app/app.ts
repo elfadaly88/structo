@@ -19,41 +19,6 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     this.langService.initLanguage();
-
-    if (typeof window !== 'undefined' && !this.authService.isAuthenticated()) {
-      this.initGoogleOneTap();
-    }
-  }
-
-  private initGoogleOneTap(): void {
-    const interval = setInterval(() => {
-      const google = (window as any).google;
-      if (google) {
-        clearInterval(interval);
-
-        google.accounts.id.initialize({
-          client_id: '752236038625-sfuglkls4icf5loo8to6gaes9b3kt1h6.apps.googleusercontent.com',
-          callback: (response: any) => this.handleGoogleCredential(response.credential)
-        });
-
-        google.accounts.id.prompt();
-      }
-    }, 200);
-
-    setTimeout(() => clearInterval(interval), 5000);
-  }
-
-  private handleGoogleCredential(credential: string): void {
-    this.authService.googleLogin(credential, 'Free').subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.redirectUser(response.data.role);
-        }
-      },
-      error: (err) => {
-        console.warn('Google One Tap auto-login failed:', err.error?.message || err.message);
-      }
-    });
   }
 
   private redirectUser(role: string): void {
