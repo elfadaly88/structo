@@ -246,6 +246,13 @@ builder.Services.AddRateLimiter(options =>
         opt.PermitLimit = 5;
         opt.QueueLimit = 0;
     });
+
+    options.AddFixedWindowLimiter("registrationPolicy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 5;
+        opt.QueueLimit = 0;
+    });
 });
 
 // JWT Authentication
