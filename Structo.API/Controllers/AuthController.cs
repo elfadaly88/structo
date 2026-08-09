@@ -84,29 +84,30 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register-tenant")]
+    [EnableRateLimiting("registrationPolicy")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<Guid>>> RegisterTenant([FromBody] TenantRegisterDto dto)
+    public async Task<ActionResult<ApiResponse<LoginResponseDto>>> RegisterTenant([FromBody] TenantRegisterDto dto)
     {
         try
         {
-            var (success, tenantId, message) = await _authService.RegisterTenantAsync(dto);
+            var (success, data, message) = await _authService.RegisterTenantAsync(dto);
 
             if (!success)
             {
-                return BadRequest(new ApiResponse<Guid> { Success = false, Message = message });
+                return BadRequest(new ApiResponse<LoginResponseDto> { Success = false, Message = message });
             }
 
-            return Ok(new ApiResponse<Guid>
+            return Ok(new ApiResponse<LoginResponseDto>
             {
-                Data = tenantId ?? Guid.Empty,
+                Data = data,
                 Success = true,
                 Message = message
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred during tenant registration.");
-            return StatusCode(500, new ApiResponse<Guid> { Success = false, Message = "An internal error occurred." });
+            _logger.LogError(ex, "An error occurred during tenant registration for email: {Email}", dto?.AdminEmail);
+            return StatusCode(500, new ApiResponse<LoginResponseDto> { Success = false, Message = ex.Message });
         }
     }
 }

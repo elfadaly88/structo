@@ -50,7 +50,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             _ => StatusCodes.Status500InternalServerError
         };
 
-        response.Message = exception is BusinessRuleException || exception is UnauthorizedAccessException
+        response.Message = !string.IsNullOrWhiteSpace(exception.Message)
             ? exception.Message
             : "An unexpected internal server error occurred.";
 

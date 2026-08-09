@@ -9,7 +9,7 @@ public class Tenant
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
     public SubscriptionPlan SubscriptionPlan { get; set; } = SubscriptionPlan.Free;
-    public int MaxActiveProjects { get; set; }
+    public int MaxActiveProjects { get; set; } = 2;
     public string LogoUrl { get; set; } = string.Empty;
     public string BannerUrl { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;

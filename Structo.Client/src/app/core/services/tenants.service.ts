@@ -42,4 +42,8 @@ export class TenantsService {
   toggleReviewVisibility(reviewId: string): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${environment.apiUrl}/superadmin/reviews/${reviewId}/toggle-visibility`, {});
   }
+
+  manualUpgradeTenant(id: string, req: { extraProjectsCount: number; amount: number; paymentMethod: string; notes?: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/${id}/manual-upgrade`, req);
+  }
 }

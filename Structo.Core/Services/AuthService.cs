@@ -89,7 +89,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         return (true, responseDto, "AUTH.LOGIN_SUCCESS");
     }
 
-    public async Task<(bool Success, Guid? TenantId, string Message)> RegisterTenantAsync(TenantRegisterDto dto)
+    public async Task<(bool Success, LoginResponseDto? Data, string Message)> RegisterTenantAsync(TenantRegisterDto dto)
     {
         // Validate password complexity
         if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
@@ -121,8 +121,9 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         {
             Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.CompanyName) ?? string.Empty,
             CompanyDescription = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.BusinessDomain) ?? string.Empty,
-            SubscriptionPlan = Enum.TryParse<SubscriptionPlan>(dto.SubscriptionPlan, true, out var parsedPlan) ? parsedPlan : SubscriptionPlan.Free,
-            Status = TenantStatus.PendingApproval,
+            SubscriptionPlan = SubscriptionPlan.Free,
+            MaxActiveProjects = 2,
+            Status = TenantStatus.Active,
             CreatedAt = DateTime.UtcNow,
             Location = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Location),
             PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
@@ -143,6 +144,8 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         var firstName = string.IsNullOrWhiteSpace(nameParts.FirstOrDefault()) ? "Admin" : nameParts.FirstOrDefault();
         var lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "User";
 
+        var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+
         var user = new User
         {
             FirstName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(firstName) ?? string.Empty,
@@ -151,6 +154,8 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = UserRole.TenantOwner,
             TenantId = tenant.Id,
+            IsApproved = true,
+            IsActive = true,
             CreatedAt = DateTime.UtcNow,
             PersonalPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.PersonalPhone),
             WhatsAppPhone = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.WhatsAppPhone),
@@ -159,16 +164,41 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ManualAddress),
             MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl),
             Latitude = dto.Latitude,
-            Longitude = dto.Longitude
+            Longitude = dto.Longitude,
+            RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7)
         };
 
         usersDbSet.Add(user);
+
+        // Single atomic SaveChangesAsync saves both Tenant and User in one single database transaction
         await context.SaveChangesAsync();
 
-        // Notify SuperAdmin about the new registration via NotificationEngine (WORKFLOW B)
-        await notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName);
+        var token = tokenProvider.GenerateToken(user);
 
-        return (true, tenant.Id, "Registration successful! Your account is pending SuperAdmin approval.");
+        bool isProfileComplete = !string.IsNullOrEmpty(tenant.ManualAddress) && 
+                                tenant.Latitude.HasValue && tenant.Longitude.HasValue;
+
+        var loginResponse = new LoginResponseDto
+        {
+            Token = token,
+            RefreshToken = refreshToken,
+            UserId = user.Id,
+            Role = user.Role.ToString(),
+            TenantId = user.TenantId,
+            Name = $"{user.FirstName} {user.LastName}",
+            IsApproved = true,
+            IsProfileComplete = isProfileComplete
+        };
+
+        // Notify SuperAdmin about the new registration via NotificationEngine — best effort, never fail registration
+        try
+        {
+            await notificationEngine.RaiseNewAccountRegistrationNotificationAsync(dto.CompanyName);
+        }
+        catch (Exception) { /* Best-effort notification delivery */ }
+
+        return (true, loginResponse, "Registration successful! Account activated instantly.");
     }
 
     public async Task<(bool Success, LoginResponseDto? Data, string Message)> RefreshTokenAsync(RefreshTokenDto dto)

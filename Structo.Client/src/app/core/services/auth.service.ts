@@ -5,6 +5,8 @@ import { ApiResponse, LoginRequest, AuthResponse, UserSession } from '../models/
 import { environment } from '../../../environments/environment';
 import { NotificationService } from './notification.service';
 
+import { Router } from '@angular/router';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -89,31 +91,53 @@ export class AuthService {
 
   private hydrateAuthState() {
     const token = localStorage.getItem(this.tokenKey);
+    const refreshToken = localStorage.getItem(this.refreshKey);
     const userStr = localStorage.getItem(this.userKey);
 
-    if (token && userStr) {
-      const isExpired = this.isTokenExpired(token);
-      if (!isExpired) {
-        try {
-          const user = JSON.parse(userStr) as UserSession;
-          this.currentUser.set(user);
+    if (userStr && (token || refreshToken)) {
+      try {
+        const user = JSON.parse(userStr) as UserSession;
+        const isExpired = token ? this.isTokenExpired(token) : true;
 
-          // Re-initialize OneSignal and SignalR dynamically to avoid circular references
-          setTimeout(() => {
-            try {
-              const notificationService = this.injector.get(NotificationService);
-              notificationService.initializeOneSignal(user.userId || (user as any).id, user.email);
-            } catch (err) {
-              console.warn('[AuthService] Could not initialize notifications on hydration:', err);
+        if (!isExpired) {
+          this.currentUser.set(user);
+          this.initializeNotifications(user);
+          return;
+        } else if (refreshToken) {
+          // Token is expired but refresh token exists. Set user session so route guards allow access,
+          // then attempt silent refresh in background.
+          this.currentUser.set(user);
+          this.initializeNotifications(user);
+
+          this.refreshToken().subscribe({
+            error: () => {
+              this.logout();
+              try {
+                const router = this.injector.get(Router);
+                router.navigate(['/login']);
+              } catch (e) {
+                // Ignore router error during bootstrap
+              }
             }
           });
           return;
-        } catch (e) {
-          // JSON parse failed
         }
+      } catch (e) {
+        // JSON parse failed
       }
     }
     this.logout();
+  }
+
+  private initializeNotifications(user: UserSession) {
+    setTimeout(() => {
+      try {
+        const notificationService = this.injector.get(NotificationService);
+        notificationService.initializeOneSignal(user.userId || (user as any).id, user.email);
+      } catch (err) {
+        console.warn('[AuthService] Could not initialize notifications on hydration:', err);
+      }
+    });
   }
 
   private getEmailFromToken(token: string): string {
@@ -142,7 +166,7 @@ export class AuthService {
     }
   }
 
-  private setSession(authData: AuthResponse): void {
+  setSession(authData: AuthResponse): void {
     const { token, refreshToken, ...userData } = authData;
     const email = this.getEmailFromToken(token);
     const name = userData.name || this.getNameFromToken(token);

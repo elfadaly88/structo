@@ -377,8 +377,7 @@ public class NotificationService : INotificationService
         var toDelete = await query
             .Where(n =>
                 n.ReceiverId == userId ||
-                (n.ReceiverId == null && n.TenantId == tenantId) ||
-                (n.ReceiverId == null && n.TenantId == null))
+                (n.ReceiverId == null && tenantId.HasValue && n.TenantId == tenantId.Value))
             .ToListAsync();
 
         var filteredToDelete = toDelete

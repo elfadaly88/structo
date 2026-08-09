@@ -106,7 +106,8 @@ public class OneSignalEmailService : IOneSignalEmailService
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("OneSignal {TemplateName} failed with status code {StatusCode}. Response: {ResponseBody}", templateNameForLogger, response.StatusCode, body);
+                var safeBody = string.IsNullOrEmpty(body) ? string.Empty : (body.Length > 200 ? body.Substring(0, 200) + "..." : body);
+                _logger.LogWarning("OneSignal {TemplateName} failed with status code {StatusCode}. Summary: {ResponseBody}", templateNameForLogger, response.StatusCode, safeBody);
             }
             else
             {

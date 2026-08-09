@@ -104,7 +104,9 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<StructoDbContext>(options =>
 {
     var databaseUrl = builder.Configuration["DATABASE_URL"] ?? Environment.GetEnvironmentVariable("DATABASE_URL");
-   string connectionString = string.Empty;
+    string connectionString = string.Empty;
+    bool isProd = builder.Environment.IsProduction();
+    bool trustCert = !isProd; // Enforce Trust Server Certificate=false in production
 
     if (!string.IsNullOrEmpty(databaseUrl) && databaseUrl.StartsWith("postgresql://"))
     {
@@ -112,7 +114,7 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
         {
             var databaseUri = new Uri(databaseUrl);
             var userInfo = databaseUri.UserInfo.Split(':');
-            connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};Maximum Pool Size=20;SSL Mode=Require;Trust Server Certificate=true;";
+            connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};Maximum Pool Size=20;SSL Mode=Require;Trust Server Certificate={(trustCert ? "true" : "false")};";
         }
         catch (Exception ex) { Console.WriteLine($"Error parsing DATABASE_URL: {ex.Message}"); }
     }
@@ -127,7 +129,7 @@ builder.Services.AddDbContext<StructoDbContext>(options =>
         connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
             ?? defaultConn
             ?? builder.Configuration.GetConnectionString("LocalConnection")
-            ?? "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=NewStrongPassword123";
+            ?? (isProd ? throw new InvalidOperationException("Production database connection string is not configured.") : "Host=localhost;Port=5444;Database=StructoDb;Username=postgres;Password=NewStrongPassword123");
     }
 
     options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -388,6 +390,22 @@ using (var scope = app.Services.CreateScope())
                 TenantId = t2.Id
             };
             context.Users.Add(owner2);
+
+            // ── Fix Tenants with 0 MaxActiveProjects ───────────────────────
+            var zeroQuotaTenants = context.Tenants.IgnoreQueryFilters().Where(t => t.MaxActiveProjects == 0).ToList();
+            if (zeroQuotaTenants.Any())
+            {
+                foreach (var zt in zeroQuotaTenants)
+                {
+                    zt.MaxActiveProjects = zt.SubscriptionPlan switch
+                    {
+                        SubscriptionPlan.Premium => 50,
+                        SubscriptionPlan.Standard => 10,
+                        _ => 2
+                    };
+                }
+                context.SaveChanges();
+            }
 
             context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
             context.SaveChanges();

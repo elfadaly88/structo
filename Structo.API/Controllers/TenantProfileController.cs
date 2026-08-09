@@ -115,9 +115,15 @@ public class TenantProfileController(StructoDbContext context) : ControllerBase
             tenant.ManualAddress = Structo.Core.Helpers.HtmlSanitizer.Sanitize(addressVal);
         }
 
-        if (dto.MapLocationUrl != null)
+        if (!string.IsNullOrWhiteSpace(dto.MapLocationUrl))
         {
-            tenant.MapLocationUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl);
+            var sanitizedUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.MapLocationUrl);
+            if (!string.IsNullOrWhiteSpace(sanitizedUrl) &&
+                Uri.TryCreate(sanitizedUrl, UriKind.Absolute, out var parsedUri) &&
+                (parsedUri.Scheme == Uri.UriSchemeHttp || parsedUri.Scheme == Uri.UriSchemeHttps))
+            {
+                tenant.MapLocationUrl = sanitizedUrl;
+            }
         }
 
         // Geographic Data Integrity Rule: retain/update high precision Lat/Lng

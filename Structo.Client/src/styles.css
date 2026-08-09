@@ -60,21 +60,120 @@
 }
 
 @media print {
-  /* Hide every element on the page */
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide default screen elements */
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
-  /* Except our print container and all its children */
-  .print-only, .print-only * {
-    visibility: visible;
+
+  /* Unclip any modal backdrop or scroll wrapper parent of .print-only */
+  *:has(> .print-only),
+  *:has(> * > .print-only),
+  *:has(> * > * > .print-only),
+  *:has(> * > * > * > .print-only),
+  *:has(> * > * > * > * > .print-only) {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    transform: none !important;
+    backdrop-filter: none !important;
   }
-  /* Position the print container at the top left */
+
+  /* Ensure print container and all inside children are visible */
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+
   .print-only {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    border-radius: 12px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
     display: block !important;
+  }
+
+  /* Ensure text contrast for high-res printing */
+  .print-only h4,
+  .print-only h3,
+  .print-only h2,
+  .print-only p,
+  .print-only span,
+  .print-only div,
+  .print-only td,
+  .print-only th {
+    color: #0f172a !important;
+  }
+
+  .print-only .text-emerald-400,
+  .print-only .text-emerald-300,
+  .print-only .text-emerald-800,
+  .print-only .text-emerald-900,
+  .print-only .text-emerald-950 {
+    color: #047857 !important;
+  }
+
+  .print-only .text-indigo-400,
+  .print-only .text-indigo-300,
+  .print-only .text-indigo-700,
+  .print-only .text-indigo-900,
+  .print-only .text-indigo-950 {
+    color: #1d4ed8 !important;
+  }
+
+  .print-only .text-amber-400,
+  .print-only .text-amber-300,
+  .print-only .text-amber-900,
+  .print-only .text-amber-950 {
+    color: #b45309 !important;
+  }
+
+  .print-only .bg-slate-950\/60,
+  .print-only .bg-slate-950,
+  .print-only .bg-slate-900 {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .print-only .bg-gradient-to-br {
+    background: #ffffff !important;
+    border-color: #0f172a !important;
+  }
+
+  /* Hide interactive buttons during printing */
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
   }
 }
 
@@ -100,4 +199,28 @@
 .leaflet-tile-container img {
   max-width: none !important;
   max-height: none !important;
+}
+
+/* 🛑 Google Sign-In Custom Button Invisible Overlay */
+#googleBtn {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0.0001 !important;
+  z-index: 10 !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+#googleBtn iframe {
+  width: 100% !important;
+  height: 100% !important;
+  transform: scale(2.5) !important;
+  transform-origin: center !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  background: transparent !important;
 }

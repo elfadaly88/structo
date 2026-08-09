@@ -15,6 +15,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.RateLimiting;
+
 namespace Structo.API.Controllers;
 
 [ApiController]
@@ -39,6 +41,7 @@ public class GoogleAuthController : ControllerBase
     }
 
     [HttpPost("google-login")]
+    [EnableRateLimiting("loginPolicy")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> GoogleLogin([FromBody] GoogleLoginRequestDto dto)
     {
         if (dto == null || string.IsNullOrWhiteSpace(dto.IdToken))
@@ -101,23 +104,6 @@ public class GoogleAuthController : ControllerBase
             {
                 _logger.LogInformation("Creating new Tenant and User for email {Email}", email);
 
-                var subscriptionPlan = SubscriptionPlan.Free;
-                if (!string.IsNullOrEmpty(dto.SubscriptionPlan))
-                {
-                    if (Enum.TryParse<SubscriptionPlan>(dto.SubscriptionPlan, true, out var parsedPlan))
-                    {
-                        subscriptionPlan = parsedPlan;
-                    }
-                }
-
-                int maxProjects = subscriptionPlan switch
-                {
-                    SubscriptionPlan.Free => 2,
-                    SubscriptionPlan.Standard => 10,
-                    SubscriptionPlan.Premium => 50,
-                    _ => 2
-                };
-
                 var firstName = HtmlSanitizer.Sanitize(payload.GivenName) ?? "Owner";
                 var lastName = HtmlSanitizer.Sanitize(payload.FamilyName) ?? string.Empty;
                 var companyName = $"شركة {firstName} {lastName}".Trim();
@@ -125,13 +111,11 @@ public class GoogleAuthController : ControllerBase
                 var tenant = new Tenant
                 {
                     Name = companyName,
-                    SubscriptionPlan = subscriptionPlan,
-                    MaxActiveProjects = maxProjects,
-                    Status = TenantStatus.PendingApproval,
+                    SubscriptionPlan = SubscriptionPlan.Free,
+                    MaxActiveProjects = 2,
+                    Status = TenantStatus.Active,
                     CreatedAt = DateTime.UtcNow
                 };
-
-                _context.Tenants.Add(tenant);
 
                 user = new User
                 {
@@ -140,22 +124,28 @@ public class GoogleAuthController : ControllerBase
                     LastName = lastName,
                     Role = UserRole.TenantOwner,
                     TenantId = tenant.Id,
-                    IsApproved = false,
+                    IsApproved = true,
                     IsActive = true,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
                     CreatedAt = DateTime.UtcNow
                 };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("New tenant owner {Email} successfully registered via Google. Pending approval.", email);
-
-                return Unauthorized(new ApiResponse<LoginResponseDto>
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    Success = false,
-                    Message = "ACCOUNT_PENDING_APPROVAL"
-                });
+                    _context.Tenants.Add(tenant);
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Transaction failed creating tenant for {Email}", email);
+                    throw;
+                }
+
+                _logger.LogInformation("New tenant owner {Email} successfully registered via Google and auto-activated.", email);
             }
 
             if (!user.IsApproved)

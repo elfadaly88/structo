@@ -23,7 +23,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
     // Free plan = 2 projects lifetime (no charge)
     // Add-On Top-Up packages (applied on top of current MaxActiveProjects)
     // ─────────────────────────────────────────────────────────
-    private static readonly decimal VatRate = 0.14m;
+    private static readonly decimal VatRate = 0.0m;
 
     private static readonly Dictionary<string, (int MaxProjects, decimal PriceEgp)> PlanPricing = new()
     {
@@ -32,18 +32,18 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         { "Enterprise", (-1,  799m) }, // -1 = unlimited
     };
 
-    // +2 → 500 EGP | +5 → 2,500 EGP | more → contact admin
+    // +1 → 250 EGP | +5 → 950 EGP (Flat price, 0% VAT)
     private static readonly Dictionary<int, decimal> TopUpPricing = new()
     {
-        { 2,  500m   },
-        { 5,  2500m  },
+        { 1,  250m  },
+        { 5,  950m  },
     };
 
     // ─────────────────────────────────────────────────────────
     // POST /api/subscription/upgrade-mock
     // Supports two modes:
     //   Mode 1 — Plan Upgrade:   supply TargetPlanId
-    //   Mode 2 — Add-On Top-Up: supply ExtraProjectsCount (5 or 10)
+    //   Mode 2 — Add-On Top-Up: supply ExtraProjectsCount (1, 2, or 5)
     // ─────────────────────────────────────────────────────────
     [HttpPost("upgrade-mock")]
     public async Task<ActionResult<ApiResponse<SubscriptionUpgradeResponseDto>>> UpgradeMock(
@@ -76,11 +76,11 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
 
         if (isAddOn)
         {
-            // ── Mode 2: Add-On Top-Up ──
+            // ── Mode 2: Add-On Top-Up (Additive Quota Addition) ──
             var extra = dto.ExtraProjectsCount!.Value;
             if (!TopUpPricing.ContainsKey(extra))
                 return BadRequest(new ApiResponse<SubscriptionUpgradeResponseDto>
-                    { Success = false, Message = "عدد المشاريع الإضافية يجب أن يكون 5 أو 10 مشروع" });
+                    { Success = false, Message = "عدد المشاريع الإضافية يجب أن يكون 1 أو 5 مشاريع" });
 
             // Enterprise (unlimited) cannot purchase add-ons
             if (tenant.MaxActiveProjects == -1)
@@ -91,6 +91,8 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
             transactionType = "AddOnTopUp";
             planName = tenant.SubscriptionPlan.ToString();
             extraAdded = extra;
+            
+            // Cumulative Additive Addition: new projects are added directly on top of tenant's current total quota
             newMaxProjects = tenant.MaxActiveProjects + extra;
         }
         else
@@ -135,7 +137,7 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         var totalAmount = amount + taxAmount;
 
         // ── Build Reference Number ──
-        var refNumber = $"TXN-TEST-{new Random().Next(100000, 999999)}";
+        var refNumber = $"TXN-TEST-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000)}";
 
         // ── Record Transaction ──
         var txn = new SubscriptionTransaction
@@ -189,15 +191,15 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
     {
         var plans = new[]
         {
-            new { id = "Free",       nameAr = "المجانية",   nameEn = "Free",       maxProjects = 2,  priceEgp = 0m,   priceWithVat = 0m,                                    description = "2 مشاريع مدى الحياة — مجاني للأبد / 2 Lifetime Projects Free" },
-            new { id = "Pro",        nameAr = "الاحترافية", nameEn = "Pro",        maxProjects = 10, priceEgp = 299m, priceWithVat = Math.Round(299m * 1.14m, 2), description = "10 مشاريع + الميزات المتقدمة / 10 Projects + Advanced Features" },
-            new { id = "Enterprise", nameAr = "المؤسسية",   nameEn = "Enterprise", maxProjects = -1, priceEgp = 799m, priceWithVat = Math.Round(799m * 1.14m, 2), description = "مشاريع غير محدودة + الأولوية والدعم / Unlimited + Priority Support" },
+            new { id = "Free",       nameAr = "المجانية",   nameEn = "Free",       maxProjects = 2,  priceEgp = 0m,   priceWithVat = 0m,    description = "2 مشاريع مدى الحياة — مجاني للأبد / 2 Lifetime Projects Free" },
+            new { id = "Pro",        nameAr = "الاحترافية", nameEn = "Pro",        maxProjects = 10, priceEgp = 299m, priceWithVat = 299m,  description = "10 مشاريع + الميزات المتقدمة / 10 Projects + Advanced Features" },
+            new { id = "Enterprise", nameAr = "المؤسسية",   nameEn = "Enterprise", maxProjects = -1, priceEgp = 799m, priceWithVat = 799m,  description = "مشاريع غير محدودة + الأولوية والدعم / Unlimited + Priority Support" },
         };
 
         var topups = new[]
         {
-            new { extra = 2, priceEgp = 500m,  priceWithVat = Math.Round(500m  * 1.14m, 2), label = "+2 مشاريع" },
-            new { extra = 5, priceEgp = 2500m, priceWithVat = Math.Round(2500m * 1.14m, 2), label = "+5 مشاريع" },
+            new { extra = 1, priceEgp = 250m, priceWithVat = 250m, label = "+1 مشروع" },
+            new { extra = 5, priceEgp = 950m, priceWithVat = 950m, label = "+5 مشاريع" },
         };
 
         return Ok(new ApiResponse<object>

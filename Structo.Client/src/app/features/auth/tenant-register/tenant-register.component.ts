@@ -1,11 +1,12 @@
 import { Component, inject, signal, computed, effect, AfterViewInit, OnDestroy, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { RateLimitService } from '../../../core/services/rate-limit.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 import * as L from 'leaflet';
 
 interface ApiResponse<T> {
@@ -79,7 +80,7 @@ interface NominatimResult {
 
       <!-- Right Side: Compact Multi-Step Wizard -->
       <div class="w-full md:w-8/12 flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-y-auto">
-        <div class="w-full max-w-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-md border border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-lg shadow-indigo-500/5">
           
           @if (isSuccess()) {
             <!-- Success Confirmation -->
@@ -101,10 +102,10 @@ interface NominatimResult {
             <div class="mb-6">
               <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h2 class="text-xl sm:text-2xl font-extrabold text-white font-cairo">تسجيل شركة جديدة / Company Registration</h2>
+                  <h2 class="text-xl sm:text-2xl font-extrabold text-white font-cairo tracking-tight">تسجيل شركة جديدة / Company Registration</h2>
                   <p class="text-slate-400 text-xs font-cairo mt-1">الخطوة {{ currentStep() }} من 3 - استكمل البيانات المطلوبة أدناه</p>
                 </div>
-                <span class="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+                <span class="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full shadow-sm">
                   Step {{ currentStep() }}/3
                 </span>
               </div>
@@ -115,8 +116,10 @@ interface NominatimResult {
                 <button type="button" (click)="goToStep(1)" class="flex flex-col gap-1 text-right focus:outline-none cursor-pointer">
                   <div class="h-2 rounded-full transition-all duration-300"
                     [class.bg-indigo-500]="currentStep() >= 1"
+                    [class.shadow-sm]="currentStep() >= 1"
+                    [class.shadow-indigo-500/50]="currentStep() >= 1"
                     [class.bg-slate-800]="currentStep() < 1"></div>
-                  <span class="text-[10px] font-bold font-cairo"
+                  <span class="text-[11px] font-bold font-cairo transition-colors"
                     [class.text-indigo-400]="currentStep() === 1"
                     [class.text-slate-400]="currentStep() !== 1">1. بيانات الحساب</span>
                 </button>
@@ -124,8 +127,10 @@ interface NominatimResult {
                 <button type="button" (click)="goToStep(2)" class="flex flex-col gap-1 text-right focus:outline-none cursor-pointer">
                   <div class="h-2 rounded-full transition-all duration-300"
                     [class.bg-indigo-500]="currentStep() >= 2"
+                    [class.shadow-sm]="currentStep() >= 2"
+                    [class.shadow-indigo-500/50]="currentStep() >= 2"
                     [class.bg-slate-800]="currentStep() < 2"></div>
-                  <span class="text-[10px] font-bold font-cairo"
+                  <span class="text-[11px] font-bold font-cairo transition-colors"
                     [class.text-indigo-400]="currentStep() === 2"
                     [class.text-slate-400]="currentStep() !== 2">2. البيانات القانونية</span>
                 </button>
@@ -133,8 +138,10 @@ interface NominatimResult {
                 <button type="button" (click)="goToStep(3)" class="flex flex-col gap-1 text-right focus:outline-none cursor-pointer">
                   <div class="h-2 rounded-full transition-all duration-300"
                     [class.bg-indigo-500]="currentStep() >= 3"
+                    [class.shadow-sm]="currentStep() >= 3"
+                    [class.shadow-indigo-500/50]="currentStep() >= 3"
                     [class.bg-slate-800]="currentStep() < 3"></div>
-                  <span class="text-[10px] font-bold font-cairo"
+                  <span class="text-[11px] font-bold font-cairo transition-colors"
                     [class.text-indigo-400]="currentStep() === 3"
                     [class.text-slate-400]="currentStep() !== 3">3. العنوان والموقع</span>
                 </button>
@@ -200,34 +207,20 @@ interface NominatimResult {
                     </div>
                   </div>
 
-                  <!-- Email & Subscription Plan -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        البريد الإلكتروني الرسمي <span class="text-rose-400">*</span>
-                      </label>
-                      <input id="email" type="email" formControlName="email" placeholder="admin@company.com" autocomplete="off" aria-autocomplete="none"
-                        class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
-                        [class.border-rose-500]="isFieldInvalid('email') || !!emailError()"
-                        [class.border-slate-800]="!isFieldInvalid('email') && !emailError()">
-                      @if (emailError()) {
-                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ {{ emailError() }}</p>
-                      } @else if (isFieldInvalid('email')) {
-                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ يرجى أدخال بريد إلكتروني صحيح.</p>
-                      }
-                    </div>
-
-                    <div>
-                      <label for="subscriptionPlan" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        خطة الاشتراك / Subscription Plan <span class="text-rose-400">*</span>
-                      </label>
-                      <select id="subscriptionPlan" formControlName="subscriptionPlan"
-                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-                        <option value="Free">Free Plan (2 Projects max)</option>
-                        <option value="Standard">Standard Plan (10 Projects max)</option>
-                        <option value="Premium">Premium Plan (50 Projects max)</option>
-                      </select>
-                    </div>
+                  <!-- Email Field -->
+                  <div>
+                    <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                      البريد الإلكتروني الرسمي <span class="text-rose-400">*</span>
+                    </label>
+                    <input id="email" type="email" formControlName="email" placeholder="admin@company.com" autocomplete="off" aria-autocomplete="none"
+                      class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                      [class.border-rose-500]="isFieldInvalid('email') || !!emailError()"
+                      [class.border-slate-800]="!isFieldInvalid('email') && !emailError()">
+                    @if (emailError()) {
+                      <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ {{ emailError() }}</p>
+                    } @else if (isFieldInvalid('email')) {
+                      <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ يرجى أدخال بريد إلكتروني صحيح.</p>
+                    }
                   </div>
 
                   <!-- Password & Strength Meter -->
@@ -440,7 +433,7 @@ interface NominatimResult {
                       <div><span class="text-slate-500">البريد الإلكتروني:</span> {{ registerForm.value.email || 'غير محدد' }}</div>
                       <div><span class="text-slate-500">نوع الحساب:</span> {{ registerForm.value.accountType }}</div>
                       <div><span class="text-slate-500">المحافظة:</span> {{ registerForm.value.location || 'غير محدد' }}</div>
-                      <div><span class="text-slate-500">خطة الاشتراك:</span> {{ registerForm.value.subscriptionPlan }}</div>
+                      <div><span class="text-slate-500">خطة الاشتراك:</span> الباقة المجانية (Free Plan - 2 مشاريع مجاناً مدى الحياة)</div>
                     </div>
                   </div>
                 </div>
@@ -476,13 +469,13 @@ interface NominatimResult {
                 <!-- Next / Submit Button -->
                 @if (currentStep() < 3) {
                   <button type="button" (click)="nextStep()"
-                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all font-cairo cursor-pointer">
+                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all font-cairo cursor-pointer active:scale-[0.98]">
                     التالي / Next →
                   </button>
                 } @else {
                   <button type="submit"
                     [disabled]="isLoading() || passwordStrength() < 3 || registerForm.invalid || rateLimitService.isLockedOut()"
-                    class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold rounded-xl text-white shadow-lg shadow-indigo-600/25 transition-all duration-200 active:scale-[0.98] flex items-center justify-center font-cairo cursor-pointer">
+                    class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center font-cairo cursor-pointer">
                     @if (rateLimitService.isLockedOut()) {
                       <div class="flex items-center space-x-2 rtl:space-x-reverse text-amber-300 font-bold">
                         <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -619,6 +612,8 @@ interface NominatimResult {
 export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   readonly rateLimitService = inject(RateLimitService);
   readonly toastService = inject(ToastService);
   
@@ -994,12 +989,14 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
       longitude: this.registerForm.value.longitude || null
     };
 
-    this.http.post<ApiResponse<string>>(`${environment.apiUrl}/Auth/register-tenant`, payload)
+    this.http.post<ApiResponse<any>>(`${environment.apiUrl}/Auth/register-tenant`, payload)
       .subscribe({
         next: (res) => {
           this.isLoading.set(false);
-          if (res.success) {
-            this.isSuccess.set(true);
+          if (res.success && res.data) {
+            this.authService.setSession(res.data);
+            this.toastService.show('أهلاً بك في منصة أُسُس', 'تم إنشاء وتفعيل حسابك بنجاح!', 'success');
+            this.router.navigate(['/dashboard']);
           } else {
             const msg = res.message || 'Registration failed.';
             if (msg.toLowerCase().includes('email') || msg.includes('مُسجل') || msg.includes('مسجل') || msg.toLowerCase().includes('taken')) {
