@@ -104,23 +104,6 @@ public class GoogleAuthController : ControllerBase
             {
                 _logger.LogInformation("Creating new Tenant and User for email {Email}", email);
 
-                var subscriptionPlan = SubscriptionPlan.Free;
-                if (!string.IsNullOrEmpty(dto.SubscriptionPlan))
-                {
-                    if (Enum.TryParse<SubscriptionPlan>(dto.SubscriptionPlan, true, out var parsedPlan))
-                    {
-                        subscriptionPlan = parsedPlan;
-                    }
-                }
-
-                int maxProjects = subscriptionPlan switch
-                {
-                    SubscriptionPlan.Free => 2,
-                    SubscriptionPlan.Standard => 10,
-                    SubscriptionPlan.Premium => 50,
-                    _ => 2
-                };
-
                 var firstName = HtmlSanitizer.Sanitize(payload.GivenName) ?? "Owner";
                 var lastName = HtmlSanitizer.Sanitize(payload.FamilyName) ?? string.Empty;
                 var companyName = $"شركة {firstName} {lastName}".Trim();

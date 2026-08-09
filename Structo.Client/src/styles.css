@@ -200,3 +200,18 @@
   max-width: none !important;
   max-height: none !important;
 }
+
+/* 🛑 Google Sign-In Button Dark Mode Refinement */
+#googleBtnContainer, #googleBtn {
+  background: transparent !important;
+  border: none !important;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: auto !important;
+}
+
+#googleBtnContainer iframe, #googleBtn iframe {
+  pointer-events: auto !important;
+  background: transparent !important;
+}

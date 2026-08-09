@@ -184,26 +184,9 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
               </div>
             </div>
 
-            <!-- Google Register Selection & Button -->
-            <div class="space-y-4 font-cairo">
-              <div>
-                <label for="google-plan" class="block text-xs font-bold text-slate-400 mb-1.5">
-                  خطة الاشتراك للشركة الجديدة / Subscription Plan for New Company:
-                </label>
-                <select
-                  id="google-plan"
-                  [(ngModel)]="selectedPlan"
-                  class="block w-full px-3 py-2 border border-slate-800 bg-slate-950/80 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 text-xs font-semibold cursor-pointer"
-                >
-                  <option value="Free">Free Plan (2 Projects max)</option>
-                  <option value="Standard">Standard Plan (10 Projects max)</option>
-                  <option value="Premium">Premium Plan (50 Projects max)</option>
-                </select>
-              </div>
-
-              <div class="w-full flex justify-center mt-2 min-h-[44px]">
-                <div id="googleBtn" class="w-full flex justify-center"></div>
-              </div>
+            <!-- Google Register / Sign In Button -->
+            <div id="googleBtnContainer" class="w-full flex justify-center mt-2 min-h-[44px]">
+              <div id="googleBtn" class="w-full flex justify-center"></div>
             </div>
 
             <!-- Public Registration Link -->
