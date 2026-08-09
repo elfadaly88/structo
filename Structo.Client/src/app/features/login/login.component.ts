@@ -184,9 +184,9 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
               </div>
             </div>
 
-            <!-- Custom Google Sign In Button -->
-            <div class="mt-2">
-              <button type="button" (click)="loginWithGoogle()" 
+            <!-- Custom Google Sign In Button with Invisible Overlay -->
+            <div class="relative w-full mt-2">
+              <button type="button" 
                 class="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-slate-100 font-semibold py-3 px-4 rounded-xl border border-slate-700/80 transition-all duration-200 cursor-pointer shadow-md">
                 <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -196,6 +196,9 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
                 </svg>
                 <span>Sign in with Google</span>
               </button>
+
+              <!-- Invisible Google Official Rendered Button Overlay -->
+              <div id="googleBtn" class="absolute inset-0 opacity-0 z-10 overflow-hidden cursor-pointer flex justify-center items-center"></div>
             </div>
 
             <!-- Public Registration Link -->
@@ -261,11 +264,40 @@ export class LoginComponent implements OnInit {
       google.accounts.id.initialize({
         client_id: environment.googleClientId,
         callback: (response: any) => this.handleGoogleCredential(response.credential),
-        use_fedcm_for_prompt: true, // 👈 إجبار المتصفح على استخدام الـ FedCM الجديد متوافق مع كروم
         auto_select: false
       });
 
       this.isGisInitialized = true; // تفعيل الحارس
+      this.renderGoogleButton();
+    }
+  }
+
+  private renderGoogleButton(): void {
+    const google = (window as any).google;
+    if (!google || !google.accounts || !google.accounts.id) return;
+
+    const btn = document.getElementById('googleBtn');
+    if (btn) {
+      google.accounts.id.renderButton(btn, {
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        width: 400
+      });
+    } else {
+      const interval = setInterval(() => {
+        const dynamicBtn = document.getElementById('googleBtn');
+        if (dynamicBtn) {
+          clearInterval(interval);
+          google.accounts.id.renderButton(dynamicBtn, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signin_with',
+            width: 400
+          });
+        }
+      }, 50);
+      setTimeout(() => clearInterval(interval), 5000);
     }
   }
 
@@ -275,9 +307,6 @@ export class LoginComponent implements OnInit {
       google.accounts.id.prompt();
     } else {
       this.initGoogleGis();
-      setTimeout(() => {
-        (window as any).google?.accounts?.id?.prompt();
-      }, 300);
     }
   }
 

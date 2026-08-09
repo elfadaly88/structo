@@ -201,17 +201,26 @@
   max-height: none !important;
 }
 
-/* 🛑 Google Sign-In Button Dark Mode Refinement */
-#googleBtnContainer, #googleBtn {
+/* 🛑 Google Sign-In Custom Button Invisible Overlay */
+#googleBtn {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0.0001 !important;
+  z-index: 10 !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
   background: transparent !important;
   border: none !important;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  pointer-events: auto !important;
 }
 
-#googleBtnContainer iframe, #googleBtn iframe {
+#googleBtn iframe {
+  width: 100% !important;
+  height: 100% !important;
+  transform: scale(2.5) !important;
+  transform-origin: center !important;
+  cursor: pointer !important;
   pointer-events: auto !important;
   background: transparent !important;
 }
