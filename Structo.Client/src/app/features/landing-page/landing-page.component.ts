@@ -111,9 +111,14 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
               <span class="text-sm font-semibold text-slate-400 font-cairo">
                 {{ langService.currentLang() === 'ar' ? 'عدد المشاريع المطلوبة' : 'Number of Projects' }}
               </span>
-              <span class="text-2xl font-extrabold text-indigo-400 font-mono">
-                {{ sliderVal() }} @if (sliderVal() === 10) { + }
-              </span>
+              <div class="flex items-center gap-2 rtl:space-x-reverse">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">
+                  {{ langService.currentLang() === 'ar' ? pricingInfo().planNameAr : pricingInfo().planNameEn }}
+                </span>
+                <span class="text-2xl font-extrabold text-indigo-400 font-mono">
+                  {{ sliderVal() }} @if (sliderVal() === 10) { + }
+                </span>
+              </div>
             </div>
 
             <div class="relative pt-2">
@@ -159,8 +164,8 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
               <div class="text-3xl font-extrabold text-white font-mono my-2 tracking-tight">
                 {{ pricingInfo().price }}
               </div>
-              <span class="text-[10px] text-slate-500 font-cairo">
-                {{ langService.currentLang() === 'ar' ? 'تفعيل فوري لمدى الحياة' : 'Lifetime instant activation' }}
+              <span class="text-[10px] text-slate-400 font-cairo">
+                {{ langService.currentLang() === 'ar' ? pricingInfo().periodAr : pricingInfo().periodEn }}
               </span>
             </div>
 
@@ -528,37 +533,64 @@ export class LandingPageComponent implements OnInit {
   readonly sliderVal = signal(1);
   readonly pricingInfo = computed(() => {
     const val = this.sliderVal();
-    if (val <= 1) {
+
+    if (val <= 2) {
       return {
+        planNameAr: 'الباقة المجانية',
+        planNameEn: 'Free Plan',
         price: '0 EGP',
+        periodAr: 'تفعيل فوري لمدى الحياة (مجاني للأبد)',
+        periodEn: 'Lifetime instant activation (Free forever)',
         isCustom: false,
-        noteAr: 'الخطة المجانية الأساسية - مشروع واحد نشط مجاناً مدى الحياة.',
-        noteEn: 'Basic Free Plan - 1 Active Project free for lifetime.'
+        noteAr: 'الباقة المجانية الأساسية — تتضمن مشروعين (2) نشطين مجاناً مدى الحياة.',
+        noteEn: 'Basic Free Plan — includes 2 active projects free for lifetime.'
       };
     }
-    if (val >= 10) {
+    if (val === 3) {
       return {
-        price: this.langService.currentLang() === 'ar' ? 'سعر مخصص' : 'Custom Pricing',
-        isCustom: true,
-        noteAr: 'للمؤسسات والشركات الكبيرة (10+ مشاريع). تواصل معنا للحصول على عرض سعر مخصص.',
-        noteEn: 'For large enterprises (10+ projects). Contact us for a custom quote.'
+        planNameAr: 'إضافة مشروع واحد',
+        planNameEn: '+1 Extra Project',
+        price: '250 EGP',
+        periodAr: 'دفع مرة واحدة — تفعيل فوري',
+        periodEn: 'One-time payment — Instant activation',
+        isCustom: false,
+        noteAr: 'الباقة المجانية (2 مشاريع) + شراء مشروع إضافي واحد (+1).',
+        noteEn: 'Free Plan (2 projects) + 1 Extra Project add-on.'
       };
     }
-    const map: Record<number, { price: string, noteAr: string, noteEn: string }> = {
-      2: { price: '2,000 EGP', noteAr: 'باقة تفعيل مشروع إضافي واحد فوري.', noteEn: '1 Extra Project instant activation.' },
-      3: { price: '4,000 EGP', noteAr: 'باقة تفعيل مشروعين إضافيين فوري.', noteEn: '2 Extra Projects instant activation.' },
-      4: { price: '6,000 EGP', noteAr: 'باقة تفعيل 3 مشاريع إضافية فورية.', noteEn: '3 Extra Projects instant activation.' },
-      5: { price: '7,500 EGP', noteAr: 'باقة 5 مشاريع متميزة (وفر 2,500 جنيه مقارنة بالشراء الفردي).', noteEn: 'Premium 5-Project Pack (Save 2,500 EGP).' },
-      6: { price: '9,500 EGP', noteAr: 'باقة 5 مشاريع + تفعيل مشروع إضافي واحد.', noteEn: '5-Project Pack + 1 Extra Project.' },
-      7: { price: '11,500 EGP', noteAr: 'باقة 5 مشاريع + تفعيل مشروعين إضافيين.', noteEn: '5-Project Pack + 2 Extra Projects.' },
-      8: { price: '13,500 EGP', noteAr: 'باقة 5 مشاريع + تفعيل 3 مشاريع إضافية.', noteEn: '5-Project Pack + 3 Extra Projects.' },
-      9: { price: '15,000 EGP', noteAr: 'باقة مزدوجة 10 مشاريع مخفضة (توفير إضافي).', noteEn: 'Double 5-Project Pack Discounted.' }
-    };
+    if (val >= 4 && val <= 6) {
+      return {
+        planNameAr: 'إضافة 5 مشاريع',
+        planNameEn: '+5 Extra Projects',
+        price: '950 EGP',
+        periodAr: 'دفع مرة واحدة — توفير إضافي',
+        periodEn: 'One-time payment — Extra savings',
+        isCustom: false,
+        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية (توفير 300 جنيه مقارنة بالشراء الفردي).',
+        noteEn: 'Free Plan (2 projects) + 5 Extra Projects pack (Save 300 EGP).'
+      };
+    }
+    if (val >= 7 && val <= 9) {
+      return {
+        planNameAr: 'الباقة الاحترافية (Pro)',
+        planNameEn: 'Pro Plan',
+        price: '299 EGP / شهر',
+        periodAr: 'اشتراك شهري — 10 مشاريع نشطة',
+        periodEn: 'Monthly Subscription — 10 Active Projects',
+        isCustom: false,
+        noteAr: 'الباقة الاحترافية (Pro) — تغطي حتى 10 مشاريع نشطة + تحليلات وميزات مالية متقدمة.',
+        noteEn: 'Pro Plan — covers up to 10 active projects + advanced financial features.'
+      };
+    }
     return {
-      price: map[val]?.price || 'Custom',
-      isCustom: false,
-      noteAr: map[val]?.noteAr || '',
-      noteEn: map[val]?.noteEn || ''
+      planNameAr: 'الباقة المؤسسية (Enterprise)',
+      planNameEn: 'Enterprise Plan',
+      price: '799 EGP / شهر',
+      periodAr: 'اشتراك شهري — مشاريع غير محدودة',
+      periodEn: 'Monthly Subscription — Unlimited Projects',
+      isCustom: true,
+      noteAr: 'الباقة المؤسسية (Enterprise) — مشاريع غير محدودة + أولوية الدعم والاستشارات الخاصة.',
+      noteEn: 'Enterprise Plan — Unlimited projects + priority support & custom services.'
     };
   });
 

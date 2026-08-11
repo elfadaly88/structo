@@ -252,11 +252,23 @@ export class LoginComponent implements OnInit {
       google.accounts.id.initialize({
         client_id: environment.googleClientId,
         callback: (response: any) => this.handleGoogleCredential(response.credential),
-        auto_select: false
+        auto_select: false,
+        itp_support: true
       });
 
       this.isGisInitialized = true; // تفعيل الحارس
       this.renderGoogleButton();
+
+      // 🚀 Trigger Google One Tap floating prompt in top-right corner automatically
+      google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed()) {
+          console.warn('Google One Tap not displayed:', notification.getNotDisplayedReason());
+        } else if (notification.isSkippedMoment()) {
+          console.warn('Google One Tap skipped:', notification.getSkippedReason());
+        } else if (notification.isDismissedMoment()) {
+          console.warn('Google One Tap dismissed:', notification.getDismissedReason());
+        }
+      });
     }
   }
 
