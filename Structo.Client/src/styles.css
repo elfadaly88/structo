@@ -201,26 +201,15 @@
   max-height: none !important;
 }
 
-/* 🛑 Google Sign-In Custom Button Invisible Overlay */
+/* Google Sign-In Native Button Wrapper */
 #googleBtn {
-  position: absolute !important;
-  inset: 0 !important;
   width: 100% !important;
-  height: 100% !important;
-  opacity: 0.0001 !important;
-  z-index: 10 !important;
-  cursor: pointer !important;
-  overflow: hidden !important;
-  background: transparent !important;
-  border: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  min-height: 44px !important;
 }
 
 #googleBtn iframe {
-  width: 100% !important;
-  height: 100% !important;
-  transform: scale(2.5) !important;
-  transform-origin: center !important;
-  cursor: pointer !important;
-  pointer-events: auto !important;
-  background: transparent !important;
+  max-width: 100% !important;
 }
