@@ -283,7 +283,7 @@ export class LoginComponent implements OnInit {
       shape: 'rectangular',
       text: 'signin_with',
       logo_alignment: 'left',
-      width: 360
+      width: 380
     };
 
     const btn = document.getElementById('googleBtn');
