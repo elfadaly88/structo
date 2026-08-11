@@ -902,22 +902,6 @@ const GOVERNORATES: GovernorateOption[] = [
                 </div>
               </div>
 
-              <!-- Custom Enterprise Pack -->
-              <div class="p-5 bg-slate-950/40 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 md:col-span-2">
-                <div>
-                  <h4 class="font-bold text-sm text-white font-cairo">أكثر من 5 مشاريع / More than 5 Projects</h4>
-                  <p class="text-xs text-slate-400 font-cairo mt-0.5">تحتاج لباقة مخصصة تناسب أعمال شركتك وحجم مشاريعك الكبيرة؟</p>
-                </div>
-                <button 
-                  (click)="contactSuperAdminForUpgrade('custom')"
-                  class="w-full sm:w-auto shrink-0 px-5 py-2.5 bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600 text-emerald-400 hover:text-white text-xs font-bold rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
-                  <span>تواصل مع المبيعات</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </button>
-              </div>
-
             </div>
 
           </div>
