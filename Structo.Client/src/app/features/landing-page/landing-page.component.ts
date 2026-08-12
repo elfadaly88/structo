@@ -72,7 +72,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
           {{ 'HERO.SUBTITLE' | translate }}
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-4 mb-16">
+        <div class="flex flex-col sm:flex-row gap-4 mb-12">
           @if (authService.isAuthenticated()) {
             <a routerLink="/dashboard" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
               Go to Dashboard
@@ -88,6 +88,18 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
             {{ 'MARKETPLACE.VIEW_PORTFOLIO' | translate }}
           </a>
         </div>
+
+        <!-- Scroll Down Indicator to Marketplace -->
+        <a href="#marketplace" class="group flex flex-col items-center gap-2 cursor-pointer transition-all duration-300 hover:opacity-100 opacity-80 mt-2">
+          <span class="text-xs font-semibold text-slate-400 group-hover:text-indigo-400 font-cairo transition-colors duration-200">
+            {{ langService.currentLang() === 'ar' ? 'استكشف دليل الشركات والمشاريع المسجلة بالمنصة' : 'Explore Registered Companies & Portfolios' }}
+          </span>
+          <div class="w-9 h-9 rounded-full border border-indigo-500/30 bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/20 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 animate-bounce transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
+        </a>
       </header>
 
       <!-- Interactive Pricing Calculator Section -->
@@ -174,6 +186,18 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                   : (langService.currentLang() === 'ar' ? 'ابدأ الآن' : 'Get Started') }}
             </button>
           </div>
+        </div>
+
+        <!-- Scroll Down Cue to Directory -->
+        <div class="mt-8 text-center flex flex-col items-center">
+          <a href="#marketplace" class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 hover:bg-indigo-950/30 text-xs font-bold text-slate-300 hover:text-indigo-300 transition-all duration-300 shadow-lg group cursor-pointer font-cairo">
+            <span>{{ langService.currentLang() === 'ar' ? 'تصفح قائمة الشركات والمشاريع المشتركة معنا' : 'Browse Subscribed Companies & Projects Directory' }}</span>
+            <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 animate-bounce">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </a>
         </div>
       </section>
 
@@ -553,8 +577,9 @@ export class LandingPageComponent implements OnInit {
         periodAr: 'دفع مرة واحدة — توفير إضافي (أكثر من 7؟ تواصل معنا)',
         periodEn: 'One-time payment — Save 300 EGP (7+ contact support)',
         isCustom: false,
-        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية (توفير 300 جنيه). لأكثر من 7 مشاريع، يرجى التواصل معنا للحصول على عرض مخصص.',
-        noteEn: 'Free Plan (2 Projects) + 5-Project Pack (Save 300 EGP). For more than 7 projects, please contact us for a custom quote.'
+        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية (توفير 300 جنيه).',
+        noteEn: 'Free Plan (2 Projects) + 5-Project Pack (Save 300 EGP).',
+
       };
     }
 
