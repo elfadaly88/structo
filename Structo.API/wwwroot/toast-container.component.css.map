@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["toast-container.component.ts"],
-  "sourcesContent": ["\n    @keyframes slide-in {\n      from { opacity: 0; transform: translateX(20px) scale(0.95); }\n      to   { opacity: 1; transform: translateX(0) scale(1); }\n    }\n    .animate-slide-in {\n      animation: slide-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;\n    }\n  "],
-  "mappings": ";AACI,WAAA;AACE;AAAO,aAAA;AAAY,eAAA,WAAA,MAAA,MAAA;AAAyC;AAC5D;AAAO,aAAA;AAAY,eAAA,WAAA,GAAA,MAAA;AAAmC;AACxD;AACA,CAAA;AACE,aAAA,SAAA,MAAA,aAAA,IAAA,EAAA,CAAA,EAAA,IAAA,EAAA,GAAA;AACF;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["projects.component.ts"],
-  "sourcesContent": ["\n    .font-cairo {\n      font-family: 'Cairo', 'Inter', sans-serif;\n    }\n    #profile-map, #map {\n      height: 350px !important;\n      min-height: 350px !important;\n      width: 100% !important;\n      display: block !important;\n    }\n    @keyframes slide-in-toast {\n      from { opacity: 0; transform: translateY(12px) scale(0.95); }\n      to   { opacity: 1; transform: translateY(0) scale(1); }\n    }\n    .animate-slide-in {\n      animation: slide-in-toast 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;\n    }\n  "],
-  "mappings": ";AACI,CAAA;AACE;IAAA,OAAA;IAAA,OAAA;IAAA;AACF;AACA,CAAA;AAAA,CAAA;AACE,UAAA;AACA,cAAA;AACA,SAAA;AACA,WAAA;AACF;AACA,WAAA;AACE;AAAO,aAAA;AAAY,eAAA,WAAA,MAAA,MAAA;AAAyC;AAC5D;AAAO,aAAA;AAAY,eAAA,WAAA,GAAA,MAAA;AAAmC;AACxD;AACA,CAAA;AACE,aAAA,eAAA,MAAA,aAAA,IAAA,EAAA,CAAA,EAAA,IAAA,EAAA,GAAA;AACF;",
-  "names": []
-}
