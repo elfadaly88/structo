@@ -330,12 +330,11 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
     try
     {
-        context.Database.EnsureCreated();
         context.Database.Migrate();
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Migration failed: {ex.Message}");
+        Console.WriteLine($"Database migration failed: {ex.Message}");
         Console.WriteLine(ex.StackTrace);
     }
 
