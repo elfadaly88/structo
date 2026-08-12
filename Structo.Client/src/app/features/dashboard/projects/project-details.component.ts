@@ -2164,9 +2164,9 @@ import { LanguageService } from '../../../core/services/language.service';
 
           <form [formGroup]="disburseForm" (ngSubmit)="onDisburseSubmit()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المهندس / Engineer <span class="text-slate-500 text-[10px] normal-case">(اختياري — إذا فارغ، ستُسجل العهدة لحسابك)</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المهندس <span class="text-slate-500 text-[10px] normal-case">(اختياري — إذا فارغ، ستُسجل العهدة لحسابك)</span></label>
               <select formControlName="userId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
-                <option [ngValue]="null">-- لنفسي (الأدمن الحالي) / Self --</option>
+                <option [ngValue]="null">-- لنفسي (الأدمن الحالي) --</option>
                 @for (u of usersList(); track u.id) {
                   <option [value]="u.id">{{ u.firstName }} {{ u.lastName }} ({{ u.role }})</option>
                 }
@@ -2175,24 +2175,24 @@ import { LanguageService } from '../../../core/services/language.service';
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المبلغ / Amount <span class="text-red-400">*</span></label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المبلغ <span class="text-red-400">*</span></label>
                 <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">طريقة الدفع / Payment Method <span class="text-red-400">*</span></label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">طريقة الدفع <span class="text-red-400">*</span></label>
                 <select formControlName="paymentMethod" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
-                  <option value="Cash">Cash / نقدي</option>
-                  <option value="BankTransfer">Bank Transfer / تحويل بنكي</option>
+                  <option value="Cash">نقدي</option>
+                  <option value="BankTransfer">تحويل بنكي</option>
                   <option value="InstaPay">InstaPay</option>
-                  <option value="Cheque">Cheque / شيك</option>
+                  <option value="Cheque">شيك</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">مصدر التمويل / Fund Pool <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">مصدر التمويل <span class="text-red-400">*</span></label>
               <select formControlName="sourcePoolId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
-                <option [ngValue]="null" disabled>اختر الصندوق / Select Pool</option>
+                <option [ngValue]="null" disabled>اختر الصندوق</option>
                 @for (pool of cashPools(); track pool.id) {
                   <option [value]="pool.id">{{ pool.sourceType }} ({{ pool.availableBalance }} EGP)</option>
                 }
@@ -2200,7 +2200,7 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">البيان / Notes <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">البيان <span class="text-red-400">*</span></label>
               <textarea formControlName="description" rows="2" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
             </div>
 
@@ -2219,20 +2219,21 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
     }
 
-    <!-- Settlement Modal -->
+    <!-- Settlement Modal (Refactored Inline Dynamic Table) -->
     @if (isSettlementModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm font-cairo">
         <div (click)="closeSettlementModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-3xl mx-auto max-h-[92vh] flex flex-col overflow-hidden rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
-          <div class="flex justify-between items-center mb-6">
+        <div class="relative w-full max-w-4xl mx-auto max-h-[92vh] flex flex-col overflow-hidden rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+          
+          <!-- Header -->
+          <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
             <div>
-              <h3 class="text-xl font-bold text-white font-cairo">تسوية عهدة / Settlement Voucher</h3>
-              <p class="text-xs text-slate-400 font-cairo mt-1">
-                العهد الحالية الصادرة: <span class="text-amber-400 font-bold font-mono">{{ selectedPettyCashForSettlement()?.amount }} EGP</span> |
-                بيان: <span class="text-slate-200">{{ selectedPettyCashForSettlement()?.reason }}</span>
+              <h3 class="text-xl font-bold text-white">تسوية عهدة</h3>
+              <p class="text-xs text-slate-400 mt-1">
+                بيان العهدة: <span class="text-slate-200 font-bold">{{ selectedPettyCashForSettlement()?.reason }}</span>
               </p>
             </div>
-            <button (click)="closeSettlementModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
+            <button (click)="closeSettlementModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -2247,147 +2248,230 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           }
 
-          <form [formGroup]="settlementForm" class="flex flex-col flex-1 min-h-0 space-y-4 font-sans">
+          <form [formGroup]="settlementForm" class="flex flex-col flex-1 min-h-0 space-y-4">
+            
+            <!-- 1️⃣ Sticky Petty Cash Live Calculation Summary -->
+            <div class="bg-slate-950/60 border border-slate-800 p-3 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-3 text-xs shadow-md">
+              <div class="flex items-center gap-2.5 bg-slate-900/60 rounded-lg px-3 py-2.5 border border-slate-800/60">
+                <span class="text-amber-400 text-base">🟡</span>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-500 font-semibold">إجمالي العهدة الصادرة</span>
+                  <span class="font-mono font-bold text-amber-400 text-sm">{{ selectedPettyCashForSettlement()?.amount | number:'1.2-2' }} EGP</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2.5 bg-slate-900/60 rounded-lg px-3 py-2.5 border border-slate-800/60">
+                <span class="text-sky-400 text-base">🔵</span>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-500 font-semibold">إجمالي البنود المصروفة</span>
+                  <span class="font-mono font-bold text-sky-400 text-sm">{{ calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2.5 bg-slate-900/60 rounded-lg px-3 py-2.5 border border-slate-800/60">
+                @let remBal = (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal());
+                <span class="text-base">{{ remBal >= 0 ? '🟢' : '🟠' }}</span>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-500 font-semibold">الرصيد المتبقي</span>
+                  <span [class]="remBal >= 0 ? 'font-mono font-bold text-emerald-400 text-sm' : 'font-mono font-bold text-amber-400 text-sm'">
+                    {{ remBal | number:'1.2-2' }} EGP
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <!-- Scrollable Content Area -->
-            <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-              <span class="text-sm text-slate-400 font-cairo">بنود الفواتير والمصروفات / Invoice Line Items</span>
-              @if (!isSettlementLocked()) {
-                <button type="button" (click)="addSettlementLine()" class="px-3 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-400 border border-indigo-500/20 text-xs font-bold rounded-lg font-cairo flex items-center gap-1 cursor-pointer">
-                  + إضافة بند / Add Line
-                </button>
-              }
-            </div>
-
-            <!-- Remaining Custody Live Summary Card -->
-            <div class="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.08)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-sans">
-              <div>
-                <span class="text-xs font-bold text-slate-400 block font-cairo">الرصيد المتبقي من العهدة / Remaining Custody</span>
-                <span class="text-2xl font-black text-emerald-400 font-mono tracking-wide mt-1 block">
-                  {{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() }} EGP
-                </span>
+            <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-3">
+              
+              <!-- 2️⃣ Compact Dynamic Inline Table (Desktop Viewport - md+) -->
+              <div formArrayName="lines" class="hidden md:block overflow-x-auto border border-slate-800/80 rounded-xl bg-slate-950/40">
+                <table class="w-full text-right rtl:text-right font-sans text-xs">
+                  <thead>
+                    <tr class="bg-slate-900/90 text-slate-400 text-[11px] font-bold border-b border-slate-800 font-cairo">
+                      <th class="py-2.5 px-3 text-center w-10">#</th>
+                      <th class="py-2.5 px-3 w-40">التصنيف</th>
+                      <th class="py-2.5 px-3">البيان / رقم الفاتورة</th>
+                      <th class="py-2.5 px-3 w-32">المبلغ</th>
+                      <th class="py-2.5 px-3 w-44">الإيصال</th>
+                      <th class="py-2.5 px-3 text-center w-16">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800/60 text-slate-200">
+                    @for (line of settlementLines.controls; track line; let idx = $index) {
+                      <tr [formGroupName]="idx" class="hover:bg-slate-900/40 transition-colors">
+                        <td class="py-2 px-3 text-center font-bold text-indigo-400 font-mono">{{ idx + 1 }}</td>
+                        <td class="py-2 px-3">
+                          <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
+                            <option value="Cement">أسمنت</option>
+                            <option value="Logistics">خدمات لوجستية</option>
+                            <option value="Materials">مواد بناء</option>
+                            <option value="Labor">حوافز وأجور عمال</option>
+                            <option value="Other">أخرى</option>
+                          </select>
+                        </td>
+                        <td class="py-2 px-3">
+                          <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
+                        </td>
+                        <td class="py-2 px-3">
+                          <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+                        </td>
+                        <td class="py-2 px-3">
+                          <div class="flex items-center gap-2">
+                            <label class="cursor-pointer px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1 font-cairo">
+                              <span>📎</span>
+                              <span>اختر ملف</span>
+                              <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
+                            </label>
+                            @if (line.get('localPreviewUrl')?.value) {
+                              <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-7 h-7 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer hover:scale-110 transition-transform shrink-0" title="معاينة الإيصال">
+                                <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
+                              </div>
+                            }
+                            @if (line.get('uploading')?.value) {
+                              <span class="text-[10px] text-indigo-400 animate-pulse font-cairo">جاري الرفع...</span>
+                            }
+                          </div>
+                        </td>
+                        <td class="py-2 px-3 text-center">
+                          @if (!isSettlementLocked()) {
+                            <button type="button" (click)="removeSettlementLine(idx)" class="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer" [disabled]="settlementLines.length === 1" title="حذف البند">
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
-              <div class="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold font-cairo self-start sm:self-center">
-                إصدار عهدة بقيمة: {{ selectedPettyCashForSettlement()?.amount }} EGP
-              </div>
-            </div>
 
-            <!-- Cards-based FormArray List -->
-            <div formArrayName="lines" class="space-y-4">
-              @for (line of settlementLines.controls; track line; let idx = $index) {
-                <div [formGroupName]="idx" class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-4 relative hover:border-slate-700/60 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_15px_rgba(99,102,241,0.05)] transition-all duration-200">
-                  <div class="flex justify-between items-center pb-2 border-b border-slate-800/80">
-                    <span class="text-xs font-bold text-indigo-400 font-cairo bg-indigo-500/10 px-2.5 py-1 rounded-lg">البند #{{ idx + 1 }} / Item #{{ idx + 1 }}</span>
-                    <div class="flex items-center gap-2">
-                      @if (!isSettlementLocked()) {
-                        <button type="button" (click)="onSettlementSubmit(true)" [disabled]="line.invalid || isSubmittingSettlement()" class="px-2.5 py-1 rounded-xl text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 disabled:opacity-50 transition-all font-cairo cursor-pointer" title="حفظ هذا البند كمسودة / Save this item draft">
-                          💾 حفظ البند / Save Item
-                        </button>
-                        <button type="button" (click)="removeSettlementLine(idx)" class="text-slate-500 hover:text-rose-400 p-1.5 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer" title="Remove Item" [disabled]="settlementLines.length === 1">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      }
-                    </div>
-                  </div>
+              <!-- 3️⃣ Responsive Mobile Card Layout (block md:hidden) -->
+              <div formArrayName="lines" class="block md:hidden space-y-3">
+                @for (line of settlementLines.controls; track line; let idx = $index) {
+                  <details [open]="idx === settlementLines.length - 1" class="group bg-slate-950 border border-slate-800 rounded-xl overflow-hidden font-cairo shadow-md">
+                    <summary class="flex items-center justify-between p-3 bg-slate-900/90 cursor-pointer select-none">
+                      <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs font-bold font-mono">#{{ idx + 1 }}</span>
+                        <span class="text-xs font-bold text-white truncate max-w-[140px]">{{ line.get('description')?.value || line.get('category')?.value || 'بند جديد' }}</span>
+                      </div>
+                      <div class="flex items-center gap-2.5">
+                        <span class="text-xs font-mono font-bold text-emerald-400">{{ line.get('amount')?.value || 0 | number:'1.2-2' }} EGP</span>
+                        <span class="text-slate-400 transition-transform group-open:rotate-180 text-[10px]">▼</span>
+                      </div>
+                    </summary>
 
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">التصنيف / Category</label>
-                      <select formControlName="category" class="w-full px-3 py-2 border border-slate-800 bg-slate-950 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:outline-none transition-all">
-                        <option value="Cement">Cement / أسمنت</option>
-                        <option value="Logistics">Logistics / خدمات لوجستية</option>
-                        <option value="Materials">Materials / مواد بناء</option>
-                        <option value="Labor">Labor / حوافز وأجور عمال</option>
-                        <option value="Other">Other / أخرى</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">المبلغ المصروف / Amount</label>
-                      <input type="number" formControlName="amount" class="w-full px-3 py-2 border border-slate-800 bg-slate-950 rounded-xl text-slate-200 text-xs font-mono focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:outline-none transition-all">
-                    </div>
-                    <div>
-                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">إيصال الفاتورة / Invoice Receipt</label>
-                      <div class="flex items-center gap-3">
-                        <div class="relative flex-1">
-                          <input type="file" 
-                          accept="image/*,application/pdf,.xlsx,.xls"
-                          [disabled]="isSettlementLocked()" 
-                          (change)="onSettlementLineFileSelected($event, idx)" 
-                          class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-[10px] file:bg-slate-800 file:text-indigo-400 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    <div [formGroupName]="idx" class="p-3.5 space-y-3 border-t border-slate-800/80 bg-slate-900/40">
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1">التصنيف</label>
+                        <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                          <option value="Cement">أسمنت</option>
+                          <option value="Logistics">خدمات لوجستية</option>
+                          <option value="Materials">مواد بناء</option>
+                          <option value="Labor">حوافز وأجور عمال</option>
+                          <option value="Other">أخرى</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1">البيان / رقم الفاتورة</label>
+                        <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1">المبلغ المصروف</label>
+                        <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1">إيصال الفاتورة</label>
+                        <div class="flex items-center gap-2">
+                          <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1">
+                            <span>📎</span>
+                            <span>اختر ملف</span>
+                            <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
+                          </label>
+                          @if (line.get('localPreviewUrl')?.value) {
+                            <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-8 h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer shrink-0">
+                              <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
+                            </div>
+                          }
                           @if (line.get('uploading')?.value) {
-                            <span class="text-[10px] text-indigo-400 animate-pulse mt-1 block">Uploading...</span>
+                            <span class="text-[10px] text-indigo-400 animate-pulse">جاري الرفع...</span>
                           }
                         </div>
-                        
-                        <!-- Thumbnail Preview -->
-                        @if (line.get('localPreviewUrl')?.value) {
-                          <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="relative w-12 h-12 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform group shadow-md" title="View Full Receipt">
-                            <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </div>
-                          </div>
-                        }
                       </div>
+
+                      @if (!isSettlementLocked()) {
+                        <div class="flex justify-end pt-1">
+                          <button type="button" (click)="removeSettlementLine(idx)" class="px-3 py-1.5 text-[11px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1" [disabled]="settlementLines.length === 1">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            حذف البند
+                          </button>
+                        </div>
+                      }
                     </div>
-                  </div>
-
-                  <div>
-                    <label class="block text-[11px] font-bold text-slate-400 mb-1.5 font-cairo">البيان / Description</label>
-                    <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full px-3 py-2 border border-slate-800 bg-slate-950 rounded-xl text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:outline-none transition-all">
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- Ledger summary & Net calculation -->
-            <div class="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-2">
-              <div class="flex justify-between text-xs text-slate-400 font-cairo">
-                <span>إجمالي مبلغ العهدة الأصلي:</span>
-                <span class="font-mono font-semibold text-slate-300">{{ selectedPettyCashForSettlement()?.amount }} EGP</span>
-              </div>
-              <div class="flex justify-between text-xs text-slate-400 font-cairo">
-                <span>إجمالي المبالغ المصروفة بالفواتير:</span>
-                <span class="font-mono font-semibold text-amber-400">{{ calculateSettlementTotal() }} EGP</span>
-              </div>
-              <div class="border-t border-slate-800/80 pt-2 flex justify-between text-sm font-bold font-cairo">
-                @if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() > 0) {
-                  <span class="text-emerald-400">متبقي يجب إرجاعه للخزينة (Net Refund to Treasury):</span>
-                  <span class="text-emerald-400 font-mono">+{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() }} EGP</span>
-                } @else if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() < 0) {
-                  <span class="text-rose-400">مستحق للمهندس (Due to Employee):</span>
-                  <span class="text-rose-400 font-mono">{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() }} EGP</span>
-                } @else {
-                  <span class="text-slate-300">تسوية متطابقة تماماً (Matched):</span>
-                  <span class="text-slate-300 font-mono">0.00 EGP</span>
+                  </details>
                 }
               </div>
-            </div>
+
+              <!-- Add Row Button -->
+              @if (!isSettlementLocked()) {
+                <button type="button" (click)="addSettlementLine()" class="w-full py-2.5 text-xs font-bold text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 border border-dashed border-indigo-500/30 hover:border-indigo-500/50 rounded-xl transition-all cursor-pointer font-cairo flex items-center justify-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  إضافة فاتورة / بند جديد
+                </button>
+              }
+
+              <!-- Ledger summary & Net calculation -->
+              <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                <div class="flex justify-between text-xs text-slate-400 font-cairo">
+                  <span>إجمالي مبلغ العهدة الأصلي:</span>
+                  <span class="font-mono font-semibold text-slate-300">{{ selectedPettyCashForSettlement()?.amount | number:'1.2-2' }} EGP</span>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 font-cairo">
+                  <span>إجمالي المبالغ المصروفة بالفواتير:</span>
+                  <span class="font-mono font-semibold text-amber-400">{{ calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+                </div>
+                <div class="border-t border-slate-800/80 pt-2 flex justify-between text-sm font-bold font-cairo">
+                  @if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() > 0) {
+                    <span class="text-emerald-400">متبقي يجب إرجاعه للخزينة:</span>
+                    <span class="text-emerald-400 font-mono">+{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+                  } @else if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() < 0) {
+                    <span class="text-rose-400">مستحق للمهندس:</span>
+                    <span class="text-rose-400 font-mono">{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+                  } @else {
+                    <span class="text-slate-300">تسوية متطابقة تماماً:</span>
+                    <span class="text-slate-300 font-mono">0.00 EGP</span>
+                  }
+                </div>
+              </div>
             </div> <!-- End of Scrollable Content Area -->
 
+            <!-- 4️⃣ Action Bar (Clean Arabic Labels) -->
             <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-800">
-              <button type="button" (click)="closeSettlementModal()" class="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all font-cairo cursor-pointer">إغلاق النافذة / Close</button>
+              <button type="button" (click)="closeSettlementModal()" class="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all font-cairo cursor-pointer">إغلاق</button>
               
               @if (!isSettlementLocked()) {
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                  <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-750 border border-slate-700 disabled:opacity-50 transition-all font-cairo cursor-pointer">
+                  <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-750 border border-slate-700 disabled:opacity-50 transition-all font-cairo cursor-pointer">
                     @if (isSubmittingSettlement()) {
                       جاري الحفظ...
                     } @else {
-                      💾 حفظ الكل كمسودة / Save All Draft
+                      💾 حفظ كمسودة
                     }
                   </button>
 
-                  <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-5 py-2 text-sm font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50 transition-all font-cairo cursor-pointer">
+                  <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50 transition-all font-cairo cursor-pointer">
                     @if (isSubmittingSettlement()) {
                       جاري التقديم...
                     } @else {
-                      🚀 تقديم للمراجعة النهائية / Submit for Review
+                      🚀 تقديم للمراجعة النهائية
                     }
                   </button>
                 </div>
