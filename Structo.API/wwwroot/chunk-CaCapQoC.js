@@ -1,0 +1,1 @@
+import {D,ap as Xe,aF as fh,aw as N}from'./main-DWPED54Q.js';function w(t){t||(t=D(Xe));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(fh(i))}export{w};

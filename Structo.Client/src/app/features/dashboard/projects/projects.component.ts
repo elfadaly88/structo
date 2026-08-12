@@ -556,8 +556,8 @@ const GOVERNORATES: GovernorateOption[] = [
     <!-- MODAL 1: CREATE PROJECT -->
     @if (isProjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 sm:p-4">
-        <!-- Backdrop -->
-        <div (click)="closeProjectModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <!-- Backdrop (Static - Disabled click dismiss to prevent accidental data loss) -->
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal container -->
         <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
@@ -718,23 +718,6 @@ const GOVERNORATES: GovernorateOption[] = [
               </div>
             </div>
 
-            <!-- Property Classification Group -->
-            <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-3.5">
-              <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
-                🏢 تصنيف المنشأ / Property Classification
-              </span>
-              <div>
-                <label for="proj-prop-type" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">تصنيف العقار / Property Type <span class="text-red-400">*</span></label>
-                <select
-                  id="proj-prop-type"
-                  formControlName="propertyType"
-                  class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
-                  <option value="Residential">Residential / سكني</option>
-                  <option value="Administrative">Administrative / إداري</option>
-                </select>
-              </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="proj-status" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }} <span class="text-red-400">*</span></label>
@@ -749,15 +732,18 @@ const GOVERNORATES: GovernorateOption[] = [
               </div>
 
               <div>
-                <label for="proj-cat" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_CATEGORY' | translate }} <span class="text-red-400">*</span></label>
+                <label for="proj-cat" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                  تصنيف المشروع / Project Classification <span class="text-red-400">*</span>
+                </label>
                 <select
                   id="proj-cat"
                   formControlName="category"
                   class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                  <option value="Residential">{{ 'PROJECTS.CATEGORIES.Residential' | translate }}</option>
-                  <option value="Commercial">{{ 'PROJECTS.CATEGORIES.Commercial' | translate }}</option>
-                  <option value="Industrial">{{ 'PROJECTS.CATEGORIES.Industrial' | translate }}</option>
-                  <option value="Other">{{ 'PROJECTS.CATEGORIES.Other' | translate }}</option>
+                  <option value="Residential">Residential / سكني</option>
+                  <option value="Commercial">Commercial / تجاري</option>
+                  <option value="Administrative">Administrative / إداري</option>
+                  <option value="Industrial">Industrial / صناعي</option>
+                  <option value="Other">Other / أخرى</option>
                 </select>
               </div>
             </div>
@@ -2088,11 +2074,13 @@ export class ProjectsComponent implements OnInit {
     this.projectValidationErrors.set([]);
 
     const formVal = this.projectForm.value;
+    const classification = formVal.category || 'Residential';
+
     const descPayload = {
       client: formVal.client,
       budget: Number(formVal.budget),
       status: formVal.status,
-      category: formVal.category,
+      category: classification,
       isPublicPortfolio: !!formVal.isPublicPortfolio,
       description: formVal.description || ''
     };
@@ -2109,7 +2097,7 @@ export class ProjectsComponent implements OnInit {
       siteAddress: formVal.siteAddress,
       clientName: formVal.client,
       clientWhatsApp: formVal.clientWhatsApp,
-      propertyType: formVal.propertyType
+      propertyType: classification
     };
 
     this.projectService.createProject(dto).subscribe({
