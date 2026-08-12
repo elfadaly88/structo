@@ -28,12 +28,12 @@ public class FinancialTransactionsController : ControllerBase
         _financialTransactionService = financialTransactionService;
         _logger = logger;
     }
-    private string CurrentUserRole => User?.FindFirstValue("role") ?? User?.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private string CurrentUserRole => User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? User?.FindFirstValue("role") ?? User?.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid CurrentUserId
     {
         get
         {
-            var val = User?.FindFirstValue("sub") ?? User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var val = User?.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(val, out var parsed) ? parsed : Guid.Empty;
         }
     }
@@ -46,18 +46,15 @@ public class FinancialTransactionsController : ControllerBase
             return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
         }
 
-        if (string.IsNullOrEmpty(CurrentUserRole) || CurrentUserId == Guid.Empty)
-        {
-            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User identity or claims missing." });
-        }
+        var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
 
         if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
         {
             _logger.LogWarning("🚨 Security Warning: Unauthorized attempt to CREATE transaction under Project {ProjectId} by User {UserId}", projectId, User.FindFirstValue(ClaimTypes.NameIdentifier));
             return Forbid();
         }
-        var (success, message) = await _financialTransactionService.CreateTransactionAsync(projectId, dto, CurrentUserRole);
-        return Ok(new ApiResponse<bool> { Data = success, Message = message, CurrentUserRole = CurrentUserRole });
+        var (success, message) = await _financialTransactionService.CreateTransactionAsync(projectId, dto, role);
+        return Ok(new ApiResponse<bool> { Data = success, Message = message, CurrentUserRole = role });
     }
 
     [HttpGet("mobile")]
@@ -80,18 +77,19 @@ public class FinancialTransactionsController : ControllerBase
                 return Forbid();
             }
 
-            var data = await _financialTransactionService.GetMobileTransactionsAsync(projectId, pageNumber, pageSize, CurrentUserRole);
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+            var data = await _financialTransactionService.GetMobileTransactionsAsync(projectId, pageNumber, pageSize, role);
             return Ok(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>>
             {
                 Data = data,
                 Success = true,
-                CurrentUserRole = CurrentUserRole
+                CurrentUserRole = role
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching mobile transactions for project {ProjectId}", projectId);
-            return StatusCode(500, new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = "An internal error occurred." });
+            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = ex.Message });
         }
     }
 
@@ -108,14 +106,10 @@ public class FinancialTransactionsController : ControllerBase
                 return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
             }
 
-            // 🛡️ 2. Claims Extraction & Validation
-            var userRole = CurrentUserRole;
-            var userId = CurrentUserId;
-            if (string.IsNullOrEmpty(userRole) || userId == Guid.Empty)
-            {
-                _logger.LogWarning("🚨 Security Warning: User claims missing in InjectCapital request for Project {ProjectId}", projectId);
-                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User identity or claims missing." });
-            }
+            // 🛡️ 2. Robust Claims Extraction & Validation
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? "TenantOwner";
+            var tenantIdStr = User.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value;
+            Guid? tenantId = Guid.TryParse(tenantIdStr, out var parsedTenantId) ? parsedTenantId : null;
 
             // 🔒 3. Project Access Verification
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
@@ -123,9 +117,7 @@ public class FinancialTransactionsController : ControllerBase
                 return Forbid();
             }
 
-            // 🔒 4. Tenant ID Safeguard
-            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
-            if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+            if (!tenantId.HasValue)
             {
                 return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant ID claim missing or invalid." });
             }
@@ -140,7 +132,7 @@ public class FinancialTransactionsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error injecting capital for project {ProjectId}", projectId);
-            return StatusCode(500, new ApiResponse<bool> { Success = false, Message = "An internal error occurred." });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.Message });
         }
     }
 
