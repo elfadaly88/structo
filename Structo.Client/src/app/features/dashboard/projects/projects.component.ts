@@ -93,7 +93,7 @@ const GOVERNORATES: GovernorateOption[] = [
             <button
               id="btn-new-project"
               (click)="openProjectModal()"
-              class="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo">
+              class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo text-sm w-full sm:w-auto">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
               </svg>
@@ -103,7 +103,7 @@ const GOVERNORATES: GovernorateOption[] = [
             <button
               id="btn-new-user"
               (click)="openUserModal()"
-              class="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer font-cairo">
+              class="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
@@ -153,42 +153,49 @@ const GOVERNORATES: GovernorateOption[] = [
 
       <!-- SECTION 1: PROJECTS HUB -->
       @if (activeTab() === 'projects') {
-        <!-- High-end Billing Widget / Project Quota visual counter -->
+        <!-- Sleek Dark-themed Quota & Consumption Indicator -->
         @if (currentUserRole() === 'TenantOwner' || currentUserRole() === 'Manager') {
-          <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-purple-950/30 border border-indigo-500/30 rounded-2xl p-5 shadow-xl shadow-indigo-500/10 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3.5 w-full md:w-auto">
-              <div class="h-11 w-11 bg-indigo-500/15 rounded-2xl flex items-center justify-center border border-indigo-500/30 text-indigo-400 shrink-0 shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 backdrop-blur-sm">
+            <!-- Right Side (RTL Start): Icon & Status Text -->
+            <div class="flex items-center gap-3.5 w-full lg:w-auto">
+              <div class="h-10 w-10 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
               <div>
-                <h4 class="font-black text-sm text-white font-cairo text-right rtl:text-left flex items-center gap-2">
-                  <span>سعة واستهلاك المشاريع</span>
-                  <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
-                    {{ usedProjectsCount() }} / {{ allowedProjectsCount() }}
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-sm text-white font-cairo">سعة المشاريع:</h4>
+                  <span class="text-sm font-extrabold text-indigo-300 font-mono">
+                    {{ usedProjectsCount() }} من أصل {{ allowedProjectsCount() }}
                   </span>
-                </h4>
-                <p class="text-xs text-slate-400 mt-1 font-cairo text-right rtl:text-left">
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5 font-cairo">
                   المشاريع المستهلكة: <strong class="text-indigo-300 font-mono">{{ usedProjectsCount() }}</strong> من أصل <strong class="text-white font-mono">{{ allowedProjectsCount() }}</strong> متاح في باقتك الحالية.
                 </p>
               </div>
             </div>
 
-            <!-- Progress Bar & Permanent CTA Button -->
-            <div class="flex items-center gap-4 w-full md:w-auto">
-              <div class="w-full md:w-48 bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800 shrink-0">
-                <div class="bg-gradient-to-r from-emerald-500 via-indigo-500 to-amber-500 h-3 rounded-full transition-all duration-500" 
-                  [style.width.%]="(usedProjectsCount() / allowedProjectsCount()) * 100 > 100 ? 100 : (usedProjectsCount() / allowedProjectsCount()) * 100">
+            <!-- Left Side (RTL End): Clean Progress Bar & Secondary Upgrade Button -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full lg:w-auto shrink-0">
+              <div class="flex items-center justify-between sm:justify-start gap-3 bg-slate-950/60 px-3.5 py-2 rounded-xl border border-slate-800/80">
+                <span class="text-xs text-slate-400 font-mono font-medium shrink-0">
+                  {{ usedProjectsCount() }} / {{ allowedProjectsCount() }} Projects Used
+                </span>
+                <div class="w-28 sm:w-36 bg-slate-800 rounded-full h-2 overflow-hidden shrink-0">
+                  <div 
+                    class="bg-indigo-500 h-2 rounded-full transition-all duration-500" 
+                    [style.width.%]="(usedProjectsCount() / (allowedProjectsCount() || 1)) * 100 > 100 ? 100 : (usedProjectsCount() / (allowedProjectsCount() || 1)) * 100">
+                  </div>
                 </div>
               </div>
 
-              <!-- Permanent CTA Upgrade Button -->
+              <!-- Upgrade Button (Secondary / Subtle Action) -->
               <button 
                 (click)="isUpgradeModalOpen.set(true)"
-                class="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-xs font-black rounded-xl text-white font-cairo shadow-lg shadow-indigo-600/25 active:scale-95 transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2 ring-2 ring-amber-500/30 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                class="bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-indigo-500/40 text-xs font-semibold py-2 px-3.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer font-cairo shadow-sm hover:border-indigo-500/60 active:scale-95 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span>+ شراء مشاريع إضافية</span>
               </button>
