@@ -21,7 +21,9 @@ public class FinancialTransaction : ITenantEntity
     public PaymentMethod? PaymentMethod { get; set; }
     public string? ReceiptPhotoUrl { get; set; }
     
-    public bool IsSystemGenerated { get; set; }
+    public bool IsSystemGenerated { get; set; } = false;
+    public bool IsAudited { get; set; } = false;
+    public bool IsClosed { get; set; } = false;
     public CashPoolSourceType? SourceType { get; set; }
     
     public bool IsOverrun { get; set; }

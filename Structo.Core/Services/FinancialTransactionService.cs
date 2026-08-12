@@ -209,7 +209,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (transaction == null)
             return (false, "Transaction not found.");
 
-        if (transaction.IsSystemGenerated)
+        if (transaction.IsAudited || transaction.IsClosed)
         {
             return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
         }
@@ -246,12 +246,12 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (transaction == null)
             return (false, "Transaction not found.");
 
-        if (transaction.IsSystemGenerated && transaction.SourceType == null)
+        if (transaction.IsAudited || transaction.IsClosed)
         {
             return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
         }
 
-        if (transaction.Type == TransactionType.Income && transaction.IsSystemGenerated && transaction.SourceType.HasValue)
+        if (transaction.Type == TransactionType.Income && transaction.SourceType.HasValue)
         {
             var pool = await context.Set<ProjectCashPool>()
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == transaction.SourceType.Value);
