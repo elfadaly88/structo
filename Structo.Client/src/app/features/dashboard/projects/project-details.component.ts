@@ -1571,7 +1571,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Settle Petty Cash Modal -->
     @if (isSettleModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeSettleModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex items-start justify-between mb-2">
             <div>
@@ -1656,11 +1656,30 @@ import { LanguageService } from '../../../core/services/language.service';
               <label for="expenseDate" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                 تاريخ الصرف الفعلي <span class="text-red-400">*</span>
               </label>
-              <input
-                id="expenseDate"
-                type="date"
-                formControlName="expenseDate"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+              <div class="relative">
+                <input
+                  id="expenseDate"
+                  type="text"
+                  [value]="formatDisplayDate(settleForm.get('expenseDate')?.value)"
+                  (input)="onDateInputChanged($event, 'expenseDate', settleForm)"
+                  placeholder="DD/MM/YYYY"
+                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 font-mono pr-10">
+                <input
+                  #expenseDatePicker
+                  type="date"
+                  [value]="settleForm.get('expenseDate')?.value"
+                  (change)="onNativeDatePicked($event, 'expenseDate', settleForm)"
+                  class="sr-only opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                  style="clip: rect(0,0,0,0);">
+                <button
+                  type="button"
+                  (click)="openDatePicker(expenseDatePicker)"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors cursor-pointer z-20">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
               @if (isSettleFieldInvalid('expenseDate')) {
                 <span class="text-xs text-red-400 mt-1 block">Expense Date is required.</span>
               }
@@ -1739,7 +1758,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Request Petty Cash Modal -->
     @if (isRequestModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeRequestModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex items-start justify-between mb-2">
             <div>
@@ -1860,7 +1879,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Inject Capital Modal -->
     @if (isInjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeInjectModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">{{ 'DETAILS.INJECT_CAPITAL' | translate }}</h3>
@@ -1914,17 +1933,29 @@ import { LanguageService } from '../../../core/services/language.service';
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                   Payment Date <span class="text-red-400">*</span>
                 </label>
-                <input
-                  type="date"
-                  formControlName="paymentDate"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl 
-                  text-slate-200 text-sm 
-                  focus:outline-none 
-                  focus:ring-2 
-                  focus:ring-indigo-500/40 
-                  focus:border-indigo-500 
-                  transition-all 
-                  duration-200">
+                <div class="relative">
+                  <input
+                    type="text"
+                    [value]="formatDisplayDate(injectForm.get('paymentDate')?.value)"
+                    (input)="onDateInputChanged($event, 'paymentDate', injectForm)"
+                    placeholder="DD/MM/YYYY"
+                    class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 font-mono pr-10">
+                  <input
+                    #injectDatePicker
+                    type="date"
+                    [value]="injectForm.get('paymentDate')?.value"
+                    (change)="onNativeDatePicked($event, 'paymentDate', injectForm)"
+                    class="sr-only opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                    style="clip: rect(0,0,0,0);">
+                  <button
+                    type="button"
+                    (click)="openDatePicker(injectDatePicker)"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors cursor-pointer z-20">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
@@ -1990,7 +2021,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Edit Petty Cash Modal -->
     @if (isEditPettyCashModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeEditPettyCashModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">تعديل العهدة النقدية (Edit Petty Cash)</h3>
@@ -2031,7 +2062,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Edit Transaction Modal -->
     @if (isEditTransactionModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeEditTransactionModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">تعديل الحركة المالية (Edit Transaction)</h3>
@@ -2062,7 +2093,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Revise Budget Modal -->
     @if (isReviseBudgetModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeReviseBudgetModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">تعديل ميزانية المشروع (Revise Budget)</h3>
@@ -2112,7 +2143,7 @@ import { LanguageService } from '../../../core/services/language.service';
     <!-- Direct Disbursement Modal -->
     @if (isDisburseModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closeDisburseModal()" class="absolute inset-0"></div>
+        <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">تعزيز عهدة مباشر / Direct Disbursement</h3>
@@ -2864,6 +2895,58 @@ export class ProjectDetailsComponent implements OnInit {
         }
       }
     });
+  }
+
+  openDatePicker(picker: HTMLInputElement): void {
+    if (picker && typeof picker.showPicker === 'function') {
+      picker.showPicker();
+    } else if (picker) {
+      picker.click();
+    }
+  }
+
+  formatDisplayDate(rawVal: any): string {
+    if (!rawVal) return '';
+    if (typeof rawVal === 'string') {
+      const trimmed = rawVal.trim();
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+        return trimmed;
+      }
+      if (trimmed.includes('-')) {
+        const parts = trimmed.split('T')[0].split('-');
+        if (parts.length === 3) {
+          const [yyyy, mm, dd] = parts;
+          return `${dd}/${mm}/${yyyy}`;
+        }
+      }
+    }
+    if (rawVal instanceof Date && !isNaN(rawVal.getTime())) {
+      const dd = String(rawVal.getDate()).padStart(2, '0');
+      const mm = String(rawVal.getMonth() + 1).padStart(2, '0');
+      const yyyy = rawVal.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+    return String(rawVal);
+  }
+
+  onNativeDatePicked(event: Event, fieldName: string, formGroup: FormGroup): void {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      formGroup.get(fieldName)?.setValue(input.value);
+    }
+  }
+
+  onDateInputChanged(event: Event, fieldName: string, formGroup: FormGroup): void {
+    const input = event.target as HTMLInputElement;
+    if (!input) return;
+    const val = input.value.trim();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+      const [dd, mm, yyyy] = val.split('/');
+      const isoDate = `${yyyy}-${mm}-${dd}`;
+      formGroup.get(fieldName)?.setValue(isoDate);
+    } else if (val === '') {
+      formGroup.get(fieldName)?.setValue('');
+    }
   }
 
   // Lightbox Viewer State
