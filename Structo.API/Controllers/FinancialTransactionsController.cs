@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Structo.API.Controllers;
 
@@ -41,20 +42,34 @@ public class FinancialTransactionsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] FinancialTransactionCreateDto dto)
     {
-        if (User?.Identity?.IsAuthenticated != true)
+        try
         {
-            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+            }
+
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+
+            if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
+            {
+                _logger.LogWarning("🚨 Security Warning: Unauthorized attempt to CREATE transaction under Project {ProjectId} by User {UserId}", projectId, User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return Forbid();
+            }
+            var (success, message) = await _financialTransactionService.CreateTransactionAsync(projectId, dto, role);
+            return Ok(new ApiResponse<bool> { Data = success, Message = message, CurrentUserRole = role });
         }
-
-        var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
-
-        if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
+        catch (DbUpdateException dbEx)
         {
-            _logger.LogWarning("🚨 Security Warning: Unauthorized attempt to CREATE transaction under Project {ProjectId} by User {UserId}", projectId, User.FindFirstValue(ClaimTypes.NameIdentifier));
-            return Forbid();
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database update error creating transaction for project {ProjectId}: {Details}", projectId, details);
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
         }
-        var (success, message) = await _financialTransactionService.CreateTransactionAsync(projectId, dto, role);
-        return Ok(new ApiResponse<bool> { Data = success, Message = message, CurrentUserRole = role });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating transaction for project {ProjectId}", projectId);
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+        }
     }
 
     [HttpGet("mobile")]
@@ -86,10 +101,16 @@ public class FinancialTransactionsController : ControllerBase
                 CurrentUserRole = role
             });
         }
+        catch (DbUpdateException dbEx)
+        {
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database error fetching mobile transactions for project {ProjectId}: {Details}", projectId, details);
+            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = $"Database Error: {details}" });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching mobile transactions for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = ex.Message });
+            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
         }
     }
 
@@ -129,10 +150,16 @@ public class FinancialTransactionsController : ControllerBase
 
             return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = userRole });
         }
+        catch (DbUpdateException dbEx)
+        {
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database error injecting capital for project {ProjectId}: {Details}", projectId, details);
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error injecting capital for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.Message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
         }
     }
 

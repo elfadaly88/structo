@@ -139,6 +139,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (projectCheck.Status == ProjectStatus.FinancialFreeze || projectCheck.Status == ProjectStatus.Closed)
             return (false, $"PROJECT_FROZEN: لا يمكن حقن رأس مال جديد. المشروع في حالة {projectCheck.Status}.");
 
+        var targetTenantId = projectCheck.TenantId;
+
         var pool = await context.Set<ProjectCashPool>()
             .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == dto.SourceType);
 
@@ -146,11 +148,13 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         {
             pool = new ProjectCashPool
             {
+                Id = Guid.NewGuid(),
                 ProjectId = projectId,
-                TenantId = tenantId.Value,
+                TenantId = targetTenantId,
                 SourceType = dto.SourceType,
                 TotalInjected = 0,
-                AvailableBalance = 0
+                AvailableBalance = 0,
+                CreatedAt = DateTime.UtcNow
             };
             context.Set<ProjectCashPool>().Add(pool);
         }
@@ -160,8 +164,9 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         var transaction = new FinancialTransaction
         {
+            Id = Guid.NewGuid(),
             ProjectId = projectId,
-            TenantId = tenantId.Value,
+            TenantId = targetTenantId,
             Amount = dto.Amount,
             Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize($"Capital Injection ({dto.SourceType}) - {dto.Description}"),
             Type = TransactionType.Income,
