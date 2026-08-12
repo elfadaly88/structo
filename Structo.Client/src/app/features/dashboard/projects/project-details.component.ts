@@ -29,62 +29,134 @@ import { LanguageService } from '../../../core/services/language.service';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, DatePipe, DecimalPipe, TranslatePipe, FormsModule],
   template: `
-    <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
+    <div class="space-y-5 w-full px-3 sm:px-6 lg:px-8">
 
-      <!-- Header / Back button -->
-      <div class="flex items-center gap-4">
-        <a
-          routerLink="/dashboard/projects"
-          class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all duration-200 shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </a>
-        <div>
-          <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">{{ 'DETAILS.WORKSPACE' | translate }}</span>
-          <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl mt-0.5">
-            @if (project()) {
-              {{ project()!.name }}
-            } @else if (isLoadingProject()) {
-              <span class="text-slate-500">{{ 'DETAILS.LOADING_PROJECT' | translate }}</span>
-            } @else {
-              <span class="text-slate-500">{{ 'DETAILS.PROJECT_NOT_FOUND' | translate }}</span>
-            }
-          </h1>
-          @if (project()) {
-            <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-400">
-              @if (project()!.governorate) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full font-cairo font-semibold">
-                  📍 {{ project()!.governorate }} @if (project()!.cityOrZone) { - {{ project()!.cityOrZone }} }
-                </span>
-              }
-              @if (project()!.propertyType) {
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full font-cairo font-semibold">
-                  @if (project()!.propertyType === 'Residential') {
-                    🏠 {{ langService.currentLang() === 'ar' ? 'سكني' : 'Residential' }}
+      <!-- 1️⃣ Compact Top KPI Stats Bar -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 font-sans">
+        @if (!isEngineer()) {
+          <!-- Card 1: Total Income -->
+          <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
+            <h3 class="text-base lg:text-lg font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+          </div>
+          <!-- Card 2: Total Expenses -->
+          <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
+            <h3 class="text-base lg:text-lg font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+          </div>
+          <!-- Card 3: Net Balance -->
+          <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
+            <h3 class="text-base lg:text-lg font-extrabold mt-1 font-mono tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
+              {{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+            </h3>
+          </div>
+        }
+        <!-- Card 4: Unsettled Petty Cash -->
+        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm" [class.col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
+          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
+          <h3 class="text-base lg:text-lg font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ totalUnsettledPettyCash() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+        </div>
+      </div>
+
+      <!-- 2️⃣ Unified Project Info & Actions Header -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+        <!-- Top Row: Back Button, Title, Badges & Primary Action (+ إيداع دفعة مالية) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5">
+          <div class="flex items-center gap-3 min-w-0">
+            <a
+              routerLink="/dashboard/projects"
+              class="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all duration-200 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </a>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white font-cairo truncate">
+                  @if (project()) {
+                    {{ project()!.name }}
+                  } @else if (isLoadingProject()) {
+                    <span class="text-slate-500">{{ 'DETAILS.LOADING_PROJECT' | translate }}</span>
                   } @else {
-                    🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
+                    <span class="text-slate-500">{{ 'DETAILS.PROJECT_NOT_FOUND' | translate }}</span>
                   }
-                </span>
-              }
-              @if (project()!.siteAddress) {
-                <span class="text-slate-500 font-cairo text-[11px] font-medium hidden sm:inline">
-                  ({{ project()!.siteAddress }})
-                </span>
+                </h1>
+                @if (project()) {
+                  @if (project()!.isActive) {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 font-cairo">
+                      {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
+                    </span>
+                  } @else {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 shrink-0 font-cairo">
+                      {{ 'PROJECTS.STATUS_CLOSED' | translate }}
+                    </span>
+                  }
+                }
+              </div>
+              @if (project()) {
+                <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-400">
+                  @if (project()!.governorate) {
+                    <span class="text-indigo-400 font-cairo font-medium">📍 {{ project()!.governorate }} @if (project()!.cityOrZone) { - {{ project()!.cityOrZone }} }</span>
+                  }
+                  @if (project()!.propertyType) {
+                    <span class="text-slate-600">•</span>
+                    <span class="text-amber-400 font-cairo font-medium">
+                      @if (project()!.propertyType === 'Residential') { 🏠 سكني } @else { 🏢 إداري }
+                    </span>
+                  }
+                </div>
               }
             </div>
+          </div>
+
+          <!-- Primary Action Button: + إيداع دفعة مالية -->
+          @if (isOwnerOrAccountant() && project()) {
+            <button 
+              (click)="openInjectModal()"
+              [disabled]="project()?.status === 'Closed'"
+              class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
+            </button>
           }
         </div>
+
+        <!-- Info Grid Side-by-Side: Client, Budget, Scope -->
         @if (project()) {
-          @if (project()!.isActive) {
-            <span class="ml-auto rtl:mr-auto rtl:ml-0 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
-            </span>
-          } @else {
-            <span class="ml-auto rtl:mr-auto rtl:ml-0 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-slate-800 text-slate-400">
-              {{ 'PROJECTS.STATUS_CLOSED' | translate }}
-            </span>
-          }
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+            <!-- Client Name -->
+            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
+              <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo block mb-0.5">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</span>
+              <p class="text-sm font-bold text-slate-200 truncate font-cairo">{{ parsedClient() || 'N/A' }}</p>
+            </div>
+
+            <!-- Budget -->
+            @if (!isEngineer()) {
+              <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</span>
+                  @if (isOwnerOrAccountant()) {
+                    <button
+                      (click)="openReviseBudgetModal()"
+                      [disabled]="project()?.status === 'Closed'"
+                      class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer font-cairo disabled:opacity-40">
+                      تعديل ✏️
+                    </button>
+                  }
+                </div>
+                <p class="text-sm font-bold text-emerald-400 font-mono">{{ parsedBudget() | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</p>
+              </div>
+            }
+
+            <!-- Scope Description -->
+            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 sm:col-span-1" [class.sm:col-span-2]="isEngineer()">
+              <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo block mb-0.5">{{ 'DETAILS.SCOPE_DESC' | translate }}</span>
+              <p class="text-xs text-slate-300 leading-relaxed font-cairo line-clamp-2" [title]="parsedDescription()">{{ parsedDescription() || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>
+            </div>
+          </div>
         }
       </div>
 
@@ -142,240 +214,80 @@ import { LanguageService } from '../../../core/services/language.service';
         </div>
       }
 
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 font-sans">
-        @if (!isEngineer()) {
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
-            <h3 class="text-2xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-          </div>
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
-            <h3 class="text-2xl font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-          </div>
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
-            @if (netBalance() >= 0) {
-              <h3 class="text-2xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-            } @else {
-              <h3 class="text-2xl font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-            }
-          </div>
-        }
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5" [class.col-span-1]="isEngineer()" [class.sm:col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
-          <h3 class="text-2xl font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ totalUnsettledPettyCash() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-        </div>
-      </div>
-
-      <!-- Balances Ledger -->
-      @if (!isEngineer()) {
-        <div class="mt-8 mb-4">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-bold text-white font-cairo">{{ 'FINANCE.CASH_POOLS' | translate }}</h3>
-            @if (isOwnerOrAccountant()) {
-              <button 
-                (click)="openInjectModal()"
-                [disabled]="project()?.status === 'Closed'"
-                class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 hover:scale-105 active:scale-95 shadow-md cursor-pointer font-cairo flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                {{ 'DETAILS.INJECT_CAPITAL' | translate }}
-              </button>
-            }
-          </div>
-          
-          @if (cashPools().length > 0) {
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 font-sans">
-              @for (pool of cashPools(); track pool.id) {
-                <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm hover:border-indigo-500/30 transition-colors">
-                  <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ pool.sourceType }}</span>
-                  <div class="flex justify-between items-end mt-2">
-                    <div>
-                      <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{{ 'FINANCE.AVAILABLE' | translate }}</p>
-                      <h3 class="text-xl font-extrabold text-emerald-400">{{ pool.availableBalance | number:'1.2-2' }}</h3>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{{ 'FINANCE.TOTAL' | translate }}</p>
-                      <h3 class="text-sm font-bold text-slate-300">{{ pool.totalInjected | number:'1.2-2' }}</h3>
-                    </div>
-                  </div>
-                  <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
-                    <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" [style.width.%]="(pool.availableBalance / (pool.totalInjected || 1)) * 100"></div>
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-8 text-center border-dashed">
-              <p class="text-slate-500 text-sm font-cairo">{{ 'FINANCE.NO_CASH_POOLS' | translate }}</p>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Description Block -->
-      @if (project()) {
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6">
-          <div class="space-y-4">
-            <div>
-              <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</span>
-              <p class="text-base font-semibold text-slate-200 mt-1">{{ parsedClient() || 'N/A' }}</p>
-            </div>
-            @if (!isEngineer()) {
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</span>
-                  @if (isOwnerOrAccountant()) {
-                    <button
-                      (click)="openReviseBudgetModal()"
-                      [disabled]="project()?.status === 'Closed'"
-                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
-                      Revise / تعديل
-                    </button>
-                  }
-                </div>
-                <p class="text-base font-bold text-emerald-400 mt-1">{{ parsedBudget() | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</p>
-              </div>
-            }
-          </div>
-          <div>
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">{{ 'DETAILS.SCOPE_DESC' | translate }}</span>
-            <p class="text-sm text-slate-300 leading-relaxed mt-1 whitespace-pre-line">{{ parsedDescription() || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>
-          </div>
-        </div>
-
-        <!-- Budget Revision History (Timeline) -->
-        @if (isOwnerOrAccountant() && budgetHistory().length > 0) {
-          <div class="bg-slate-900/15 border border-slate-800/80 rounded-2xl p-4 sm:p-5 mt-4">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo mb-3 flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              سجل تغييرات الميزانية / Budget Revision History
-            </h4>
-            <div class="overflow-x-auto rounded-xl border border-slate-800/60 bg-slate-950/40">
-              <table class="w-full text-left rtl:text-right border-collapse">
-                <thead>
-                  <tr class="bg-slate-900/60 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-cairo">
-                    <th class="p-2 sm:p-3">Before / قبل</th>
-                    <th class="p-2 sm:p-3">After / بعد</th>
-                    <th class="p-2 sm:p-3">Reason / السبب</th>
-                    <th class="p-2 sm:p-3">Date / التاريخ</th>
-                    <th class="p-2 sm:p-3 text-center">BOQ Document / المقايسة</th>
-                  </tr>
-                </thead>
-                <tbody class="text-xs text-slate-300 divide-y divide-slate-800/60">
-                  @for (log of budgetHistory(); track log.id) {
-                    <tr class="hover:bg-slate-900/30 transition-colors">
-                      <td class="p-2 sm:p-3 font-mono text-slate-400">{{ log.oldBudget | number:'1.2-2' }}</td>
-                      <td class="p-2 sm:p-3 font-mono text-emerald-400 font-semibold">{{ log.newBudget | number:'1.2-2' }}</td>
-                      <td class="p-2 sm:p-3 font-cairo max-w-xs truncate" [title]="log.reasonForChange">{{ log.reasonForChange }}</td>
-                      <td class="p-2 sm:p-3 text-slate-400 font-mono">{{ log.changedAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                      <td class="p-2 sm:p-3 text-center">
-                        @if (log.boqFileUrl) {
-                          <a [href]="log.boqFileUrl" target="_blank" 
-                              class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm">
-                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                             </svg>
-                             <span>Download / تحميل</span>
-                           </a>
-                        } @else {
-                          <span class="text-slate-500 text-[11px] font-cairo">لا يوجد / None</span>
-                        }
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-      }
-
-      <!-- Tabs Navigation -->
-      <div class="flex border-b border-slate-800 gap-6">
+      <!-- 3️⃣ Responsive Navigation Tabs System (Smooth Horizontal Scroll on Mobile/Tablet) -->
+      <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 border-b border-slate-800 font-cairo">
+        
+        <!-- Tab 1: Site Petty Cash -->
         <button
           id="tab-petty-cash"
           (click)="activeTab.set('petty-cash')"
-          class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo"
-          [class.border-indigo-500]="activeTab() === 'petty-cash'"
+          class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+          [class.bg-indigo-600\/10]="activeTab() === 'petty-cash'"
           [class.text-indigo-400]="activeTab() === 'petty-cash'"
+          [class.border-indigo-500]="activeTab() === 'petty-cash'"
           [class.border-transparent]="activeTab() !== 'petty-cash'"
           [class.text-slate-400]="activeTab() !== 'petty-cash'">
-          {{ 'DETAILS.TAB_PETTY_CASH' | translate }}
+          <span>🧾 طلبات عهدة الموقع (Site Petty Cash)</span>
           @if (unsettledCount() > 0) {
-            <span class="ml-2 rtl:mr-2 rtl:ml-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400">{{ unsettledCount() }}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 font-mono">{{ unsettledCount() }}</span>
           }
         </button>
+
+        <!-- Tab 2: Financial Ledger -->
         @if (!isEngineer()) {
           <button
             id="tab-transactions"
             (click)="activeTab.set('transactions')"
-            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo"
-            [class.border-indigo-500]="activeTab() === 'transactions'"
+            class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+            [class.bg-indigo-600\/10]="activeTab() === 'transactions'"
             [class.text-indigo-400]="activeTab() === 'transactions'"
+            [class.border-indigo-500]="activeTab() === 'transactions'"
             [class.border-transparent]="activeTab() !== 'transactions'"
             [class.text-slate-400]="activeTab() !== 'transactions'">
-            {{ 'DETAILS.TAB_LEDGER' | translate }}
+            <span>📖 الدفتر المالي (Financial Ledger)</span>
           </button>
         }
+
+        <!-- Tab 3: Settlements -->
+        <button
+          id="tab-settlements"
+          (click)="activeTab.set('settlements')"
+          class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+          [class.bg-indigo-600\/10]="activeTab() === 'settlements'"
+          [class.text-indigo-400]="activeTab() === 'settlements'"
+          [class.border-indigo-500]="activeTab() === 'settlements'"
+          [class.border-transparent]="activeTab() !== 'settlements'"
+          [class.text-slate-400]="activeTab() !== 'settlements'">
+          <span>⚖️ التسويات (Settlements)</span>
+        </button>
+
+        <!-- Tab 4: Site Photos -->
         @if (!isAccountant()) {
           <button
             id="tab-gallery"
             (click)="activeTab.set('gallery')"
-            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo"
-            [class.border-indigo-500]="activeTab() === 'gallery'"
+            class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+            [class.bg-indigo-600\/10]="activeTab() === 'gallery'"
             [class.text-indigo-400]="activeTab() === 'gallery'"
+            [class.border-indigo-500]="activeTab() === 'gallery'"
             [class.border-transparent]="activeTab() !== 'gallery'"
             [class.text-slate-400]="activeTab() !== 'gallery'">
-            {{ 'DETAILS.TAB_GALLERY' | translate }}
+            <span>📸 معرض الصور (Site Photos)</span>
           </button>
         }
-        <button
-          id="tab-settlements"
-          (click)="activeTab.set('settlements')"
-          class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo flex items-center gap-1.5"
-          [class.border-indigo-500]="activeTab() === 'settlements'"
-          [class.text-indigo-400]="activeTab() === 'settlements'"
-          [class.border-transparent]="activeTab() !== 'settlements'"
-          [class.text-slate-400]="activeTab() !== 'settlements'">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-          </svg>
-          <span>التسويات / Settlements</span>
-        </button>
-        @if (isTenantOwner()) {
-          <button
-            id="tab-admin-settings"
-            (click)="activeTab.set('admin-settings')"
-            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo flex items-center gap-1.5"
-            [class.border-indigo-500]="activeTab() === 'admin-settings'"
-            [class.text-indigo-400]="activeTab() === 'admin-settings'"
-            [class.border-transparent]="activeTab() !== 'admin-settings'"
-            [class.text-slate-400]="activeTab() !== 'admin-settings'">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0" />
-            </svg>
-            <span>لوحة تحكم الأدمن</span>
-          </button>
-        }
+
+        <!-- Tab 5: Project Control & Admin -->
         @if (isOwnerOrAccountant()) {
           <button
             id="tab-closeout"
             (click)="activeTab.set('closeout')"
-            class="pb-3 text-sm font-semibold border-b-2 transition-all duration-150 cursor-pointer font-cairo flex items-center gap-1.5"
-            [class.border-rose-500]="activeTab() === 'closeout'"
-            [class.text-rose-400]="activeTab() === 'closeout'"
+            class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+            [class.bg-indigo-600\/10]="activeTab() === 'closeout'"
+            [class.text-indigo-400]="activeTab() === 'closeout'"
+            [class.border-indigo-500]="activeTab() === 'closeout'"
             [class.border-transparent]="activeTab() !== 'closeout'"
             [class.text-slate-400]="activeTab() !== 'closeout'">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>إغلاق المشروع</span>
+            <span>⚙️ إدارة المشروع (Project Control & Admin)</span>
           </button>
         }
       </div>
