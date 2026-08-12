@@ -1880,7 +1880,7 @@ import { LanguageService } from '../../../core/services/language.service';
     @if (isInjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
         <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
+        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 overflow-hidden box-border">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-white font-cairo">{{ 'DETAILS.INJECT_CAPITAL' | translate }}</h3>
             <button (click)="closeInjectModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -1900,7 +1900,7 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           }
 
-          <form [formGroup]="injectForm" (ngSubmit)="submitCapitalInjection()" class="space-y-5 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+          <form [formGroup]="injectForm" (ngSubmit)="submitCapitalInjection()" class="space-y-5 font-sans overflow-y-auto overflow-x-hidden min-h-0 pr-1 pb-2 flex-1 box-border">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                 {{ 'FINANCE.AMOUNT' | translate }} <span class="text-red-400">*</span>
@@ -2005,7 +2005,7 @@ import { LanguageService } from '../../../core/services/language.service';
               <button
                 type="submit"
                 [disabled]="injectForm.invalid || isInjecting()"
-                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
+                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer font-cairo shadow-lg shadow-indigo-600/20 box-border">
                 @if (isInjecting()) {
                   {{ 'COMMON.LOADING' | translate }}
                 } @else {
