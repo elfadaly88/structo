@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener, ChangeDetectorRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -2719,6 +2719,7 @@ export class ProjectDetailsComponent implements OnInit {
   protected readonly langService = inject(LanguageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly zone = inject(NgZone);
 
   readonly reconciliationReport = signal<ProjectReconciliationReportDto | null>(null);
   readonly isCloseoutLoading = signal(false);
@@ -3478,13 +3479,8 @@ export class ProjectDetailsComponent implements OnInit {
     this.isLoadingProject.set(true);
     this.projectService.getProjectById(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.isLoadingProject.set(false);
         if (response.success && response.data) {
           const proj = response.data;
-          const user = this.authService.currentUser();
-          this.project.set(proj);
-
-          // Extract isPublicPortfolio to patch form
           let isPublicPortfolio = false;
           if (proj.description && proj.description.startsWith('{')) {
             try {
@@ -3492,35 +3488,67 @@ export class ProjectDetailsComponent implements OnInit {
               isPublicPortfolio = !!parsed.isPublicPortfolio || !!parsed.isPublic;
             } catch (e) { }
           }
-          this.projectSettingsForm.patchValue({ isPublicPortfolio });
+
+          this.zone.run(() => {
+            this.isLoadingProject.set(false);
+            this.project.set(proj);
+            this.projectSettingsForm.patchValue({ isPublicPortfolio });
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          });
 
           // Silently load reconciliation report for Closed or Frozen projects
           if (proj.status === 'Closed' || proj.status === 'FinancialFreeze') {
             this.projectCloseoutService.getReconciliationReport(this.projectId).subscribe({
               next: (res) => {
                 if (res.success && res.data) {
-                  this.reconciliationReport.set(res.data);
+                  this.zone.run(() => {
+                    this.reconciliationReport.set(res.data);
+                    this.cdr.markForCheck();
+                    this.cdr.detectChanges();
+                  });
                 }
               }
             });
           }
+        } else {
+          this.zone.run(() => {
+            this.isLoadingProject.set(false);
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          });
         }
       },
-      error: () => this.isLoadingProject.set(false)
+      error: () => {
+        this.zone.run(() => {
+          this.isLoadingProject.set(false);
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
+      }
     });
   }
-
 
   fetchPettyCash(): void {
     this.isLoadingPettyCash.set(true);
     this.pettyCashService.getProjectPettyCash(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.isLoadingPettyCash.set(false);
-        if (response.success && response.data) {
-          this.pettyCashes.set(response.data.items);
-        }
+        this.zone.run(() => {
+          this.isLoadingPettyCash.set(false);
+          if (response.success && response.data) {
+            this.pettyCashes.set(response.data.items);
+          }
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
-      error: () => this.isLoadingPettyCash.set(false)
+      error: () => {
+        this.zone.run(() => {
+          this.isLoadingPettyCash.set(false);
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
+      }
     });
   }
 
@@ -3528,7 +3556,12 @@ export class ProjectDetailsComponent implements OnInit {
     this.financialService.getCashPools(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.cashPools.set(response.data);
+          const pools = response.data;
+          this.zone.run(() => {
+            this.cashPools.set(pools);
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          });
         }
       }
     });
@@ -3538,15 +3571,21 @@ export class ProjectDetailsComponent implements OnInit {
     this.isLoadingTransactions.set(true);
     this.financialService.getProjectTransactions(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.isLoadingTransactions.set(false);
-        if (response.success && response.data) {
-          this.transactions.set(response.data.items);
-          queueMicrotask(() => this.cdr.detectChanges());
-        }
+        this.zone.run(() => {
+          this.isLoadingTransactions.set(false);
+          if (response.success && response.data) {
+            this.transactions.set(response.data.items);
+          }
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
       error: () => {
-        this.isLoadingTransactions.set(false);
-        queueMicrotask(() => this.cdr.detectChanges());
+        this.zone.run(() => {
+          this.isLoadingTransactions.set(false);
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       }
     });
   }

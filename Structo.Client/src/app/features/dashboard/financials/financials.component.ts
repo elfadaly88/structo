@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -973,6 +973,7 @@ export class FinancialsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly zone = inject(NgZone);
   readonly isEditTransactionModalOpen = signal(false);
   readonly isSavingTransaction = signal(false);
   selectedTransactionToEdit: FinancialTransactionMobileDto | null = null;
@@ -1105,12 +1106,16 @@ export class FinancialsComponent implements OnInit {
     this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         if (response.data) {
-          this.projects.set(response.data);
-          // Proactively select the first project if available and not selected
-          if (response.data.length > 0 && !this.selectedProjectId()) {
-            this.selectedProjectId.set(response.data[0].id);
-            this.loadData();
-          }
+          const projectsList = response.data;
+          this.zone.run(() => {
+            this.projects.set(projectsList);
+            if (projectsList.length > 0 && !this.selectedProjectId()) {
+              this.selectedProjectId.set(projectsList[0].id);
+              this.loadData();
+            }
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          });
 
           // Preload expenses for all projects to compute burn rates
           response.data.forEach(p => {
@@ -1118,9 +1123,13 @@ export class FinancialsComponent implements OnInit {
               next: (res) => {
                 if (res.data) {
                   const summaryData = res.data;
-                  this.projectExpenses.update(map => {
-                    map.set(p.id, summaryData.totalExpenses);
-                    return new Map(map);
+                  this.zone.run(() => {
+                    this.projectExpenses.update(map => {
+                      map.set(p.id, summaryData.totalExpenses);
+                      return new Map(map);
+                    });
+                    this.cdr.markForCheck();
+                    this.cdr.detectChanges();
                   });
                 }
               }
@@ -1176,10 +1185,14 @@ export class FinancialsComponent implements OnInit {
   loadData(): void {
     const projectId = this.selectedProjectId();
     if (!projectId) {
-      this.pendingApprovals.set([]);
-      this.myPettyCash.set([]);
-      this.transactions.set([]);
-      this.financialSummary.set(null);
+      this.zone.run(() => {
+        this.pendingApprovals.set([]);
+        this.myPettyCash.set([]);
+        this.transactions.set([]);
+        this.financialSummary.set(null);
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      });
       return;
     }
 
@@ -1189,7 +1202,11 @@ export class FinancialsComponent implements OnInit {
     this.financialService.getProjectFinancialSummary(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.financialSummary.set(res.data);
+          this.zone.run(() => {
+            this.financialSummary.set(res.data);
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          });
         }
       }
     });
@@ -1202,12 +1219,17 @@ export class FinancialsComponent implements OnInit {
 
           // Filter pending ones for Owner or Accountant
           const pending = items.filter(i => i.status === 'Pending');
-          this.pendingApprovals.set(pending);
 
           // Filter my own requests for SiteEngineer
           const currentUserName = this.authService.currentUser()?.name;
           const myReqs = items.filter(i => i.issuedTo === currentUserName);
-          this.myPettyCash.set(myReqs);
+
+          this.zone.run(() => {
+            this.pendingApprovals.set(pending);
+            this.myPettyCash.set(myReqs);
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          });
         }
       }
     });

@@ -1,1 +1,0 @@
-import {D,at as et,aJ as fh,aA as N}from'./main-CYK3V63P.js';function w(t){t||(t=D(et));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(fh(i))}export{w};
