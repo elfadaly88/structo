@@ -552,7 +552,7 @@ interface MapSearchResult {
           <div class="flex items-center justify-between p-5 border-b border-slate-800">
             <div>
               <h3 class="text-base font-black text-white font-cairo">اختر الباقة المناسبة / Choose Your Plan</h3>
-              <p class="text-[11px] text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري شاملة ضريبة القيمة المضافة 14%</p>
+              <p class="text-xs text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري / All prices in EGP</p>
             </div>
             <button type="button" (click)="closePlanModal()" id="btn-close-plan-modal"
               class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
@@ -573,48 +573,58 @@ interface MapSearchResult {
                 [class.opacity-40]="isCurrentPlan(plan.id)"
                 [class.cursor-not-allowed]="isCurrentPlan(plan.id)"
                 [class.cursor-pointer]="!isCurrentPlan(plan.id)"
-                class="relative p-4 bg-slate-950 border border-slate-800 rounded-xl transition-all duration-200 hover:border-slate-600">
+                class="relative p-4 bg-slate-950 border border-slate-800 rounded-xl transition-all duration-200 hover:border-slate-600 flex flex-col justify-between">
 
-                <!-- Current Plan Badge -->
-                @if (isCurrentPlan(plan.id)) {
-                  <span class="absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 bg-emerald-500 text-white rounded-full">الباقة الحالية</span>
-                }
-                @if (plan.id === 'Enterprise') {
-                  <span class="absolute -top-2 right-3 text-[10px] font-bold px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full">⭐ الأفضل</span>
-                }
-
-                <div class="mb-3">
-                  <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
-                    [class.bg-slate-700]="plan.id === 'Free'"
-                    [class.bg-indigo-600]="plan.id === 'Pro'"
-                    [class.bg-gradient-to-br]="plan.id === 'Enterprise'"
-                    [class.from-amber-500]="plan.id === 'Enterprise'"
-                    [class.to-orange-600]="plan.id === 'Enterprise'">
-                    @if (plan.id === 'Free') {
-                      <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    } @else if (plan.id === 'Pro') {
-                      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    } @else {
-                      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
+                <div>
+                  <!-- Current Plan / Best Value Badge -->
+                  <div class="flex items-center justify-between mb-2 min-h-[20px]">
+                    @if (isCurrentPlan(plan.id)) {
+                      <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-cairo">الباقة الحالية</span>
+                    } @else if (plan.id === 'Enterprise') {
+                      <span class="text-[10px] font-bold px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-cairo shadow-sm">⭐️ الأفضل / Best Value</span>
                     }
                   </div>
-                  <h4 class="text-sm font-black text-white">{{ plan.nameEn }}</h4>
-                  <p class="text-[10px] text-slate-400 mt-0.5">{{ plan.nameAr }}</p>
-                </div>
 
-                <div class="mb-3">
-                  @if (plan.priceEgp === 0) {
-                    <span class="text-lg font-black text-emerald-400">مجاني</span>
-                  } @else {
-                    <div>
-                      <span class="text-lg font-black text-white">{{ plan.priceWithVat | number:'1.0-0' }}</span>
-                      <span class="text-xs text-slate-400 mr-1">ج.م / شهر</span>
+                  <div class="mb-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
+                      [class.bg-slate-700]="plan.id === 'Free'"
+                      [class.bg-indigo-600]="plan.id === 'Pro'"
+                      [class.bg-gradient-to-br]="plan.id === 'Enterprise'"
+                      [class.from-amber-500]="plan.id === 'Enterprise'"
+                      [class.to-orange-600]="plan.id === 'Enterprise'">
+                      @if (plan.id === 'Free') {
+                        <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      } @else if (plan.id === 'Pro') {
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                      } @else {
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
+                      }
                     </div>
-                    <span class="text-[10px] text-slate-500">(شامل 14% ضريبة)</span>
-                  }
-                </div>
+                    <h4 class="text-sm font-black text-white font-cairo">{{ plan.nameEn }}</h4>
+                    <p class="text-[10px] text-slate-400 mt-0.5 font-cairo">{{ plan.nameAr }}</p>
+                  </div>
 
-                <p class="text-[11px] text-slate-400 leading-relaxed">{{ plan.description }}</p>
+                  <div class="mb-3">
+                    @if (plan.priceEgp === 0) {
+                      <span class="text-lg font-black text-emerald-400 font-cairo">مجاني / Free</span>
+                    } @else {
+                      <div class="flex items-baseline gap-1">
+                        <span class="text-lg font-black text-white font-mono">{{ plan.priceEgp }}</span>
+                        <span class="text-xs text-slate-400 font-cairo">ج.م / شهر</span>
+                      </div>
+                    }
+                  </div>
+
+                  <p class="text-[11px] text-slate-400 leading-relaxed font-cairo">
+                    @if (plan.id === 'Free') {
+                      2 مشاريع مدى الحياة (2 Lifetime Projects)
+                    } @else if (plan.id === 'Pro') {
+                      10 مشاريع + الميزات المتقدمة (10 Projects + Advanced Features)
+                    } @else {
+                      مشاريع غير محدودة + الأولوية والدعم (Unlimited Projects + Priority Support)
+                    }
+                  </p>
+                </div>
               </div>
             }
           </div>
@@ -1287,13 +1297,13 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       error: () => {
         // Fallback hardcoded pricing (mirrors SubscriptionController.GetPlans)
         this.availablePlans.set([
-          { id: 'Free',       nameAr: 'المجانية',   nameEn: 'Free',       maxProjects: 2,  priceEgp: 0,    priceWithVat: 0,       description: '2 مشاريع مدى الحياة — مجاني للأبد / 2 Lifetime Projects Free' },
-          { id: 'Pro',        nameAr: 'الاحترافية', nameEn: 'Pro',        maxProjects: 10, priceEgp: 299,  priceWithVat: 340.86,  description: '10 مشاريع + الميزات المتقدمة / 10 Projects + Advanced Features' },
-          { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799,  priceWithVat: 910.86,  description: 'مشاريع غير محدودة + الأولوية / Unlimited + Priority Support' }
+          { id: 'Free',       nameAr: 'المجانية',   nameEn: 'Free',       maxProjects: 2,  priceEgp: 0,    priceWithVat: 0,   description: '2 مشاريع مدى الحياة (2 Lifetime Projects)' },
+          { id: 'Pro',        nameAr: 'الاحترافية', nameEn: 'Pro',        maxProjects: 10, priceEgp: 299,  priceWithVat: 299, description: '10 مشاريع + الميزات المتقدمة (10 Projects + Advanced Features)' },
+          { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799,  priceWithVat: 799, description: 'مشاريع غير محدودة + الأولوية والدعم (Unlimited Projects + Priority Support)' }
         ]);
         this.availableTopUps.set([
-          { extra: 1, priceEgp: 250, priceWithVat: 285,  label: '+1 مشروع' },
-          { extra: 5, priceEgp: 950, priceWithVat: 1083, label: '+5 مشاريع' }
+          { extra: 1, priceEgp: 250, priceWithVat: 250, label: '+1 مشروع' },
+          { extra: 5, priceEgp: 950, priceWithVat: 950, label: '+5 مشاريع' }
         ]);
       }
     });
