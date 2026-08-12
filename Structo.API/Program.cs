@@ -330,6 +330,11 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
     try
     {
+        // 🚀 Self-Healing Schema Guard for Production Deployment
+        context.Database.ExecuteSqlRaw(@"
+            ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsAudited"" boolean NOT NULL DEFAULT false;
+            ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsClosed"" boolean NOT NULL DEFAULT false;
+        ");
         context.Database.Migrate();
     }
     catch (Exception ex)
