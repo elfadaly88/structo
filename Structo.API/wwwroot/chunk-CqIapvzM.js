@@ -1,0 +1,1 @@
+import {D,at as et,aJ as hh,aA as N}from'./main-T2JHS3HY.js';function w(t){t||(t=D(et));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(hh(i))}export{w};

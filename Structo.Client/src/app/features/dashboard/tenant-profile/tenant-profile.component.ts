@@ -155,7 +155,7 @@ interface MapSearchResult {
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>حفظ التعديلات / Save Changes</span>
+                <span>حفظ التغيرات</span>
               }
             </button>
           </div>
@@ -361,7 +361,7 @@ interface MapSearchResult {
           <div class="flex items-center justify-end pt-3 border-t border-slate-800">
             <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
               class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
-              <span>حفظ بيانات الحساب / Save Tab 1</span>
+              <span>حفظ التغيرات</span>
             </button>
           </div>
         </div>
@@ -436,7 +436,7 @@ interface MapSearchResult {
           <div class="flex items-center justify-end pt-3 border-t border-slate-800">
             <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
               class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
-              <span>حفظ البيانات القانونية / Save Tab 2</span>
+              <span>حفظ التغيرات</span>
             </button>
           </div>
         </div>
@@ -522,7 +522,7 @@ interface MapSearchResult {
           <div class="flex items-center justify-end pt-3 border-t border-slate-800">
             <button type="button" (click)="saveCurrentTab()" [disabled]="isSaving()" 
               class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer">
-              <span>حفظ بيانات الموقع والجغرافيا / Save Tab 3</span>
+              <span>حفظ التغيرات</span>
             </button>
           </div>
         </div>

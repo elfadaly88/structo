@@ -110,17 +110,37 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           </div>
 
-          <!-- Primary Action Button: + إيداع دفعة مالية -->
+          <!-- Primary Action & Header Controls -->
           @if (isOwnerOrAccountant() && project()) {
-            <button 
-              (click)="openInjectModal()"
-              [disabled]="project()?.status === 'Closed'"
-              class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
-            </button>
+            <div class="flex items-center gap-3 shrink-0 flex-wrap">
+              <!-- Direct Public Visibility Toggle Switch -->
+              <div class="flex items-center gap-2.5 bg-slate-950/80 border border-slate-800 px-3.5 py-2 rounded-xl font-cairo shadow-sm">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
+                  <span>إظهار في البروفايل العام</span>
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    [checked]="isPublicPortfolio()"
+                    (change)="togglePublicVisibility($any($event.target).checked)"
+                    [disabled]="isSavingProjectSettings()"
+                    class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+
+              <!-- Primary Action Button: + إيداع دفعة مالية -->
+              <button 
+                (click)="openInjectModal()"
+                [disabled]="project()?.status === 'Closed'"
+                class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
+              </button>
+            </div>
           }
         </div>
 
@@ -1865,8 +1885,8 @@ import { LanguageService } from '../../../core/services/language.service';
               <textarea formControlName="reason" rows="3" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
             </div>
             <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeEditPettyCashModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">Cancel / إلغاء</button>
-              <button type="submit" [disabled]="editPettyCashForm.invalid || isEditingPettyCash()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">Save / حفظ</button>
+              <button type="button" (click)="closeEditPettyCashModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
+              <button type="submit" [disabled]="editPettyCashForm.invalid || isEditingPettyCash()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">حفظ التغيرات</button>
             </div>
           </form>
         </div>
@@ -1896,8 +1916,8 @@ import { LanguageService } from '../../../core/services/language.service';
               <textarea formControlName="description" rows="3" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
             </div>
             <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeEditTransactionModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">Cancel / إلغاء</button>
-              <button type="submit" [disabled]="editTransactionForm.invalid || isSavingTransaction()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">Save / حفظ</button>
+              <button type="button" (click)="closeEditTransactionModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
+              <button type="submit" [disabled]="editTransactionForm.invalid || isSavingTransaction()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">حفظ التغيرات</button>
             </div>
           </form>
         </div>
@@ -1940,12 +1960,12 @@ import { LanguageService } from '../../../core/services/language.service';
               }
             </div>
             <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeReviseBudgetModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">Cancel / إلغاء</button>
+              <button type="button" (click)="closeReviseBudgetModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
               <button type="submit" [disabled]="reviseBudgetForm.invalid || isRevisingBudget() || isUploadingBoq()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">
                 @if (isRevisingBudget()) {
                   {{ 'COMMON.LOADING' | translate }}
                 } @else {
-                  Save / حفظ
+                  حفظ التغيرات
                 }
               </button>
             </div>
@@ -2557,6 +2577,30 @@ export class ProjectDetailsComponent implements OnInit {
     }
     return desc || '';
   });
+
+  readonly isPublicPortfolio = computed(() => {
+    const proj = this.project();
+    if (!proj) return false;
+    if ((proj as any).isPublicPortfolio !== undefined) {
+      return !!(proj as any).isPublicPortfolio;
+    }
+    if (proj.description && proj.description.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(proj.description);
+        return !!parsed.isPublicPortfolio || !!parsed.isPublic;
+      } catch (e) { }
+    }
+    return false;
+  });
+
+  togglePublicVisibility(newValue: boolean): void {
+    const currentProj = this.project();
+    if (!currentProj) return;
+
+    this.projectSettingsForm.patchValue({ isPublicPortfolio: newValue });
+    this.onProjectSettingsSubmit();
+  }
+
 
   readonly pettyCashes = signal<PettyCashMobileDto[]>([]);
   readonly transactions = signal<FinancialTransactionMobileDto[]>([]);

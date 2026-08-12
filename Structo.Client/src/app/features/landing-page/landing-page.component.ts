@@ -364,121 +364,174 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 
       <!-- PORTFOLIO PROFILE DETAILS MODAL -->
       @if (isModalOpen() && selectedCompany()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div (click)="closeModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+          <div (click)="closeModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md"></div>
 
-          <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col p-0 shadow-2xl z-10 font-sans">
-            <div class="overflow-y-auto min-h-0 w-full flex-1">
-            <!-- Banner Image -->
-            <div class="relative h-44 w-full bg-gradient-to-r from-indigo-950 via-purple-950 to-pink-950 border-b border-slate-800">
+          <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-11/12 sm:w-full max-h-[92vh] flex flex-col p-0 shadow-2xl z-10 font-sans overflow-hidden">
+            <!-- Modal Header / Banner Container -->
+            <div class="relative h-48 sm:h-56 w-full bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border-b border-slate-800 shrink-0">
               @if (selectedCompany()!.bannerUrl) {
                 <img [src]="selectedCompany()!.bannerUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover">
               }
+              <!-- Gradient Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+              
+              <!-- Close Button -->
               <button 
                 (click)="closeModal()"
-                class="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-950/40 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-950/60 transition-colors duration-150 cursor-pointer">
+                class="absolute top-4 right-4 p-2 rounded-xl bg-slate-950/60 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-950 transition-all duration-150 cursor-pointer shadow-lg z-20">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <!-- Profile Info Box -->
-            <div class="px-6 md:px-8 pb-8 pt-4 space-y-6 relative">
-              <!-- Float Logo -->
-              <div class="absolute -top-12 left-6 md:left-8">
-                @if (selectedCompany()!.logoUrl) {
-                  <div class="relative h-20 w-20 rounded-2xl border-4 border-slate-900 bg-slate-950 shadow-lg overflow-hidden flex items-center justify-center">
-                    <img [src]="selectedCompany()!.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
-                    <div class="hidden h-full w-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-2xl font-cairo">
+            <!-- Modal Content (Scrollable Container) -->
+            <div class="overflow-y-auto min-h-0 w-full flex-1 px-4 sm:px-8 pb-8 font-cairo scrollbar-none">
+              <!-- Avatar & Profile Info Header -->
+              <div class="relative flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 -mt-14 mb-6 z-10">
+                <!-- Company Avatar -->
+                <div class="flex items-end gap-4">
+                  @if (selectedCompany()!.logoUrl) {
+                    <div class="h-24 w-24 rounded-2xl border-4 border-slate-900 bg-slate-950 shadow-2xl overflow-hidden shrink-0 flex items-center justify-center">
+                      <img [src]="selectedCompany()!.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
+                    </div>
+                  } @else {
+                    <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-3xl border-4 border-slate-900 shadow-2xl font-cairo shrink-0">
                       {{ selectedCompany()!.name.substring(0,2) }}
                     </div>
-                  </div>
-                } @else {
-                  <div class="h-20 w-20 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-2xl border-4 border-slate-900 shadow-lg font-cairo">
-                    {{ selectedCompany()!.name.substring(0,2) }}
-                  </div>
-                }
-              </div>
-
-              <!-- General details -->
-              <div class="pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <h2 class="text-2xl font-extrabold text-white font-cairo">{{ selectedCompany()!.name }}</h2>
-                  <div class="flex items-center gap-4 mt-1">
-                    <span class="text-sm text-slate-400 font-mono">{{ selectedCompany()!.region || 'Global' }}</span>
-                    <span class="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
-                    <button
-                      (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
-                      title="View all client reviews"
-                      class="flex items-center gap-1 text-sm font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-transparent border-0 p-0 focus:outline-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      {{ selectedCompany()!.rating | number:'1.1-1' }}
-                    </button>
+                  }
+                  <div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight font-cairo">{{ selectedCompany()!.name }}</h2>
+                    <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                      <span class="text-xs sm:text-sm text-indigo-400 font-bold font-cairo flex items-center gap-1">
+                        📍 {{ selectedCompany()!.region || 'مصر' }}
+                      </span>
+                      <span class="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
+                      <button
+                        (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
+                        title="View all client reviews"
+                        class="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-slate-950/60 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span>{{ selectedCompany()!.rating | number:'1.1-1' }}</span>
+                        <span class="text-[10px] text-amber-400/80 font-normal">(تقييمات العملاء)</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div class="px-5 py-2.5 bg-slate-950/40 border border-slate-800 rounded-xl flex items-center gap-3">
-                  <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'MARKETPLACE.STATS_PROJECTS' | translate }}</span>
-                  <span class="text-xl font-extrabold text-white">{{ selectedCompany()!.projects.length }}</span>
+
+                <!-- Projects Stats Badge -->
+                <div class="px-4 py-2 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center gap-3 shadow-md shrink-0">
+                  <span class="text-xs text-slate-400 font-bold font-cairo">المشاريع الموثقة</span>
+                  <span class="text-lg font-black text-indigo-400 font-mono">{{ selectedCompany()!.projects.length }}</span>
                 </div>
               </div>
 
-              <!-- About description -->
-              <div>
-                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider font-cairo mb-2">{{ 'PROFILE.FIELD_COMP_DESC' | translate }}</h3>
-                <p class="text-sm text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/20 border border-slate-800/40 rounded-xl p-4">
-                  {{ selectedCompany()!.companyDescription || 'No description available for this corporate profile.' }}
+              <!-- About Description Section -->
+              <div class="mb-8">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-cairo mb-2 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  عن الشركة والنشاط
+                </h3>
+                <p class="text-sm text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/50 border border-slate-800/60 rounded-2xl p-4 sm:p-5 shadow-inner font-cairo">
+                  {{ selectedCompany()!.companyDescription || 'لا يتوفر وصف منفصل لهذا الملف التعريفي للشركة حالياً.' }}
                 </p>
               </div>
 
-              <!-- Projects public gallery -->
+              <!-- Public Projects Grid Showcase -->
               <div>
-                <h3 class="text-sm font-bold text-white font-cairo mb-4 border-b border-slate-800/80 pb-2">{{ 'MARKETPLACE.PROJECT_GALLERY' | translate }}</h3>
-                
-                <div class="space-y-6">
+                <h3 class="text-base font-extrabold text-white font-cairo mb-4 border-b border-slate-800 pb-3 flex items-center justify-between">
+                  <span class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    معرض المشاريع المنفذة والعلنية
+                  </span>
+                  <span class="text-xs font-normal text-slate-400">({{ selectedCompany()!.projects.length }} مشروع)</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                   @for (proj of selectedCompany()!.projects; track proj.id) {
-                    <div class="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-5 space-y-4">
-                      <div class="flex justify-between items-start">
-                        <div>
-                          <h4 class="text-base font-bold text-white">{{ proj.name }}</h4>
-                          <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-xs border border-indigo-500/20 mt-1 inline-block font-cairo">
-                            {{ getCategoryTranslation(proj.category) | translate }}
+                    @let meta = parseProjectDetails(proj.description);
+                    <div class="bg-slate-950/60 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200 shadow-xl group">
+                      <!-- Project Card Cover Photo & Badges -->
+                      <div class="relative h-44 w-full bg-slate-900 overflow-hidden">
+                        @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
+                          <img [src]="proj.sitePhotos[0]" (error)="onImgError($event)" alt="{{ proj.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        } @else {
+                          <div class="w-full h-full bg-gradient-to-br from-slate-900 to-indigo-950/40 flex flex-col items-center justify-center p-4 text-slate-600">
+                            <svg class="w-10 h-10 mb-2 opacity-40 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-4-8l-2-2m0 0l-2 2m2-2v6" />
+                            </svg>
+                            <span class="text-xs text-slate-500 font-cairo">معرض صور قيد التحديث</span>
+                          </div>
+                        }
+
+                        <!-- Category / Classification Badge -->
+                        <div class="absolute top-3 right-3 flex items-center gap-2">
+                          <span class="px-3 py-1 rounded-xl text-xs font-bold bg-slate-950/80 backdrop-blur-md text-indigo-300 border border-indigo-500/30 font-cairo shadow-lg">
+                            {{ meta.category || 'عام' }}
                           </span>
                         </div>
-                        <span class="text-xs text-slate-500 font-mono">{{ proj.startDate | date:'dd/MM/yyyy' }} @if (proj.endDate) { - {{ proj.endDate | date:'dd/MM/yyyy' }} } @else { - Present }</span>
+
+                        <!-- Photos Count Badge -->
+                        @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
+                          <div class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] font-bold text-slate-200 flex items-center gap-1 font-mono">
+                            📷 {{ proj.sitePhotos.length }} صور
+                          </div>
+                        }
                       </div>
 
-                      <p class="text-slate-400 text-sm leading-relaxed">{{ proj.description || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>
-
-                      <!-- Project Images Grid -->
-                      @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
-                          @for (photo of proj.sitePhotos; track photo) {
-                            <div class="relative group aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm cursor-pointer flex items-center justify-center">
-                              <img [src]="photo" (error)="onImgError($event)" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
-                              <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
-                              </div>
-                            </div>
+                      <!-- Project Card Content -->
+                      <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+                        <div>
+                          <h4 class="text-lg font-bold text-white font-cairo group-hover:text-indigo-400 transition-colors line-clamp-1">{{ proj.name }}</h4>
+                          @if (meta.governorate) {
+                            <p class="text-xs text-indigo-400 font-cairo font-medium mt-1">📍 {{ meta.governorate }} @if (meta.cityOrZone) { - {{ meta.cityOrZone }} }</p>
                           }
+                          <p class="text-xs text-slate-400 leading-relaxed font-cairo mt-2 line-clamp-2">
+                            {{ meta.cleanDescription || ('PROJECTS.NO_DESCRIPTION' | translate) }}
+                          </p>
                         </div>
-                      } @else {
-                        <p class="text-xs text-slate-600 italic font-cairo">{{ 'MARKETPLACE.NO_PHOTOS' | translate }}</p>
-                      }
+
+                        <!-- Card Footer Action Button -->
+                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                          <span class="text-[11px] text-slate-500 font-mono">
+                            {{ proj.startDate | date:'yyyy/MM' }}
+                          </span>
+                          <button
+                            (click)="toggleProjectDetailsExpand(proj.id)"
+                            class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 transition-all cursor-pointer font-cairo flex items-center gap-1.5">
+                            <span>عرض التفاصيل</span>
+                            <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="expandedProjectId() === proj.id" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <!-- Expanded Project Details & Photos -->
+                        @if (expandedProjectId() === proj.id) {
+                          <div class="pt-3 border-t border-slate-800/80 space-y-3 animate-fade-in">
+                            @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
+                              <div class="grid grid-cols-3 gap-2">
+                                @for (photo of proj.sitePhotos; track photo) {
+                                  <div class="relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer">
+                                    <img [src]="photo" (error)="onImgError($event)" alt="" class="w-full h-full object-cover hover:scale-110 transition-transform">
+                                  </div>
+                                }
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
                     </div>
                   } @empty {
-                    <div class="py-10 text-center text-slate-600 font-cairo text-sm">
-                      No public projects published in this portfolio.
+                    <div class="col-span-2 py-12 text-center text-slate-500 font-cairo text-sm bg-slate-950/40 rounded-2xl border border-slate-800">
+                      لا يوجد مشاريع علنية مضافة في المعرض العام لهذه الشركة حتى الآن.
                     </div>
                   }
                 </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
@@ -573,6 +626,7 @@ export class LandingPageComponent implements OnInit {
   readonly selectedCompany = signal<PublicTenantPortfolioDto | null>(null);
   readonly isModalOpen = signal(false);
   readonly isLoading = signal(false);
+  readonly expandedProjectId = signal<string | null>(null);
 
   // Reviews states
   readonly isReviewsModalOpen = signal(false);
@@ -774,8 +828,43 @@ export class LandingPageComponent implements OnInit {
   closeModal(): void {
     this.isModalOpen.set(false);
     this.selectedCompany.set(null);
+    this.expandedProjectId.set(null);
     this.renderer.removeClass(this.document.body, 'overflow-hidden');
   }
+
+  toggleProjectDetailsExpand(id: string): void {
+    if (this.expandedProjectId() === id) {
+      this.expandedProjectId.set(null);
+    } else {
+      this.expandedProjectId.set(id);
+    }
+  }
+
+  parseProjectDetails(rawDescription?: string): {
+    cleanDescription: string;
+    category: string;
+    governorate: string;
+    cityOrZone: string;
+    client: string;
+  } {
+    if (!rawDescription) {
+      return { cleanDescription: '', category: '', governorate: '', cityOrZone: '', client: '' };
+    }
+    if (rawDescription.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(rawDescription);
+        return {
+          cleanDescription: parsed.description || '',
+          category: parsed.category || '',
+          governorate: parsed.governorate || '',
+          cityOrZone: parsed.cityOrZone || '',
+          client: parsed.client || ''
+        };
+      } catch (e) { }
+    }
+    return { cleanDescription: rawDescription, category: '', governorate: '', cityOrZone: '', client: '' };
+  }
+
 
   getCategoryTranslation(cat?: string): string {
     if (!cat) return 'PROJECTS.CATEGORIES.Other';
