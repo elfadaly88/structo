@@ -59,6 +59,16 @@
   scrollbar-color: #334155 rgba(15, 23, 42, 0.6);
 }
 
+/* Scrollbar Clean-up Utility */
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+
 @media print {
   @page {
     size: A4 portrait;

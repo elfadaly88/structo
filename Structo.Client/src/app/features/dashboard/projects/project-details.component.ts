@@ -214,22 +214,53 @@ import { LanguageService } from '../../../core/services/language.service';
         </div>
       }
 
-      <!-- 3️⃣ Responsive Navigation Tabs System (Smooth Horizontal Scroll on Mobile/Tablet) -->
-      <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 border-b border-slate-800 font-cairo">
+      <!-- 📱 Mobile / Tablet Navigation (< md): Adaptive Select Picker -->
+      <div class="md:hidden w-full pb-3 border-b border-slate-800 font-cairo">
+        <label for="mobile-tab-select" class="sr-only">اختر القسم</label>
+        <div class="relative">
+          <select
+            id="mobile-tab-select"
+            [value]="activeTab()"
+            (change)="activeTab.set($any($event.target).value)"
+            class="w-full appearance-none bg-slate-900 border border-indigo-500/40 text-indigo-300 font-bold text-sm rounded-xl py-3 pr-4 pl-10 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-lg cursor-pointer transition-all duration-150 font-cairo">
+            <option value="petty-cash" class="bg-slate-900 text-slate-100 py-2">
+              🧾 عهدة الموقع {{ unsettledCount() > 0 ? '(' + unsettledCount() + ')' : '' }}
+            </option>
+            @if (!isEngineer()) {
+              <option value="transactions" class="bg-slate-900 text-slate-100 py-2">📖 الدفتر المالي</option>
+            }
+            <option value="settlements" class="bg-slate-900 text-slate-100 py-2">⚖️ التسويات</option>
+            @if (!isAccountant()) {
+              <option value="gallery" class="bg-slate-900 text-slate-100 py-2">📸 معرض الصور</option>
+            }
+            @if (isOwnerOrAccountant()) {
+              <option value="closeout" class="bg-slate-900 text-slate-100 py-2">⚙️ إدارة المشروع</option>
+            }
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-indigo-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🖥️ Desktop Navigation (>= md): Equal Distribution Tabs Container -->
+      <div class="hidden md:flex w-full items-center justify-between gap-2 border-b border-slate-800 font-cairo scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
         
         <!-- Tab 1: Site Petty Cash -->
         <button
           id="tab-petty-cash"
           (click)="activeTab.set('petty-cash')"
-          class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+          class="flex-1 min-w-0 px-3 py-2.5 text-xs lg:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 rounded-t-lg whitespace-nowrap"
           [class.bg-indigo-600\/10]="activeTab() === 'petty-cash'"
           [class.text-indigo-400]="activeTab() === 'petty-cash'"
           [class.border-indigo-500]="activeTab() === 'petty-cash'"
           [class.border-transparent]="activeTab() !== 'petty-cash'"
           [class.text-slate-400]="activeTab() !== 'petty-cash'">
-          <span>🧾 طلبات عهدة الموقع (Site Petty Cash)</span>
+          <span>🧾 عهدة الموقع</span>
           @if (unsettledCount() > 0) {
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 font-mono">{{ unsettledCount() }}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 font-mono shrink-0">{{ unsettledCount() }}</span>
           }
         </button>
 
@@ -238,13 +269,13 @@ import { LanguageService } from '../../../core/services/language.service';
           <button
             id="tab-transactions"
             (click)="activeTab.set('transactions')"
-            class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+            class="flex-1 min-w-0 px-3 py-2.5 text-xs lg:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 rounded-t-lg whitespace-nowrap"
             [class.bg-indigo-600\/10]="activeTab() === 'transactions'"
             [class.text-indigo-400]="activeTab() === 'transactions'"
             [class.border-indigo-500]="activeTab() === 'transactions'"
             [class.border-transparent]="activeTab() !== 'transactions'"
             [class.text-slate-400]="activeTab() !== 'transactions'">
-            <span>📖 الدفتر المالي (Financial Ledger)</span>
+            <span>📖 الدفتر المالي</span>
           </button>
         }
 
@@ -252,13 +283,13 @@ import { LanguageService } from '../../../core/services/language.service';
         <button
           id="tab-settlements"
           (click)="activeTab.set('settlements')"
-          class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+          class="flex-1 min-w-0 px-3 py-2.5 text-xs lg:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 rounded-t-lg whitespace-nowrap"
           [class.bg-indigo-600\/10]="activeTab() === 'settlements'"
           [class.text-indigo-400]="activeTab() === 'settlements'"
           [class.border-indigo-500]="activeTab() === 'settlements'"
           [class.border-transparent]="activeTab() !== 'settlements'"
           [class.text-slate-400]="activeTab() !== 'settlements'">
-          <span>⚖️ التسويات (Settlements)</span>
+          <span>⚖️ التسويات</span>
         </button>
 
         <!-- Tab 4: Site Photos -->
@@ -266,13 +297,13 @@ import { LanguageService } from '../../../core/services/language.service';
           <button
             id="tab-gallery"
             (click)="activeTab.set('gallery')"
-            class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+            class="flex-1 min-w-0 px-3 py-2.5 text-xs lg:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 rounded-t-lg whitespace-nowrap"
             [class.bg-indigo-600\/10]="activeTab() === 'gallery'"
             [class.text-indigo-400]="activeTab() === 'gallery'"
             [class.border-indigo-500]="activeTab() === 'gallery'"
             [class.border-transparent]="activeTab() !== 'gallery'"
             [class.text-slate-400]="activeTab() !== 'gallery'">
-            <span>📸 معرض الصور (Site Photos)</span>
+            <span>📸 معرض الصور</span>
           </button>
         }
 
@@ -281,16 +312,17 @@ import { LanguageService } from '../../../core/services/language.service';
           <button
             id="tab-closeout"
             (click)="activeTab.set('closeout')"
-            class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center gap-2 rounded-t-lg"
+            class="flex-1 min-w-0 px-3 py-2.5 text-xs lg:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 rounded-t-lg whitespace-nowrap"
             [class.bg-indigo-600\/10]="activeTab() === 'closeout'"
             [class.text-indigo-400]="activeTab() === 'closeout'"
             [class.border-indigo-500]="activeTab() === 'closeout'"
             [class.border-transparent]="activeTab() !== 'closeout'"
             [class.text-slate-400]="activeTab() !== 'closeout'">
-            <span>⚙️ إدارة المشروع (Project Control & Admin)</span>
+            <span>⚙️ إدارة المشروع</span>
           </button>
         }
       </div>
+
 
       <!-- ======================== CLOSEOUT DASHBOARD TAB ======================== -->
       @if (activeTab() === 'closeout' && isOwnerOrAccountant()) {
