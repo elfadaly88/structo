@@ -144,11 +144,11 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                 </li>
               </ul>
             </div>
-            <a 
-              routerLink="/auth/register"
+            <button 
+              (click)="onSelectPricingPlan(0)"
               class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-md cursor-pointer block">
               <span>ابدأ مجاناً الان / Start Free</span>
-            </a>
+            </button>
           </div>
 
           <!-- Card 2: +1 Single Project Topup -->
@@ -178,11 +178,11 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                 </li>
               </ul>
             </div>
-            <a 
-              routerLink="/auth/register"
+            <button 
+              (click)="onSelectPricingPlan(1)"
               class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-lg shadow-indigo-600/30 cursor-pointer block">
               <span>شراء مشروع إضافي / Buy Single Project</span>
-            </a>
+            </button>
           </div>
 
           <!-- Card 3: +5 Projects Package (Highlighted Card) -->
@@ -218,11 +218,11 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                 </li>
               </ul>
             </div>
-            <a 
-              routerLink="/auth/register"
+            <button 
+              (click)="onSelectPricingPlan(5)"
               class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-xl shadow-indigo-600/30 active:scale-[0.98] ring-2 ring-amber-500/30 cursor-pointer block">
               <span>اشترِ الحزمة ووفر الان / Buy Package & Save</span>
-            </a>
+            </button>
           </div>
 
         </div>
@@ -723,6 +723,18 @@ export class LandingPageComponent implements OnInit {
       this.whatsappLink.openChat('201004500766', msg);
     } else {
       this.router.navigate(['/login']);
+    }
+  }
+
+  onSelectPricingPlan(extraProjectsCount: number = 0): void {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/dashboard/projects']);
+    } else {
+      if (extraProjectsCount === 0) {
+        this.router.navigate(['/register']);
+      } else {
+        this.router.navigate(['/register'], { queryParams: { plan: extraProjectsCount } });
+      }
     }
   }
 
