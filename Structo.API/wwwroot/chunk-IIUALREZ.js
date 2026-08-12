@@ -1,0 +1,1992 @@
+import {
+  RateLimitService
+} from "./chunk-A6YFNXNO.js";
+import {
+  require_leaflet_src
+} from "./chunk-A7Z3MP62.js";
+import {
+  DefaultValueAccessor,
+  FormBuilder,
+  FormControlName,
+  FormGroupDirective,
+  FormsModule,
+  MaxLengthValidator,
+  NgControlStatus,
+  NgControlStatusGroup,
+  NgModel,
+  NgSelectOption,
+  ReactiveFormsModule,
+  SelectControlValueAccessor,
+  Validators,
+  ɵNgNoValidate,
+  ɵNgSelectMultipleOption
+} from "./chunk-PRQNVNAF.js";
+import {
+  AuthService
+} from "./chunk-CXPACYC7.js";
+import {
+  ToastService
+} from "./chunk-DLHRGTU7.js";
+import {
+  Router,
+  RouterLink
+} from "./chunk-YUU7E6C7.js";
+import {
+  CommonModule,
+  HttpClient,
+  environment
+} from "./chunk-2FDFRP6Y.js";
+import {
+  Component,
+  ViewChild,
+  ViewEncapsulation,
+  __toESM,
+  computed,
+  effect,
+  inject,
+  setClassMetadata,
+  signal,
+  ɵsetClassDebugInfo,
+  ɵɵadvance,
+  ɵɵclassProp,
+  ɵɵconditional,
+  ɵɵconditionalCreate,
+  ɵɵcontrol,
+  ɵɵcontrolCreate,
+  ɵɵdefineComponent,
+  ɵɵelement,
+  ɵɵelementEnd,
+  ɵɵelementStart,
+  ɵɵgetCurrentView,
+  ɵɵlistener,
+  ɵɵloadQuery,
+  ɵɵnamespaceHTML,
+  ɵɵnamespaceSVG,
+  ɵɵnextContext,
+  ɵɵproperty,
+  ɵɵqueryRefresh,
+  ɵɵrepeater,
+  ɵɵrepeaterCreate,
+  ɵɵrepeaterTrackByIndex,
+  ɵɵresetView,
+  ɵɵrestoreView,
+  ɵɵstyleProp,
+  ɵɵtext,
+  ɵɵtextInterpolate,
+  ɵɵtextInterpolate1,
+  ɵɵtextInterpolate2,
+  ɵɵtwoWayBindingSet,
+  ɵɵtwoWayListener,
+  ɵɵtwoWayProperty,
+  ɵɵviewQuery
+} from "./chunk-EHUV6UVS.js";
+
+// src/app/features/auth/tenant-register/tenant-register.component.ts
+var L = __toESM(require_leaflet_src());
+var _c0 = ["mapContainer"];
+function TenantRegisterComponent_Conditional_38_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 26)(1, "div", 28);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(2, "svg", 29);
+    \u0275\u0275element(3, "path", 16);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(4, "h2", 30);
+    \u0275\u0275text(5, "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0637\u0644\u0628 \u0628\u0646\u062C\u0627\u062D!");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "p", 31);
+    \u0275\u0275text(7, " \u062A\u0645 \u062A\u0633\u062C\u064A\u0644 \u062D\u0633\u0627\u0628 \u0634\u0631\u0643\u062A\u0643 \u0628\u0646\u062C\u0627\u062D. \u062D\u0633\u0627\u0628\u0643 \u062D\u0627\u0644\u064A\u0627\u064B \u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0645\u0631\u0627\u062C\u0639\u0629 \u0648\u062A\u0641\u0639\u064A\u0644 \u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645. \u0633\u062A\u0635\u0644\u0643 \u0625\u0634\u0639\u0627\u0631 \u0641\u0648\u0631 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u0633\u0627\u0628. ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "button", 32);
+    \u0275\u0275text(9, " \u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u0644\u0635\u0641\u062D\u0629 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629 ");
+    \u0275\u0275elementEnd()();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 42);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 52);
+    \u0275\u0275element(2, "path", 53);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(3, "span");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.errorMessage());
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u0627\u0633\u0645 \u0627\u0644\u0634\u0631\u0643\u0629 \u0645\u0637\u0644\u0648\u0628 (\u062D\u062A\u0649 100 \u062D\u0631\u0641).");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_18_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u0648\u0644 \u0645\u0637\u0644\u0648\u0628.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_25_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u0627\u0633\u0645 \u0627\u0644\u0639\u0627\u0626\u0644\u0629 \u0645\u0637\u0644\u0648\u0628.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_32_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1("\u26A0\uFE0F ", ctx_r1.emailError());
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_33_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u064A\u0631\u062C\u0649 \u0623\u062F\u062E\u0627\u0644 \u0628\u0631\u064A\u062F \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0635\u062D\u064A\u062D.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_42_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(0, "svg", 71);
+    \u0275\u0275element(1, "path", 77);
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_43_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(0, "svg", 71);
+    \u0275\u0275element(1, "path", 78)(2, "path", 79);
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_52_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u064A\u062C\u0628 \u0623\u0646 \u062A\u062A\u0643\u0648\u0646 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0645\u0646 6 \u0623\u062D\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_24_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 44)(1, "div", 54)(2, "h3", 55);
+    \u0275\u0275text(3, "\u0627\u0644\u062E\u0637\u0648\u0629 1: \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0634\u0631\u0643\u0629 \u0648\u062D\u0633\u0627\u0628 \u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(4, "div")(5, "label", 56);
+    \u0275\u0275text(6, " \u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062A\u0623\u062C\u0631 / \u0627\u0644\u0634\u0631\u0643\u0629 ");
+    \u0275\u0275elementStart(7, "span", 57);
+    \u0275\u0275text(8, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275element(9, "input", 58);
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(10, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_10_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "div", 60)(12, "div")(13, "label", 61);
+    \u0275\u0275text(14, " \u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u0648\u0644 \u0644\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645 ");
+    \u0275\u0275elementStart(15, "span", 57);
+    \u0275\u0275text(16, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275element(17, "input", 62);
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(18, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_18_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(19, "div")(20, "label", 63);
+    \u0275\u0275text(21, " \u0627\u0633\u0645 \u0627\u0644\u0639\u0627\u0626\u0644\u0629 \u0644\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645 ");
+    \u0275\u0275elementStart(22, "span", 57);
+    \u0275\u0275text(23, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275element(24, "input", 64);
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(25, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_25_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(26, "div")(27, "label", 65);
+    \u0275\u0275text(28, " \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0627\u0644\u0631\u0633\u0645\u064A ");
+    \u0275\u0275elementStart(29, "span", 57);
+    \u0275\u0275text(30, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275element(31, "input", 66);
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(32, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_32_Template, 2, 1, "p", 59)(33, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_33_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(34, "div")(35, "label", 67);
+    \u0275\u0275text(36, " \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 / Password ");
+    \u0275\u0275elementStart(37, "span", 57);
+    \u0275\u0275text(38, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(39, "div", 68);
+    \u0275\u0275element(40, "input", 69);
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementStart(41, "button", 70);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Conditional_24_Template_button_click_41_listener() {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.togglePasswordVisibility());
+    });
+    \u0275\u0275conditionalCreate(42, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_42_Template, 2, 0, ":svg:svg", 71)(43, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_43_Template, 3, 0, ":svg:svg", 71);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(44, "div", 72)(45, "div", 73);
+    \u0275\u0275element(46, "div", 74);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(47, "div", 75)(48, "span", 76);
+    \u0275\u0275text(49, "\u0642\u0648\u0629 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(50, "span");
+    \u0275\u0275text(51);
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275conditionalCreate(52, TenantRegisterComponent_Conditional_39_Conditional_24_Conditional_52_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(9);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("tenantName"))("border-slate-800", !ctx_r1.isFieldInvalid("tenantName"));
+    \u0275\u0275control();
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("tenantName") ? 10 : -1);
+    \u0275\u0275advance(7);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("adminFirstName"))("border-slate-800", !ctx_r1.isFieldInvalid("adminFirstName"));
+    \u0275\u0275control();
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("adminFirstName") ? 18 : -1);
+    \u0275\u0275advance(6);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("adminLastName"))("border-slate-800", !ctx_r1.isFieldInvalid("adminLastName"));
+    \u0275\u0275control();
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("adminLastName") ? 25 : -1);
+    \u0275\u0275advance(6);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("email") || !!ctx_r1.emailError())("border-slate-800", !ctx_r1.isFieldInvalid("email") && !ctx_r1.emailError());
+    \u0275\u0275control();
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.emailError() ? 32 : ctx_r1.isFieldInvalid("email") ? 33 : -1);
+    \u0275\u0275advance(8);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("password"))("border-slate-800", !ctx_r1.isFieldInvalid("password"));
+    \u0275\u0275property("type", ctx_r1.showPassword() ? "text" : "password");
+    \u0275\u0275control();
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.showPassword() ? 42 : 43);
+    \u0275\u0275advance(4);
+    \u0275\u0275styleProp("width", ctx_r1.passwordStrength() * 25, "%");
+    \u0275\u0275classProp("bg-rose-500", ctx_r1.passwordStrength() <= 1)("bg-amber-500", ctx_r1.passwordStrength() === 2)("bg-emerald-500", ctx_r1.passwordStrength() >= 3);
+    \u0275\u0275advance(4);
+    \u0275\u0275classProp("text-rose-400", ctx_r1.passwordStrength() <= 1)("text-amber-400", ctx_r1.passwordStrength() === 2)("text-emerald-400", ctx_r1.passwordStrength() >= 3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r1.passwordStrength() <= 1 ? "\u0636\u0639\u064A\u0641 (\u064A\u062A\u0637\u0644\u0628 \u0623\u0631\u0642\u0627\u0645 \u0648\u062D\u0631\u0648\u0641 \u0648\u0623\u062D\u062C\u0627\u0645 \u0645\u062E\u062A\u0644\u0641\u0629)" : ctx_r1.passwordStrength() === 2 ? "\u0645\u062A\u0648\u0633\u0637" : "\u0642\u0648\u064A \u062C\u062F\u0627\u064B \u0648\u0645\u0642\u0628\u0648\u0644 \u0644\u0644\u062A\u0633\u062C\u064A\u0644", " ");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("password") ? 52 : -1);
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_59_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u0627\u062E\u062A\u0627\u0631 \u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 \u0645\u0637\u0644\u0648\u0628 \u0644\u062A\u062D\u062F\u064A\u062F \u0628\u064A\u0626\u0629 \u0627\u0644\u062D\u0633\u0627\u0628.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_65_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u064A\u062C\u0628 \u0623\u0646 \u064A\u062A\u0643\u0648\u0646 \u0645\u0646 11 \u0631\u0642\u0645\u0627\u064B \u0648\u064A\u0628\u062F\u0623 \u0628\u0640 01.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_70_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "\u26A0\uFE0F \u064A\u062C\u0628 \u0623\u0646 \u064A\u062A\u0643\u0648\u0646 \u0645\u0646 11 \u0631\u0642\u0645\u0627\u064B \u0648\u064A\u0628\u062F\u0623 \u0628\u0640 01.");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_71_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 109)(1, "div")(2, "label", 110);
+    \u0275\u0275text(3, " \u0631\u0642\u0645 \u0627\u0644\u0633\u062C\u0644 \u0627\u0644\u062A\u062C\u0627\u0631\u064A / Commercial Register ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(4, "input", 111);
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "div")(6, "label", 112);
+    \u0275\u0275text(7, " \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0636\u0631\u064A\u0628\u064A / Tax Card ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(8, "input", 113);
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    \u0275\u0275advance(4);
+    \u0275\u0275control();
+    \u0275\u0275advance(4);
+    \u0275\u0275control();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_72_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 109)(1, "div")(2, "label", 114);
+    \u0275\u0275text(3, " \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A (14 \u0631\u0642\u0645) / National ID ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(4, "input", 115);
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "div")(6, "label", 116);
+    \u0275\u0275text(7, " \u0631\u0642\u0645 \u0639\u0636\u0648\u064A\u0629 \u0627\u0644\u0646\u0642\u0627\u0628\u0629 / Syndicate ID ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(8, "input", 117);
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    \u0275\u0275advance(4);
+    \u0275\u0275control();
+    \u0275\u0275advance(4);
+    \u0275\u0275control();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_25_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 44)(1, "div", 54)(2, "h3", 55);
+    \u0275\u0275text(3, "\u0627\u0644\u062E\u0637\u0648\u0629 2: \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A\u0629 \u0648\u0623\u0631\u0642\u0627\u0645 \u0627\u0644\u0627\u062A\u0635\u0627\u0644");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(4, "div", 60)(5, "div")(6, "label", 80);
+    \u0275\u0275text(7, " \u0646\u0648\u0639 \u0627\u0644\u062D\u0633\u0627\u0628 / Account Type ");
+    \u0275\u0275elementStart(8, "span", 57);
+    \u0275\u0275text(9, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(10, "select", 81)(11, "option", 82);
+    \u0275\u0275text(12, "Company / \u0634\u0631\u0643\u0629 \u0623\u0648 \u0645\u0624\u0633\u0633\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(13, "option", 83);
+    \u0275\u0275text(14, "Freelancer / \u0645\u0633\u062A\u0642\u0644 \u0623\u0648 \u0645\u0647\u0646\u062F\u0633 \u062D\u0631");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(15, "div")(16, "label", 84);
+    \u0275\u0275text(17, " \u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 / Location ");
+    \u0275\u0275elementStart(18, "span", 57);
+    \u0275\u0275text(19, "*");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(20, "select", 85)(21, "option", 86);
+    \u0275\u0275text(22, "-- \u0627\u062E\u062A\u0631 \u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 --");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(23, "option", 87);
+    \u0275\u0275text(24, "Cairo / \u0627\u0644\u0642\u0627\u0647\u0631\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(25, "option", 88);
+    \u0275\u0275text(26, "Giza / \u0627\u0644\u062C\u064A\u0632\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(27, "option", 89);
+    \u0275\u0275text(28, "Alexandria / \u0627\u0644\u0625\u0633\u0643\u0646\u062F\u0631\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(29, "option", 90);
+    \u0275\u0275text(30, "Qalyubia / \u0627\u0644\u0642\u0644\u064A\u0648\u0628\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(31, "option", 91);
+    \u0275\u0275text(32, "Gharbia / \u0627\u0644\u063A\u0631\u0628\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(33, "option", 92);
+    \u0275\u0275text(34, "Dakahlia / \u0627\u0644\u062F\u0642\u0647\u0644\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(35, "option", 93);
+    \u0275\u0275text(36, "Sharqia / \u0627\u0644\u0634\u0631\u0642\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(37, "option", 94);
+    \u0275\u0275text(38, "Monufia / \u0627\u0644\u0645\u0646\u0648\u0641\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(39, "option", 95);
+    \u0275\u0275text(40, "Beheira / \u0627\u0644\u0628\u062D\u064A\u0631\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(41, "option", 96);
+    \u0275\u0275text(42, "Kafr El Sheikh / \u0643\u0641\u0631 \u0627\u0644\u0634\u064A\u062E");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(43, "option", 97);
+    \u0275\u0275text(44, "Damietta / \u062F\u0645\u064A\u0627\u0637");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(45, "option", 98);
+    \u0275\u0275text(46, "Port Said / \u0628\u0648\u0631\u0633\u0639\u064A\u062F");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(47, "option", 99);
+    \u0275\u0275text(48, "Ismailia / \u0627\u0644\u0625\u0633\u0645\u0627\u0639\u064A\u0644\u064A\u0629");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(49, "option", 100);
+    \u0275\u0275text(50, "Suez / \u0627\u0644\u0633\u0648\u064A\u0633");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(51, "option", 101);
+    \u0275\u0275text(52, "Aswan / \u0623\u0633\u0648\u0627\u0646");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(53, "option", 102);
+    \u0275\u0275text(54, "Luxor / \u0627\u0644\u0623\u0642\u0635\u0631");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(55, "option", 103);
+    \u0275\u0275text(56, "Red Sea / \u0627\u0644\u0628\u062D\u0631 \u0627\u0644\u0623\u062D\u0645\u0631");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(57, "option", 104);
+    \u0275\u0275text(58, "Matrouh / \u0645\u0637\u0631\u0648\u062D");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(59, TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_59_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(60, "div", 60)(61, "div")(62, "label", 105);
+    \u0275\u0275text(63, " \u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062A\u0641 \u0627\u0644\u0634\u062E\u0635\u064A / Personal Phone ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(64, "input", 106);
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(65, TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_65_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(66, "div")(67, "label", 107);
+    \u0275\u0275text(68, " \u0631\u0642\u0645 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628 / WhatsApp Phone ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(69, "input", 108);
+    \u0275\u0275controlCreate();
+    \u0275\u0275conditionalCreate(70, TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_70_Template, 2, 0, "p", 59);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(71, TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_71_Template, 9, 0, "div", 109);
+    \u0275\u0275conditionalCreate(72, TenantRegisterComponent_Conditional_39_Conditional_25_Conditional_72_Template, 9, 0, "div", 109);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(10);
+    \u0275\u0275control();
+    \u0275\u0275advance(10);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("location"))("border-slate-800", !ctx_r1.isFieldInvalid("location"));
+    \u0275\u0275control();
+    \u0275\u0275advance(39);
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("location") ? 59 : -1);
+    \u0275\u0275advance(5);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("personalPhone"));
+    \u0275\u0275control();
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("personalPhone") ? 65 : -1);
+    \u0275\u0275advance(4);
+    \u0275\u0275classProp("border-rose-500", ctx_r1.isFieldInvalid("whatsAppPhone"));
+    \u0275\u0275control();
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isFieldInvalid("whatsAppPhone") ? 70 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.registerForm.get("accountType")?.value === "Company" ? 71 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.registerForm.get("accountType")?.value === "Freelancer" ? 72 : -1);
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_26_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 122)(1, "span");
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate2("\u2713 Map Pin Dropped: ", ctx_r1.registerForm.get("latitude")?.value, " , ", ctx_r1.registerForm.get("longitude")?.value);
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_26_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 44)(1, "div", 54)(2, "h3", 55);
+    \u0275\u0275text(3, "\u0627\u0644\u062E\u0637\u0648\u0629 3: \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0641\u0639\u0644\u064A \u0648\u062A\u062D\u062F\u064A\u062F \u0627\u0644\u062E\u0631\u064A\u0637\u0629 \u0648\u0627\u0644\u062A\u0623\u0643\u064A\u062F");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(4, "div")(5, "label", 118);
+    \u0275\u0275text(6, " \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0641\u0639\u0644\u064A \u0627\u0644\u0645\u0642\u0631 \u0627\u0644\u0631\u0626\u064A\u0633\u064A / Physical Address ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "div", 119);
+    \u0275\u0275element(8, "input", 120);
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementStart(9, "button", 121);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Conditional_26_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.openMapModal());
+    });
+    \u0275\u0275text(10, " \u{1F4CD} \u0627\u0644\u062E\u0631\u064A\u0637\u0629 / Map ");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275conditionalCreate(11, TenantRegisterComponent_Conditional_39_Conditional_26_Conditional_11_Template, 3, 2, "div", 122);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "div", 123)(13, "h4", 124);
+    \u0275\u0275text(14, "\u0645\u0631\u0627\u062C\u0639\u0629 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u0646\u0647\u0627\u0626\u064A:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(15, "div", 125)(16, "div")(17, "span", 76);
+    \u0275\u0275text(18, "\u0627\u0633\u0645 \u0627\u0644\u0634\u0631\u0643\u0629:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(19);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(20, "div")(21, "span", 76);
+    \u0275\u0275text(22, "\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(23);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(24, "div")(25, "span", 76);
+    \u0275\u0275text(26, "\u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(27);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(28, "div")(29, "span", 76);
+    \u0275\u0275text(30, "\u0646\u0648\u0639 \u0627\u0644\u062D\u0633\u0627\u0628:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(31);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(32, "div")(33, "span", 76);
+    \u0275\u0275text(34, "\u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(35);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(36, "div")(37, "span", 76);
+    \u0275\u0275text(38, "\u062E\u0637\u0629 \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(39, " \u0627\u0644\u0628\u0627\u0642\u0629 \u0627\u0644\u0645\u062C\u0627\u0646\u064A\u0629 (Free Plan - 2 \u0645\u0634\u0627\u0631\u064A\u0639 \u0645\u062C\u0627\u0646\u0627\u064B \u0645\u062F\u0649 \u0627\u0644\u062D\u064A\u0627\u0629)");
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(8);
+    \u0275\u0275control();
+    \u0275\u0275advance(3);
+    \u0275\u0275conditional(ctx_r1.registerForm.get("latitude")?.value ? 11 : -1);
+    \u0275\u0275advance(8);
+    \u0275\u0275textInterpolate1(" ", ctx_r1.registerForm.value.tenantName || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate2(" ", ctx_r1.registerForm.value.adminFirstName, " ", ctx_r1.registerForm.value.adminLastName);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r1.registerForm.value.email || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F");
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r1.registerForm.value.accountType);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate1(" ", ctx_r1.registerForm.value.location || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F");
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_27_For_8_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "li");
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const label_r5 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(label_r5);
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_27_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 45)(1, "div", 126);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(2, "svg", 127);
+    \u0275\u0275element(3, "path", 128);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(4, "span");
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "ul", 129);
+    \u0275\u0275repeaterCreate(7, TenantRegisterComponent_Conditional_39_Conditional_27_For_8_Template, 2, 1, "li", null, \u0275\u0275repeaterTrackByIndex);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate1("\u064A\u0631\u062C\u0649 \u0627\u0633\u062A\u0643\u0645\u0627\u0644 \u0627\u0644\u062D\u0642\u0648\u0644 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629 \u0627\u0644\u0643\u0644\u064A\u0629 (", ctx_r1.getInvalidFieldLabels().length, " \u062D\u0642\u0644 \u0645\u062A\u0628\u0642\u064A):");
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r1.getInvalidFieldLabels());
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_29_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 130);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Conditional_29_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.prevStep());
+    });
+    \u0275\u0275text(1, " \u0627\u0644\u0633\u0627\u0628\u0642 / Back ");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_30_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "div");
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_31_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 131);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Conditional_31_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.nextStep());
+    });
+    \u0275\u0275text(1, " \u0627\u0644\u062A\u0627\u0644\u064A / Next \u2192 ");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_32_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 132);
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 133);
+    \u0275\u0275element(2, "circle", 134)(3, "path", 135);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(4, "span");
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate1("\u0645\u062D\u0638\u0648\u0631 \u0645\u0624\u0642\u062A\u0627\u064B (", ctx_r1.rateLimitService.cooldownSeconds(), "\u062B)...");
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_32_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(0, "svg", 136);
+    \u0275\u0275element(1, "circle", 134)(2, "path", 135);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(3, "span", 137);
+    \u0275\u0275text(4, "\u062C\u0627\u0631\u064A \u0627\u0644\u062A\u0633\u062C\u064A\u0644...");
+    \u0275\u0275elementEnd();
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_32_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275text(0, " \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062D\u0633\u0627\u0628 / Complete Registration ");
+  }
+}
+function TenantRegisterComponent_Conditional_39_Conditional_32_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "button", 49);
+    \u0275\u0275conditionalCreate(1, TenantRegisterComponent_Conditional_39_Conditional_32_Conditional_1_Template, 6, 1, "div", 132)(2, TenantRegisterComponent_Conditional_39_Conditional_32_Conditional_2_Template, 5, 0)(3, TenantRegisterComponent_Conditional_39_Conditional_32_Conditional_3_Template, 1, 0);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("disabled", ctx_r1.isLoading() || ctx_r1.passwordStrength() < 3 || ctx_r1.registerForm.invalid || ctx_r1.rateLimitService.isLockedOut());
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.rateLimitService.isLockedOut() ? 1 : ctx_r1.isLoading() ? 2 : 3);
+  }
+}
+function TenantRegisterComponent_Conditional_39_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 33)(1, "div", 34)(2, "div")(3, "h2", 35);
+    \u0275\u0275text(4, "\u062A\u0633\u062C\u064A\u0644 \u0634\u0631\u0643\u0629 \u062C\u062F\u064A\u062F\u0629 / Company Registration");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "p", 36);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "span", 37);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(9, "div", 38)(10, "button", 39);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Template_button_click_10_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.goToStep(1));
+    });
+    \u0275\u0275element(11, "div", 40);
+    \u0275\u0275elementStart(12, "span", 41);
+    \u0275\u0275text(13, "1. \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(14, "button", 39);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Template_button_click_14_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.goToStep(2));
+    });
+    \u0275\u0275element(15, "div", 40);
+    \u0275\u0275elementStart(16, "span", 41);
+    \u0275\u0275text(17, "2. \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A\u0629");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(18, "button", 39);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_39_Template_button_click_18_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.goToStep(3));
+    });
+    \u0275\u0275element(19, "div", 40);
+    \u0275\u0275elementStart(20, "span", 41);
+    \u0275\u0275text(21, "3. \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0648\u0627\u0644\u0645\u0648\u0642\u0639");
+    \u0275\u0275elementEnd()()()();
+    \u0275\u0275conditionalCreate(22, TenantRegisterComponent_Conditional_39_Conditional_22_Template, 5, 1, "div", 42);
+    \u0275\u0275elementStart(23, "form", 43);
+    \u0275\u0275listener("ngSubmit", function TenantRegisterComponent_Conditional_39_Template_form_ngSubmit_23_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onSubmit());
+    });
+    \u0275\u0275conditionalCreate(24, TenantRegisterComponent_Conditional_39_Conditional_24_Template, 53, 42, "div", 44);
+    \u0275\u0275conditionalCreate(25, TenantRegisterComponent_Conditional_39_Conditional_25_Template, 73, 13, "div", 44);
+    \u0275\u0275conditionalCreate(26, TenantRegisterComponent_Conditional_39_Conditional_26_Template, 40, 7, "div", 44);
+    \u0275\u0275conditionalCreate(27, TenantRegisterComponent_Conditional_39_Conditional_27_Template, 9, 1, "div", 45);
+    \u0275\u0275elementStart(28, "div", 46);
+    \u0275\u0275conditionalCreate(29, TenantRegisterComponent_Conditional_39_Conditional_29_Template, 2, 0, "button", 47)(30, TenantRegisterComponent_Conditional_39_Conditional_30_Template, 1, 0, "div");
+    \u0275\u0275conditionalCreate(31, TenantRegisterComponent_Conditional_39_Conditional_31_Template, 2, 0, "button", 48)(32, TenantRegisterComponent_Conditional_39_Conditional_32_Template, 4, 2, "button", 49);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(33, "p", 50);
+    \u0275\u0275text(34, " \u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628 \u0628\u0627\u0644\u0641\u0639\u0644\u061F ");
+    \u0275\u0275elementStart(35, "a", 51);
+    \u0275\u0275text(36, "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0647\u0646\u0627");
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(6);
+    \u0275\u0275textInterpolate1("\u0627\u0644\u062E\u0637\u0648\u0629 ", ctx_r1.currentStep(), " \u0645\u0646 3 - \u0627\u0633\u062A\u0643\u0645\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629 \u0623\u062F\u0646\u0627\u0647");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" Step ", ctx_r1.currentStep(), "/3 ");
+    \u0275\u0275advance(3);
+    \u0275\u0275classProp("bg-indigo-500", ctx_r1.currentStep() >= 1)("shadow-sm", ctx_r1.currentStep() >= 1)("shadow-indigo-500/50", ctx_r1.currentStep() >= 1)("bg-slate-800", ctx_r1.currentStep() < 1);
+    \u0275\u0275advance();
+    \u0275\u0275classProp("text-indigo-400", ctx_r1.currentStep() === 1)("text-slate-400", ctx_r1.currentStep() !== 1);
+    \u0275\u0275advance(3);
+    \u0275\u0275classProp("bg-indigo-500", ctx_r1.currentStep() >= 2)("shadow-sm", ctx_r1.currentStep() >= 2)("shadow-indigo-500/50", ctx_r1.currentStep() >= 2)("bg-slate-800", ctx_r1.currentStep() < 2);
+    \u0275\u0275advance();
+    \u0275\u0275classProp("text-indigo-400", ctx_r1.currentStep() === 2)("text-slate-400", ctx_r1.currentStep() !== 2);
+    \u0275\u0275advance(3);
+    \u0275\u0275classProp("bg-indigo-500", ctx_r1.currentStep() >= 3)("shadow-sm", ctx_r1.currentStep() >= 3)("shadow-indigo-500/50", ctx_r1.currentStep() >= 3)("bg-slate-800", ctx_r1.currentStep() < 3);
+    \u0275\u0275advance();
+    \u0275\u0275classProp("text-indigo-400", ctx_r1.currentStep() === 3)("text-slate-400", ctx_r1.currentStep() !== 3);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.errorMessage() ? 22 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275property("formGroup", ctx_r1.registerForm);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.currentStep() === 1 ? 24 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.currentStep() === 2 ? 25 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.currentStep() === 3 ? 26 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.showSummaryBanner() && ctx_r1.getInvalidFieldLabels().length > 0 ? 27 : -1);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.currentStep() > 1 ? 29 : 30);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.currentStep() < 3 ? 31 : 32);
+  }
+}
+function TenantRegisterComponent_Conditional_40_Conditional_15_For_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 158);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_40_Conditional_15_For_2_Template_button_click_0_listener() {
+      const result_r10 = \u0275\u0275restoreView(_r9).$implicit;
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.selectSearchResult(result_r10));
+    });
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const result_r10 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", result_r10.display_name, " ");
+  }
+}
+function TenantRegisterComponent_Conditional_40_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 151);
+    \u0275\u0275repeaterCreate(1, TenantRegisterComponent_Conditional_40_Conditional_15_For_2_Template, 2, 1, "button", 157, \u0275\u0275repeaterTrackByIndex);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275repeater(ctx_r1.searchResults);
+  }
+}
+function TenantRegisterComponent_Conditional_40_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 27)(1, "div", 138);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_40_Template_div_click_1_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.closeMapModal());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "div", 139)(3, "div", 140)(4, "h3", 141);
+    \u0275\u0275text(5, "\u062A\u062D\u062F\u064A\u062F \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u062C\u063A\u0631\u0627\u0641\u064A / Drop Pin on Map");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "button", 142);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_40_Template_button_click_6_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.closeMapModal());
+    });
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(7, "svg", 143);
+    \u0275\u0275element(8, "path", 144);
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(9, "div", 145)(10, "div", 146)(11, "input", 147);
+    \u0275\u0275twoWayListener("ngModelChange", function TenantRegisterComponent_Conditional_40_Template_input_ngModelChange_11_listener($event) {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.searchQuery, $event) || (ctx_r1.searchQuery = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("ngModelChange", function TenantRegisterComponent_Conditional_40_Template_input_ngModelChange_11_listener($event) {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onSearchQueryChange($event));
+    })("keydown.enter", function TenantRegisterComponent_Conditional_40_Template_input_keydown_enter_11_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onSearchSubmit());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275controlCreate();
+    \u0275\u0275elementStart(12, "button", 148);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_40_Template_button_click_12_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onSearchSubmit());
+    });
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(13, "svg", 149);
+    \u0275\u0275element(14, "path", 150);
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275conditionalCreate(15, TenantRegisterComponent_Conditional_40_Conditional_15_Template, 3, 0, "div", 151);
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(16, "p", 152);
+    \u0275\u0275text(17, " \u0627\u0646\u0642\u0631 \u0639\u0644\u0649 \u0632\u0631 \u0625\u0633\u0642\u0627\u0637 \u0627\u0644\u062F\u0628\u0648\u0633 \u0644\u062A\u062D\u062F\u064A\u062F \u0625\u062D\u062F\u0627\u062B\u064A\u0627\u062A \u0645\u0648\u0642\u0639\u0643 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A\u0629 \u0648\u0645\u0644\u0621 \u062D\u0642\u0648\u0644 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0648\u0645\u062D\u0627\u0641\u0638\u0629 \u0627\u0644\u0642\u0627\u0647\u0631\u0629 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B. ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(18, "div", 153, 0);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(20, "div", 154)(21, "button", 155);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_40_Template_button_click_21_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.closeMapModal());
+    });
+    \u0275\u0275text(22, " \u0625\u0644\u063A\u0627\u0621 / Cancel ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(23, "button", 156);
+    \u0275\u0275listener("click", function TenantRegisterComponent_Conditional_40_Template_button_click_23_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.confirmPinDrop());
+    });
+    \u0275\u0275text(24, " \u0625\u0633\u0642\u0627\u0637 \u0627\u0644\u062F\u0628\u0648\u0633 / Drop Pin & Confirm ");
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(11);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.searchQuery);
+    \u0275\u0275control();
+    \u0275\u0275advance(4);
+    \u0275\u0275conditional(ctx_r1.searchResults.length > 0 ? 15 : -1);
+  }
+}
+var TenantRegisterComponent = class _TenantRegisterComponent {
+  fb = inject(FormBuilder);
+  http = inject(HttpClient);
+  router = inject(Router);
+  authService = inject(AuthService);
+  rateLimitService = inject(RateLimitService);
+  toastService = inject(ToastService);
+  mapContainer;
+  map = null;
+  marker = null;
+  currentLatLng = L.latLng(30.0444, 31.2357);
+  // Cairo/Giza
+  searchQuery = "";
+  searchResults = [];
+  searchTimeout = null;
+  currentStep = signal(
+    1,
+    ...ngDevMode ? [{ debugName: "currentStep" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  showSummaryBanner = signal(
+    false,
+    ...ngDevMode ? [{ debugName: "showSummaryBanner" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  isLoading = signal(
+    false,
+    ...ngDevMode ? [{ debugName: "isLoading" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  isSuccess = signal(
+    false,
+    ...ngDevMode ? [{ debugName: "isSuccess" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  showPassword = signal(
+    false,
+    ...ngDevMode ? [{ debugName: "showPassword" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  errorMessage = signal(
+    null,
+    ...ngDevMode ? [{ debugName: "errorMessage" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  emailError = signal(
+    null,
+    ...ngDevMode ? [{ debugName: "emailError" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  passwordValue = signal(
+    "",
+    ...ngDevMode ? [{ debugName: "passwordValue" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  passwordStrength = computed(
+    () => {
+      const pass = this.passwordValue();
+      if (!pass)
+        return 0;
+      let score = 0;
+      if (/[A-Z]/.test(pass))
+        score++;
+      if (/[a-z]/.test(pass))
+        score++;
+      if (/[0-9]/.test(pass))
+        score++;
+      if (/[^a-zA-Z0-9]/.test(pass))
+        score++;
+      return score;
+    },
+    ...ngDevMode ? [{ debugName: "passwordStrength" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  isMapModalOpen = signal(
+    false,
+    ...ngDevMode ? [{ debugName: "isMapModalOpen" }] : (
+      /* istanbul ignore next */
+      []
+    )
+  );
+  registerForm = this.fb.nonNullable.group({
+    tenantName: ["", [Validators.required, Validators.maxLength(100)]],
+    adminFirstName: ["", [Validators.required, Validators.maxLength(50)]],
+    adminLastName: ["", [Validators.required, Validators.maxLength(50)]],
+    email: ["", [Validators.required, Validators.email]],
+    password: ["", [Validators.required, Validators.minLength(6)]],
+    subscriptionPlan: ["Free", Validators.required],
+    accountType: ["Company", Validators.required],
+    location: ["", Validators.required],
+    personalPhone: ["", [Validators.pattern(/^01\d{9}$/)]],
+    whatsAppPhone: ["", [Validators.pattern(/^01\d{9}$/)]],
+    commercialRegister: [""],
+    taxCard: [""],
+    nationalId: [""],
+    syndicateId: [""],
+    manualAddress: [""],
+    mapLocationUrl: [""],
+    latitude: [null],
+    longitude: [null]
+  });
+  constructor() {
+    this.registerForm.get("password")?.valueChanges.subscribe((value) => {
+      this.passwordValue.set(value || "");
+    });
+    this.registerForm.valueChanges.subscribe(() => {
+      this.clearErrorState();
+    });
+    let wasLockedOut = false;
+    effect(() => {
+      const cd = this.rateLimitService.cooldownSeconds();
+      if (cd > 0) {
+        wasLockedOut = true;
+      } else if (wasLockedOut && cd === 0) {
+        wasLockedOut = false;
+        this.clearErrorState();
+      }
+    });
+  }
+  clearErrorState() {
+    if (this.emailError()) {
+      this.emailError.set(null);
+    }
+    if (this.errorMessage()) {
+      this.errorMessage.set(null);
+    }
+    if (this.showSummaryBanner()) {
+      this.showSummaryBanner.set(false);
+    }
+    if (this.toastService.toasts().length > 0) {
+      this.toastService.clearAll();
+    }
+    Object.keys(this.registerForm.controls).forEach((key) => {
+      const control = this.registerForm.get(key);
+      if (control) {
+        if (control.touched) {
+          control.markAsUntouched({ onlySelf: true });
+        }
+        if (control.dirty) {
+          control.markAsPristine({ onlySelf: true });
+        }
+      }
+    });
+  }
+  // Helper mapping for user-friendly field labels
+  fieldLabels = {
+    tenantName: "\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062A\u0623\u062C\u0631 / \u0627\u0644\u0634\u0631\u0643\u0629",
+    adminFirstName: "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u0648\u0644 \u0644\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
+    adminLastName: "\u0627\u0633\u0645 \u0627\u0644\u0639\u0627\u0626\u0644\u0629 \u0644\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
+    email: "\u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0627\u0644\u0631\u0633\u0645\u064A",
+    password: "\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631",
+    location: "\u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 / \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0631\u0626\u064A\u0633\u064A",
+    personalPhone: "\u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062A\u0641 \u0627\u0644\u0634\u062E\u0635\u064A",
+    whatsAppPhone: "\u0631\u0642\u0645 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628"
+  };
+  goToStep(step) {
+    if (step < this.currentStep() || this.isStepValid(this.currentStep())) {
+      this.showSummaryBanner.set(false);
+      this.currentStep.set(step);
+    } else {
+      this.showSummaryBanner.set(true);
+      this.markCurrentStepControlsTouched();
+      this.scrollToFirstInvalidControl();
+    }
+  }
+  nextStep() {
+    if (this.isStepValid(this.currentStep())) {
+      this.showSummaryBanner.set(false);
+      this.currentStep.update((s) => Math.min(s + 1, 3));
+    } else {
+      this.showSummaryBanner.set(true);
+      this.markCurrentStepControlsTouched();
+      this.scrollToFirstInvalidControl();
+    }
+  }
+  prevStep() {
+    this.showSummaryBanner.set(false);
+    this.currentStep.update((s) => Math.max(s - 1, 1));
+  }
+  currentStepControlNames(step = this.currentStep()) {
+    switch (step) {
+      case 1:
+        return ["tenantName", "adminFirstName", "adminLastName", "email", "password"];
+      case 2:
+        return ["accountType", "location", "personalPhone", "whatsAppPhone"];
+      case 3:
+        return ["manualAddress"];
+      default:
+        return [];
+    }
+  }
+  isStepValid(step = this.currentStep()) {
+    const controls = this.currentStepControlNames(step);
+    const allValid = controls.every((name) => {
+      const c = this.registerForm.get(name);
+      return !c || c.valid;
+    });
+    if (step === 1) {
+      return allValid && this.passwordStrength() >= 3;
+    }
+    return allValid;
+  }
+  markCurrentStepControlsTouched() {
+    const controls = this.currentStepControlNames(this.currentStep());
+    controls.forEach((name) => {
+      this.registerForm.get(name)?.markAsTouched();
+    });
+  }
+  getInvalidFieldLabels() {
+    const invalidLabels = [];
+    Object.keys(this.registerForm.controls).forEach((key) => {
+      const control = this.registerForm.get(key);
+      if (control && control.invalid) {
+        if (this.fieldLabels[key]) {
+          invalidLabels.push(this.fieldLabels[key]);
+        }
+      }
+    });
+    if (this.passwordStrength() < 3 && this.registerForm.get("password")?.value) {
+      if (!invalidLabels.includes("\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 (\u064A\u062C\u0628 \u0623\u0646 \u062A\u0643\u0648\u0646 \u0642\u0648\u064A\u0629)")) {
+        invalidLabels.push("\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 (\u064A\u062C\u0628 \u0623\u0646 \u062A\u0643\u0648\u0646 \u0642\u0648\u064A\u0629 \u062A\u062D\u062A\u0648\u064A \u0639\u0644\u0649 \u0623\u0631\u0642\u0627\u0645 \u0648\u062D\u0631\u0648\u0641)");
+      }
+    }
+    return invalidLabels;
+  }
+  scrollToFirstInvalidControl() {
+    setTimeout(() => {
+      const firstInvalid = document.querySelector(".border-rose-500, input.ng-invalid, select.ng-invalid");
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+        firstInvalid.focus();
+      }
+    }, 100);
+  }
+  openMapModal() {
+    this.isMapModalOpen.set(true);
+    setTimeout(() => {
+      this.initMap();
+      if (this.map) {
+        this.map.invalidateSize();
+      }
+    }, 200);
+  }
+  closeMapModal() {
+    this.isMapModalOpen.set(false);
+  }
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.initMap();
+    }, 100);
+  }
+  ngOnDestroy() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  }
+  initMap() {
+    if (this.map || !this.mapContainer)
+      return;
+    const iconDefault = L.icon({
+      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      shadowSize: [41, 41]
+    });
+    L.Marker.prototype.options.icon = iconDefault;
+    this.map = L.map(this.mapContainer.nativeElement).setView(this.currentLatLng, 12);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap contributors, &copy; CARTO",
+      subdomains: "abcd",
+      maxZoom: 19
+    }).addTo(this.map);
+    this.marker = L.marker(this.currentLatLng, { draggable: true }).addTo(this.map);
+    this.marker.on("dragend", (e) => {
+      this.currentLatLng = this.marker.getLatLng();
+    });
+    this.map.invalidateSize();
+  }
+  confirmPinDrop() {
+    const lat = this.currentLatLng.lat;
+    const lng = this.currentLatLng.lng;
+    const computedAddr = `\u0645\u0648\u0642\u0639 \u062A\u0645 \u0625\u0633\u0642\u0627\u0637\u0647 \u0639\u0644\u0649 \u0627\u0644\u062E\u0631\u064A\u0637\u0629 / Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    this.registerForm.patchValue({
+      manualAddress: computedAddr,
+      mapLocationUrl: mapUrl,
+      latitude: lat,
+      longitude: lng,
+      location: "Cairo"
+    });
+    this.isMapModalOpen.set(false);
+  }
+  onSearchQueryChange(query) {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    if (query.length < 2) {
+      this.searchResults = [];
+      return;
+    }
+    this.searchTimeout = setTimeout(() => this.searchNominatim(query), 500);
+  }
+  onSearchSubmit() {
+    if (this.searchQuery.length >= 2) {
+      this.searchNominatim(this.searchQuery);
+    }
+  }
+  searchNominatim(query) {
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`;
+    this.http.get(url).subscribe({
+      next: (response) => {
+        this.searchResults = response.features.map((feature) => ({
+          lat: feature.geometry.coordinates[1].toString(),
+          lon: feature.geometry.coordinates[0].toString(),
+          display_name: feature.properties.name || feature.properties.street || feature.properties.city || feature.properties.country || query
+        }));
+      },
+      error: (err) => {
+        console.error("Photon search failed:", err);
+      }
+    });
+  }
+  selectSearchResult(result) {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    this.currentLatLng = L.latLng(lat, lng);
+    if (this.map) {
+      this.map.flyTo(this.currentLatLng, 14);
+    }
+    if (this.marker) {
+      this.marker.setLatLng(this.currentLatLng);
+    }
+    this.searchResults = [];
+    this.searchQuery = result.display_name;
+  }
+  togglePasswordVisibility() {
+    this.showPassword.update((v) => !v);
+  }
+  isFieldInvalid(field) {
+    const control = this.registerForm.get(field);
+    return !!control && control.invalid && (control.dirty || control.touched);
+  }
+  onSubmit() {
+    if (this.registerForm.invalid || this.passwordStrength() < 3 || this.rateLimitService.isLockedOut()) {
+      this.showSummaryBanner.set(true);
+      this.registerForm.markAllAsTouched();
+      this.scrollToFirstInvalidControl();
+      return;
+    }
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.showSummaryBanner.set(false);
+    const payload = {
+      companyName: this.registerForm.value.tenantName,
+      businessDomain: "Construction",
+      ownerName: `${this.registerForm.value.adminFirstName} ${this.registerForm.value.adminLastName}`.trim(),
+      adminEmail: this.registerForm.value.email,
+      password: this.registerForm.value.password,
+      subscriptionPlan: String(this.registerForm.value.subscriptionPlan),
+      accountType: this.registerForm.value.accountType,
+      location: this.registerForm.value.location,
+      personalPhone: this.registerForm.value.personalPhone,
+      whatsAppPhone: this.registerForm.value.whatsAppPhone,
+      commercialRegister: this.registerForm.value.commercialRegister || null,
+      taxCard: this.registerForm.value.taxCard || null,
+      nationalId: this.registerForm.value.nationalId || null,
+      syndicateId: this.registerForm.value.syndicateId || null,
+      manualAddress: this.registerForm.value.manualAddress || null,
+      mapLocationUrl: this.registerForm.value.mapLocationUrl || null,
+      latitude: this.registerForm.value.latitude || null,
+      longitude: this.registerForm.value.longitude || null
+    };
+    this.http.post(`${environment.apiUrl}/Auth/register-tenant`, payload).subscribe({
+      next: (res) => {
+        this.isLoading.set(false);
+        if (res.success && res.data) {
+          this.authService.setSession(res.data);
+          this.toastService.show("\u0623\u0647\u0644\u0627\u064B \u0628\u0643 \u0641\u064A \u0645\u0646\u0635\u0629 \u0623\u064F\u0633\u064F\u0633", "\u062A\u0645 \u0625\u0646\u0634\u0627\u0621 \u0648\u062A\u0641\u0639\u064A\u0644 \u062D\u0633\u0627\u0628\u0643 \u0628\u0646\u062C\u0627\u062D!", "success");
+          this.router.navigate(["/dashboard"]);
+        } else {
+          const msg = res.message || "Registration failed.";
+          if (msg.toLowerCase().includes("email") || msg.includes("\u0645\u064F\u0633\u062C\u0644") || msg.includes("\u0645\u0633\u062C\u0644") || msg.toLowerCase().includes("taken")) {
+            const friendlyEmailMsg = "\u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0645\u064F\u0633\u062C\u0644 \u0645\u0633\u0628\u0642\u0627\u064B\u060C \u064A\u0631\u062C\u0649 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0628\u0631\u064A\u062F \u0622\u062E\u0631 \u0623\u0648 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644.";
+            this.emailError.set(friendlyEmailMsg);
+            this.errorMessage.set(friendlyEmailMsg);
+            this.toastService.show("\u062A\u0646\u0628\u064A\u0647 \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A", friendlyEmailMsg, "warning");
+            this.goToStep(1);
+          } else {
+            this.errorMessage.set(msg);
+          }
+        }
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        if (err.status === 400) {
+          const rawMsg = err.error?.message || err.error?.title || (typeof err.error === "string" ? err.error : "") || err.message || "";
+          const errorCode = err.error?.code || "";
+          const isSecurityRejection = errorCode === "SECURITY_REJECTION" || errorCode === "XSS_DETECTED" || errorCode === "TAINT_DETECTED" || rawMsg.includes("Sanitization") || rawMsg.includes("Security Rejection") || rawMsg.includes("Invalid Characters") || rawMsg.includes("Payload Error") || rawMsg.includes("\u0645\u064F\u062F\u062E\u0644\u0627\u062A \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D \u0628\u0647\u0627 \u0644\u0623\u0633\u0628\u0627\u0628 \u0623\u0645\u0646\u064A\u0629");
+          if (isSecurityRejection) {
+            this.toastService.show("\u062A\u0646\u0628\u064A\u0647 \u0623\u0645\u0646\u064A", "\u062A\u0646\u0628\u064A\u0647 \u0623\u0645\u0646\u064A: \u062A\u0645 \u0631\u0635\u062F \u0645\u064F\u062F\u062E\u0644\u0627\u062A \u063A\u064A\u0631 \u0645\u0633\u0645\u0648\u062D \u0628\u0647\u0627 \u0644\u0623\u0633\u0628\u0627\u0628 \u0623\u0645\u0646\u064A\u0629. \u064A\u0631\u062C\u0649 \u062A\u0635\u062D\u064A\u062D \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u0645\u062D\u0627\u0648\u0644\u0629 \u0645\u062C\u062F\u062F\u0627\u064B.", "error");
+            this.rateLimitService.startCooldown(60);
+            this.errorMessage.set(null);
+            return;
+          }
+          if (rawMsg.toLowerCase().includes("email") || rawMsg.includes("\u0645\u064F\u0633\u062C\u0644") || rawMsg.includes("\u0645\u0633\u062C\u0644") || rawMsg.toLowerCase().includes("taken")) {
+            const friendlyEmailMsg = "\u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0645\u064F\u0633\u062C\u0644 \u0645\u0633\u0628\u0642\u0627\u064B\u060C \u064A\u0631\u062C\u0649 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0628\u0631\u064A\u062F \u0622\u062E\u0631 \u0623\u0648 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644.";
+            this.emailError.set(friendlyEmailMsg);
+            this.errorMessage.set(friendlyEmailMsg);
+            this.toastService.show("\u062A\u0646\u0628\u064A\u0647 \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A", friendlyEmailMsg, "warning");
+            this.goToStep(1);
+          } else {
+            this.errorMessage.set(rawMsg || "\u062D\u062F\u062B \u062E\u0637\u0623 \u0641\u064A \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0645\u062F\u062E\u0644\u0629. \u064A\u0631\u062C\u0649 \u0645\u0631\u0627\u062C\u0639\u0629 \u0627\u0644\u062D\u0642\u0648\u0644 \u0648\u0627\u0644\u0645\u062D\u0627\u0648\u0644\u0629 \u0645\u062C\u062F\u062F\u0627\u064B.");
+          }
+          return;
+        }
+        if (err.status === 429 || err.status === 503) {
+          this.rateLimitService.startCooldown(60);
+          this.errorMessage.set(null);
+          return;
+        }
+        const msg = err.error?.message || err.message || "An error occurred during registration.";
+        if (typeof msg === "string" && (msg.includes("Http failure") || msg.includes("status 400") || msg.includes("status 503"))) {
+          this.errorMessage.set(null);
+        } else {
+          this.errorMessage.set(msg);
+        }
+      }
+    });
+  }
+  static \u0275fac = function TenantRegisterComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TenantRegisterComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TenantRegisterComponent, selectors: [["app-tenant-register"]], viewQuery: function TenantRegisterComponent_Query(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275viewQuery(_c0, 5);
+    }
+    if (rf & 2) {
+      let _t;
+      \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.mapContainer = _t.first);
+    }
+  }, decls: 41, vars: 2, consts: [["mapContainer", ""], [1, "min-h-screen", "bg-slate-950", "flex", "flex-col", "md:flex-row", "font-sans", "selection:bg-indigo-500", "selection:text-white"], [1, "hidden", "md:flex", "md:w-4/12", "bg-slate-900", "border-r", "border-slate-800", "p-8", "lg:p-12", "flex-col", "justify-between", "relative", "overflow-hidden"], [1, "absolute", "top-0", "left-0", "w-full", "h-full", "overflow-hidden", "pointer-events-none"], [1, "absolute", "-top-[20%]", "-left-[10%]", "w-[500px]", "h-[500px]", "bg-indigo-600/20", "rounded-full", "blur-[100px]"], [1, "absolute", "bottom-[10%]", "-right-[20%]", "w-[400px]", "h-[400px]", "bg-purple-600/20", "rounded-full", "blur-[120px]"], [1, "relative", "z-10"], [1, "flex", "items-center", "gap-3", "mb-10"], ["src", "assets/images/default-tenant-logo.png", "alt", "Osos Logo", 1, "h-10", "w-auto", "object-contain"], [1, "text-2xl", "font-bold", "tracking-tight", "text-white", "font-cairo"], [1, "text-3xl", "lg:text-4xl", "font-extrabold", "text-white", "leading-tight", "mb-4", "font-cairo"], [1, "text-slate-400", "text-sm", "lg:text-base", "leading-relaxed", "mb-8", "font-cairo"], [1, "space-y-4"], [1, "flex", "items-start", "gap-3"], [1, "h-7", "w-7", "rounded-full", "bg-emerald-500/10", "border", "border-emerald-500/20", "flex", "items-center", "justify-center", "shrink-0", "mt-0.5"], ["fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "h-3.5", "w-3.5", "text-emerald-400"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M5 13l4 4L19 7"], [1, "text-white", "font-bold", "text-xs", "font-cairo"], [1, "text-slate-500", "text-xs"], [1, "h-7", "w-7", "rounded-full", "bg-indigo-500/10", "border", "border-indigo-500/20", "flex", "items-center", "justify-center", "shrink-0", "mt-0.5"], ["fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "h-3.5", "w-3.5", "text-indigo-400"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M13 10V3L4 14h7v7l9-11h-7z"], [1, "relative", "z-10", "pt-6"], [1, "text-[11px]", "text-slate-600", "font-mono"], [1, "w-full", "md:w-8/12", "flex", "items-center", "justify-center", "p-4", "sm:p-6", "lg:p-10", "relative", "overflow-y-auto"], [1, "w-full", "max-w-2xl", "bg-slate-900/80", "backdrop-blur-md", "border", "border-indigo-500/30", "rounded-3xl", "p-6", "sm:p-8", "shadow-lg", "shadow-indigo-500/5"], [1, "text-center", "py-8", "animate-fade-in-up"], [1, "fixed", "inset-0", "z-50", "flex", "items-stretch", "justify-center", "p-3", "sm:p-4"], [1, "h-20", "w-20", "bg-emerald-500/10", "border-2", "border-emerald-500", "rounded-full", "flex", "items-center", "justify-center", "mx-auto", "mb-6", "shadow-lg", "shadow-emerald-500/20"], ["fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "h-10", "w-10", "text-emerald-500", "animate-bounce"], [1, "text-2xl", "sm:text-3xl", "font-extrabold", "text-white", "mb-3", "font-cairo"], [1, "text-slate-300", "text-sm", "leading-relaxed", "mb-8", "font-cairo", "max-w-md", "mx-auto"], ["routerLink", "/", 1, "px-8", "py-3", "bg-indigo-600", "hover:bg-indigo-700", "text-sm", "font-bold", "rounded-xl", "text-white", "shadow-lg", "shadow-indigo-600/30", "transition-all", "font-cairo", "cursor-pointer"], [1, "mb-6"], [1, "flex", "items-center", "justify-between", "mb-4"], [1, "text-xl", "sm:text-2xl", "font-extrabold", "text-white", "font-cairo", "tracking-tight"], [1, "text-slate-400", "text-xs", "font-cairo", "mt-1"], [1, "text-xs", "font-mono", "font-bold", "text-indigo-400", "bg-indigo-500/10", "border", "border-indigo-500/30", "px-3", "py-1", "rounded-full", "shadow-sm"], [1, "grid", "grid-cols-3", "gap-2", "py-2"], ["type", "button", 1, "flex", "flex-col", "gap-1", "text-right", "focus:outline-none", "cursor-pointer", 3, "click"], [1, "h-2", "rounded-full", "transition-all", "duration-300"], [1, "text-[11px]", "font-bold", "font-cairo", "transition-colors"], [1, "mb-5", "p-4", "rounded-xl", "bg-rose-500/10", "border", "border-rose-500/30", "flex", "items-start", "gap-3", "text-xs", "text-rose-400", "font-medium"], ["autocomplete", "off", 1, "space-y-4", 3, "ngSubmit", "formGroup"], [1, "space-y-4", "animate-fade-in"], [1, "p-3.5", "rounded-xl", "bg-rose-500/10", "border", "border-rose-500/30", "text-rose-400", "font-cairo", "text-xs", "space-y-1", "animate-slide-in"], [1, "flex", "items-center", "justify-between", "gap-3", "pt-3", "border-t", "border-slate-800"], ["type", "button", 1, "px-5", "py-2.5", "bg-slate-950", "hover:bg-slate-800", "border", "border-slate-800", "text-slate-300", "rounded-xl", "text-xs", "font-bold", "transition-all", "font-cairo", "cursor-pointer"], ["type", "button", 1, "px-6", "py-2.5", "bg-indigo-600", "hover:bg-indigo-500", "text-white", "rounded-xl", "text-xs", "font-bold", "shadow-lg", "shadow-indigo-600/30", "transition-all", "font-cairo", "cursor-pointer", "active:scale-[0.98]"], ["type", "submit", 1, "px-8", "py-3", "bg-indigo-600", "hover:bg-indigo-500", "disabled:opacity-50", "disabled:cursor-not-allowed", "text-xs", "font-bold", "rounded-xl", "text-white", "shadow-lg", "shadow-indigo-600/30", "transition-all", "duration-200", "active:scale-[0.98]", "flex", "items-center", "justify-center", "font-cairo", "cursor-pointer", 3, "disabled"], [1, "text-center", "text-xs", "text-slate-500", "mt-4", "font-cairo"], ["routerLink", "/login", 1, "text-indigo-400", "font-bold", "hover:underline"], ["fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "h-5", "w-5", "shrink-0"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"], [1, "border-b", "border-slate-800", "pb-2"], [1, "text-xs", "font-bold", "text-indigo-400", "uppercase", "tracking-wider", "font-cairo"], ["for", "tenantName", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], [1, "text-rose-400"], ["id", "tenantName", "type", "text", "formControlName", "tenantName", "placeholder", "\u0645\u062B\u0627\u0644: \u0634\u0631\u0643\u0629 \u0627\u0644\u0645\u0642\u0627\u0648\u0644\u0627\u062A \u0627\u0644\u062D\u062F\u064A\u062B\u0629", "autocomplete", "off", "aria-autocomplete", "none", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], [1, "text-[11px]", "text-rose-400", "mt-1", "font-medium", "font-cairo"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-3"], ["for", "adminFirstName", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "adminFirstName", "type", "text", "formControlName", "adminFirstName", "placeholder", "\u0623\u062D\u0645\u062F", "autocomplete", "off", "aria-autocomplete", "none", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "adminLastName", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "adminLastName", "type", "text", "formControlName", "adminLastName", "placeholder", "\u0645\u062D\u0645\u0648\u062F", "autocomplete", "off", "aria-autocomplete", "none", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "email", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "email", "type", "email", "formControlName", "email", "placeholder", "admin@company.com", "autocomplete", "off", "aria-autocomplete", "none", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "password", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], [1, "relative"], ["id", "password", "formControlName", "password", "placeholder", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", "autocomplete", "new-password", 1, "w-full", "pl-3.5", "pr-10", "py-2.5", "bg-slate-950", "border", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans", 3, "type"], ["type", "button", 1, "absolute", "inset-y-0", "right-0", "pr-3", "flex", "items-center", "text-slate-500", "hover:text-slate-300", "focus:outline-none", 3, "click"], ["xmlns", "http://www.w3.org/2000/svg", "fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "h-4", "w-4"], [1, "mt-2", "space-y-1", "bg-slate-950/60", "border", "border-slate-800", "rounded-xl", "p-2"], [1, "h-1.5", "w-full", "bg-slate-900", "rounded-full", "overflow-hidden", "flex", "gap-0.5"], [1, "h-full", "rounded-full", "transition-all", "duration-300"], [1, "flex", "justify-between", "items-center", "text-[10px]", "font-medium", "font-cairo"], [1, "text-slate-500"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M15 12a3 3 0 11-6 0 3 3 0 016 0z"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"], ["for", "accountType", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "accountType", "formControlName", "accountType", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["value", "Company"], ["value", "Freelancer"], ["for", "location", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "location", "formControlName", "location", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "rounded-xl", "text-white", "text-xs", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["value", "", "disabled", "", "selected", ""], ["value", "Cairo"], ["value", "Giza"], ["value", "Alexandria"], ["value", "Qalyubia"], ["value", "Gharbia"], ["value", "Dakahlia"], ["value", "Sharqia"], ["value", "Monufia"], ["value", "Beheira"], ["value", "Kafr El Sheikh"], ["value", "Damietta"], ["value", "Port Said"], ["value", "Ismailia"], ["value", "Suez"], ["value", "Aswan"], ["value", "Luxor"], ["value", "Red Sea"], ["value", "Matrouh"], ["for", "personalPhone", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "personalPhone", "type", "tel", "formControlName", "personalPhone", "inputmode", "numeric", "maxlength", "11", "placeholder", "01xxxxxxxxx", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "whatsAppPhone", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "whatsAppPhone", "type", "tel", "formControlName", "whatsAppPhone", "inputmode", "numeric", "maxlength", "11", "placeholder", "01xxxxxxxxx", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-3", "pt-1"], ["for", "commercialRegister", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "commercialRegister", "type", "text", "formControlName", "commercialRegister", "placeholder", "\u0631\u0642\u0645 \u0627\u0644\u0633\u062C\u0644 \u0627\u0644\u062A\u062C\u0627\u0631\u064A \u0627\u0644\u0631\u0633\u0645\u064A", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "taxCard", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "taxCard", "type", "text", "formControlName", "taxCard", "placeholder", "\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 \u0627\u0644\u0636\u0631\u064A\u0628\u064A\u0629", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "nationalId", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "nationalId", "type", "text", "formControlName", "nationalId", "placeholder", "14 \u0631\u0642\u0645 \u0642\u0648\u0645\u064A", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "syndicateId", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], ["id", "syndicateId", "type", "text", "formControlName", "syndicateId", "placeholder", "\u0631\u0642\u0645 \u0627\u0644\u0642\u064A\u062F \u0628\u0646\u0642\u0627\u0628\u0629 \u0627\u0644\u0645\u0647\u0646\u062F\u0633\u064A\u0646", 1, "w-full", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["for", "manualAddress", 1, "block", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-slate-300", "mb-1", "font-cairo"], [1, "flex", "gap-2"], ["id", "manualAddress", "type", "text", "formControlName", "manualAddress", "placeholder", "\u0623\u062F\u062E\u0644 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062A\u0641\u0635\u064A\u0644\u064A \u0623\u0648 \u062D\u062F\u062F \u0645\u0646 \u0627\u0644\u062E\u0631\u064A\u0637\u0629", 1, "flex-1", "px-3.5", "py-2.5", "bg-slate-950", "border", "border-slate-800", "rounded-xl", "text-white", "text-xs", "placeholder-slate-600", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/40", "transition-all", "font-sans"], ["type", "button", 1, "px-4", "py-2.5", "bg-indigo-950/60", "text-indigo-300", "border", "border-indigo-800/40", "hover:bg-indigo-900/50", "transition-all", "rounded-xl", "text-xs", "font-bold", "font-cairo", "shrink-0", "cursor-pointer", "flex", "items-center", "gap-1.5", "shadow-md", 3, "click"], [1, "mt-2", "p-2", "bg-emerald-500/10", "border", "border-emerald-500/20", "rounded-lg", "text-[11px]", "text-emerald-400", "font-mono", "flex", "items-center", "gap-2"], [1, "bg-slate-950/80", "border", "border-slate-800", "rounded-2xl", "p-4", "space-y-2", "text-xs", "font-cairo"], [1, "font-bold", "text-indigo-400", "border-b", "border-slate-800/80", "pb-1.5"], [1, "grid", "grid-cols-1", "sm:grid-cols-2", "gap-2", "text-slate-300", "text-[11px]"], [1, "font-bold", "flex", "items-center", "gap-1.5"], ["fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "w-4", "h-4", "shrink-0"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"], [1, "list-disc", "list-inside", "text-[11px]", "opacity-90", "pr-2"], ["type", "button", 1, "px-5", "py-2.5", "bg-slate-950", "hover:bg-slate-800", "border", "border-slate-800", "text-slate-300", "rounded-xl", "text-xs", "font-bold", "transition-all", "font-cairo", "cursor-pointer", 3, "click"], ["type", "button", 1, "px-6", "py-2.5", "bg-indigo-600", "hover:bg-indigo-500", "text-white", "rounded-xl", "text-xs", "font-bold", "shadow-lg", "shadow-indigo-600/30", "transition-all", "font-cairo", "cursor-pointer", "active:scale-[0.98]", 3, "click"], [1, "flex", "items-center", "space-x-2", "rtl:space-x-reverse", "text-amber-300", "font-bold"], ["fill", "none", "viewBox", "0 0 24 24", 1, "h-4", "w-4", "animate-spin"], ["cx", "12", "cy", "12", "r", "10", "stroke", "currentColor", "stroke-width", "4", 1, "opacity-25"], ["fill", "currentColor", "d", "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z", 1, "opacity-75"], ["fill", "none", "viewBox", "0 0 24 24", 1, "animate-spin", "h-4", "w-4", "text-white"], [1, "mr-2"], [1, "absolute", "inset-0", "bg-slate-950/80", "backdrop-blur-sm", 3, "click"], [1, "relative", "z-10", "w-full", "max-w-2xl", "mx-auto", "my-auto", "p-4", "md:p-6", "max-h-[92vh]", "flex", "flex-col", "bg-slate-950", "border", "border-slate-900", "rounded-xl", "overflow-hidden", "shadow-2xl", "font-cairo"], [1, "p-4", "border-b", "border-slate-900", "flex", "justify-between", "items-center"], [1, "text-sm", "font-bold", "text-white"], ["type", "button", 1, "text-slate-500", "hover:text-white", 3, "click"], ["fill", "none", "viewBox", "0 0 24 24", "stroke", "currentColor", 1, "w-4", "h-4"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M6 18L18 6M6 6l12 12"], [1, "p-4", "flex-1", "flex", "flex-col", "gap-3", "min-h-0", "overflow-y-auto"], [1, "relative", "shrink-0"], ["type", "text", "placeholder", "\u0627\u0628\u062D\u062B \u0639\u0646 \u0645\u062F\u064A\u0646\u0629 \u0623\u0648 \u0645\u0646\u0637\u0642\u0629 / Search for city or area...", 1, "w-full", "px-4", "py-3", "bg-slate-900", "border", "border-slate-800", "text-slate-200", "rounded-lg", "focus:outline-none", "focus:ring-2", "focus:ring-indigo-500/50", "focus:border-indigo-500", "transition-all", "font-cairo", "text-sm", 3, "ngModelChange", "keydown.enter", "ngModel"], ["type", "button", 1, "absolute", "right-3", "top-1/2", "-translate-y-1/2", "text-slate-400", "hover:text-slate-200", 3, "click"], ["fill", "none", "stroke", "currentColor", "viewBox", "0 0 24 24", 1, "w-5", "h-5"], ["stroke-linecap", "round", "stroke-linejoin", "round", "stroke-width", "2", "d", "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"], [1, "bg-slate-900", "border", "border-slate-800", "rounded-lg", "max-h-48", "overflow-y-auto", "shrink-0"], [1, "text-xs", "text-slate-400", "leading-relaxed", "shrink-0"], ["id", "interactive-map", 1, "w-full", "h-[280px]", "rounded-lg", "border", "border-slate-900", "shrink-0"], [1, "flex", "flex-col-reverse", "md:flex-row", "justify-end", "gap-3", "w-full", "p-4", "border-t", "border-slate-900", "bg-slate-950/80"], ["type", "button", 1, "w-full", "md:w-auto", "px-4", "py-2", "border", "border-slate-800", "text-slate-400", "hover:text-white", "rounded-lg", "transition-all", "text-xs", 3, "click"], ["type", "button", 1, "w-full", "md:w-auto", "px-4", "py-2", "bg-indigo-600", "hover:bg-indigo-700", "text-white", "rounded-lg", "font-bold", "transition-all", "shadow-lg", "shadow-indigo-600/15", "text-xs", 3, "click"], ["type", "button", 1, "w-full", "px-4", "py-3", "text-left", "text-sm", "text-slate-200", "hover:bg-slate-800", "transition-colors", "font-cairo", "border-b", "border-slate-800", "last:border-b-0"], ["type", "button", 1, "w-full", "px-4", "py-3", "text-left", "text-sm", "text-slate-200", "hover:bg-slate-800", "transition-colors", "font-cairo", "border-b", "border-slate-800", "last:border-b-0", 3, "click"]], template: function TenantRegisterComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "div", 1)(1, "div", 2)(2, "div", 3);
+      \u0275\u0275element(3, "div", 4)(4, "div", 5);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(5, "div", 6)(6, "div", 7);
+      \u0275\u0275element(7, "img", 8);
+      \u0275\u0275elementStart(8, "span", 9);
+      \u0275\u0275text(9, "\u0623\u064F\u0633\u064F\u0633 / Osos");
+      \u0275\u0275elementEnd()();
+      \u0275\u0275elementStart(10, "h1", 10);
+      \u0275\u0275text(11, " \u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u0622\u0645\u0646\u0629 \u0648\u0627\u0644\u0630\u0643\u064A\u0629 ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(12, "p", 11);
+      \u0275\u0275text(13, " \u0642\u0645 \u0628\u062A\u0633\u062C\u064A\u0644 \u0634\u0631\u0643\u062A\u0643 \u0623\u0648 \u062D\u0633\u0627\u0628\u0643 \u0627\u0644\u0645\u0633\u062A\u0642\u0644 \u0628\u0633\u0647\u0648\u0644\u0629 \u0641\u064A \u062E\u0637\u0648\u0627\u062A \u0645\u062F\u0645\u062C\u0629 \u0645\u0639 \u0646\u0638\u0627\u0645 \u0627\u0644\u062A\u062D\u0642\u0642 \u0627\u0644\u062C\u063A\u0631\u0627\u0641\u064A \u0648\u0627\u0644\u0623\u0645\u0627\u0646 \u0627\u0644\u0645\u062A\u0643\u0627\u0645\u0644. ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(14, "div", 12)(15, "div", 13)(16, "div", 14);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(17, "svg", 15);
+      \u0275\u0275element(18, "path", 16);
+      \u0275\u0275elementEnd()();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(19, "div")(20, "h3", 17);
+      \u0275\u0275text(21, "\u0639\u0632\u0644 \u0635\u0627\u0631\u0645 \u0644\u0644\u0645\u0633\u062A\u0623\u062C\u0631\u064A\u0646 / Multi-Tenant Security");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(22, "p", 18);
+      \u0275\u0275text(23, "\u0628\u064A\u0627\u0646\u0627\u062A \u0634\u0631\u0643\u062A\u0643 \u0645\u0639\u0632\u0648\u0644\u0629 \u0628\u0623\u0645\u0627\u0646 \u062A\u0627\u0645 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u062D\u062F\u062B \u0645\u0639\u0627\u064A\u064A\u0631 JWT.");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(24, "div", 13)(25, "div", 19);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(26, "svg", 20);
+      \u0275\u0275element(27, "path", 21);
+      \u0275\u0275elementEnd()();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(28, "div")(29, "h3", 17);
+      \u0275\u0275text(30, "\u062A\u062D\u0642\u0642 \u062C\u063A\u0631\u0627\u0641\u064A \u062F\u0642\u064A\u0642 / Precise Geo-Tagging");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(31, "p", 18);
+      \u0275\u0275text(32, "\u062A\u062D\u062F\u064A\u062F \u0645\u0648\u0642\u0639\u0643 \u0627\u0644\u0641\u0639\u0644\u064A \u0639\u0644\u0649 \u0627\u0644\u062E\u0631\u064A\u0637\u0629 \u0644\u062D\u0641\u0638 \u0628\u064A\u0627\u0646\u062A\u0643 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A\u0629 \u0627\u0644\u0631\u0633\u0645\u064A\u0629.");
+      \u0275\u0275elementEnd()()()()();
+      \u0275\u0275elementStart(33, "div", 22)(34, "p", 23);
+      \u0275\u0275text(35, "\xA9 2026 Structo Platforms Inc.");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(36, "div", 24)(37, "div", 25);
+      \u0275\u0275conditionalCreate(38, TenantRegisterComponent_Conditional_38_Template, 10, 0, "div", 26)(39, TenantRegisterComponent_Conditional_39_Template, 37, 46);
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275conditionalCreate(40, TenantRegisterComponent_Conditional_40_Template, 25, 2, "div", 27);
+    }
+    if (rf & 2) {
+      \u0275\u0275advance(38);
+      \u0275\u0275conditional(ctx.isSuccess() ? 38 : 39);
+      \u0275\u0275advance(2);
+      \u0275\u0275conditional(ctx.isMapModalOpen() ? 40 : -1);
+    }
+  }, dependencies: [CommonModule, RouterLink, ReactiveFormsModule, \u0275NgNoValidate, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, SelectControlValueAccessor, NgControlStatus, NgControlStatusGroup, MaxLengthValidator, FormGroupDirective, FormControlName, FormsModule, NgModel], styles: ['/* angular:styles/component:css;e879297dd3fb894962b3fbbbf510e9c6d6af35415682b96e847015b21fe9e182;E:/private/structo/structo/Structo.Client/src/app/features/auth/tenant-register/tenant-register.component.ts */\n.font-cairo {\n  font-family:\n    "Cairo",\n    "Inter",\n    sans-serif;\n}\n.leaflet-container {\n  height: 280px !important;\n  width: 100% !important;\n  display: block !important;\n  z-index: 9999 !important;\n}\n#interactive-map {\n  height: 280px !important;\n  width: 100% !important;\n  display: block !important;\n}\n@keyframes fade-in {\n  from {\n    opacity: 0;\n    transform: translateY(6px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n.animate-fade-in {\n  animation: fade-in 0.25s ease-out both;\n}\n/*# sourceMappingURL=tenant-register.component.css.map */\n'], encapsulation: 2 });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TenantRegisterComponent, [{
+    type: Component,
+    args: [{ selector: "app-tenant-register", standalone: true, imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule], encapsulation: ViewEncapsulation.None, template: `
+    <div class="min-h-screen bg-slate-950 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white">
+      
+      <!-- Left Side: Copy & Branding -->
+      <div class="hidden md:flex md:w-4/12 bg-slate-900 border-r border-slate-800 p-8 lg:p-12 flex-col justify-between relative overflow-hidden">
+        <!-- Abstract glowing orbs -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div class="absolute -top-[20%] -left-[10%] w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
+          <div class="absolute bottom-[10%] -right-[20%] w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[120px]"></div>
+        </div>
+
+        <div class="relative z-10">
+          <div class="flex items-center gap-3 mb-10">
+            <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-10 w-auto object-contain">
+            <span class="text-2xl font-bold tracking-tight text-white font-cairo">\u0623\u064F\u0633\u064F\u0633 / Osos</span>
+          </div>
+
+          <h1 class="text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-4 font-cairo">
+            \u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u0622\u0645\u0646\u0629 \u0648\u0627\u0644\u0630\u0643\u064A\u0629
+          </h1>
+          <p class="text-slate-400 text-sm lg:text-base leading-relaxed mb-8 font-cairo">
+            \u0642\u0645 \u0628\u062A\u0633\u062C\u064A\u0644 \u0634\u0631\u0643\u062A\u0643 \u0623\u0648 \u062D\u0633\u0627\u0628\u0643 \u0627\u0644\u0645\u0633\u062A\u0642\u0644 \u0628\u0633\u0647\u0648\u0644\u0629 \u0641\u064A \u062E\u0637\u0648\u0627\u062A \u0645\u062F\u0645\u062C\u0629 \u0645\u0639 \u0646\u0638\u0627\u0645 \u0627\u0644\u062A\u062D\u0642\u0642 \u0627\u0644\u062C\u063A\u0631\u0627\u0641\u064A \u0648\u0627\u0644\u0623\u0645\u0627\u0646 \u0627\u0644\u0645\u062A\u0643\u0627\u0645\u0644.
+          </p>
+
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="h-7 w-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <svg class="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h3 class="text-white font-bold text-xs font-cairo">\u0639\u0632\u0644 \u0635\u0627\u0631\u0645 \u0644\u0644\u0645\u0633\u062A\u0623\u062C\u0631\u064A\u0646 / Multi-Tenant Security</h3>
+                <p class="text-slate-500 text-xs">\u0628\u064A\u0627\u0646\u0627\u062A \u0634\u0631\u0643\u062A\u0643 \u0645\u0639\u0632\u0648\u0644\u0629 \u0628\u0623\u0645\u0627\u0646 \u062A\u0627\u0645 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u062D\u062F\u062B \u0645\u0639\u0627\u064A\u064A\u0631 JWT.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="h-7 w-7 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <svg class="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <div>
+                <h3 class="text-white font-bold text-xs font-cairo">\u062A\u062D\u0642\u0642 \u062C\u063A\u0631\u0627\u0641\u064A \u062F\u0642\u064A\u0642 / Precise Geo-Tagging</h3>
+                <p class="text-slate-500 text-xs">\u062A\u062D\u062F\u064A\u062F \u0645\u0648\u0642\u0639\u0643 \u0627\u0644\u0641\u0639\u0644\u064A \u0639\u0644\u0649 \u0627\u0644\u062E\u0631\u064A\u0637\u0629 \u0644\u062D\u0641\u0638 \u0628\u064A\u0627\u0646\u062A\u0643 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A\u0629 \u0627\u0644\u0631\u0633\u0645\u064A\u0629.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative z-10 pt-6">
+          <p class="text-[11px] text-slate-600 font-mono">\xA9 2026 Structo Platforms Inc.</p>
+        </div>
+      </div>
+
+      <!-- Right Side: Compact Multi-Step Wizard -->
+      <div class="w-full md:w-8/12 flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-y-auto">
+        <div class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-md border border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-lg shadow-indigo-500/5">
+          
+          @if (isSuccess()) {
+            <!-- Success Confirmation -->
+            <div class="text-center py-8 animate-fade-in-up">
+              <div class="h-20 w-20 bg-emerald-500/10 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
+                <svg class="h-10 w-10 text-emerald-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-3 font-cairo">\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0637\u0644\u0628 \u0628\u0646\u062C\u0627\u062D!</h2>
+              <p class="text-slate-300 text-sm leading-relaxed mb-8 font-cairo max-w-md mx-auto">
+                \u062A\u0645 \u062A\u0633\u062C\u064A\u0644 \u062D\u0633\u0627\u0628 \u0634\u0631\u0643\u062A\u0643 \u0628\u0646\u062C\u0627\u062D. \u062D\u0633\u0627\u0628\u0643 \u062D\u0627\u0644\u064A\u0627\u064B \u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0645\u0631\u0627\u062C\u0639\u0629 \u0648\u062A\u0641\u0639\u064A\u0644 \u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645. \u0633\u062A\u0635\u0644\u0643 \u0625\u0634\u0639\u0627\u0631 \u0641\u0648\u0631 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u0633\u0627\u0628.
+              </p>
+              <button routerLink="/" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-sm font-bold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all font-cairo cursor-pointer">
+                \u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u0644\u0635\u0641\u062D\u0629 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629
+              </button>
+            </div>
+          } @else {
+            
+            <!-- Header & Stepper -->
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h2 class="text-xl sm:text-2xl font-extrabold text-white font-cairo tracking-tight">\u062A\u0633\u062C\u064A\u0644 \u0634\u0631\u0643\u0629 \u062C\u062F\u064A\u062F\u0629 / Company Registration</h2>
+                  <p class="text-slate-400 text-xs font-cairo mt-1">\u0627\u0644\u062E\u0637\u0648\u0629 {{ currentStep() }} \u0645\u0646 3 - \u0627\u0633\u062A\u0643\u0645\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629 \u0623\u062F\u0646\u0627\u0647</p>
+                </div>
+                <span class="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full shadow-sm">
+                  Step {{ currentStep() }}/3
+                </span>
+              </div>
+
+              <!-- Multi-Step Progress Stepper -->
+              <div class="grid grid-cols-3 gap-2 py-2">
+                <!-- Step 1 Indicator -->
+                <button type="button" (click)="goToStep(1)" class="flex flex-col gap-1 text-right focus:outline-none cursor-pointer">
+                  <div class="h-2 rounded-full transition-all duration-300"
+                    [class.bg-indigo-500]="currentStep() >= 1"
+                    [class.shadow-sm]="currentStep() >= 1"
+                    [class.shadow-indigo-500/50]="currentStep() >= 1"
+                    [class.bg-slate-800]="currentStep() < 1"></div>
+                  <span class="text-[11px] font-bold font-cairo transition-colors"
+                    [class.text-indigo-400]="currentStep() === 1"
+                    [class.text-slate-400]="currentStep() !== 1">1. \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628</span>
+                </button>
+                <!-- Step 2 Indicator -->
+                <button type="button" (click)="goToStep(2)" class="flex flex-col gap-1 text-right focus:outline-none cursor-pointer">
+                  <div class="h-2 rounded-full transition-all duration-300"
+                    [class.bg-indigo-500]="currentStep() >= 2"
+                    [class.shadow-sm]="currentStep() >= 2"
+                    [class.shadow-indigo-500/50]="currentStep() >= 2"
+                    [class.bg-slate-800]="currentStep() < 2"></div>
+                  <span class="text-[11px] font-bold font-cairo transition-colors"
+                    [class.text-indigo-400]="currentStep() === 2"
+                    [class.text-slate-400]="currentStep() !== 2">2. \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A\u0629</span>
+                </button>
+                <!-- Step 3 Indicator -->
+                <button type="button" (click)="goToStep(3)" class="flex flex-col gap-1 text-right focus:outline-none cursor-pointer">
+                  <div class="h-2 rounded-full transition-all duration-300"
+                    [class.bg-indigo-500]="currentStep() >= 3"
+                    [class.shadow-sm]="currentStep() >= 3"
+                    [class.shadow-indigo-500/50]="currentStep() >= 3"
+                    [class.bg-slate-800]="currentStep() < 3"></div>
+                  <span class="text-[11px] font-bold font-cairo transition-colors"
+                    [class.text-indigo-400]="currentStep() === 3"
+                    [class.text-slate-400]="currentStep() !== 3">3. \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0648\u0627\u0644\u0645\u0648\u0642\u0639</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Standard Error Alert -->
+            @if (errorMessage()) {
+              <div class="mb-5 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-xs text-rose-400 font-medium">
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>{{ errorMessage() }}</span>
+              </div>
+            }
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4" autocomplete="off">
+              
+              <!-- STEP 1: Company & Account Details -->
+              @if (currentStep() === 1) {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="border-b border-slate-800 pb-2">
+                    <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider font-cairo">\u0627\u0644\u062E\u0637\u0648\u0629 1: \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0634\u0631\u0643\u0629 \u0648\u062D\u0633\u0627\u0628 \u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645</h3>
+                  </div>
+
+                  <!-- Tenant Name -->
+                  <div>
+                    <label for="tenantName" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                      \u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062A\u0623\u062C\u0631 / \u0627\u0644\u0634\u0631\u0643\u0629 <span class="text-rose-400">*</span>
+                    </label>
+                    <input id="tenantName" type="text" formControlName="tenantName" placeholder="\u0645\u062B\u0627\u0644: \u0634\u0631\u0643\u0629 \u0627\u0644\u0645\u0642\u0627\u0648\u0644\u0627\u062A \u0627\u0644\u062D\u062F\u064A\u062B\u0629" autocomplete="off" aria-autocomplete="none"
+                      class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                      [class.border-rose-500]="isFieldInvalid('tenantName')"
+                      [class.border-slate-800]="!isFieldInvalid('tenantName')">
+                    @if (isFieldInvalid('tenantName')) {
+                      <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u0627\u0633\u0645 \u0627\u0644\u0634\u0631\u0643\u0629 \u0645\u0637\u0644\u0648\u0628 (\u062D\u062A\u0649 100 \u062D\u0631\u0641).</p>
+                    }
+                  </div>
+
+                  <!-- Admin First & Last Name -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label for="adminFirstName" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                        \u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u0648\u0644 \u0644\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645 <span class="text-rose-400">*</span>
+                      </label>
+                      <input id="adminFirstName" type="text" formControlName="adminFirstName" placeholder="\u0623\u062D\u0645\u062F" autocomplete="off" aria-autocomplete="none"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                        [class.border-rose-500]="isFieldInvalid('adminFirstName')"
+                        [class.border-slate-800]="!isFieldInvalid('adminFirstName')">
+                      @if (isFieldInvalid('adminFirstName')) {
+                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0623\u0648\u0644 \u0645\u0637\u0644\u0648\u0628.</p>
+                      }
+                    </div>
+                    <div>
+                      <label for="adminLastName" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                        \u0627\u0633\u0645 \u0627\u0644\u0639\u0627\u0626\u0644\u0629 \u0644\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645 <span class="text-rose-400">*</span>
+                      </label>
+                      <input id="adminLastName" type="text" formControlName="adminLastName" placeholder="\u0645\u062D\u0645\u0648\u062F" autocomplete="off" aria-autocomplete="none"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                        [class.border-rose-500]="isFieldInvalid('adminLastName')"
+                        [class.border-slate-800]="!isFieldInvalid('adminLastName')">
+                      @if (isFieldInvalid('adminLastName')) {
+                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u0627\u0633\u0645 \u0627\u0644\u0639\u0627\u0626\u0644\u0629 \u0645\u0637\u0644\u0648\u0628.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Email Field -->
+                  <div>
+                    <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                      \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0627\u0644\u0631\u0633\u0645\u064A <span class="text-rose-400">*</span>
+                    </label>
+                    <input id="email" type="email" formControlName="email" placeholder="admin@company.com" autocomplete="off" aria-autocomplete="none"
+                      class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                      [class.border-rose-500]="isFieldInvalid('email') || !!emailError()"
+                      [class.border-slate-800]="!isFieldInvalid('email') && !emailError()">
+                    @if (emailError()) {
+                      <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F {{ emailError() }}</p>
+                    } @else if (isFieldInvalid('email')) {
+                      <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u064A\u0631\u062C\u0649 \u0623\u062F\u062E\u0627\u0644 \u0628\u0631\u064A\u062F \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0635\u062D\u064A\u062D.</p>
+                    }
+                  </div>
+
+                  <!-- Password & Strength Meter -->
+                  <div>
+                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                      \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 / Password <span class="text-rose-400">*</span>
+                    </label>
+                    <div class="relative">
+                      <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="new-password"
+                        class="w-full pl-3.5 pr-10 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                        [class.border-rose-500]="isFieldInvalid('password')"
+                        [class.border-slate-800]="!isFieldInvalid('password')">
+                      <button type="button" (click)="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 focus:outline-none">
+                        @if (showPassword()) {
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        }
+                      </button>
+                    </div>
+
+                    <!-- Password Strength Meter -->
+                    <div class="mt-2 space-y-1 bg-slate-950/60 border border-slate-800 rounded-xl p-2">
+                      <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden flex gap-0.5">
+                        <div class="h-full rounded-full transition-all duration-300"
+                          [style.width.%]="passwordStrength() * 25"
+                          [class.bg-rose-500]="passwordStrength() <= 1"
+                          [class.bg-amber-500]="passwordStrength() === 2"
+                          [class.bg-emerald-500]="passwordStrength() >= 3">
+                        </div>
+                      </div>
+                      <div class="flex justify-between items-center text-[10px] font-medium font-cairo">
+                        <span class="text-slate-500">\u0642\u0648\u0629 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631:</span>
+                        <span [class.text-rose-400]="passwordStrength() <= 1"
+                              [class.text-amber-400]="passwordStrength() === 2"
+                              [class.text-emerald-400]="passwordStrength() >= 3">
+                          {{ passwordStrength() <= 1 ? '\u0636\u0639\u064A\u0641 (\u064A\u062A\u0637\u0644\u0628 \u0623\u0631\u0642\u0627\u0645 \u0648\u062D\u0631\u0648\u0641 \u0648\u0623\u062D\u062C\u0627\u0645 \u0645\u062E\u062A\u0644\u0641\u0629)' : passwordStrength() === 2 ? '\u0645\u062A\u0648\u0633\u0637' : '\u0642\u0648\u064A \u062C\u062F\u0627\u064B \u0648\u0645\u0642\u0628\u0648\u0644 \u0644\u0644\u062A\u0633\u062C\u064A\u0644' }}
+                        </span>
+                      </div>
+                    </div>
+
+                    @if (isFieldInvalid('password')) {
+                      <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u064A\u062C\u0628 \u0623\u0646 \u062A\u062A\u0643\u0648\u0646 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0645\u0646 6 \u0623\u062D\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.</p>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- STEP 2: Legal & Contact Information -->
+              @if (currentStep() === 2) {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="border-b border-slate-800 pb-2">
+                    <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider font-cairo">\u0627\u0644\u062E\u0637\u0648\u0629 2: \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A\u0629 \u0648\u0623\u0631\u0642\u0627\u0645 \u0627\u0644\u0627\u062A\u0635\u0627\u0644</h3>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Account Type -->
+                    <div>
+                      <label for="accountType" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                        \u0646\u0648\u0639 \u0627\u0644\u062D\u0633\u0627\u0628 / Account Type <span class="text-rose-400">*</span>
+                      </label>
+                      <select id="accountType" formControlName="accountType"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                        <option value="Company">Company / \u0634\u0631\u0643\u0629 \u0623\u0648 \u0645\u0624\u0633\u0633\u0629</option>
+                        <option value="Freelancer">Freelancer / \u0645\u0633\u062A\u0642\u0644 \u0623\u0648 \u0645\u0647\u0646\u062F\u0633 \u062D\u0631</option>
+                      </select>
+                    </div>
+
+                    <!-- Governorate Location -->
+                    <div>
+                      <label for="location" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                        \u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 / Location <span class="text-rose-400">*</span>
+                      </label>
+                      <select id="location" formControlName="location"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                        [class.border-rose-500]="isFieldInvalid('location')"
+                        [class.border-slate-800]="!isFieldInvalid('location')">
+                        <option value="" disabled selected>-- \u0627\u062E\u062A\u0631 \u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 --</option>
+                        <option value="Cairo">Cairo / \u0627\u0644\u0642\u0627\u0647\u0631\u0629</option>
+                        <option value="Giza">Giza / \u0627\u0644\u062C\u064A\u0632\u0629</option>
+                        <option value="Alexandria">Alexandria / \u0627\u0644\u0625\u0633\u0643\u0646\u062F\u0631\u064A\u0629</option>
+                        <option value="Qalyubia">Qalyubia / \u0627\u0644\u0642\u0644\u064A\u0648\u0628\u064A\u0629</option>
+                        <option value="Gharbia">Gharbia / \u0627\u0644\u063A\u0631\u0628\u064A\u0629</option>
+                        <option value="Dakahlia">Dakahlia / \u0627\u0644\u062F\u0642\u0647\u0644\u064A\u0629</option>
+                        <option value="Sharqia">Sharqia / \u0627\u0644\u0634\u0631\u0642\u064A\u0629</option>
+                        <option value="Monufia">Monufia / \u0627\u0644\u0645\u0646\u0648\u0641\u064A\u0629</option>
+                        <option value="Beheira">Beheira / \u0627\u0644\u0628\u062D\u064A\u0631\u0629</option>
+                        <option value="Kafr El Sheikh">Kafr El Sheikh / \u0643\u0641\u0631 \u0627\u0644\u0634\u064A\u062E</option>
+                        <option value="Damietta">Damietta / \u062F\u0645\u064A\u0627\u0637</option>
+                        <option value="Port Said">Port Said / \u0628\u0648\u0631\u0633\u0639\u064A\u062F</option>
+                        <option value="Ismailia">Ismailia / \u0627\u0644\u0625\u0633\u0645\u0627\u0639\u064A\u0644\u064A\u0629</option>
+                        <option value="Suez">Suez / \u0627\u0644\u0633\u0648\u064A\u0633</option>
+                        <option value="Aswan">Aswan / \u0623\u0633\u0648\u0627\u0646</option>
+                        <option value="Luxor">Luxor / \u0627\u0644\u0623\u0642\u0635\u0631</option>
+                        <option value="Red Sea">Red Sea / \u0627\u0644\u0628\u062D\u0631 \u0627\u0644\u0623\u062D\u0645\u0631</option>
+                        <option value="Matrouh">Matrouh / \u0645\u0637\u0631\u0648\u062D</option>
+                      </select>
+                      @if (isFieldInvalid('location')) {
+                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u0627\u062E\u062A\u0627\u0631 \u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629 \u0645\u0637\u0644\u0648\u0628 \u0644\u062A\u062D\u062F\u064A\u062F \u0628\u064A\u0626\u0629 \u0627\u0644\u062D\u0633\u0627\u0628.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Contact Phone Numbers -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label for="personalPhone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                        \u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062A\u0641 \u0627\u0644\u0634\u062E\u0635\u064A / Personal Phone
+                      </label>
+                      <input id="personalPhone" type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                        [class.border-rose-500]="isFieldInvalid('personalPhone')">
+                      @if (isFieldInvalid('personalPhone')) {
+                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u064A\u062C\u0628 \u0623\u0646 \u064A\u062A\u0643\u0648\u0646 \u0645\u0646 11 \u0631\u0642\u0645\u0627\u064B \u0648\u064A\u0628\u062F\u0623 \u0628\u0640 01.</p>
+                      }
+                    </div>
+                    <div>
+                      <label for="whatsAppPhone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                        \u0631\u0642\u0645 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628 / WhatsApp Phone
+                      </label>
+                      <input id="whatsAppPhone" type="tel" formControlName="whatsAppPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
+                        [class.border-rose-500]="isFieldInvalid('whatsAppPhone')">
+                      @if (isFieldInvalid('whatsAppPhone')) {
+                        <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">\u26A0\uFE0F \u064A\u062C\u0628 \u0623\u0646 \u064A\u062A\u0643\u0648\u0646 \u0645\u0646 11 \u0631\u0642\u0645\u0627\u064B \u0648\u064A\u0628\u062F\u0623 \u0628\u0640 01.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Company Dynamic Legal Inputs -->
+                  @if (registerForm.get('accountType')?.value === 'Company') {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label for="commercialRegister" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                          \u0631\u0642\u0645 \u0627\u0644\u0633\u062C\u0644 \u0627\u0644\u062A\u062C\u0627\u0631\u064A / Commercial Register
+                        </label>
+                        <input id="commercialRegister" type="text" formControlName="commercialRegister" placeholder="\u0631\u0642\u0645 \u0627\u0644\u0633\u062C\u0644 \u0627\u0644\u062A\u062C\u0627\u0631\u064A \u0627\u0644\u0631\u0633\u0645\u064A"
+                          class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                      </div>
+                      <div>
+                        <label for="taxCard" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                          \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0636\u0631\u064A\u0628\u064A / Tax Card
+                        </label>
+                        <input id="taxCard" type="text" formControlName="taxCard" placeholder="\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 \u0627\u0644\u0636\u0631\u064A\u0628\u064A\u0629"
+                          class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Freelancer Dynamic Legal Inputs -->
+                  @if (registerForm.get('accountType')?.value === 'Freelancer') {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label for="nationalId" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                          \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A (14 \u0631\u0642\u0645) / National ID
+                        </label>
+                        <input id="nationalId" type="text" formControlName="nationalId" placeholder="14 \u0631\u0642\u0645 \u0642\u0648\u0645\u064A"
+                          class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                      </div>
+                      <div>
+                        <label for="syndicateId" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                          \u0631\u0642\u0645 \u0639\u0636\u0648\u064A\u0629 \u0627\u0644\u0646\u0642\u0627\u0628\u0629 / Syndicate ID
+                        </label>
+                        <input id="syndicateId" type="text" formControlName="syndicateId" placeholder="\u0631\u0642\u0645 \u0627\u0644\u0642\u064A\u062F \u0628\u0646\u0642\u0627\u0628\u0629 \u0627\u0644\u0645\u0647\u0646\u062F\u0633\u064A\u0646"
+                          class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- STEP 3: Location, Map & Final Confirmation -->
+              @if (currentStep() === 3) {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="border-b border-slate-800 pb-2">
+                    <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider font-cairo">\u0627\u0644\u062E\u0637\u0648\u0629 3: \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0641\u0639\u0644\u064A \u0648\u062A\u062D\u062F\u064A\u062F \u0627\u0644\u062E\u0631\u064A\u0637\u0629 \u0648\u0627\u0644\u062A\u0623\u0643\u064A\u062F</h3>
+                  </div>
+
+                  <!-- Physical Address & Map Launcher -->
+                  <div>
+                    <label for="manualAddress" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
+                      \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0641\u0639\u0644\u064A \u0627\u0644\u0645\u0642\u0631 \u0627\u0644\u0631\u0626\u064A\u0633\u064A / Physical Address
+                    </label>
+                    <div class="flex gap-2">
+                      <input id="manualAddress" type="text" formControlName="manualAddress" placeholder="\u0623\u062F\u062E\u0644 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062A\u0641\u0635\u064A\u0644\u064A \u0623\u0648 \u062D\u062F\u062F \u0645\u0646 \u0627\u0644\u062E\u0631\u064A\u0637\u0629"
+                        class="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
+                      <button type="button" (click)="openMapModal()"
+                        class="px-4 py-2.5 bg-indigo-950/60 text-indigo-300 border border-indigo-800/40 hover:bg-indigo-900/50 transition-all rounded-xl text-xs font-bold font-cairo shrink-0 cursor-pointer flex items-center gap-1.5 shadow-md">
+                        \u{1F4CD} \u0627\u0644\u062E\u0631\u064A\u0637\u0629 / Map
+                      </button>
+                    </div>
+                    @if (registerForm.get('latitude')?.value) {
+                      <div class="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[11px] text-emerald-400 font-mono flex items-center gap-2">
+                        <span>\u2713 Map Pin Dropped: {{ registerForm.get('latitude')?.value }} , {{ registerForm.get('longitude')?.value }}</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Final Summary Confirmation Card -->
+                  <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs font-cairo">
+                    <h4 class="font-bold text-indigo-400 border-b border-slate-800/80 pb-1.5">\u0645\u0631\u0627\u062C\u0639\u0629 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u0646\u0647\u0627\u0626\u064A:</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300 text-[11px]">
+                      <div><span class="text-slate-500">\u0627\u0633\u0645 \u0627\u0644\u0634\u0631\u0643\u0629:</span> {{ registerForm.value.tenantName || '\u063A\u064A\u0631 \u0645\u062D\u062F\u062F' }}</div>
+                      <div><span class="text-slate-500">\u0645\u062F\u064A\u0631 \u0627\u0644\u0646\u0638\u0627\u0645:</span> {{ registerForm.value.adminFirstName }} {{ registerForm.value.adminLastName }}</div>
+                      <div><span class="text-slate-500">\u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A:</span> {{ registerForm.value.email || '\u063A\u064A\u0631 \u0645\u062D\u062F\u062F' }}</div>
+                      <div><span class="text-slate-500">\u0646\u0648\u0639 \u0627\u0644\u062D\u0633\u0627\u0628:</span> {{ registerForm.value.accountType }}</div>
+                      <div><span class="text-slate-500">\u0627\u0644\u0645\u062D\u0627\u0641\u0638\u0629:</span> {{ registerForm.value.location || '\u063A\u064A\u0631 \u0645\u062D\u062F\u062F' }}</div>
+                      <div><span class="text-slate-500">\u062E\u0637\u0629 \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643:</span> \u0627\u0644\u0628\u0627\u0642\u0629 \u0627\u0644\u0645\u062C\u0627\u0646\u064A\u0629 (Free Plan - 2 \u0645\u0634\u0627\u0631\u064A\u0639 \u0645\u062C\u0627\u0646\u0627\u064B \u0645\u062F\u0649 \u0627\u0644\u062D\u064A\u0627\u0629)</div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- SUMMARY ERROR BANNER -->
+              @if (showSummaryBanner() && getInvalidFieldLabels().length > 0) {
+                <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 font-cairo text-xs space-y-1 animate-slide-in">
+                  <div class="font-bold flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>\u064A\u0631\u062C\u0649 \u0627\u0633\u062A\u0643\u0645\u0627\u0644 \u0627\u0644\u062D\u0642\u0648\u0644 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629 \u0627\u0644\u0643\u0644\u064A\u0629 ({{ getInvalidFieldLabels().length }} \u062D\u0642\u0644 \u0645\u062A\u0628\u0642\u064A):</span>
+                  </div>
+                  <ul class="list-disc list-inside text-[11px] opacity-90 pr-2">
+                    @for (label of getInvalidFieldLabels(); track $index) {
+                      <li>{{ label }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <!-- STEP NAVIGATION & ACTION BUTTONS -->
+              <div class="flex items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                <!-- Back Button -->
+                @if (currentStep() > 1) {
+                  <button type="button" (click)="prevStep()"
+                    class="px-5 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all font-cairo cursor-pointer">
+                    \u0627\u0644\u0633\u0627\u0628\u0642 / Back
+                  </button>
+                } @else {
+                  <div></div>
+                }
+
+                <!-- Next / Submit Button -->
+                @if (currentStep() < 3) {
+                  <button type="button" (click)="nextStep()"
+                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all font-cairo cursor-pointer active:scale-[0.98]">
+                    \u0627\u0644\u062A\u0627\u0644\u064A / Next \u2192
+                  </button>
+                } @else {
+                  <button type="submit"
+                    [disabled]="isLoading() || passwordStrength() < 3 || registerForm.invalid || rateLimitService.isLockedOut()"
+                    class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold rounded-xl text-white shadow-lg shadow-indigo-600/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center font-cairo cursor-pointer">
+                    @if (rateLimitService.isLockedOut()) {
+                      <div class="flex items-center space-x-2 rtl:space-x-reverse text-amber-300 font-bold">
+                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>\u0645\u062D\u0638\u0648\u0631 \u0645\u0624\u0642\u062A\u0627\u064B ({{ rateLimitService.cooldownSeconds() }}\u062B)...</span>
+                      </div>
+                    } @else if (isLoading()) {
+                      <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span class="mr-2">\u062C\u0627\u0631\u064A \u0627\u0644\u062A\u0633\u062C\u064A\u0644...</span>
+                    } @else {
+                      \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062D\u0633\u0627\u0628 / Complete Registration
+                    }
+                  </button>
+                }
+              </div>
+
+              <p class="text-center text-xs text-slate-500 mt-4 font-cairo">
+                \u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628 \u0628\u0627\u0644\u0641\u0639\u0644\u061F 
+                <a routerLink="/login" class="text-indigo-400 font-bold hover:underline">\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0647\u0646\u0627</a>
+              </p>
+
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP SELECTOR MODAL -->
+    @if (isMapModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-stretch justify-center p-3 sm:p-4">
+        <!-- Backdrop -->
+        <div (click)="closeMapModal()" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+
+        <!-- Modal Content -->
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl font-cairo">
+          <!-- Header -->
+          <div class="p-4 border-b border-slate-900 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-white">\u062A\u062D\u062F\u064A\u062F \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u062C\u063A\u0631\u0627\u0641\u064A / Drop Pin on Map</h3>
+            <button type="button" (click)="closeMapModal()" class="text-slate-500 hover:text-white">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-4 flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto">
+            <!-- Search Input -->
+            <div class="relative shrink-0">
+              <input 
+                type="text" 
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchQueryChange($event)"
+                (keydown.enter)="onSearchSubmit()"
+                placeholder="\u0627\u0628\u062D\u062B \u0639\u0646 \u0645\u062F\u064A\u0646\u0629 \u0623\u0648 \u0645\u0646\u0637\u0642\u0629 / Search for city or area..."
+                class="w-full px-4 py-3 bg-slate-900 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-cairo text-sm"
+              />
+              <button 
+                type="button" 
+                (click)="onSearchSubmit()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Search Results Dropdown -->
+            @if (searchResults.length > 0) {
+              <div class="bg-slate-900 border border-slate-800 rounded-lg max-h-48 overflow-y-auto shrink-0">
+                @for (result of searchResults; track $index) {
+                  <button 
+                    type="button" 
+                    (click)="selectSearchResult(result)"
+                    class="w-full px-4 py-3 text-left text-sm text-slate-200 hover:bg-slate-800 transition-colors font-cairo border-b border-slate-800 last:border-b-0"
+                  >
+                    {{ result.display_name }}
+                  </button>
+                }
+              </div>
+            }
+
+            <p class="text-xs text-slate-400 leading-relaxed shrink-0">
+              \u0627\u0646\u0642\u0631 \u0639\u0644\u0649 \u0632\u0631 \u0625\u0633\u0642\u0627\u0637 \u0627\u0644\u062F\u0628\u0648\u0633 \u0644\u062A\u062D\u062F\u064A\u062F \u0625\u062D\u062F\u0627\u062B\u064A\u0627\u062A \u0645\u0648\u0642\u0639\u0643 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A\u0629 \u0648\u0645\u0644\u0621 \u062D\u0642\u0648\u0644 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0648\u0645\u062D\u0627\u0641\u0638\u0629 \u0627\u0644\u0642\u0627\u0647\u0631\u0629 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B.
+            </p>
+
+            <!-- Interactive Leaflet Map -->
+            <div #mapContainer id="interactive-map" class="w-full h-[280px] rounded-lg border border-slate-900 shrink-0"></div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full p-4 border-t border-slate-900 bg-slate-950/80">
+            <button type="button" (click)="closeMapModal()"
+              class="w-full md:w-auto px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition-all text-xs">
+              \u0625\u0644\u063A\u0627\u0621 / Cancel
+            </button>
+            <button type="button" (click)="confirmPinDrop()"
+              class="w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/15 text-xs">
+              \u0625\u0633\u0642\u0627\u0637 \u0627\u0644\u062F\u0628\u0648\u0633 / Drop Pin & Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  `, styles: ['/* angular:styles/component:css;e879297dd3fb894962b3fbbbf510e9c6d6af35415682b96e847015b21fe9e182;E:/private/structo/structo/Structo.Client/src/app/features/auth/tenant-register/tenant-register.component.ts */\n.font-cairo {\n  font-family:\n    "Cairo",\n    "Inter",\n    sans-serif;\n}\n.leaflet-container {\n  height: 280px !important;\n  width: 100% !important;\n  display: block !important;\n  z-index: 9999 !important;\n}\n#interactive-map {\n  height: 280px !important;\n  width: 100% !important;\n  display: block !important;\n}\n@keyframes fade-in {\n  from {\n    opacity: 0;\n    transform: translateY(6px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n.animate-fade-in {\n  animation: fade-in 0.25s ease-out both;\n}\n/*# sourceMappingURL=tenant-register.component.css.map */\n'] }]
+  }], () => [], { mapContainer: [{
+    type: ViewChild,
+    args: ["mapContainer"]
+  }] });
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TenantRegisterComponent, { className: "TenantRegisterComponent", filePath: "src/app/features/auth/tenant-register/tenant-register.component.ts", lineNumber: 612 });
+})();
+export {
+  TenantRegisterComponent
+};
+//# sourceMappingURL=chunk-IIUALREZ.js.map

@@ -101,16 +101,61 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             .Take(pageSize)
             .ToListAsync();
 
-        var items = dbItems.Select(t => new FinancialTransactionMobileDto
+        var pools = await context.Set<ProjectCashPool>()
+            .Where(p => p.ProjectId == projectId)
+            .ToListAsync();
+
+        var pettyCashes = await context.Set<PettyCash>()
+            .Where(p => p.ProjectId == projectId && p.Status != "Rejected")
+            .ToListAsync();
+
+        var totalDisbursedMap = pettyCashes
+            .Where(p => p.SourcePoolId.HasValue)
+            .GroupBy(p => p.SourcePoolId!.Value)
+            .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+
+        var items = dbItems.Select(t =>
         {
-            Id = t.Id,
-            Amount = t.Amount,
-            Type = t.Type.ToString(),
-            Description = t.Description,
-            TransactionDate = ToEgyptLocalTime(t.TransactionDate),
-            PaymentDate = ToEgyptLocalTime(t.PaymentDate),
-            PaymentMethod = t.PaymentMethod.HasValue ? t.PaymentMethod.ToString() : null,
-            ReceiptPhotoUrl = t.ReceiptPhotoUrl
+            bool isLocked = t.IsAudited || t.IsClosed || t.SettlementId.HasValue ||
+                (!string.IsNullOrEmpty(t.Description) && t.Description.StartsWith("petty cash settlement -", StringComparison.OrdinalIgnoreCase));
+
+            if (!isLocked && t.Type == TransactionType.Income)
+            {
+                if (t.SourceType.HasValue)
+                {
+                    var pool = pools.FirstOrDefault(p => p.SourceType == t.SourceType.Value);
+                    if (pool != null)
+                    {
+                        var disbursed = totalDisbursedMap.GetValueOrDefault(pool.Id, 0m);
+                        if (disbursed > 0 || pool.AvailableBalance < pool.TotalInjected)
+                        {
+                            isLocked = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (totalDisbursedMap.Values.Any(v => v > 0) || pools.Any(p => p.AvailableBalance < p.TotalInjected))
+                    {
+                        isLocked = true;
+                    }
+                }
+            }
+
+            return new FinancialTransactionMobileDto
+            {
+                Id = t.Id,
+                Amount = t.Amount,
+                Type = t.Type.ToString(),
+                Description = t.Description,
+                TransactionDate = ToEgyptLocalTime(t.TransactionDate),
+                PaymentDate = ToEgyptLocalTime(t.PaymentDate),
+                PaymentMethod = t.PaymentMethod.HasValue ? t.PaymentMethod.ToString() : null,
+                ReceiptPhotoUrl = t.ReceiptPhotoUrl,
+                IsLocked = isLocked,
+                CanEdit = !isLocked,
+                CanDelete = !isLocked
+            };
         }).ToList();
 
         return new PaginatedList<FinancialTransactionMobileDto>
@@ -267,9 +312,28 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (transaction == null)
             return (false, "Transaction not found.");
 
-        if (transaction.IsAudited || transaction.IsClosed)
+        if (transaction.IsAudited || transaction.IsClosed || transaction.SettlementId.HasValue ||
+            (!string.IsNullOrEmpty(transaction.Description) && transaction.Description.StartsWith("petty cash settlement -", StringComparison.OrdinalIgnoreCase)))
         {
-            return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
+            return (false, "TRANSACTION_LOCKED: هذه المعاملة المالية مقفلة ولا يمكن تعديلها.");
+        }
+
+        if (transaction.Type == TransactionType.Income && transaction.SourceType.HasValue)
+        {
+            var pool = await context.Set<ProjectCashPool>()
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == transaction.SourceType.Value);
+
+            if (pool != null)
+            {
+                var totalDisbursed = await context.Set<PettyCash>()
+                    .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
+                    .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+                if (totalDisbursed > 0 || pool.AvailableBalance < pool.TotalInjected)
+                {
+                    return (false, "TRANSACTION_LOCKED: المعاملة مقفلة نظراً لوجود تسويات أو عهد مسحوبة من هذا الوعاء التمويلي.");
+                }
+            }
         }
 
         transaction.Amount = dto.Amount;
@@ -304,9 +368,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (transaction == null)
             return (false, "Transaction not found.");
 
-        if (transaction.IsAudited || transaction.IsClosed)
+        if (transaction.IsAudited || transaction.IsClosed || transaction.SettlementId.HasValue ||
+            (!string.IsNullOrEmpty(transaction.Description) && transaction.Description.StartsWith("petty cash settlement -", StringComparison.OrdinalIgnoreCase)))
         {
-            return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
+            return (false, "TRANSACTION_LOCKED: هذه المعاملة المالية مقفلة ولا يمكن حذفها.");
         }
 
         if (transaction.Type == TransactionType.Income && transaction.SourceType.HasValue)
@@ -316,6 +381,15 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
             if (pool != null)
             {
+                var totalDisbursed = await context.Set<PettyCash>()
+                    .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
+                    .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+                if (totalDisbursed > 0 || pool.AvailableBalance < pool.TotalInjected)
+                {
+                    return (false, "TRANSACTION_LOCKED: المعاملة مقفلة نظراً لوجود تسويات أو عهد مسحوبة من هذا الوعاء التمويلي.");
+                }
+
                 pool.AvailableBalance = Math.Max(0, pool.AvailableBalance - transaction.Amount);
                 pool.TotalInjected = Math.Max(0, pool.TotalInjected - transaction.Amount);
             }

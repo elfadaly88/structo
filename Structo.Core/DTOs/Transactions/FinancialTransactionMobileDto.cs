@@ -12,4 +12,7 @@ public class FinancialTransactionMobileDto
     public DateTime? PaymentDate { get; set; }
     public string? PaymentMethod { get; set; }
     public string? ReceiptPhotoUrl { get; set; }
+    public bool IsLocked { get; set; }
+    public bool CanEdit { get; set; } = true;
+    public bool CanDelete { get; set; } = true;
 }

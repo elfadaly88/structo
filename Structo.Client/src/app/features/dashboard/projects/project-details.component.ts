@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -1070,7 +1070,7 @@ import { LanguageService } from '../../../core/services/language.service';
                                       <option [value]="undefined" disabled selected>-- محفظة الصرف / Source Pool --</option>
                                       @for (pool of cashPools(); track pool.id) {
                                         <option [value]="pool.id" [disabled]="pool.availableBalance < item.amount">
-                                          {{ 'FINANCE.' + getPoolSourceTranslationKey(pool.sourceType) | translate }} ({{ pool.availableBalance | number:'1.0-0' }} EGP)
+                                          {{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)
                                         </option>
                                       }
                                     </select>
@@ -1384,8 +1384,8 @@ import { LanguageService } from '../../../core/services/language.service';
                       </td>
                       @if (isOwnerOrAccountant()) {
                         <td class="px-6 py-4 text-center">
-                          @if (t.description.toLowerCase().startsWith('petty cash settlement -')) {
-                            <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none">
+                          @if (t.isLocked || t.canEdit === false || t.description.toLowerCase().startsWith('petty cash settlement -')) {
+                            <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                               <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                               </svg>
@@ -2718,6 +2718,7 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly projectCloseoutService = inject(ProjectCloseoutService);
   protected readonly langService = inject(LanguageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly reconciliationReport = signal<ProjectReconciliationReportDto | null>(null);
   readonly isCloseoutLoading = signal(false);
@@ -3540,9 +3541,13 @@ export class ProjectDetailsComponent implements OnInit {
         this.isLoadingTransactions.set(false);
         if (response.success && response.data) {
           this.transactions.set(response.data.items);
+          this.cdr.detectChanges();
         }
       },
-      error: () => this.isLoadingTransactions.set(false)
+      error: () => {
+        this.isLoadingTransactions.set(false);
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -3794,20 +3799,28 @@ export class ProjectDetailsComponent implements OnInit {
   getPoolSourceTranslationKey(sourceType: string): string {
     switch (sourceType) {
       case 'ClientDeposit': return 'CLIENT_DEPOSIT';
-      case 'OwnerCapital': return 'OWNER_CAPITAL';
+      case 'OwnerCapital':
+      case 'OwnerLoan':
+      case 'OwnerInjection': return 'OWNER_CAPITAL';
       case 'ExternalLoan': return 'EXTERNAL_LOAN';
-      default: return sourceType.toUpperCase();
+      default: return sourceType ? sourceType.toUpperCase() : '';
     }
   }
 
-  getPoolSourceLabel(sourceType: string): string {
+  getPoolSourceLabel(sourceType: string, detailed: boolean = false): string {
     if (!sourceType) return '';
     switch (sourceType) {
-      case 'ClientDeposit': return 'دفعة العميل';
-      case 'OwnerCapital': return 'تمويل المالك';
+      case 'ClientDeposit':
+        return detailed ? 'دفعة من العميل (إيراد مشروع)' : 'دفعة من العميل';
+      case 'OwnerCapital':
+      case 'OwnerLoan':
+      case 'OwnerInjection':
+        return detailed ? 'تمويل شخصي من المالك (جاري المالك - يسترد لاحقاً)' : 'تمويل شخصي من المالك';
       case 'ExternalLoan':
-      case 'Loan': return 'تمويل إضافي';
-      default: return sourceType;
+      case 'Loan':
+        return 'تمويل إضافي';
+      default:
+        return sourceType;
     }
   }
 

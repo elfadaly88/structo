@@ -7,6 +7,9 @@ export interface FinancialTransactionMobileDto {
   paymentDate?: string;
   paymentMethod?: string;
   receiptPhotoUrl?: string;
+  isLocked?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export interface FinancialTransactionCreateDto {

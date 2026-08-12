@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -372,7 +372,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
       <!-- TAB 2: سجل المعاملات المالية (Financial Transactions) -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6 ledger-table-container">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.TRANSACTIONS' | translate }}</h2>
             <span class="text-xs text-slate-400 font-cairo">إجمالي النتائج: <strong class="text-indigo-400 font-mono">{{ filteredTransactions.length }}</strong></span>
@@ -432,7 +432,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           </div>
 
           <!-- Desktop Ledger Table (md+) -->
-          <div class="hidden md:block overflow-x-auto">
+          <div class="hidden md:block overflow-x-auto w-full overflow-y-visible">
             <table class="w-full text-left rtl:text-right font-sans">
               <thead>
                 <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
@@ -474,8 +474,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                     </td>
                     @if (isOwnerOrAccountant()) {
                       <td class="py-4 text-center">
-                        @if (transaction.description.toLowerCase().startsWith('petty cash settlement -')) {
-                          <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none">
+                        @if (transaction.isLocked || transaction.canEdit === false || transaction.description.toLowerCase().startsWith('petty cash settlement -')) {
+                          <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2.5 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                             🔒 مقفلة
                           </span>
                         } @else {
@@ -536,11 +536,17 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 </p>
                 <div class="flex items-center justify-between text-xs text-slate-500 font-mono tabular-nums pt-1">
                   <span>📅 {{ transaction.transactionDate | date:'dd/MM/yyyy HH:mm' }}</span>
-                  @if (isOwnerOrAccountant() && !transaction.description.toLowerCase().startsWith('petty cash settlement -')) {
-                    <div class="flex items-center gap-1.5">
-                      <button (click)="openEditTransactionModal(transaction)" class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo">تعديل</button>
-                      <button (click)="onDeleteTransaction(transaction.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo">حذف</button>
-                    </div>
+                  @if (isOwnerOrAccountant()) {
+                    @if (transaction.isLocked || transaction.canEdit === false || transaction.description.toLowerCase().startsWith('petty cash settlement -')) {
+                      <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
+                        🔒 مقفلة
+                      </span>
+                    } @else {
+                      <div class="flex items-center gap-1.5">
+                        <button (click)="openEditTransactionModal(transaction)" class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo">تعديل</button>
+                        <button (click)="onDeleteTransaction(transaction.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo">حذف</button>
+                      </div>
+                    }
                   }
                 </div>
               </div>
@@ -966,6 +972,7 @@ export class FinancialsComponent implements OnInit {
   private readonly confirmService = inject(ConfirmModalService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
   readonly isEditTransactionModalOpen = signal(false);
   readonly isSavingTransaction = signal(false);
   selectedTransactionToEdit: FinancialTransactionMobileDto | null = null;
@@ -1048,14 +1055,20 @@ export class FinancialsComponent implements OnInit {
     receiptPhotoUrl: ''
   };
 
-  getPoolSourceLabel(sourceType: string): string {
+  getPoolSourceLabel(sourceType: string, detailed: boolean = false): string {
     if (!sourceType) return '';
     switch (sourceType) {
-      case 'ClientDeposit': return 'دفعة العميل';
-      case 'OwnerCapital': return 'تمويل المالك';
+      case 'ClientDeposit':
+        return detailed ? 'دفعة من العميل (إيراد مشروع)' : 'دفعة من العميل';
+      case 'OwnerCapital':
+      case 'OwnerLoan':
+      case 'OwnerInjection':
+        return detailed ? 'تمويل شخصي من المالك (جاري المالك - يسترد لاحقاً)' : 'تمويل شخصي من المالك';
       case 'ExternalLoan':
-      case 'Loan': return 'تمويل إضافي';
-      default: return sourceType;
+      case 'Loan':
+        return 'تمويل إضافي';
+      default:
+        return sourceType;
     }
   }
 
@@ -1205,10 +1218,12 @@ export class FinancialsComponent implements OnInit {
         this.loading.set(false);
         if (response.success && response.data) {
           this.transactions.set(response.data.items);
+          this.cdr.detectChanges();
         }
       },
       error: () => {
         this.loading.set(false);
+        this.cdr.detectChanges();
       }
     });
   }

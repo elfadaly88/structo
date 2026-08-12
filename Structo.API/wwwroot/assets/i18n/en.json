@@ -337,8 +337,10 @@
     "NO_CASH_POOLS": "No cash pools active. Inject capital to start funding the project.",
     "SOURCE_TYPE": "Source Type",
     "SELECT_SOURCE": "Select source type...",
-    "CLIENT_DEPOSIT": "Client Deposit",
-    "OWNER_CAPITAL": "Owner Capital",
+    "CLIENT_DEPOSIT": "Client Deposit (Project Revenue)",
+    "OWNER_CAPITAL": "Owner Personal Funding (Owner Equity/Loan)",
+    "OWNER_LOAN": "Owner Personal Funding (Owner Equity/Loan)",
+    "OWNER_INJECTION": "Owner Personal Funding (Owner Equity/Loan)",
     "EXTERNAL_LOAN": "Additional Funding",
     "NOTES_REFERENCE": "Notes / Reference"
   },
