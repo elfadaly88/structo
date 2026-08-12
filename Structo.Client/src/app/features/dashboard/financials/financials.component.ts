@@ -372,7 +372,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
       <!-- TAB 2: سجل المعاملات المالية (Financial Transactions) -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6 ledger-table-container">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6 ledger-table-container min-h-[300px] h-auto overflow-x-auto overflow-y-visible">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.TRANSACTIONS' | translate }}</h2>
             <span class="text-xs text-slate-400 font-cairo">إجمالي النتائج: <strong class="text-indigo-400 font-mono">{{ filteredTransactions.length }}</strong></span>
@@ -432,7 +432,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           </div>
 
           <!-- Desktop Ledger Table (md+) -->
-          <div class="hidden md:block overflow-x-auto w-full overflow-y-visible">
+          <div class="hidden md:block overflow-x-auto w-full overflow-y-visible min-h-[300px] h-auto">
             <table class="w-full text-left rtl:text-right font-sans">
               <thead>
                 <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
@@ -1218,12 +1218,16 @@ export class FinancialsComponent implements OnInit {
         this.loading.set(false);
         if (response.success && response.data) {
           this.transactions.set(response.data.items);
-          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 50);
         }
       },
       error: () => {
         this.loading.set(false);
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 50);
       }
     });
   }

@@ -1298,7 +1298,7 @@ import { LanguageService } from '../../../core/services/language.service';
 
       <!-- Tab Content: Financial Transactions -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl shadow-xl ledger-table-container min-h-[300px] h-auto overflow-x-auto overflow-y-visible">
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
             <div class="flex items-center gap-3">
@@ -1314,7 +1314,7 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <div class="w-full overflow-x-auto block font-sans">
+            <div class="w-full overflow-x-auto overflow-y-visible block font-sans min-h-[300px] h-auto">
               <table class="w-full text-left rtl:text-right min-w-[800px]">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
@@ -3541,12 +3541,16 @@ export class ProjectDetailsComponent implements OnInit {
         this.isLoadingTransactions.set(false);
         if (response.success && response.data) {
           this.transactions.set(response.data.items);
-          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 50);
         }
       },
       error: () => {
         this.isLoadingTransactions.set(false);
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 50);
       }
     });
   }
