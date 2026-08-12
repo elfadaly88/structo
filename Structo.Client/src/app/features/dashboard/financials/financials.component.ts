@@ -821,7 +821,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 required>
                 <option value="" disabled>Select cash pool...</option>
                 @for (pool of currentProjectPools(); track pool.id) {
-                  <option [value]="pool.id">{{ pool.sourceType }} (Avail: {{ pool.availableBalance | number:'1.2-2' }})</option>
+                  <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)</option>
                 }
               </select>
             </div>
@@ -1048,6 +1048,17 @@ export class FinancialsComponent implements OnInit {
     receiptPhotoUrl: ''
   };
 
+  getPoolSourceLabel(sourceType: string): string {
+    if (!sourceType) return '';
+    switch (sourceType) {
+      case 'ClientDeposit': return 'دفعة العميل';
+      case 'OwnerCapital': return 'تمويل المالك';
+      case 'ExternalLoan':
+      case 'Loan': return 'تمويل إضافي';
+      default: return sourceType;
+    }
+  }
+
   get totalIncome(): number {
     if (this.financialSummary()) {
       return this.financialSummary()!.totalIncome;
@@ -1093,8 +1104,9 @@ export class FinancialsComponent implements OnInit {
             this.financialService.getProjectFinancialSummary(p.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
               next: (res) => {
                 if (res.data) {
+                  const summaryData = res.data;
                   this.projectExpenses.update(map => {
-                    map.set(p.id, res.data.totalExpenses);
+                    map.set(p.id, summaryData.totalExpenses);
                     return new Map(map);
                   });
                 }

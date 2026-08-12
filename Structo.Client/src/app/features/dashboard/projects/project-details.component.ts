@@ -745,7 +745,7 @@ import { LanguageService } from '../../../core/services/language.service';
                                   <option [value]="undefined" disabled selected>-- اختر محفظة الصندوق --</option>
                                   @for (pool of cashPools(); track pool.id) {
                                     <option [value]="pool.id" [disabled]="pool.availableBalance < item.amount">
-                                      {{ getPoolSourceTranslationKey(pool.sourceType) }} ({{ pool.availableBalance | number:'1.0-0' }} EGP)
+                                      {{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)
                                     </option>
                                   }
                                 </select>
@@ -1838,7 +1838,7 @@ import { LanguageService } from '../../../core/services/language.service';
                   class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
                   <option [ngValue]="null" disabled>Select funding source...</option>
                   @for (pool of cashPools(); track pool.id) {
-                    <option [value]="pool.id">{{ 'FINANCE.' + getPoolSourceTranslationKey(pool.sourceType) | translate }} ({{ 'DETAILS.BAL_PREFIX' | translate }}: {{ pool.availableBalance | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }})</option>
+                    <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)</option>
                   }
                 </select>
                 @if (isRequestFieldInvalid('sourcePoolId')) {
@@ -2194,7 +2194,7 @@ import { LanguageService } from '../../../core/services/language.service';
               <select formControlName="sourcePoolId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
                 <option [ngValue]="null" disabled>اختر الصندوق</option>
                 @for (pool of cashPools(); track pool.id) {
-                  <option [value]="pool.id">{{ pool.sourceType }} ({{ pool.availableBalance }} EGP)</option>
+                  <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)</option>
                 }
               </select>
             </div>
@@ -3797,6 +3797,17 @@ export class ProjectDetailsComponent implements OnInit {
       case 'OwnerCapital': return 'OWNER_CAPITAL';
       case 'ExternalLoan': return 'EXTERNAL_LOAN';
       default: return sourceType.toUpperCase();
+    }
+  }
+
+  getPoolSourceLabel(sourceType: string): string {
+    if (!sourceType) return '';
+    switch (sourceType) {
+      case 'ClientDeposit': return 'دفعة العميل';
+      case 'OwnerCapital': return 'تمويل المالك';
+      case 'ExternalLoan':
+      case 'Loan': return 'تمويل إضافي';
+      default: return sourceType;
     }
   }
 

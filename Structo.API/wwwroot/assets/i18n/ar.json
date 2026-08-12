@@ -335,9 +335,9 @@
     "NO_CASH_POOLS": "لا توجد محافظ نشطة. قم بإيداع دفعة لبدء تمويل المشروع.",
     "SOURCE_TYPE": "نوع المصدر",
     "SELECT_SOURCE": "اختر نوع المصدر...",
-    "CLIENT_DEPOSIT": "حساب العميل",
-    "OWNER_CAPITAL": "تمويل ذاتي من المالك",
-    "EXTERNAL_LOAN": "قرض خارجي",
+    "CLIENT_DEPOSIT": "دفعة العميل",
+    "OWNER_CAPITAL": "تمويل المالك",
+    "EXTERNAL_LOAN": "تمويل إضافي",
     "NOTES_REFERENCE": "ملاحظات / رقم الإيصال"
   },
   "TENANTS": {

@@ -339,7 +339,7 @@
     "SELECT_SOURCE": "Select source type...",
     "CLIENT_DEPOSIT": "Client Deposit",
     "OWNER_CAPITAL": "Owner Capital",
-    "EXTERNAL_LOAN": "External Loan",
+    "EXTERNAL_LOAN": "Additional Funding",
     "NOTES_REFERENCE": "Notes / Reference"
   },
   "TENANTS": {
