@@ -1,6 +1,7 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, ErrorHandler } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
+import { DATE_PIPE_DEFAULT_OPTIONS } from '@angular/common';
 import { routes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { rateLimitInterceptor } from './core/interceptors/rate-limit.interceptor';
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
         deps: [HttpClient]
       }
     }),
+    { provide: DATE_PIPE_DEFAULT_OPTIONS, useValue: { dateFormat: 'dd/MM/yyyy' } },
     { provide: ErrorHandler, useClass: GlobalErrorHandlerService }
   ]
 };

@@ -35,6 +35,8 @@ builder.Services.AddControllers(options =>
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.Converters.Add(new CustomDateTimeJsonConverter());
+        options.JsonSerializerOptions.Converters.Add(new CustomNullableDateTimeJsonConverter());
     })
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -643,5 +645,64 @@ public class CustomAwsHttpClientFactory : Amazon.Runtime.HttpClientFactory
             SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
         };
         return new System.Net.Http.HttpClient(handler);
+    }
+}
+
+public class CustomDateTimeJsonConverter : System.Text.Json.Serialization.JsonConverter<DateTime>
+{
+    private static readonly string[] Formats = new[] { "dd/MM/yyyy", "dd/MM/yyyy HH:mm", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ssZ" };
+
+    public override DateTime Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        if (reader.TokenType == System.Text.Json.JsonTokenType.String)
+        {
+            var str = reader.GetString();
+            if (!string.IsNullOrWhiteSpace(str))
+            {
+                if (DateTime.TryParseExact(str, Formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtExact))
+                    return dtExact;
+                if (DateTime.TryParse(str, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtParsed))
+                    return dtParsed;
+            }
+        }
+        return reader.GetDateTime();
+    }
+
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTime value, System.Text.Json.JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString("dd/MM/yyyy HH:mm:ss"));
+    }
+}
+
+public class CustomNullableDateTimeJsonConverter : System.Text.Json.Serialization.JsonConverter<DateTime?>
+{
+    private static readonly string[] Formats = new[] { "dd/MM/yyyy", "dd/MM/yyyy HH:mm", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ssZ" };
+
+    public override DateTime? Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        if (reader.TokenType == System.Text.Json.JsonTokenType.Null)
+            return null;
+
+        if (reader.TokenType == System.Text.Json.JsonTokenType.String)
+        {
+            var str = reader.GetString();
+            if (string.IsNullOrWhiteSpace(str))
+                return null;
+
+            if (DateTime.TryParseExact(str, Formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtExact))
+                return dtExact;
+            if (DateTime.TryParse(str, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtParsed))
+                return dtParsed;
+        }
+
+        return reader.GetDateTime();
+    }
+
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTime? value, System.Text.Json.JsonSerializerOptions options)
+    {
+        if (value.HasValue)
+            writer.WriteStringValue(value.Value.ToString("dd/MM/yyyy HH:mm:ss"));
+        else
+            writer.WriteNullValue();
     }
 }

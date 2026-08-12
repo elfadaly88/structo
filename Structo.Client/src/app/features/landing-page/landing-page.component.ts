@@ -511,7 +511,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                         <!-- Card Footer Action Button -->
                         <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                           <span class="text-[11px] text-slate-500 font-mono">
-                            {{ proj.startDate | date:'yyyy/MM' }}
+                            {{ proj.startDate | date:'dd/MM/yyyy' }}
                           </span>
                           <button
                             (click)="toggleProjectDetailsExpand(proj.id)"

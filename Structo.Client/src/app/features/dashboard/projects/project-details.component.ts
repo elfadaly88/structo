@@ -343,6 +343,27 @@ import { LanguageService } from '../../../core/services/language.service';
         }
       </div>
 
+      <!-- Contextual Dynamic Tab Info Banner -->
+      <div class="bg-indigo-950/40 border-l-4 border-indigo-500 text-slate-300 text-xs p-3 rounded-lg mb-4 flex items-center gap-2 font-cairo shadow-sm">
+        @switch (activeTab()) {
+          @case ('petty-cash') {
+            <span>💡 <strong>عهد الموقع:</strong> صرف ومتابعة المبالغ المالية السائلة المسلمة لمهندس الموقع للمصاريف اليومية.</span>
+          }
+          @case ('transactions') {
+            <span>💡 <strong>الدفتر المالي:</strong> السجل الشامل والموثق لجميع الإيرادات والمصروفات الفعلية الخاصة بالمشروع.</span>
+          }
+          @case ('settlements') {
+            <span>💡 <strong>التسويات:</strong> مراجعة واعتماد الفواتير والمستندات المقدمة من مهندس الموقع لتسوية العهدة المالية.</span>
+          }
+          @case ('gallery') {
+            <span>💡 <strong>معرض الصور:</strong> رفع وتوثيق صور التقدم الميداني للمشروع (يمكن إظهارها في البروفايل العام).</span>
+          }
+          @case ('closeout') {
+            <span>💡 <strong>إدارة المشروع:</strong> تعديل بيانات المشروع الأساسية، حالة الظهور، ورفع ملفات المقايسة المرجعية.</span>
+          }
+        }
+      </div>
+
 
       <!-- ======================== CLOSEOUT DASHBOARD TAB ======================== -->
       @if (activeTab() === 'closeout' && isOwnerOrAccountant()) {
@@ -374,6 +395,113 @@ import { LanguageService } from '../../../core/services/language.service';
                 </span>
               }
             </div>
+          </div>
+
+          <!-- 📄 Private BOQ / Estimation Attachment Card (إدارة المشروع Tab) -->
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/60 pb-3">
+              <div>
+                <h4 class="text-sm font-extrabold text-white font-cairo flex items-center gap-2">
+                  <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  المقايسة المرجعية للمشروع / Project BOQ Reference
+                </h4>
+                <p class="text-xs text-slate-400 mt-1 font-cairo">
+                  رفع وإدارة مستند جدول الكميات والمقايسة التقديرية المرجعية الخاصة بالمشروع.
+                </p>
+              </div>
+              <span class="px-3 py-1 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-bold rounded-xl font-cairo shrink-0">
+                مستند مرجعي خاص
+              </span>
+            </div>
+
+            <!-- Lock Notice Banner -->
+            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-300 font-cairo flex items-center gap-2">
+              <span class="text-base shrink-0">🔒</span>
+              <span>هذا المستند مرجعي داخلي فقط ولا يظهر إطلاقاً في بروفايل الشركة العام ولا يؤثر على العمليات المالية.</span>
+            </div>
+
+            <!-- Upload / Download Actions Box -->
+            @if (boqFileDetails().fileUrl) {
+              <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <div class="p-3 bg-indigo-600/10 rounded-xl border border-indigo-500/20 text-indigo-400 shrink-0">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-white font-mono truncate" [title]="boqFileDetails().fileName">
+                      {{ boqFileDetails().fileName }}
+                    </p>
+                    <p class="text-[10px] text-emerald-400 font-cairo mt-0.5">✅ ملف المقايسة مرفوع ومحفوظ</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                  <!-- Download BOQ Button -->
+                  <a 
+                    [href]="boqFileDetails().fileUrl" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    download
+                    class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo flex items-center gap-1.5 shadow-md">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    تحميل المقايسة
+                  </a>
+
+                  <!-- Replace BOQ Button -->
+                  @if (isOwnerOrAccountant()) {
+                    <button 
+                      (click)="boqFileInput.click()" 
+                      [disabled]="isUploadingBOQ()"
+                      class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold border border-slate-700 transition-all cursor-pointer font-cairo flex items-center gap-1.5">
+                      🔄 استبدال الملف
+                    </button>
+                  }
+                </div>
+              </div>
+            } @else {
+              <!-- Empty Upload Box -->
+              <div class="border-2 border-dashed border-slate-800 hover:border-indigo-500/40 rounded-xl p-6 text-center bg-slate-950/30 transition-all">
+                <svg class="w-10 h-10 mx-auto text-slate-600 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-xs font-bold text-slate-300 font-cairo">لم يتم رفع ملف مقايسة مرجعية لهذا المشروع بعد</p>
+                <p class="text-[11px] text-slate-500 font-cairo mt-1">يُسمح برفع ملفات (.pdf, .xlsx, .docx) حتى 10 ميجابايت</p>
+                
+                @if (isOwnerOrAccountant()) {
+                  <button 
+                    (click)="boqFileInput.click()" 
+                    [disabled]="isUploadingBOQ()"
+                    class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer font-cairo inline-flex items-center gap-1.5">
+                    @if (isUploadingBOQ()) {
+                      <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      جاري رفع ملف المقايسة...
+                    } @else {
+                      📁 اختيار ملف المقايسة
+                    }
+                  </button>
+                }
+              </div>
+            }
+
+            <input 
+              #boqFileInput 
+              type="file" 
+              class="hidden" 
+              (change)="onBOQFileSelected($event)" 
+              accept=".pdf,.xlsx,.xls,.docx,.doc">
+
+            @if (boqUploadError()) {
+              <p class="text-xs text-rose-400 font-cairo font-bold mt-1">⚠️ {{ boqUploadError() }}</p>
+            }
           </div>
 
           <!-- Client Review Link Card (Displayed stably inside Closeout tab when publicReviewToken exists) -->
@@ -2651,6 +2779,91 @@ export class ProjectDetailsComponent implements OnInit {
 
     this.projectSettingsForm.patchValue({ isPublicPortfolio: newValue });
     this.onProjectSettingsSubmit();
+  }
+
+  readonly boqFileDetails = computed(() => {
+    const proj = this.project();
+    if (!proj) return { fileUrl: '', fileName: '' };
+    if ((proj as any).boqFileUrl) {
+      return {
+        fileUrl: (proj as any).boqFileUrl,
+        fileName: (proj as any).boqFileName || 'المقايسة_المرجعية_للمشروع.pdf'
+      };
+    }
+    if (proj.description && proj.description.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(proj.description);
+        return {
+          fileUrl: parsed.boqFileUrl || '',
+          fileName: parsed.boqFileName || 'المقايسة_المرجعية_للمشروع.pdf'
+        };
+      } catch (e) { }
+    }
+    return { fileUrl: '', fileName: '' };
+  });
+
+  readonly isUploadingBOQ = signal(false);
+  readonly boqUploadError = signal<string | null>(null);
+
+  onBOQFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    if (file.size > 10 * 1024 * 1024) {
+      this.boqUploadError.set('حجم الملف يتجاوز الحد الأقصى المسموح به (10 ميجابايت).');
+      return;
+    }
+
+    this.boqUploadError.set(null);
+    this.isUploadingBOQ.set(true);
+
+    this.uploadService.uploadProjectGallery(this.projectId, file).subscribe({
+      next: (res: any) => {
+        this.isUploadingBOQ.set(false);
+        const uploadedUrl = res.data?.url || (typeof res.data === 'string' ? res.data : null);
+        if (res.success && uploadedUrl) {
+          this.updateProjectBOQReference(uploadedUrl, file.name);
+        } else {
+          this.boqUploadError.set('فشل رفع ملف المقايسة. يرجى المحاولة مرة أخرى.');
+        }
+      },
+      error: () => {
+        this.isUploadingBOQ.set(false);
+        this.boqUploadError.set('حدث خطأ أثناء رفع ملف المقايسة.');
+      }
+    });
+  }
+
+  updateProjectBOQReference(fileUrl: string, fileName: string): void {
+    const proj = this.project();
+    if (!proj) return;
+
+    let payloadObj: any = {};
+    if (proj.description && proj.description.startsWith('{')) {
+      try {
+        payloadObj = JSON.parse(proj.description);
+      } catch (e) { }
+    } else {
+      payloadObj = { description: proj.description || '' };
+    }
+
+    payloadObj.boqFileUrl = fileUrl;
+    payloadObj.boqFileName = fileName;
+
+    const updateDto = {
+      name: proj.name,
+      description: JSON.stringify(payloadObj),
+      status: proj.status
+    };
+
+    this.projectService.updateProject(this.projectId, updateDto as any).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.fetchProjectDetails();
+        }
+      }
+    });
   }
 
   // Lightbox Viewer State
