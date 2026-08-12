@@ -171,7 +171,11 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize($"Capital Injection ({dto.SourceType}) - {dto.Description}"),
             Type = TransactionType.Income,
             TransactionDate = DateTime.UtcNow,
-            PaymentDate = dto.PaymentDate ?? DateTime.UtcNow,
+            PaymentDate = dto.PaymentDate.HasValue
+                ? (dto.PaymentDate.Value.Kind == DateTimeKind.Utc
+                    ? dto.PaymentDate.Value
+                    : DateTime.SpecifyKind(dto.PaymentDate.Value, DateTimeKind.Utc))
+                : DateTime.UtcNow,
             PaymentMethod = dto.PaymentMethod,
             ReceiptPhotoUrl = dto.ReceiptPhotoUrl,
             IsSystemGenerated = true,

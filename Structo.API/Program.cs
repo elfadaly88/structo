@@ -18,8 +18,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.StaticFiles;
 using Structo.API.Hubs;
 
-// 1. FIRST: Preserve JWT Claim Type Map - ABSOLUTELY AT THE TOP
+// 1. FIRST: Preserve JWT Claim Type Map & Configure Npgsql Timestamp Behavior - ABSOLUTELY AT THE TOP
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -654,18 +655,30 @@ public class CustomDateTimeJsonConverter : System.Text.Json.Serialization.JsonCo
 
     public override DateTime Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
     {
+        DateTime dt;
         if (reader.TokenType == System.Text.Json.JsonTokenType.String)
         {
             var str = reader.GetString();
             if (!string.IsNullOrWhiteSpace(str))
             {
-                if (DateTime.TryParseExact(str, Formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtExact))
-                    return dtExact;
-                if (DateTime.TryParse(str, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtParsed))
-                    return dtParsed;
+                if (DateTime.TryParseExact(str, Formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtExact))
+                    dt = dtExact;
+                else if (DateTime.TryParse(str, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtParsed))
+                    dt = dtParsed;
+                else
+                    dt = reader.GetDateTime();
+            }
+            else
+            {
+                dt = reader.GetDateTime();
             }
         }
-        return reader.GetDateTime();
+        else
+        {
+            dt = reader.GetDateTime();
+        }
+
+        return dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
     }
 
     public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTime value, System.Text.Json.JsonSerializerOptions options)
@@ -683,19 +696,27 @@ public class CustomNullableDateTimeJsonConverter : System.Text.Json.Serializatio
         if (reader.TokenType == System.Text.Json.JsonTokenType.Null)
             return null;
 
+        DateTime? dt = null;
         if (reader.TokenType == System.Text.Json.JsonTokenType.String)
         {
             var str = reader.GetString();
             if (string.IsNullOrWhiteSpace(str))
                 return null;
 
-            if (DateTime.TryParseExact(str, Formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtExact))
-                return dtExact;
-            if (DateTime.TryParse(str, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtParsed))
-                return dtParsed;
+            if (DateTime.TryParseExact(str, Formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtExact))
+                dt = dtExact;
+            else if (DateTime.TryParse(str, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dtParsed))
+                dt = dtParsed;
+            else
+                dt = reader.GetDateTime();
+        }
+        else
+        {
+            dt = reader.GetDateTime();
         }
 
-        return reader.GetDateTime();
+        if (!dt.HasValue) return null;
+        return dt.Value.Kind == DateTimeKind.Utc ? dt.Value : DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
     }
 
     public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTime? value, System.Text.Json.JsonSerializerOptions options)
