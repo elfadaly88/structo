@@ -551,7 +551,7 @@ interface MapSearchResult {
           <!-- Header -->
           <div class="flex items-center justify-between p-5 border-b border-slate-800">
             <div>
-              <h3 class="text-base font-black text-white font-cairo">اختر الباقة المناسبة / Choose Your Plan</h3>
+              <h3 class="text-base font-black text-white font-cairo">شراء سعة مشاريع إضافية / Buy Project Quota</h3>
               <p class="text-xs text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري / All prices in EGP</p>
             </div>
             <button type="button" (click)="closePlanModal()" id="btn-close-plan-modal"
@@ -562,67 +562,47 @@ interface MapSearchResult {
             </button>
           </div>
 
-          <!-- Plan Cards -->
-          <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-y-auto min-h-0">
+          <!-- Plan Cards (2 Additive Top-up Options) -->
+          <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto min-h-0">
             @for (plan of availablePlans(); track plan.id) {
               <div (click)="selectPlan(plan)"
                 [class.ring-2]="selectedPlan()?.id === plan.id"
                 [class.ring-indigo-500]="selectedPlan()?.id === plan.id"
                 [class.bg-indigo-950]="selectedPlan()?.id === plan.id"
                 [class.border-indigo-500]="selectedPlan()?.id === plan.id"
-                [class.opacity-40]="isCurrentPlan(plan.id)"
-                [class.cursor-not-allowed]="isCurrentPlan(plan.id)"
-                [class.cursor-pointer]="!isCurrentPlan(plan.id)"
-                class="relative p-4 bg-slate-950 border border-slate-800 rounded-xl transition-all duration-200 hover:border-slate-600 flex flex-col justify-between">
+                class="relative p-5 bg-slate-950 border border-slate-800 rounded-xl transition-all duration-200 hover:border-slate-600 flex flex-col justify-between cursor-pointer">
 
                 <div>
-                  <!-- Current Plan / Best Value Badge -->
-                  <div class="flex items-center justify-between mb-2 min-h-[20px]">
-                    @if (isCurrentPlan(plan.id)) {
-                      <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-cairo">الباقة الحالية</span>
-                    } @else if (plan.id === 'Enterprise') {
-                      <span class="text-[10px] font-bold px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-cairo shadow-sm">⭐️ الأفضل / Best Value</span>
+                  <!-- Best Value Badge -->
+                  <div class="flex items-center justify-between mb-3 min-h-[22px]">
+                    @if (plan.id === '5' || plan.extra === 5 || plan.maxProjects === 5) {
+                      <span class="text-[10px] font-bold px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-cairo shadow-sm">⭐️ الأفضل توفيراً / Best Value</span>
+                    } @else {
+                      <span class="text-[10px] font-bold px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-cairo">تفعيل فوري</span>
                     }
                   </div>
 
                   <div class="mb-3">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
-                      [class.bg-slate-700]="plan.id === 'Free'"
-                      [class.bg-indigo-600]="plan.id === 'Pro'"
-                      [class.bg-gradient-to-br]="plan.id === 'Enterprise'"
-                      [class.from-amber-500]="plan.id === 'Enterprise'"
-                      [class.to-orange-600]="plan.id === 'Enterprise'">
-                      @if (plan.id === 'Free') {
-                        <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      } @else if (plan.id === 'Pro') {
-                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                      } @else {
-                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
-                      }
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-lg"
+                      [class.bg-emerald-600/20]="plan.id === '1' || plan.extra === 1"
+                      [class.bg-gradient-to-br]="plan.id === '5' || plan.extra === 5"
+                      [class.from-amber-500]="plan.id === '5' || plan.extra === 5"
+                      [class.to-orange-600]="plan.id === '5' || plan.extra === 5">
+                      @if (plan.id === '1' || plan.extra === 1) { 📦 } @else { 🚀 }
                     </div>
-                    <h4 class="text-sm font-black text-white font-cairo">{{ plan.nameEn }}</h4>
-                    <p class="text-[10px] text-slate-400 mt-0.5 font-cairo">{{ plan.nameAr }}</p>
+                    <h4 class="text-base font-black text-white font-cairo">{{ plan.nameEn || plan.label }}</h4>
+                    <p class="text-xs text-slate-400 mt-0.5 font-cairo">{{ plan.nameAr }}</p>
                   </div>
 
                   <div class="mb-3">
-                    @if (plan.priceEgp === 0) {
-                      <span class="text-lg font-black text-emerald-400 font-cairo">مجاني / Free</span>
-                    } @else {
-                      <div class="flex items-baseline gap-1">
-                        <span class="text-lg font-black text-white font-mono">{{ plan.priceEgp }}</span>
-                        <span class="text-xs text-slate-400 font-cairo">ج.م / شهر</span>
-                      </div>
-                    }
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-xl font-black text-white font-mono">{{ plan.priceEgp }}</span>
+                      <span class="text-xs text-slate-400 font-cairo">ج.م / EGP</span>
+                    </div>
                   </div>
 
-                  <p class="text-[11px] text-slate-400 leading-relaxed font-cairo">
-                    @if (plan.id === 'Free') {
-                      2 مشاريع مدى الحياة (2 Lifetime Projects)
-                    } @else if (plan.id === 'Pro') {
-                      10 مشاريع + الميزات المتقدمة (10 Projects + Advanced Features)
-                    } @else {
-                      مشاريع غير محدودة + الأولوية والدعم (Unlimited Projects + Priority Support)
-                    }
+                  <p class="text-xs text-slate-400 leading-relaxed font-cairo">
+                    {{ plan.description || 'إضافة مشاريع إضافية لرصيدك الحالي (Adds projects to active quota)' }}
                   </p>
                 </div>
               </div>
@@ -1297,9 +1277,8 @@ export class TenantProfileComponent implements OnInit, AfterViewInit, OnDestroy 
       error: () => {
         // Fallback hardcoded pricing (mirrors SubscriptionController.GetPlans)
         this.availablePlans.set([
-          { id: 'Free',       nameAr: 'المجانية',   nameEn: 'Free',       maxProjects: 2,  priceEgp: 0,    priceWithVat: 0,   description: '2 مشاريع مدى الحياة (2 Lifetime Projects)' },
-          { id: 'Pro',        nameAr: 'الاحترافية', nameEn: 'Pro',        maxProjects: 10, priceEgp: 299,  priceWithVat: 299, description: '10 مشاريع + الميزات المتقدمة (10 Projects + Advanced Features)' },
-          { id: 'Enterprise', nameAr: 'المؤسسية',   nameEn: 'Enterprise', maxProjects: -1, priceEgp: 799,  priceWithVat: 799, description: 'مشاريع غير محدودة + الأولوية والدعم (Unlimited Projects + Priority Support)' }
+          { id: '1', extra: 1, maxProjects: 1, nameAr: 'إضافة مشروع واحد', nameEn: '📦 إضافة مشروع واحد (+1 Project)', priceEgp: 250, priceWithVat: 250, description: 'إضافة مشروع واحد إضافي لرصيدك الحالي (Adds +1 project to your active quota)' },
+          { id: '5', extra: 5, maxProjects: 5, nameAr: 'حزمة 5 مشاريع', nameEn: '🚀 حزمة 5 مشاريع (+5 Projects Package)', priceEgp: 950, priceWithVat: 950, description: 'إضافة 5 مشاريع إضافية لرصيدك الحالي (Adds +5 projects to your active quota)' }
         ]);
         this.availableTopUps.set([
           { extra: 1, priceEgp: 250, priceWithVat: 250, label: '+1 مشروع' },

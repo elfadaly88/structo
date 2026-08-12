@@ -923,7 +923,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 </svg>
               </div>
               <div>
-                <h3 class="text-xl font-black text-white font-cairo tracking-wide">اختر الباقة المناسبة / Choose Your Plan</h3>
+                <h3 class="text-xl font-black text-white font-cairo tracking-wide">شراء سعة مشاريع إضافية / Buy Project Quota</h3>
                 <p class="text-xs text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري / All prices in EGP</p>
               </div>
             </div>
@@ -938,69 +938,54 @@ const GOVERNORATES: GovernorateOption[] = [
 
           <!-- Modal Body (Independent Inner Scroll) -->
           <div class="overflow-y-auto min-h-0 p-6 space-y-5">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               
-              <!-- Tier 1: Free Plan -->
-              <div class="p-5 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-slate-700 transition-all duration-200">
+              <!-- Card 1: +1 Project (250 EGP) -->
+              <div class="p-5 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-emerald-500/70 transition-all duration-200 shadow-lg relative group">
                 <div>
-                  <div class="flex items-center justify-between mb-3 min-h-[22px]">
-                    <span class="px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full font-cairo">الباقة الحالية</span>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full font-cairo">+1 مشروع</span>
+                    <span class="text-xl font-black text-emerald-400 font-mono">250 EGP</span>
                   </div>
-                  <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <div class="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mb-3 text-emerald-400">
+                    📦
                   </div>
-                  <h4 class="font-bold text-base text-white font-cairo">المجانية / Free</h4>
-                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">2 مشاريع مدى الحياة (2 Lifetime Projects)</p>
+                  <h4 class="font-bold text-base text-white font-cairo">إضافة مشروع واحد (+1 Project)</h4>
+                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">إضافة مشروع واحد إضافي لرصيدك الحالي (Adds +1 project to your active quota)</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-emerald-400 font-cairo font-semibold">
-                  <span>مجاني / Free</span>
-                  <span>✓ 2 مشاريع</span>
-                </div>
-              </div>
-
-              <!-- Tier 2: Pro Plan -->
-              <div class="p-5 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-indigo-500/70 transition-all duration-200 shadow-lg relative group">
-                <div>
-                  <div class="flex items-center justify-between mb-3 min-h-[22px]">
-                    <span class="px-2.5 py-0.5 text-[10px] font-bold text-indigo-300 bg-indigo-950/80 border border-indigo-500/40 rounded-full font-cairo">باقة المحترفين</span>
-                  </div>
-                  <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                  </div>
-                  <h4 class="font-bold text-base text-white font-cairo">الاحترافية / Pro</h4>
-                  <p class="text-xs text-slate-400 font-cairo mt-1 leading-relaxed">10 مشاريع + الميزات المتقدمة (10 Projects + Advanced Features)</p>
-                </div>
-                <div class="mt-4 pt-3 border-t border-slate-800/60 space-y-3">
-                  <div class="text-lg font-black text-white font-mono">299 ج.م <span class="text-xs font-normal text-slate-400 font-cairo">/ شهر</span></div>
+                <div class="mt-4 pt-3 border-t border-slate-800/60">
                   <button 
-                    (click)="openCheckout({ extraProjectsCount: 8, titleAr: 'الباقة الاحترافية (Pro Plan)', titleEn: 'Pro Plan', priceEgp: 299, badge: 'ترقية باقة' })"
-                    class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-[0.98] cursor-pointer">
-                    <span>شراء الباقة / Buy Plan 💳</span>
+                    (click)="openCheckout({ extraProjectsCount: 1, titleAr: 'إضافة مشروع واحد (+1 Project)', titleEn: '+1 Extra Project', priceEgp: 250, badge: 'تفعيل فوري' })"
+                    class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer">
+                    <span>شراء مشروع (+1 Project) 💳</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Tier 3: Enterprise Plan (Best Value Tag) -->
+              <!-- Card 2: +5 Projects Package (950 EGP - Best Value) -->
               <div class="p-5 bg-gradient-to-br from-indigo-950/40 via-slate-950 to-amber-950/20 border-2 border-amber-500/70 rounded-2xl flex flex-col justify-between hover:border-amber-400 transition-all duration-200 shadow-xl shadow-amber-500/10 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl font-cairo shadow-md">
-                  ⭐️ الأفضل / Best Value
+                  ⭐️ الأفضل توفيراً / Best Value
                 </div>
                 <div class="pt-2">
-                  <div class="flex items-center justify-between mb-3 min-h-[22px]">
-                    <span class="px-2.5 py-0.5 text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-500/40 rounded-full font-cairo">باقة المؤسسات</span>
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="px-2.5 py-0.5 text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-500/40 rounded-full font-cairo">حزمة 5 مشاريع</span>
+                    <div class="text-left rtl:text-right">
+                      <span class="text-xl font-black text-amber-400 font-mono">950 EGP</span>
+                      <span class="block text-[10px] text-slate-500 line-through font-mono">1,250 EGP</span>
+                    </div>
                   </div>
-                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-3 text-white">
+                    🚀
                   </div>
-                  <h4 class="font-bold text-base text-white font-cairo">المؤسسية / Enterprise</h4>
-                  <p class="text-xs text-slate-300 font-cairo mt-1 leading-relaxed">مشاريع غير محدودة + الأولوية والدعم (Unlimited Projects + Priority Support)</p>
+                  <h4 class="font-bold text-base text-white font-cairo">حزمة 5 مشاريع (+5 Projects Package)</h4>
+                  <p class="text-xs text-slate-300 font-cairo mt-1 leading-relaxed">إضافة 5 مشاريع إضافية لرصيدك الحالي (Adds +5 projects to your active quota)</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-amber-500/30 space-y-3">
-                  <div class="text-xl font-black text-amber-400 font-mono">799 ج.م <span class="text-xs font-normal text-slate-400 font-cairo">/ شهر</span></div>
+                <div class="mt-4 pt-3 border-t border-amber-500/30">
                   <button 
-                    (click)="openCheckout({ extraProjectsCount: 999, titleAr: 'الباقة المؤسسية (Enterprise Plan)', titleEn: 'Enterprise Plan', priceEgp: 799, badge: '⭐️ الأفضل' })"
-                    class="w-full py-2.5 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/30 active:scale-[0.98] cursor-pointer">
-                    <span>شراء الباقة / Buy Plan 🛒</span>
+                    (click)="openCheckout({ extraProjectsCount: 5, titleAr: 'حزمة 5 مشاريع (+5 Projects Package)', titleEn: '+5 Projects Package', priceEgp: 950, badge: '⭐️ الأفضل توفيراً' })"
+                    class="w-full py-2.5 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/30 cursor-pointer">
+                    <span>شراء 5 مشاريع (+5 Projects) 🛒</span>
                   </button>
                 </div>
               </div>

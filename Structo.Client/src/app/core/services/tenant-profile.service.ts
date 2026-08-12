@@ -40,6 +40,8 @@ export interface SubscriptionPlanInfo {
   priceEgp: number;
   priceWithVat: number;
   description: string;
+  extra?: number;
+  label?: string;
 }
 
 export interface SubscriptionTopUpInfo {
