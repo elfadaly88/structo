@@ -15,7 +15,10 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
 
   let authReq = req;
   // Attach the token only if it exists and request is to our backend API
-  const isApiRequest = req.url.startsWith(environment.apiUrl) || req.url.startsWith('/api') || req.url.includes('/api/');
+  const isApiRequest = req.url.startsWith(environment.apiUrl) ||
+                       req.url.startsWith('https://structo-production.up.railway.app/api') ||
+                       req.url.startsWith('/api') ||
+                       req.url.includes('/api/');
   if (token && isApiRequest) {
     authReq = req.clone({
       setHeaders: {

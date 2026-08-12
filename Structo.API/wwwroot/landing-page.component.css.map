@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["landing-page.component.ts"],
-  "sourcesContent": ["\n    .font-cairo {\n      font-family: 'Cairo', 'Inter', sans-serif;\n    }\n  "],
-  "mappings": ";AACI,CAAA;AACE;IAAA,OAAA;IAAA,OAAA;IAAA;AACF;",
-  "names": []
-}
