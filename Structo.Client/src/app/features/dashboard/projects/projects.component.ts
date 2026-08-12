@@ -553,17 +553,24 @@ const GOVERNORATES: GovernorateOption[] = [
       </div>
     }
 
-    <!-- MODAL 1: CREATE PROJECT -->
+    <!-- MODAL 1: CREATE PROJECT (Tabbed Layout) -->
     @if (isProjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 sm:p-4">
         <!-- Backdrop (Static - Disabled click dismiss to prevent accidental data loss) -->
         <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
 
         <!-- Modal container -->
-        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
-          <div class="flex items-start justify-between mb-6">
+        <div class="relative z-10 w-full max-w-2xl mx-auto my-auto max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
+          
+          <!-- Modal Header -->
+          <div class="flex items-start justify-between p-5 pb-3 border-b border-slate-800/60 bg-slate-950/60">
             <div>
-              <h3 class="text-xl font-bold text-white font-cairo">{{ 'PROJECTS.MODAL_TITLE' | translate }}</h3>
+              <h3 class="text-xl font-bold text-white font-cairo flex items-center gap-2">
+                <span>{{ 'PROJECTS.MODAL_TITLE' | translate }}</span>
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
+                  الخطوة {{ activeProjectTab() }} من 3
+                </span>
+              </h3>
               <p class="text-xs text-slate-400 mt-1 font-cairo">{{ 'PROJECTS.MODAL_SUBTITLE' | translate }}</p>
             </div>
             <button
@@ -575,213 +582,323 @@ const GOVERNORATES: GovernorateOption[] = [
             </button>
           </div>
 
-          @if (projectValidationErrors().length > 0) {
-            <div class="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
-              <span class="font-bold block mb-1 font-cairo">{{ 'PROJECTS.VALIDATION_TITLE' | translate }}</span>
-              @for (err of projectValidationErrors(); track err) {
-                <div>• {{ err }}</div>
+          <!-- Responsive Tab Navigation Header -->
+          <div class="flex border-b border-slate-800 bg-slate-950/40 px-4 sm:px-6 overflow-x-auto whitespace-nowrap scrollbar-none">
+            <button 
+              type="button"
+              (click)="setProjectTab(1)" 
+              class="py-3 px-3.5 text-xs sm:text-sm font-bold border-b-2 transition-all duration-200 cursor-pointer font-cairo flex items-center gap-2 shrink-0"
+              [class.border-indigo-500]="activeProjectTab() === 1"
+              [class.text-indigo-400]="activeProjectTab() === 1"
+              [class.border-transparent]="activeProjectTab() !== 1"
+              [class.text-slate-400]="activeProjectTab() !== 1"
+              [class.hover:text-slate-200]="activeProjectTab() !== 1">
+              <span>📋</span>
+              <span>البيانات الأساسية</span>
+            </button>
+
+            <button 
+              type="button"
+              (click)="setProjectTab(2)" 
+              class="py-3 px-3.5 text-xs sm:text-sm font-bold border-b-2 transition-all duration-200 cursor-pointer font-cairo flex items-center gap-2 shrink-0"
+              [class.border-indigo-500]="activeProjectTab() === 2"
+              [class.text-indigo-400]="activeProjectTab() === 2"
+              [class.border-transparent]="activeProjectTab() !== 2"
+              [class.text-slate-400]="activeProjectTab() !== 2"
+              [class.hover:text-slate-200]="activeProjectTab() !== 2">
+              <span>📍</span>
+              <span>الموقع والتصنيف</span>
+            </button>
+
+            <button 
+              type="button"
+              (click)="setProjectTab(3)" 
+              class="py-3 px-3.5 text-xs sm:text-sm font-bold border-b-2 transition-all duration-200 cursor-pointer font-cairo flex items-center gap-2 shrink-0"
+              [class.border-indigo-500]="activeProjectTab() === 3"
+              [class.text-indigo-400]="activeProjectTab() === 3"
+              [class.border-transparent]="activeProjectTab() !== 3"
+              [class.text-slate-400]="activeProjectTab() !== 3"
+              [class.hover:text-slate-200]="activeProjectTab() !== 3">
+              <span>📲</span>
+              <span>التواصل والإعدادات</span>
+            </button>
+          </div>
+
+          <!-- Modal Body & Form -->
+          <form [formGroup]="projectForm" (ngSubmit)="onProjectSubmit()" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div class="flex-1 overflow-y-auto min-h-0 p-5 sm:p-6 space-y-4">
+              @if (projectValidationErrors().length > 0) {
+                <div class="mb-4 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
+                  <span class="font-bold block mb-1 font-cairo">{{ 'PROJECTS.VALIDATION_TITLE' | translate }}</span>
+                  @for (err of projectValidationErrors(); track err) {
+                    <div>• {{ err }}</div>
+                  }
+                </div>
+              }
+
+              <!-- TAB 1: البيانات الأساسية (Basic Info) -->
+              @if (activeProjectTab() === 1) {
+                <div class="space-y-4 animate-fade-in">
+                  <div>
+                    <label for="proj-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                      {{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                      id="proj-name"
+                      type="text"
+                      formControlName="name"
+                      class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                      placeholder="e.g. برج العاصمة الإدارية الجديدة">
+                    @if (isProjectFieldInvalid('name')) {
+                      <p class="text-[10px] text-rose-400 mt-1 font-cairo">اسم المشروع مطلوب / Project Name is required.</p>
+                    }
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label for="proj-client" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        {{ 'PROJECTS.TABLE_CLIENT' | translate }} <span class="text-red-400">*</span>
+                      </label>
+                      <input
+                        id="proj-client"
+                        type="text"
+                        formControlName="client"
+                        class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                        placeholder="e.g. شركة أوراسكوم للانشاءات">
+                      @if (isProjectFieldInvalid('client')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">اسم العميل مطلوب / Client Name is required.</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label for="proj-budget" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        {{ 'PROJECTS.TABLE_BUDGET' | translate }} (EGP) <span class="text-red-400">*</span>
+                      </label>
+                      <input
+                        id="proj-budget"
+                        type="number"
+                        formControlName="budget"
+                        class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                        placeholder="e.g. 15000000">
+                      @if (isProjectFieldInvalid('budget')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">الميزانية مطلوبة برقم صحيح / Budget is required.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label for="proj-start" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        {{ 'PROJECTS.FIELD_START' | translate }} <span class="text-red-400">*</span>
+                      </label>
+                      <input
+                        id="proj-start"
+                        type="date"
+                        formControlName="startDate"
+                        class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                      @if (isProjectFieldInvalid('startDate')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">تاريخ البدء مطلوب / Start Date is required.</p>
+                      }
+                    </div>
+                    <div>
+                      <label for="proj-end" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        {{ 'PROJECTS.FIELD_END' | translate }}
+                      </label>
+                      <input
+                        id="proj-end"
+                        type="date"
+                        formControlName="endDate"
+                        class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 2: الموقع والتصنيف (Location & Classification) -->
+              @if (activeProjectTab() === 2) {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label for="proj-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        المحافظة / Governorate <span class="text-red-400">*</span>
+                      </label>
+                      <select
+                        id="proj-gov"
+                        formControlName="governorate"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                        <option value="" disabled selected>-- اختر المحافظة --</option>
+                        <option value="Cairo">Cairo / القاهرة</option>
+                        <option value="Giza">Giza / الجيزة</option>
+                        <option value="Alexandria">Alexandria / الإسكندرية</option>
+                        <option value="Qalyubia">Qalyubia / القليوبية</option>
+                        <option value="Gharbia">Gharbia / الغربية</option>
+                        <option value="Dakahlia">Dakahlia / الدقهلية</option>
+                        <option value="Sharqia">Sharqia / الشرقية</option>
+                        <option value="Monufia">Monufia / المنوفية</option>
+                        <option value="Beheira">Beheira / البحيرة</option>
+                        <option value="Kafr El Sheikh">Kafr El Sheikh / كفر الشيخ</option>
+                        <option value="Damietta">Damietta / دمياط</option>
+                        <option value="Port Said">Port Said / بورسعيد</option>
+                        <option value="Ismailia">Ismailia / الإسماعيلية</option>
+                        <option value="Suez">Suez / السويس</option>
+                        <option value="Aswan">Aswan / أسوان</option>
+                        <option value="Luxor">Luxor / الأقصر</option>
+                        <option value="Red Sea">Red Sea / البحر الأحمر</option>
+                        <option value="Matrouh">Matrouh / مطروح</option>
+                      </select>
+                      @if (isProjectFieldInvalid('governorate')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">المحافظة مطلوبة / Governorate is required.</p>
+                      }
+                    </div>
+                    <div>
+                      <label for="proj-city" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        المدينة أو المنطقة / City or Zone <span class="text-red-400">*</span>
+                      </label>
+                      <input
+                        id="proj-city"
+                        type="text"
+                        formControlName="cityOrZone"
+                        placeholder="e.g. التجمع الخامس"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                      @if (isProjectFieldInvalid('cityOrZone')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">المنطقة مطلوبة / Zone is required.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <label for="proj-address" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                      العنوان التفصيلي / Physical Site Address <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                      id="proj-address"
+                      type="text"
+                      formControlName="siteAddress"
+                      placeholder="e.g. شارع التسعين الشمالي، قطعة 44"
+                      class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                    @if (isProjectFieldInvalid('siteAddress')) {
+                      <p class="text-[10px] text-rose-400 mt-1 font-cairo">العنوان مطلوب / Address is required.</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label for="proj-cat" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                      تصنيف المشروع / Project Classification <span class="text-red-400">*</span>
+                    </label>
+                    <select
+                      id="proj-cat"
+                      formControlName="category"
+                      class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                      <option value="Residential">Residential / سكني</option>
+                      <option value="Commercial">Commercial / تجاري</option>
+                      <option value="Administrative">Administrative / إداري</option>
+                      <option value="Industrial">Industrial / صناعي</option>
+                      <option value="Other">Other / أخرى</option>
+                    </select>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 3: التواصل والإعدادات (Contact & Settings) -->
+              @if (activeProjectTab() === 3) {
+                <div class="space-y-4 animate-fade-in">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label for="proj-client-wh" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        رقم واتساب العميل / Client WhatsApp <span class="text-red-400">*</span>
+                      </label>
+                      <input
+                        id="proj-client-wh"
+                        type="text"
+                        formControlName="clientWhatsApp"
+                        placeholder="e.g. +201012345678"
+                        class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
+                      @if (isProjectFieldInvalid('clientWhatsApp')) {
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">رقم واتساب العميل مطلوب بصيغة صحيحة / Invalid WhatsApp number.</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label for="proj-status" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                        {{ 'PROJECTS.TABLE_STATUS' | translate }} <span class="text-red-400">*</span>
+                      </label>
+                      <select
+                        id="proj-status"
+                        formControlName="status"
+                        class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                        <option value="Active">{{ 'PROJECTS.STATUS.ACTIVE' | translate }}</option>
+                        <option value="Delayed">{{ 'PROJECTS.STATUS.DELAYED' | translate }}</option>
+                        <option value="Completed">{{ 'PROJECTS.STATUS.COMPLETED' | translate }}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-3 py-1.5 bg-slate-950/40 border border-slate-800/80 rounded-xl p-3.5">
+                    <input
+                      id="proj-pub"
+                      type="checkbox"
+                      formControlName="isPublicPortfolio"
+                      class="h-4 w-4 rounded border-slate-700 text-indigo-600 bg-slate-950 focus:ring-0">
+                    <label for="proj-pub" class="text-xs text-slate-300 font-cairo font-semibold cursor-pointer select-none">
+                      {{ 'PROJECTS.FIELD_PUBLIC' | translate }}
+                    </label>
+                  </div>
+
+                  <div>
+                    <label for="proj-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                      {{ 'PROJECTS.FIELD_DESC' | translate }}
+                    </label>
+                    <textarea
+                      id="proj-desc"
+                      formControlName="description"
+                      rows="3"
+                      class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                      placeholder="نطاق ورؤية المشروع التفصيلية..."></textarea>
+                  </div>
+                </div>
               }
             </div>
-          }
 
-          <form [formGroup]="projectForm" (ngSubmit)="onProjectSubmit()" class="space-y-4 overflow-y-auto min-h-0 pr-1">
-            <div>
-              <label for="proj-name" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_NAME' | translate }} <span class="text-red-400">*</span></label>
-              <input
-                id="proj-name"
-                type="text"
-                formControlName="name"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
-                placeholder="e.g. New Administrative Capital Tower">
-            </div>
+            <!-- Action Bar (Footer) -->
+            <div class="px-6 py-4 bg-slate-950/90 border-t border-slate-900 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 shrink-0">
+              <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                @if (activeProjectTab() > 1) {
+                  <button
+                    type="button"
+                    (click)="prevProjectTab()"
+                    class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all duration-200 cursor-pointer font-cairo flex items-center gap-1.5">
+                    <span>←</span>
+                    <span>{{ langService.currentLang() === 'ar' ? 'السابق' : 'Back' }}</span>
+                  </button>
+                }
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="proj-client" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.TABLE_CLIENT' | translate }} <span class="text-red-400">*</span></label>
-                <input
-                  id="proj-client"
-                  type="text"
-                  formControlName="client"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="e.g. Orascom">
-              </div>
-
-              <div>
-                <label for="proj-budget" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }} <span class="text-red-400">*</span></label>
-                <input
-                  id="proj-budget"
-                  type="number"
-                  formControlName="budget"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="e.g. 15000000">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="proj-start" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_START' | translate }} <span class="text-red-400">*</span></label>
-                <input
-                  id="proj-start"
-                  type="date"
-                  formControlName="startDate"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-              </div>
-              <div>
-                <label for="proj-end" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_END' | translate }}</label>
-                <input
-                  id="proj-end"
-                  type="date"
-                  formControlName="endDate"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-              </div>
-            </div>
-
-            <!-- Geographic Location Group -->
-            <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-3.5">
-              <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
-                📍 تفاصيل الموقع الجغرافي دقیقًا / Geographic Location
-              </span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                <div>
-                  <label for="proj-gov" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">المحافظة / Governorate <span class="text-red-400">*</span></label>
-                  <select
-                    id="proj-gov"
-                    formControlName="governorate"
-                    class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
-                    <option value="" disabled selected>-- اختر المحافظة --</option>
-                    <option value="Cairo">Cairo / القاهرة</option>
-                    <option value="Giza">Giza / الجيزة</option>
-                    <option value="Alexandria">Alexandria / الإسكندرية</option>
-                    <option value="Qalyubia">Qalyubia / القليوبية</option>
-                    <option value="Gharbia">Gharbia / الغربية</option>
-                    <option value="Dakahlia">Dakahlia / الدقهلية</option>
-                    <option value="Sharqia">Sharqia / الشرقية</option>
-                    <option value="Monufia">Monufia / المنوفية</option>
-                    <option value="Beheira">Beheira / البحيرة</option>
-                    <option value="Kafr El Sheikh">Kafr El Sheikh / كفر الشيخ</option>
-                    <option value="Damietta">Damietta / دمياط</option>
-                    <option value="Port Said">Port Said / بورسعيد</option>
-                    <option value="Ismailia">Ismailia / الإسماعيلية</option>
-                    <option value="Suez">Suez / السويس</option>
-                    <option value="Aswan">Aswan / أسوان</option>
-                    <option value="Luxor">Luxor / الأقصر</option>
-                    <option value="Red Sea">Red Sea / البحر الأحمر</option>
-                    <option value="Matrouh">Matrouh / مطروح</option>
-                  </select>
-                  @if (isProjectFieldInvalid('governorate')) {
-                    <p class="text-[9px] text-rose-400 mt-1 font-cairo">المحافظة مطلوبة / Governorate is required.</p>
-                  }
-                </div>
-                <div>
-                  <label for="proj-city" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">المدينة أو المنطقة / City or Zone <span class="text-red-400">*</span></label>
-                  <input
-                    id="proj-city"
-                    type="text"
-                    formControlName="cityOrZone"
-                    placeholder="e.g. التجمع الخامس"
-                    class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
-                  @if (isProjectFieldInvalid('cityOrZone')) {
-                    <p class="text-[9px] text-rose-400 mt-1 font-cairo">المنطقة مطلوبة / Zone is required.</p>
-                  }
-                </div>
-              </div>
-              <div>
-                <label for="proj-address" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">العنوان التفصيلي / Physical Site Address <span class="text-red-400">*</span></label>
-                <input
-                  id="proj-address"
-                  type="text"
-                  formControlName="siteAddress"
-                  placeholder="e.g. شارع التسعين الشمالي، قطعة 44"
-                  class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
-                @if (isProjectFieldInvalid('siteAddress')) {
-                  <p class="text-[9px] text-rose-400 mt-1 font-cairo">العنوان مطلوب / Address is required.</p>
+                @if (activeProjectTab() < 3) {
+                  <button
+                    type="button"
+                    (click)="nextProjectTab()"
+                    class="px-5 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 transition-all duration-200 cursor-pointer font-cairo flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+                    <span>{{ langService.currentLang() === 'ar' ? 'التالي' : 'Next' }}</span>
+                    <span>→</span>
+                  </button>
                 }
               </div>
-            </div>
 
-            <!-- Client & Owner Details Group -->
-            <div class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-3.5">
-              <span class="text-[11px] font-bold text-indigo-400 font-cairo uppercase tracking-wider block border-b border-slate-800/60 pb-1.5">
-                👤 بيانات العميل وصاحب المشروع / Client & Owner Info
-              </span>
-              <div>
-                <label for="proj-client-wh" class="block text-[10px] font-bold text-slate-400 mb-1 font-cairo">رقم واتساب العميل / Client WhatsApp <span class="text-red-400">*</span></label>
-                <input
-                  id="proj-client-wh"
-                  type="text"
-                  formControlName="clientWhatsApp"
-                  placeholder="e.g. +201012345678"
-                  class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
-                @if (isProjectFieldInvalid('clientWhatsApp')) {
-                  <p class="text-[9px] text-rose-400 mt-1 font-cairo">رقم واتساب العميل مطلوب بصيغة صحيحة / Invalid WhatsApp number.</p>
-                }
+              <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  (click)="closeProjectModal()"
+                  class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
+                  {{ 'COMMON.CANCEL' | translate }}
+                </button>
+
+                <button
+                  type="submit"
+                  [disabled]="projectForm.invalid || isSavingProject()"
+                  class="px-5 py-2 text-xs sm:text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                  <span>💾</span>
+                  <span>{{ 'PROJECTS.BTN_CREATE' | translate }}</span>
+                </button>
               </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="proj-status" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.TABLE_STATUS' | translate }} <span class="text-red-400">*</span></label>
-                <select
-                  id="proj-status"
-                  formControlName="status"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                  <option value="Active">{{ 'PROJECTS.STATUS.ACTIVE' | translate }}</option>
-                  <option value="Delayed">{{ 'PROJECTS.STATUS.DELAYED' | translate }}</option>
-                  <option value="Completed">{{ 'PROJECTS.STATUS.COMPLETED' | translate }}</option>
-                </select>
-              </div>
-
-              <div>
-                <label for="proj-cat" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
-                  تصنيف المشروع / Project Classification <span class="text-red-400">*</span>
-                </label>
-                <select
-                  id="proj-cat"
-                  formControlName="category"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                  <option value="Residential">Residential / سكني</option>
-                  <option value="Commercial">Commercial / تجاري</option>
-                  <option value="Administrative">Administrative / إداري</option>
-                  <option value="Industrial">Industrial / صناعي</option>
-                  <option value="Other">Other / أخرى</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3 py-2">
-              <input
-                id="proj-pub"
-                type="checkbox"
-                formControlName="isPublicPortfolio"
-                class="h-4 w-4 rounded border-slate-700 text-indigo-600 bg-slate-950 focus:ring-0">
-              <label for="proj-pub" class="text-sm text-slate-300 font-cairo font-semibold cursor-pointer select-none">
-                {{ 'PROJECTS.FIELD_PUBLIC' | translate }}
-              </label>
-            </div>
-
-            <div>
-              <label for="proj-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'PROJECTS.FIELD_DESC' | translate }}</label>
-              <textarea
-                id="proj-desc"
-                formControlName="description"
-                rows="3"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
-                placeholder="Scope details..."></textarea>
-            </div>
-
-            <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full p-4 border-t border-slate-900">
-              <button
-                type="button"
-                (click)="closeProjectModal()"
-                class="w-full md:w-auto px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo">
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button
-                type="submit"
-                [disabled]="projectForm.invalid || isSavingProject()"
-                class="w-full md:w-auto px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-                {{ 'PROJECTS.BTN_CREATE' | translate }}
-              </button>
             </div>
           </form>
         </div>
@@ -1429,6 +1546,7 @@ export class ProjectsComponent implements OnInit {
   readonly projects = signal<ProjectViewDto[]>([]);
   readonly isLoadingProjects = signal(false);
   readonly isProjectModalOpen = signal(false);
+  readonly activeProjectTab = signal<1 | 2 | 3>(1);
   readonly isSavingProject = signal(false);
   readonly projectValidationErrors = signal<string[]>([]);
   readonly projectError = signal<string | null>(null);
@@ -2054,11 +2172,30 @@ export class ProjectsComponent implements OnInit {
       propertyType: 'Residential'
     });
     this.projectValidationErrors.set([]);
+    this.activeProjectTab.set(1);
     this.isProjectModalOpen.set(true);
   }
 
   closeProjectModal(): void {
     this.isProjectModalOpen.set(false);
+  }
+
+  setProjectTab(tab: 1 | 2 | 3): void {
+    this.activeProjectTab.set(tab);
+  }
+
+  nextProjectTab(): void {
+    const current = this.activeProjectTab();
+    if (current < 3) {
+      this.activeProjectTab.set((current + 1) as 1 | 2 | 3);
+    }
+  }
+
+  prevProjectTab(): void {
+    const current = this.activeProjectTab();
+    if (current > 1) {
+      this.activeProjectTab.set((current - 1) as 1 | 2 | 3);
+    }
   }
 
   onProjectSubmit(): void {
