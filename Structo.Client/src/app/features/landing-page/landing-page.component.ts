@@ -116,7 +116,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                   {{ langService.currentLang() === 'ar' ? pricingInfo().planNameAr : pricingInfo().planNameEn }}
                 </span>
                 <span class="text-2xl font-extrabold text-indigo-400 font-mono">
-                  {{ sliderVal() }} @if (sliderVal() === 10) { + }
+                  {{ sliderVal() }} @if (sliderVal() === 7) { + }
                 </span>
               </div>
             </div>
@@ -125,7 +125,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
               <input 
                 type="range" 
                 min="1" 
-                max="10" 
+                max="7" 
                 [value]="sliderVal()" 
                 (input)="onSliderInput($event)"
                 class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none">
@@ -137,10 +137,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                 <span>4</span>
                 <span>5</span>
                 <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span>9</span>
-                <span>10+</span>
+                <span>7+</span>
               </div>
             </div>
 
@@ -548,16 +545,16 @@ export class LandingPageComponent implements OnInit {
       };
     }
 
-    if (val >= 10) {
+    if (val >= 7) {
       return {
-        planNameAr: 'الباقة المؤسسية (Enterprise)',
-        planNameEn: 'Enterprise Plan',
-        price: isAr ? 'سعر مخصص' : 'Custom Pricing',
-        periodAr: 'تواصل مع المبيعات للحصول على عرض خاص',
-        periodEn: 'Contact sales for custom quote',
-        isCustom: true,
-        noteAr: 'للمؤسسات والشركات الكبيرة (10+ مشاريع). تواصل معنا للحصول على عرض سعر مخصص.',
-        noteEn: 'For large enterprises (10+ projects). Contact us for a custom quote.'
+        planNameAr: 'باقة 5 مشاريع (+2 مجاناً)',
+        planNameEn: '5-Project Pack (+2 Free)',
+        price: '950 EGP',
+        periodAr: 'دفع مرة واحدة — توفير إضافي (أكثر من 7؟ تواصل معنا)',
+        periodEn: 'One-time payment — Save 300 EGP (7+ contact support)',
+        isCustom: false,
+        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية (توفير 300 جنيه). لأكثر من 7 مشاريع، يرجى التواصل معنا للحصول على عرض مخصص.',
+        noteEn: 'Free Plan (2 Projects) + 5-Project Pack (Save 300 EGP). For more than 7 projects, please contact us for a custom quote.'
       };
     }
 
@@ -610,36 +607,6 @@ export class LandingPageComponent implements OnInit {
         isCustom: false,
         noteAr: 'توفير متميز: باقة 5 مشاريع إضافية تمنحك 7 مشاريع كلياً بـ 950 ج.م فقط (أوفر من شراء 4 مشاريع فردية).',
         noteEn: 'Best Value: 5-Project Pack gives 7 total projects for 950 EGP (cheaper than 4 single projects).'
-      },
-      7: {
-        planNameAr: 'باقة 5 مشاريع إضافية',
-        planNameEn: '5-Project Pack',
-        price: '950 EGP',
-        periodAr: 'دفع مرة واحدة — توفير إضافي',
-        periodEn: 'One-time payment — Extra savings',
-        isCustom: false,
-        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية (توفير 300 جنيه مقارنة بالشراء الفردي).',
-        noteEn: 'Free Plan (2 Projects) + 5-Project Pack (Save 300 EGP vs single purchases).'
-      },
-      8: {
-        planNameAr: 'باقة 5 مشاريع + 1 إضافي',
-        planNameEn: '5-Project Pack + 1 Extra',
-        price: '1,200 EGP',
-        periodAr: 'دفع مرة واحدة — تفعيل فوري',
-        periodEn: 'One-time payment — Instant activation',
-        isCustom: false,
-        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية + مشروع إضافي واحد (1,200 ج.م).',
-        noteEn: 'Free Plan (2 Projects) + 5-Project Pack + 1 Extra Project (1,200 EGP).'
-      },
-      9: {
-        planNameAr: 'باقة 5 مشاريع + 2 إضافي',
-        planNameEn: '5-Project Pack + 2 Extra',
-        price: '1,450 EGP',
-        periodAr: 'دفع مرة واحدة — تفعيل فوري',
-        periodEn: 'One-time payment — Instant activation',
-        isCustom: false,
-        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية + 2 مشاريع إضافية (1,450 ج.م).',
-        noteEn: 'Free Plan (2 Projects) + 5-Project Pack + 2 Extra Projects (1,450 EGP).'
       }
     };
 
