@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -773,9 +773,16 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           } @else {
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              @for (photo of galleryPhotos(); track photo.id) {
-                <div class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md flex items-center justify-center">
-                  <img [src]="photo.photoUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover">
+              @for (photo of galleryPhotos(); track photo.id; let idx = $index) {
+                <div 
+                  (click)="openLightbox(galleryPhotos(), idx, $event)"
+                  class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md flex items-center justify-center cursor-pointer">
+                  <img [src]="photo.photoUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="px-2.5 py-1 bg-slate-950/80 backdrop-blur-md rounded-lg text-[11px] font-bold text-white font-cairo flex items-center gap-1">
+                      🔍 معاينة
+                    </span>
+                  </div>
                   <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2371,6 +2378,51 @@ import { LanguageService } from '../../../core/services/language.service';
         </div>
       </div>
     }
+
+    <!-- 🖼️ FULLSCREEN LIGHTBOX VIEWER -->
+    @if (isLightboxOpen() && lightboxPhotos().length > 0) {
+      <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/92 backdrop-blur-md animate-fade-in">
+        <div (click)="closeLightbox()" class="absolute inset-0 z-0"></div>
+
+        <button 
+          (click)="closeLightbox()" 
+          class="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-slate-900/80 border border-white/20 text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xl">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div class="absolute top-4 left-4 z-20 px-3.5 py-1.5 rounded-xl bg-slate-900/80 border border-white/20 text-white text-xs font-mono font-bold shadow-xl flex items-center gap-2 font-cairo">
+          <span>📷</span>
+          <span>{{ activeLightboxIndex() + 1 }} / {{ lightboxPhotos().length }}</span>
+        </div>
+
+        <div class="relative z-10 max-w-5xl max-h-[85vh] flex items-center justify-center p-2">
+          <img 
+            [src]="lightboxPhotos()[activeLightboxIndex()]" 
+            (error)="onImgError($event)" 
+            alt="Site Photo Full View" 
+            class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-slate-800 transition-all duration-200">
+        </div>
+
+        @if (lightboxPhotos().length > 1) {
+          <button 
+            (click)="prevLightboxPhoto()" 
+            class="absolute left-4 sm:left-8 z-20 p-3 rounded-full bg-slate-900/80 border border-white/20 text-white hover:bg-indigo-600 transition-all cursor-pointer shadow-2xl hover:scale-110 active:scale-95">
+            <svg class="w-6 h-6 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button 
+            (click)="nextLightboxPhoto()" 
+            class="absolute right-4 sm:right-8 z-20 p-3 rounded-full bg-slate-900/80 border border-white/20 text-white hover:bg-indigo-600 transition-all cursor-pointer shadow-2xl hover:scale-110 active:scale-95">
+            <svg class="w-6 h-6 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        }
+      </div>
+    }
   `
 })
 export class ProjectDetailsComponent implements OnInit {
@@ -2599,6 +2651,54 @@ export class ProjectDetailsComponent implements OnInit {
 
     this.projectSettingsForm.patchValue({ isPublicPortfolio: newValue });
     this.onProjectSettingsSubmit();
+  }
+
+  // Lightbox Viewer State
+  readonly lightboxPhotos = signal<string[]>([]);
+  readonly activeLightboxIndex = signal<number>(0);
+  readonly isLightboxOpen = signal<boolean>(false);
+
+  openLightbox(photos: any[], startIndex: number = 0, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!photos || photos.length === 0) return;
+
+    const urls = photos.map(p => typeof p === 'string' ? p : p.photoUrl).filter(Boolean);
+    if (urls.length === 0) return;
+
+    this.lightboxPhotos.set(urls);
+    this.activeLightboxIndex.set(startIndex);
+    this.isLightboxOpen.set(true);
+  }
+
+  closeLightbox(): void {
+    this.isLightboxOpen.set(false);
+    this.lightboxPhotos.set([]);
+    this.activeLightboxIndex.set(0);
+  }
+
+  nextLightboxPhoto(): void {
+    const photos = this.lightboxPhotos();
+    if (photos.length === 0) return;
+    this.activeLightboxIndex.set((this.activeLightboxIndex() + 1) % photos.length);
+  }
+
+  prevLightboxPhoto(): void {
+    const photos = this.lightboxPhotos();
+    if (photos.length === 0) return;
+    this.activeLightboxIndex.set((this.activeLightboxIndex() - 1 + photos.length) % photos.length);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    if (this.isLightboxOpen()) {
+      if (event.key === 'Escape') {
+        this.closeLightbox();
+      } else if (event.key === 'ArrowRight') {
+        this.nextLightboxPhoto();
+      } else if (event.key === 'ArrowLeft') {
+        this.prevLightboxPhoto();
+      }
+    }
   }
 
 

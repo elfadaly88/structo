@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed, Renderer2 } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, Renderer2, HostListener } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -368,69 +368,75 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
           <div (click)="closeModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md"></div>
 
           <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-11/12 sm:w-full max-h-[92vh] flex flex-col p-0 shadow-2xl z-10 font-sans overflow-hidden">
-            <!-- Modal Header / Banner Container -->
-            <div class="relative h-48 sm:h-56 w-full bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border-b border-slate-800 shrink-0">
-              @if (selectedCompany()!.bannerUrl) {
-                <img [src]="selectedCompany()!.bannerUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover">
-              }
-              <!-- Gradient Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-              
-              <!-- Close Button -->
-              <button 
-                (click)="closeModal()"
-                class="absolute top-4 right-4 p-2 rounded-xl bg-slate-950/60 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-950 transition-all duration-150 cursor-pointer shadow-lg z-20">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            
+            <!-- 1️⃣ FIXED TOP HEADER (PERMANENTLY VISIBLE ON SCROLL) -->
+            <div class="shrink-0 bg-slate-900 border-b border-slate-800 relative z-20 shadow-md">
+              <!-- Banner Container with Dark Gradient Overlay -->
+              <div class="relative h-28 sm:h-36 w-full bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border-b border-slate-800/80 overflow-hidden">
+                @if (selectedCompany()!.bannerUrl) {
+                  <img [src]="selectedCompany()!.bannerUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover">
+                }
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
 
-            <!-- Modal Content (Scrollable Container) -->
-            <div class="overflow-y-auto min-h-0 w-full flex-1 px-4 sm:px-8 pb-8 font-cairo scrollbar-none">
-              <!-- Avatar & Profile Info Header -->
-              <div class="relative flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 -mt-14 mb-6 z-10">
-                <!-- Company Avatar -->
-                <div class="flex items-end gap-4">
-                  @if (selectedCompany()!.logoUrl) {
-                    <div class="h-24 w-24 rounded-2xl border-4 border-slate-900 bg-slate-950 shadow-2xl overflow-hidden shrink-0 flex items-center justify-center">
-                      <img [src]="selectedCompany()!.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
-                    </div>
-                  } @else {
-                    <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-3xl border-4 border-slate-900 shadow-2xl font-cairo shrink-0">
-                      {{ selectedCompany()!.name.substring(0,2) }}
-                    </div>
-                  }
-                  <div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight font-cairo">{{ selectedCompany()!.name }}</h2>
-                    <div class="flex items-center gap-3 mt-1.5 flex-wrap">
-                      <span class="text-xs sm:text-sm text-indigo-400 font-bold font-cairo flex items-center gap-1">
-                        📍 {{ selectedCompany()!.region || 'مصر' }}
-                      </span>
-                      <span class="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
-                      <button
-                        (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
-                        title="View all client reviews"
-                        class="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-slate-950/60 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span>{{ selectedCompany()!.rating | number:'1.1-1' }}</span>
-                        <span class="text-[10px] text-amber-400/80 font-normal">(تقييمات العملاء)</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Projects Stats Badge -->
-                <div class="px-4 py-2 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center gap-3 shadow-md shrink-0">
-                  <span class="text-xs text-slate-400 font-bold font-cairo">المشاريع الموثقة</span>
-                  <span class="text-lg font-black text-indigo-400 font-mono">{{ selectedCompany()!.projects.length }}</span>
-                </div>
+                <!-- Close Button (X) -->
+                <button 
+                  (click)="closeModal()"
+                  class="absolute top-3 right-3 p-2 rounded-xl bg-slate-950/70 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-950 transition-all duration-150 cursor-pointer shadow-lg z-30">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
+              <!-- Fixed Avatar & Profile Summary Bar -->
+              <div class="px-4 sm:px-8 pb-4 pt-1 font-cairo">
+                <div class="relative flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 -mt-10 sm:-mt-12 z-10">
+                  <!-- Company Avatar & Name -->
+                  <div class="flex items-end gap-4">
+                    @if (selectedCompany()!.logoUrl) {
+                      <div class="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-4 border-slate-900 bg-slate-950 shadow-2xl overflow-hidden shrink-0 flex items-center justify-center">
+                        <img [src]="selectedCompany()!.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
+                      </div>
+                    } @else {
+                      <div class="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-2xl sm:text-3xl border-4 border-slate-900 shadow-2xl font-cairo shrink-0">
+                        {{ selectedCompany()!.name.substring(0,2) }}
+                      </div>
+                    }
+                    <div>
+                      <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight font-cairo">{{ selectedCompany()!.name }}</h2>
+                      <div class="flex items-center gap-3 mt-1 flex-wrap">
+                        <span class="text-xs sm:text-sm text-indigo-400 font-bold font-cairo flex items-center gap-1">
+                          📍 {{ selectedCompany()!.region || 'مصر' }}
+                        </span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
+                        <button
+                          (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
+                          title="View all client reviews"
+                          class="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-slate-950/60 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span>{{ selectedCompany()!.rating | number:'1.1-1' }}</span>
+                          <span class="text-[10px] text-amber-400/80 font-normal">(تقييمات العملاء)</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Projects Stats Badge -->
+                  <div class="px-3.5 py-1.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center gap-2.5 shadow-md shrink-0">
+                    <span class="text-xs text-slate-400 font-bold font-cairo">المشاريع الموثقة</span>
+                    <span class="text-base font-black text-indigo-400 font-mono">{{ selectedCompany()!.projects.length }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2️⃣ SCROLLABLE CONTENT AREA (PROJECTS GRID & ABOUT SCROLL UNDERNEATH) -->
+            <div class="overflow-y-auto min-h-0 w-full flex-1 px-4 sm:px-8 py-6 font-cairo scrollbar-none space-y-6">
               <!-- About Description Section -->
-              <div class="mb-8">
+              <div>
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-cairo mb-2 flex items-center gap-2">
                   <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                   عن الشركة والنشاط
@@ -454,10 +460,18 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                   @for (proj of selectedCompany()!.projects; track proj.id) {
                     @let meta = parseProjectDetails(proj.description);
                     <div class="bg-slate-950/60 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200 shadow-xl group">
-                      <!-- Project Card Cover Photo & Badges -->
-                      <div class="relative h-44 w-full bg-slate-900 overflow-hidden">
+                      <!-- Project Card Cover Photo & Badges (Click Cover to Open Lightbox) -->
+                      <div 
+                        (click)="proj.sitePhotos && proj.sitePhotos.length > 0 && openLightbox(proj.sitePhotos, 0, $event)"
+                        class="relative h-44 w-full bg-slate-900 overflow-hidden"
+                        [class.cursor-pointer]="proj.sitePhotos && proj.sitePhotos.length > 0">
                         @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
                           <img [src]="proj.sitePhotos[0]" (error)="onImgError($event)" alt="{{ proj.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                          <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-white text-xs font-bold font-cairo flex items-center gap-1.5 shadow-xl border border-white/20">
+                              🔍 معاينة الصورة بالكامل
+                            </span>
+                          </div>
                         } @else {
                           <div class="w-full h-full bg-gradient-to-br from-slate-900 to-indigo-950/40 flex flex-col items-center justify-center p-4 text-slate-600">
                             <svg class="w-10 h-10 mb-2 opacity-40 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,21 +516,28 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                           <button
                             (click)="toggleProjectDetailsExpand(proj.id)"
                             class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 transition-all cursor-pointer font-cairo flex items-center gap-1.5">
-                            <span>عرض التفاصيل</span>
+                            <span>عرض التفاصيل والصور</span>
                             <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="expandedProjectId() === proj.id" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                           </button>
                         </div>
 
-                        <!-- Expanded Project Details & Photos -->
+                        <!-- Expanded Project Details & Photos Gallery -->
                         @if (expandedProjectId() === proj.id) {
                           <div class="pt-3 border-t border-slate-800/80 space-y-3 animate-fade-in">
                             @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
                               <div class="grid grid-cols-3 gap-2">
-                                @for (photo of proj.sitePhotos; track photo) {
-                                  <div class="relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer">
-                                    <img [src]="photo" (error)="onImgError($event)" alt="" class="w-full h-full object-cover hover:scale-110 transition-transform">
+                                @for (photo of proj.sitePhotos; track photo; let idx = $index) {
+                                  <div 
+                                    (click)="openLightbox(proj.sitePhotos, idx, $event)"
+                                    class="relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer group/photo">
+                                    <img [src]="photo" (error)="onImgError($event)" alt="" class="w-full h-full object-cover group-hover/photo:scale-110 transition-transform">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                      </svg>
+                                    </div>
                                   </div>
                                 }
                               </div>
@@ -534,6 +555,56 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
               </div>
             </div>
           </div>
+        </div>
+      }
+
+      <!-- 🖼️ FULLSCREEN LIGHTBOX VIEWER -->
+      @if (isLightboxOpen() && lightboxPhotos().length > 0) {
+        <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/92 backdrop-blur-md animate-fade-in">
+          <!-- Backdrop Click to Close -->
+          <div (click)="closeLightbox()" class="absolute inset-0 z-0"></div>
+
+          <!-- Close Button (X) -->
+          <button 
+            (click)="closeLightbox()" 
+            class="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-slate-900/80 border border-white/20 text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xl">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <!-- Counter Indicator -->
+          <div class="absolute top-4 left-4 z-20 px-3.5 py-1.5 rounded-xl bg-slate-900/80 border border-white/20 text-white text-xs font-mono font-bold shadow-xl flex items-center gap-2 font-cairo">
+            <span>📷</span>
+            <span>{{ activeLightboxIndex() + 1 }} / {{ lightboxPhotos().length }}</span>
+          </div>
+
+          <!-- Main Image Container -->
+          <div class="relative z-10 max-w-5xl max-h-[85vh] flex items-center justify-center p-2">
+            <img 
+              [src]="lightboxPhotos()[activeLightboxIndex()]" 
+              (error)="onImgError($event)" 
+              alt="Public Portfolio Photo" 
+              class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-slate-800 transition-all duration-200">
+          </div>
+
+          <!-- Navigation Arrow Prev (<) & Next (>) -->
+          @if (lightboxPhotos().length > 1) {
+            <button 
+              (click)="prevLightboxPhoto()" 
+              class="absolute left-4 sm:left-8 z-20 p-3 rounded-full bg-slate-900/80 border border-white/20 text-white hover:bg-indigo-600 transition-all cursor-pointer shadow-2xl hover:scale-110 active:scale-95">
+              <svg class="w-6 h-6 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button 
+              (click)="nextLightboxPhoto()" 
+              class="absolute right-4 sm:right-8 z-20 p-3 rounded-full bg-slate-900/80 border border-white/20 text-white hover:bg-indigo-600 transition-all cursor-pointer shadow-2xl hover:scale-110 active:scale-95">
+              <svg class="w-6 h-6 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          }
         </div>
       }
 
@@ -627,6 +698,56 @@ export class LandingPageComponent implements OnInit {
   readonly isModalOpen = signal(false);
   readonly isLoading = signal(false);
   readonly expandedProjectId = signal<string | null>(null);
+
+  // Lightbox Viewer State
+  readonly lightboxPhotos = signal<string[]>([]);
+  readonly activeLightboxIndex = signal<number>(0);
+  readonly isLightboxOpen = signal<boolean>(false);
+
+  openLightbox(photos: string[], startIndex: number = 0, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (!photos || photos.length === 0) return;
+    this.lightboxPhotos.set(photos);
+    this.activeLightboxIndex.set(startIndex);
+    this.isLightboxOpen.set(true);
+  }
+
+  closeLightbox(): void {
+    this.isLightboxOpen.set(false);
+    this.lightboxPhotos.set([]);
+    this.activeLightboxIndex.set(0);
+  }
+
+  nextLightboxPhoto(): void {
+    const photos = this.lightboxPhotos();
+    if (photos.length === 0) return;
+    this.activeLightboxIndex.set((this.activeLightboxIndex() + 1) % photos.length);
+  }
+
+  prevLightboxPhoto(): void {
+    const photos = this.lightboxPhotos();
+    if (photos.length === 0) return;
+    this.activeLightboxIndex.set((this.activeLightboxIndex() - 1 + photos.length) % photos.length);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    if (this.isLightboxOpen()) {
+      if (event.key === 'Escape') {
+        this.closeLightbox();
+      } else if (event.key === 'ArrowRight') {
+        this.nextLightboxPhoto();
+      } else if (event.key === 'ArrowLeft') {
+        this.prevLightboxPhoto();
+      }
+    } else if (this.isModalOpen() && event.key === 'Escape') {
+      this.closeModal();
+    } else if (this.isReviewsModalOpen() && event.key === 'Escape') {
+      this.closeReviewsModal();
+    }
+  }
 
   // Reviews states
   readonly isReviewsModalOpen = signal(false);
