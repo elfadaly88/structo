@@ -15,7 +15,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
 
   let authReq = req;
   // Attach the token only if it exists and request is to our backend API
-  if (token && req.url.startsWith(environment.apiUrl)) {
+  const isApiRequest = req.url.startsWith(environment.apiUrl) || req.url.startsWith('/api') || req.url.includes('/api/');
+  if (token && isApiRequest) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`

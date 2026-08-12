@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["dashboard-layout.component.ts"],
+  "sourcesContent": ["\n    :host {\n      display: block;\n      height: 100vh;\n    }\n    aside {\n      transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;\n    }\n    :host ::ng-deep html[dir=\"ltr\"] .sidebar-closed {\n      transform: translateX(-100%);\n    }\n    :host ::ng-deep html[dir=\"rtl\"] .sidebar-closed {\n      transform: translateX(100%);\n    }\n    .sidebar-open {\n      transform: translateX(0) !important;\n    }\n    @media (min-width: 768px) {\n      .sidebar-closed {\n        transform: translateX(0) !important;\n        width: 16rem !important;\n      }\n    }\n  "],
+  "mappings": ";AACI;AACE,WAAA;AACA,UAAA;AACF;AACA;AACE,cAAA,UAAA,KAAA,WAAA,EAAA,MAAA,KAAA;AACF;AACA,MAAA,UAAA,IAAA,CAAA,SAAA,CAAA;AACE,aAAA,WAAA;AACF;AACA,MAAA,UAAA,IAAA,CAAA,SAAA,CAHA;AAIE,aAAA,WAAA;AACF;AACA,CAAA;AACE,aAAA,WAAA;AACF;AACA,QAAA,WAAA;AACE,GAVF;AAWI,eAAA,WAAA;AACA,WAAA;AACF;AACF;",
+  "names": []
+}

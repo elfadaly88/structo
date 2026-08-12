@@ -337,8 +337,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (string.IsNullOrEmpty(tenantIdClaim) || string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleClaim))
             return false;
 
-        var tenantId = Guid.Parse(tenantIdClaim);
-        var userId = Guid.Parse(userIdClaim);
+        if (!Guid.TryParse(tenantIdClaim, out var tenantId) || !Guid.TryParse(userIdClaim, out var userId))
+            return false;
 
         // 2. 🧠 السحر البرمجي: تحويل النص القادم من الـ JWT إلى الـ UserRole Enum بالملي
         if (!Enum.TryParse<UserRole>(roleClaim, true, out var userRole))

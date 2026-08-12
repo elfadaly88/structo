@@ -28,15 +28,29 @@ public class FinancialTransactionsController : ControllerBase
         _financialTransactionService = financialTransactionService;
         _logger = logger;
     }
-    private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-    private Guid CurrentUserId => Guid.Parse(
-        User.FindFirstValue("sub") ??
-        User.FindFirstValue(ClaimTypes.NameIdentifier) ??
-        Guid.Empty.ToString());
+    private string CurrentUserRole => User?.FindFirstValue("role") ?? User?.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+    private Guid CurrentUserId
+    {
+        get
+        {
+            var val = User?.FindFirstValue("sub") ?? User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(val, out var parsed) ? parsed : Guid.Empty;
+        }
+    }
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] FinancialTransactionCreateDto dto)
     {
+        if (User?.Identity?.IsAuthenticated != true)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+        }
+
+        if (string.IsNullOrEmpty(CurrentUserRole) || CurrentUserId == Guid.Empty)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User identity or claims missing." });
+        }
+
         if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
         {
             _logger.LogWarning("🚨 Security Warning: Unauthorized attempt to CREATE transaction under Project {ProjectId} by User {UserId}", projectId, User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -55,6 +69,11 @@ public class FinancialTransactionsController : ControllerBase
     {
         try
         {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = "User is not authenticated." });
+            }
+
             // 🔒 حظر الاطلاع على المعاملات لغير المصرح لهم بالدخول للمشروع
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
             {
@@ -82,21 +101,41 @@ public class FinancialTransactionsController : ControllerBase
     {
         try
         {
-            // 🔒 حظر حقن أموال في مشروع لا ينتمي لنفس الـ Tenant
+            // 🛡️ 1. Explicit Authentication Guard
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                _logger.LogWarning("🚨 Security Warning: Unauthenticated call to InjectCapital for Project {ProjectId}", projectId);
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+            }
+
+            // 🛡️ 2. Claims Extraction & Validation
+            var userRole = CurrentUserRole;
+            var userId = CurrentUserId;
+            if (string.IsNullOrEmpty(userRole) || userId == Guid.Empty)
+            {
+                _logger.LogWarning("🚨 Security Warning: User claims missing in InjectCapital request for Project {ProjectId}", projectId);
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User identity or claims missing." });
+            }
+
+            // 🔒 3. Project Access Verification
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
             {
                 return Forbid();
             }
 
+            // 🔒 4. Tenant ID Safeguard
             var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
-            Guid? tenantId = tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var parsedId) ? parsedId : null;
+            if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+            {
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant ID claim missing or invalid." });
+            }
 
-            var (success, message) = await _financialTransactionService.InjectCapitalAsync(projectId, dto, tenantId, CurrentUserRole);
+            var (success, message) = await _financialTransactionService.InjectCapitalAsync(projectId, dto, tenantId, userRole);
 
             if (!success)
                 return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
 
-            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = CurrentUserRole });
+            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = userRole });
         }
         catch (Exception ex)
         {
