@@ -37,25 +37,25 @@ import { LanguageService } from '../../../core/services/language.service';
           <!-- Card 1: Total Income -->
           <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
             <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
-            <h3 class="text-base lg:text-lg font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ totalIncome() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            <h3 class="text-base lg:text-lg font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ (totalIncome() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
           </div>
           <!-- Card 2: Total Expenses -->
           <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
             <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
-            <h3 class="text-base lg:text-lg font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ totalExpenses() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            <h3 class="text-base lg:text-lg font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ (totalExpenses() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
           </div>
           <!-- Card 3: Net Balance -->
           <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
             <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
             <h3 class="text-base lg:text-lg font-extrabold mt-1 font-mono tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
-              {{ netBalance() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+              {{ (netBalance() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
             </h3>
           </div>
         }
         <!-- Card 4: Unsettled Petty Cash -->
         <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm" [class.col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
           <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
-          <h3 class="text-base lg:text-lg font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ totalUnsettledPettyCash() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+          <h3 class="text-base lg:text-lg font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ (totalUnsettledPettyCash() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
         </div>
       </div>
 
@@ -563,19 +563,19 @@ import { LanguageService } from '../../../core/services/language.service';
               <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
                   <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي الميزانية</span>
-                  <p class="text-xl font-extrabold text-slate-200 mt-1 font-mono">{{ reconciliationReport()!.totalBudget | number:'1.0-0' }} EGP</p>
+                  <p class="text-xl font-extrabold text-slate-200 mt-1 font-mono">{{ (reconciliationReport()?.totalBudget || 0) | number:'1.0-0' }} EGP</p>
                 </div>
                 <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
                   <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي الدخل</span>
-                  <p class="text-xl font-extrabold text-emerald-400 mt-1 font-mono">{{ reconciliationReport()!.totalIncome | number:'1.0-0' }} EGP</p>
+                  <p class="text-xl font-extrabold text-emerald-400 mt-1 font-mono">{{ (reconciliationReport()?.totalIncome || 0) | number:'1.0-0' }} EGP</p>
                 </div>
                 <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
                   <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">إجمالي المصروفات</span>
-                  <p class="text-xl font-extrabold text-rose-400 mt-1 font-mono">{{ reconciliationReport()!.totalExpenses | number:'1.0-0' }} EGP</p>
+                  <p class="text-xl font-extrabold text-rose-400 mt-1 font-mono">{{ (reconciliationReport()?.totalExpenses || 0) | number:'1.0-0' }} EGP</p>
                 </div>
                 <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
                   <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">صافي الرصيد</span>
-                  <p class="text-xl font-extrabold mt-1 font-mono" [class.text-emerald-400]="reconciliationReport()!.netBalance >= 0" [class.text-rose-400]="reconciliationReport()!.netBalance < 0">{{ reconciliationReport()!.netBalance | number:'1.0-0' }} EGP</p>
+                  <p class="text-xl font-extrabold mt-1 font-mono" [class.text-emerald-400]="(reconciliationReport()?.netBalance || 0) >= 0" [class.text-rose-400]="(reconciliationReport()?.netBalance || 0) < 0">{{ (reconciliationReport()?.netBalance || 0) | number:'1.0-0' }} EGP</p>
                 </div>
               </div>
               <!-- Custody Row (Clickable KPI Drill-Down triggers) -->
@@ -588,7 +588,7 @@ import { LanguageService } from '../../../core/services/language.service';
                   [class.bg-amber-500\/5]="selectedDrilldown() === 'unsettled'">
                   <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-cairo block">عُهَد معلَّقة للغلق / Unsettled Custody</span>
                   <p class="text-lg font-bold text-amber-400 mt-1 font-mono hover:underline">
-                    {{ unsettledCustodyList().length }} عهدة ({{ unsettledCustodySum() | number:'1.0-0' }} EGP)
+                    {{ unsettledCustodyList().length }} عهدة ({{ (unsettledCustodySum() || 0) | number:'1.0-0' }} EGP)
                   </p>
                   <span class="text-[9px] text-slate-500 font-cairo block mt-0.5">اضغط للتفاصيل وإرسال التذكيرات</span>
                 </div>
@@ -601,7 +601,7 @@ import { LanguageService } from '../../../core/services/language.service';
                   [class.bg-amber-500\/5]="selectedDrilldown() === 'refunds'">
                   <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-cairo block">مرتجعات الخزينة المعلقة / Treasury Refunds</span>
                   <p class="text-lg font-bold text-amber-400 mt-1 font-mono hover:underline">
-                    {{ pendingRefundsList().length }} تسوية ({{ pendingRefundsSum() | number:'1.0-0' }} EGP)
+                    {{ pendingRefundsList().length }} تسوية ({{ (pendingRefundsSum() || 0) | number:'1.0-0' }} EGP)
                   </p>
                   <span class="text-[9px] text-slate-500 font-cairo block mt-0.5">اضغط لتأكيد استلام المبلغ نقداً</span>
                 </div>
@@ -614,7 +614,7 @@ import { LanguageService } from '../../../core/services/language.service';
                   [class.bg-amber-500\/5]="selectedDrilldown() === 'reimbursements'">
                   <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-cairo block">تعويضات الموظفين المعلقة / Reimbursements</span>
                   <p class="text-lg font-bold text-amber-400 mt-1 font-mono hover:underline">
-                    {{ pendingReimbursementsList().length }} طلب ({{ pendingReimbursementsSum() | number:'1.0-0' }} EGP)
+                    {{ pendingReimbursementsList().length }} طلب ({{ (pendingReimbursementsSum() || 0) | number:'1.0-0' }} EGP)
                   </p>
                   <span class="text-[9px] text-slate-500 font-cairo block mt-0.5">اضغط لصرف التعويض للموظف</span>
                 </div>
@@ -1298,7 +1298,7 @@ import { LanguageService } from '../../../core/services/language.service';
 
       <!-- Tab Content: Financial Transactions -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl shadow-xl ledger-table-container min-h-[300px] h-auto overflow-x-auto overflow-y-visible">
+        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl shadow-xl ledger-table-container overflow-x-auto overflow-y-visible min-h-[350px] h-auto w-full">
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
             <div class="flex items-center gap-3">
@@ -1314,8 +1314,8 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <div class="w-full overflow-x-auto overflow-y-visible block font-sans min-h-[300px] h-auto">
-              <table class="w-full text-left rtl:text-right min-w-[800px]">
+            <div class="w-full overflow-x-auto overflow-y-visible min-h-[350px]">
+              <table class="w-full border-collapse text-left rtl:text-right min-w-[800px]">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
                     <th class="px-6 py-4">{{ 'DETAILS.TH_DATE' | translate }}</th>
@@ -1333,9 +1333,9 @@ import { LanguageService } from '../../../core/services/language.service';
                   @for (t of transactions(); track t.id) {
                     <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
                       <td class="px-6 py-4 text-slate-400">
-                        <div>{{ t.transactionDate | date:'dd/MM/yyyy HH:mm' }}</div>
-                        @if (t.paymentDate) {
-                          <div class="text-[10px] text-slate-500 mt-1">Paid: {{ t.paymentDate | date:'dd/MM/yyyy' }}</div>
+                        <div>{{ (t?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</div>
+                        @if (t?.paymentDate) {
+                          <div class="text-[10px] text-slate-500 mt-1">Paid: {{ (t?.paymentDate) | date:'dd/MM/yyyy' }}</div>
                         }
                       </td>
                       <td class="px-6 py-4">
@@ -1366,7 +1366,7 @@ import { LanguageService } from '../../../core/services/language.service';
                       <td class="px-6 py-4 font-mono font-bold"
                           [class.text-emerald-400]="t.type === 'Income'"
                           [class.text-rose-400]="t.type !== 'Income'">
-                        {{ t.type === 'Income' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                        {{ t.type === 'Income' ? '+' : '-' }}{{ (t?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
                       </td>
                       <td class="px-6 py-4 text-center">
                         @if (t.receiptPhotoUrl) {
@@ -1384,7 +1384,7 @@ import { LanguageService } from '../../../core/services/language.service';
                       </td>
                       @if (isOwnerOrAccountant()) {
                         <td class="px-6 py-4 text-center">
-                          @if (t.isLocked || t.canEdit === false || t.description.toLowerCase().startsWith('petty cash settlement -')) {
+                          @if (t?.isLocked || t?.canEdit === false || t?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
                             <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                               <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -3541,16 +3541,12 @@ export class ProjectDetailsComponent implements OnInit {
         this.isLoadingTransactions.set(false);
         if (response.success && response.data) {
           this.transactions.set(response.data.items);
-          setTimeout(() => {
-            this.cdr.detectChanges();
-          }, 50);
+          queueMicrotask(() => this.cdr.detectChanges());
         }
       },
       error: () => {
         this.isLoadingTransactions.set(false);
-        setTimeout(() => {
-          this.cdr.detectChanges();
-        }, 50);
+        queueMicrotask(() => this.cdr.detectChanges());
       }
     });
   }

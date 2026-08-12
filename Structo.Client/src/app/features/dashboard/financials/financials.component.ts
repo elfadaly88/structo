@@ -54,7 +54,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 <span>إجمالي الإيرادات</span>
               </div>
               <div class="text-2xl sm:text-3xl font-bold text-emerald-400 font-mono tabular-nums">
-                {{ totalIncome | number:'1.2-2' }} <span class="text-xs text-emerald-400/80 font-cairo">{{ 'COMMON.CURRENCY' | translate }}</span>
+                {{ (totalIncome || 0) | number:'1.2-2' }} <span class="text-xs text-emerald-400/80 font-cairo">{{ 'COMMON.CURRENCY' | translate }}</span>
               </div>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl">
@@ -70,7 +70,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 <span>إجمالي المصروفات</span>
               </div>
               <div class="text-2xl sm:text-3xl font-bold text-rose-400 font-mono tabular-nums">
-                {{ totalExpenses | number:'1.2-2' }} <span class="text-xs text-rose-400/80 font-cairo">{{ 'COMMON.CURRENCY' | translate }}</span>
+                {{ (totalExpenses || 0) | number:'1.2-2' }} <span class="text-xs text-rose-400/80 font-cairo">{{ 'COMMON.CURRENCY' | translate }}</span>
               </div>
             </div>
             <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 text-xl">
@@ -125,8 +125,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </div>
               <div class="mt-5 space-y-2.5">
                 <div class="flex justify-between text-xs text-slate-400 font-mono">
-                  <span>{{ spent | number:'1.0-0' }} / {{ budget | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</span>
-                  <span [class.text-rose-400]="pct > 85" [class.text-indigo-400]="pct <= 85" class="font-bold">{{ pct | number:'1.1-1' }}%</span>
+                  <span>{{ (spent || 0) | number:'1.0-0' }} / {{ (budget || 0) | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</span>
+                  <span [class.text-rose-400]="pct > 85" [class.text-indigo-400]="pct <= 85" class="font-bold">{{ (pct || 0) | number:'1.1-1' }}%</span>
                 </div>
                 <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                   <div 
@@ -212,7 +212,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                       </div>
                       <div class="text-right">
                         <span class="text-lg font-bold text-amber-400 font-mono tabular-nums block">
-                          {{ request.amount | number:'1.2-2' }}
+                          {{ (request?.amount || 0) | number:'1.2-2' }}
                         </span>
                         <span class="text-[10px] text-amber-400/70 font-cairo uppercase font-bold">{{ 'COMMON.CURRENCY' | translate }}</span>
                       </div>
@@ -221,7 +221,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                     <!-- Middle: Date & Reason -->
                     <div class="pt-3 space-y-2">
                       <div class="flex items-center justify-between text-xs text-slate-400 font-mono tabular-nums">
-                        <span>📅 {{ request.issuedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <span>📅 {{ (request?.issuedAt || '') | date:'dd/MM/yyyy HH:mm' }}</span>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
                           في الانتظار
                         </span>
@@ -285,13 +285,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                   @for (request of myPettyCash(); track request.id) {
                     <tr class="hover:bg-slate-950/20">
                       <td class="py-4 text-white font-medium">{{ getProjectName(request) }}</td>
-                      <td class="py-4 text-amber-400 font-bold font-mono">{{ request.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
+                      <td class="py-4 text-amber-400 font-bold font-mono">{{ (request?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
                       <td class="py-4 text-slate-400 max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
                           [title]="request.reason"
                           (click)="openMyPettyCashReasonModal(request)">
                         {{ request.reason }}
                       </td>
-                      <td class="py-4 text-slate-400 font-mono">{{ request.issuedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="py-4 text-slate-400 font-mono">{{ (request?.issuedAt || '') | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="py-4 text-center">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
                           [class.bg-emerald-500/10]="request.status === 'Settled'" 
@@ -347,7 +347,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                             }
                             @if (request.expenseDate) {
                               <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-400" title="Expense Date">
-                                {{ request.expenseDate | date:'dd/MM/yyyy' }}
+                                {{ (request?.expenseDate || request?.issuedAt) | date:'dd/MM/yyyy' }}
                               </span>
                             }
                           </div>
@@ -372,7 +372,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
       <!-- TAB 2: سجل المعاملات المالية (Financial Transactions) -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6 ledger-table-container min-h-[300px] h-auto overflow-x-auto overflow-y-visible">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6 ledger-table-container overflow-x-auto overflow-y-visible min-h-[350px] h-auto w-full">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.TRANSACTIONS' | translate }}</h2>
             <span class="text-xs text-slate-400 font-cairo">إجمالي النتائج: <strong class="text-indigo-400 font-mono">{{ filteredTransactions.length }}</strong></span>
@@ -432,8 +432,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           </div>
 
           <!-- Desktop Ledger Table (md+) -->
-          <div class="hidden md:block overflow-x-auto w-full overflow-y-visible min-h-[300px] h-auto">
-            <table class="w-full text-left rtl:text-right font-sans">
+          <div class="hidden md:block w-full overflow-x-auto overflow-y-visible min-h-[350px]">
+            <table class="w-full border-collapse text-left rtl:text-right font-sans">
               <thead>
                 <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
                   <th class="pb-4 font-cairo">{{ 'FINANCE.DATE' | translate }}</th>
@@ -448,7 +448,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               <tbody class="text-sm divide-y divide-slate-800/60 text-slate-300">
                 @for (transaction of filteredTransactions; track transaction.id) {
                   <tr class="hover:bg-slate-950/20">
-                    <td class="py-4 text-slate-400 font-mono tabular-nums">{{ transaction.transactionDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="py-4 text-slate-400 font-mono tabular-nums">{{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td class="py-4 text-white font-medium max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
                         [title]="transaction.description"
                         (click)="openTransactionInspectionModal(transaction)">
@@ -470,11 +470,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                       [class.text-emerald-400]="transaction.type === 'Income'" 
                       [class.text-rose-400]="transaction.type === 'Expense'"
                     >
-                      {{ transaction.type === 'Income' ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                      {{ transaction.type === 'Income' ? '+' : '-' }}{{ (transaction?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
                     </td>
                     @if (isOwnerOrAccountant()) {
                       <td class="py-4 text-center">
-                        @if (transaction.isLocked || transaction.canEdit === false || transaction.description.toLowerCase().startsWith('petty cash settlement -')) {
+                        @if (transaction?.isLocked || transaction?.canEdit === false || transaction?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
                           <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2.5 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                             🔒 مقفلة
                           </span>
@@ -528,16 +528,16 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                     [class.text-emerald-400]="transaction.type === 'Income'" 
                     [class.text-rose-400]="transaction.type === 'Expense'"
                   >
-                    {{ transaction.type === 'Income' ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                    {{ transaction.type === 'Income' ? '+' : '-' }}{{ (transaction?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
                   </span>
                 </div>
                 <p class="text-xs text-white font-medium font-cairo cursor-pointer" (click)="openTransactionInspectionModal(transaction)">
                   {{ transaction.description }}
                 </p>
                 <div class="flex items-center justify-between text-xs text-slate-500 font-mono tabular-nums pt-1">
-                  <span>📅 {{ transaction.transactionDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span>📅 {{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
                   @if (isOwnerOrAccountant()) {
-                    @if (transaction.isLocked || transaction.canEdit === false || transaction.description.toLowerCase().startsWith('petty cash settlement -')) {
+                    @if (transaction?.isLocked || transaction?.canEdit === false || transaction?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
                       <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                         🔒 مقفلة
                       </span>
@@ -674,7 +674,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           <form (ngSubmit)="submitSettleRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
               <div class="text-sm text-slate-400 mb-1 font-cairo">{{ 'FINANCE.ISSUED_AMOUNT' | translate }}</div>
-              <div class="text-xl font-bold text-white font-mono">{{ settleRequest()?.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</div>
+              <div class="text-xl font-bold text-white font-mono">{{ (settleRequest()?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</div>
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.SPENT_AMOUNT' | translate }}</label>
@@ -689,7 +689,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.RETURN_AMOUNT' | translate }}</label>
               <div class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-400 font-mono">
-                {{ getCalculatedReturnAmount() | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                {{ (getCalculatedReturnAmount() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
               </div>
             </div>
             <div>
@@ -827,7 +827,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 required>
                 <option value="" disabled>Select cash pool...</option>
                 @for (pool of currentProjectPools(); track pool.id) {
-                  <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)</option>
+                  <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ (pool?.availableBalance || 0) | number:'1.0-2' }} ج.م)</option>
                 }
               </select>
             </div>
@@ -1218,16 +1218,12 @@ export class FinancialsComponent implements OnInit {
         this.loading.set(false);
         if (response.success && response.data) {
           this.transactions.set(response.data.items);
-          setTimeout(() => {
-            this.cdr.detectChanges();
-          }, 50);
+          queueMicrotask(() => this.cdr.detectChanges());
         }
       },
       error: () => {
         this.loading.set(false);
-        setTimeout(() => {
-          this.cdr.detectChanges();
-        }, 50);
+        queueMicrotask(() => this.cdr.detectChanges());
       }
     });
   }
