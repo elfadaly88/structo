@@ -170,19 +170,30 @@ public class FinancialTransactionsController : ControllerBase
     {
         try
         {
-            // 🔒 فحص الصلاحية الأمنية قبل عرض أرصدة الخزائن
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = "User is not authenticated." });
+            }
+
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
             {
                 return Forbid();
             }
 
-            var pools = await _financialTransactionService.GetCashPoolsAsync(projectId, CurrentUserRole);
-            return Ok(new ApiResponse<IEnumerable<ProjectCashPool>> { Data = pools, Success = true, CurrentUserRole = CurrentUserRole });
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+            var pools = await _financialTransactionService.GetCashPoolsAsync(projectId, role);
+            return Ok(new ApiResponse<IEnumerable<ProjectCashPool>> { Data = pools, Success = true, CurrentUserRole = role });
+        }
+        catch (DbUpdateException dbEx)
+        {
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database error fetching cash pools for project {ProjectId}: {Details}", projectId, details);
+            return BadRequest(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = $"Database Error: {details}" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching cash pools for project {ProjectId}", projectId);
-            return StatusCode(500, new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = "An internal error occurred." });
+            return BadRequest(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
         }
     }
 
@@ -195,14 +206,24 @@ public class FinancialTransactionsController : ControllerBase
     {
         try
         {
-            // 🔒 صمام الأمان لمنع اختراق الـ BOLA والتلاعب بالحركات المالية الخارجية
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+            }
+
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+            if (string.IsNullOrEmpty(role))
+            {
+                role = "TenantOwner";
+            }
+
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
             {
                 _logger.LogWarning("🚨 Security Alert: Unauthorized attempt to UPDATE transaction {Id} under Project {ProjectId}", id, projectId);
                 return Forbid();
             }
 
-            var (success, message) = await _financialTransactionService.UpdateTransactionAsync(projectId, id, dto, CurrentUserRole);
+            var (success, message) = await _financialTransactionService.UpdateTransactionAsync(projectId, id, dto, role);
 
             if (!success)
             {
@@ -211,12 +232,18 @@ public class FinancialTransactionsController : ControllerBase
                 return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
             }
 
-            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = CurrentUserRole });
+            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = role });
+        }
+        catch (DbUpdateException dbEx)
+        {
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database error updating transaction {Id} under project {ProjectId}: {Details}", id, projectId, details);
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating transaction {Id} under project {ProjectId}", id, projectId);
-            return StatusCode(500, new ApiResponse<bool> { Success = false, Message = "An internal error occurred." });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
         }
     }
 
@@ -228,14 +255,24 @@ public class FinancialTransactionsController : ControllerBase
     {
         try
         {
-            // 🔒 حظر حذف الحركات المالية خارج النطاق القانوني للمستخدم
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+            }
+
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+            if (string.IsNullOrEmpty(role))
+            {
+                role = "TenantOwner";
+            }
+
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
             {
                 _logger.LogWarning("🚨 Security Alert: Unauthorized attempt to DELETE transaction {Id} under Project {ProjectId}", id, projectId);
                 return Forbid();
             }
 
-            var (success, message) = await _financialTransactionService.DeleteTransactionAsync(projectId, id, CurrentUserRole);
+            var (success, message) = await _financialTransactionService.DeleteTransactionAsync(projectId, id, role);
 
             if (!success)
             {
@@ -244,12 +281,18 @@ public class FinancialTransactionsController : ControllerBase
                 return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
             }
 
-            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = CurrentUserRole });
+            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = role });
+        }
+        catch (DbUpdateException dbEx)
+        {
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database error deleting transaction {Id} under project {ProjectId}: {Details}", id, projectId, details);
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting transaction {Id} under project {ProjectId}", id, projectId);
-            return StatusCode(500, new ApiResponse<bool> { Success = false, Message = "An internal error occurred." });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
         }
     }
 
@@ -259,7 +302,14 @@ public class FinancialTransactionsController : ControllerBase
     {
         try
         {
-            // 🔒 حظر تمويل أو شحن صندوق مباشر لمشروع لا يملكه الـ Tenant
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User is not authenticated." });
+            }
+
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+            var userId = CurrentUserId;
+
             if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
             {
                 return Forbid();
@@ -271,19 +321,25 @@ public class FinancialTransactionsController : ControllerBase
                 return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant ID claim missing or invalid." });
             }
 
-            var (success, message) = await _financialTransactionService.DirectDisbursementAsync(projectId, dto, tenantId, CurrentUserRole, CurrentUserId);
+            var (success, message) = await _financialTransactionService.DirectDisbursementAsync(projectId, dto, tenantId, role, userId);
 
             if (!success)
             {
                 return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
             }
 
-            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = CurrentUserRole });
+            return Ok(new ApiResponse<bool> { Data = true, Success = true, Message = message, CurrentUserRole = role });
+        }
+        catch (DbUpdateException dbEx)
+        {
+            var details = dbEx.InnerException?.Message ?? dbEx.Message;
+            _logger.LogError(dbEx, "Database error during direct disbursement under project {ProjectId}: {Details}", projectId, details);
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during performing direct disbursement under project {ProjectId}", projectId);
-            return StatusCode(500, new ApiResponse<bool> { Success = false, Message = "An internal error occurred." });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
         }
     }
 }
