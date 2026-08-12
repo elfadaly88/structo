@@ -107,7 +107,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 
           <!-- Left side: Slider -->
           <div class="w-full md:w-3/5 space-y-6">
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center flex-wrap gap-2">
               <span class="text-sm font-semibold text-slate-400 font-cairo">
                 {{ langService.currentLang() === 'ar' ? 'عدد المشاريع المطلوبة' : 'Number of Projects' }}
               </span>
@@ -533,6 +533,7 @@ export class LandingPageComponent implements OnInit {
   readonly sliderVal = signal(1);
   readonly pricingInfo = computed(() => {
     const val = this.sliderVal();
+    const isAr = this.langService.currentLang() === 'ar';
 
     if (val <= 2) {
       return {
@@ -546,51 +547,111 @@ export class LandingPageComponent implements OnInit {
         noteEn: 'Basic Free Plan — includes 2 active projects free for lifetime.'
       };
     }
-    if (val === 3) {
+
+    if (val >= 10) {
       return {
-        planNameAr: 'إضافة مشروع واحد',
+        planNameAr: 'الباقة المؤسسية (Enterprise)',
+        planNameEn: 'Enterprise Plan',
+        price: isAr ? 'سعر مخصص' : 'Custom Pricing',
+        periodAr: 'تواصل مع المبيعات للحصول على عرض خاص',
+        periodEn: 'Contact sales for custom quote',
+        isCustom: true,
+        noteAr: 'للمؤسسات والشركات الكبيرة (10+ مشاريع). تواصل معنا للحصول على عرض سعر مخصص.',
+        noteEn: 'For large enterprises (10+ projects). Contact us for a custom quote.'
+      };
+    }
+
+    const map: Record<number, {
+      planNameAr: string;
+      planNameEn: string;
+      price: string;
+      periodAr: string;
+      periodEn: string;
+      isCustom: boolean;
+      noteAr: string;
+      noteEn: string;
+    }> = {
+      3: {
+        planNameAr: '+1 مشروع إضافي',
         planNameEn: '+1 Extra Project',
         price: '250 EGP',
         periodAr: 'دفع مرة واحدة — تفعيل فوري',
         periodEn: 'One-time payment — Instant activation',
         isCustom: false,
-        noteAr: 'الباقة المجانية (2 مشاريع) + شراء مشروع إضافي واحد (+1).',
-        noteEn: 'Free Plan (2 projects) + 1 Extra Project add-on.'
-      };
-    }
-    if (val >= 4 && val <= 6) {
-      return {
-        planNameAr: 'إضافة 5 مشاريع',
-        planNameEn: '+5 Extra Projects',
+        noteAr: 'الباقة المجانية (2 مشاريع) + مشروع إضافي واحد بتكلفة 250 ج.م.',
+        noteEn: 'Free Plan (2 Projects) + 1 Extra Project (250 EGP).'
+      },
+      4: {
+        planNameAr: '+2 مشروع إضافي',
+        planNameEn: '+2 Extra Projects',
+        price: '500 EGP',
+        periodAr: 'دفع مرة واحدة — تفعيل فوري',
+        periodEn: 'One-time payment — Instant activation',
+        isCustom: false,
+        noteAr: 'الباقة المجانية (2 مشاريع) + 2 مشروع إضافي بتكلفة 500 ج.م.',
+        noteEn: 'Free Plan (2 Projects) + 2 Extra Projects (500 EGP).'
+      },
+      5: {
+        planNameAr: '+3 مشاريع إضافية',
+        planNameEn: '+3 Extra Projects',
+        price: '750 EGP',
+        periodAr: 'دفع مرة واحدة — تفعيل فوري',
+        periodEn: 'One-time payment — Instant activation',
+        isCustom: false,
+        noteAr: 'الباقة المجانية (2 مشاريع) + 3 مشاريع إضافية بتكلفة 750 ج.م.',
+        noteEn: 'Free Plan (2 Projects) + 3 Extra Projects (750 EGP).'
+      },
+      6: {
+        planNameAr: 'باقة 5 مشاريع (+5)',
+        planNameEn: '5-Project Pack (+5)',
+        price: '950 EGP',
+        periodAr: 'دفع مرة واحدة — توفير إضافي (وفر 300 ج.م)',
+        periodEn: 'One-time payment — Save 300 EGP',
+        isCustom: false,
+        noteAr: 'توفير متميز: باقة 5 مشاريع إضافية تمنحك 7 مشاريع كلياً بـ 950 ج.م فقط (أوفر من شراء 4 مشاريع فردية).',
+        noteEn: 'Best Value: 5-Project Pack gives 7 total projects for 950 EGP (cheaper than 4 single projects).'
+      },
+      7: {
+        planNameAr: 'باقة 5 مشاريع إضافية',
+        planNameEn: '5-Project Pack',
         price: '950 EGP',
         periodAr: 'دفع مرة واحدة — توفير إضافي',
         periodEn: 'One-time payment — Extra savings',
         isCustom: false,
         noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية (توفير 300 جنيه مقارنة بالشراء الفردي).',
-        noteEn: 'Free Plan (2 projects) + 5 Extra Projects pack (Save 300 EGP).'
-      };
-    }
-    if (val >= 7 && val <= 9) {
-      return {
-        planNameAr: 'الباقة الاحترافية (Pro)',
-        planNameEn: 'Pro Plan',
-        price: '299 EGP / شهر',
-        periodAr: 'اشتراك شهري — 10 مشاريع نشطة',
-        periodEn: 'Monthly Subscription — 10 Active Projects',
+        noteEn: 'Free Plan (2 Projects) + 5-Project Pack (Save 300 EGP vs single purchases).'
+      },
+      8: {
+        planNameAr: 'باقة 5 مشاريع + 1 إضافي',
+        planNameEn: '5-Project Pack + 1 Extra',
+        price: '1,200 EGP',
+        periodAr: 'دفع مرة واحدة — تفعيل فوري',
+        periodEn: 'One-time payment — Instant activation',
         isCustom: false,
-        noteAr: 'الباقة الاحترافية (Pro) — تغطي حتى 10 مشاريع نشطة + تحليلات وميزات مالية متقدمة.',
-        noteEn: 'Pro Plan — covers up to 10 active projects + advanced financial features.'
-      };
-    }
+        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية + مشروع إضافي واحد (1,200 ج.م).',
+        noteEn: 'Free Plan (2 Projects) + 5-Project Pack + 1 Extra Project (1,200 EGP).'
+      },
+      9: {
+        planNameAr: 'باقة 5 مشاريع + 2 إضافي',
+        planNameEn: '5-Project Pack + 2 Extra',
+        price: '1,450 EGP',
+        periodAr: 'دفع مرة واحدة — تفعيل فوري',
+        periodEn: 'One-time payment — Instant activation',
+        isCustom: false,
+        noteAr: 'الباقة المجانية (2 مشاريع) + باقة 5 مشاريع إضافية + 2 مشاريع إضافية (1,450 ج.م).',
+        noteEn: 'Free Plan (2 Projects) + 5-Project Pack + 2 Extra Projects (1,450 EGP).'
+      }
+    };
+
     return {
-      planNameAr: 'الباقة المؤسسية (Enterprise)',
-      planNameEn: 'Enterprise Plan',
-      price: '799 EGP / شهر',
-      periodAr: 'اشتراك شهري — مشاريع غير محدودة',
-      periodEn: 'Monthly Subscription — Unlimited Projects',
-      isCustom: true,
-      noteAr: 'الباقة المؤسسية (Enterprise) — مشاريع غير محدودة + أولوية الدعم والاستشارات الخاصة.',
-      noteEn: 'Enterprise Plan — Unlimited projects + priority support & custom services.'
+      planNameAr: map[val]?.planNameAr || 'مخصص',
+      planNameEn: map[val]?.planNameEn || 'Custom',
+      price: map[val]?.price || 'Custom',
+      periodAr: map[val]?.periodAr || '',
+      periodEn: map[val]?.periodEn || '',
+      isCustom: map[val]?.isCustom || false,
+      noteAr: map[val]?.noteAr || '',
+      noteEn: map[val]?.noteEn || ''
     };
   });
 
