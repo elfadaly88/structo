@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
-import { FinancialTransactionMobileDto, FinancialTransactionCreateDto } from '../models/financial.models';
+import { FinancialTransactionMobileDto, FinancialTransactionCreateDto, ProjectFinancialSummaryDto } from '../models/financial.models';
 import { PaginatedList } from '../models/petty-cash.models';
 import { environment } from '../../../environments/environment';
 
@@ -13,10 +13,18 @@ export class FinancialService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/projects`;
 
+  getProjectFinancialSummary(
+    projectId: string
+  ): Observable<ApiResponse<ProjectFinancialSummaryDto>> {
+    return this.http.get<ApiResponse<ProjectFinancialSummaryDto>>(
+      `${this.baseUrl}/${projectId}/financialtransactions/summary`
+    );
+  }
+
   getProjectTransactions(
     projectId: string,
     pageNumber: number = 1,
-    pageSize: number = 10
+    pageSize: number = 1000
   ): Observable<ApiResponse<PaginatedList<FinancialTransactionMobileDto>>> {
     const params = new HttpParams()
       .set('pageNumber', pageNumber.toString())

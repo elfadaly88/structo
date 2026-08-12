@@ -63,3 +63,11 @@ export interface DirectDisbursementDto {
   sourcePoolId: string;
   paymentMethod: 'Cash' | 'BankTransfer' | 'InstaPay' | 'Cheque';
 }
+
+export interface ProjectFinancialSummaryDto {
+  projectId: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netBalance: number;
+  pendingApprovalsCount: number;
+}

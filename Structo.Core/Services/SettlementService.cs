@@ -117,22 +117,6 @@ public class SettlementService(DbContext context) : ISettlementService
             settlement.Status = SettlementStatus.ApprovedPendingRefund;
             pettyCash.Status = "ApprovedPendingRefund";
             pettyCash.IsSettled = false;
-
-            // Register spent amount as project expense
-            var expense = new FinancialTransaction
-            {
-                ProjectId = projectId,
-                TenantId = settlement.TenantId,
-                Type = TransactionType.Expense,
-                Amount = settlement.TotalAmount,
-                Description = $"Petty Cash Settlement - Spent Amount: {pettyCash.Reason}",
-                PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
-                TransactionDate = DateTime.UtcNow,
-                PaymentDate = DateTime.UtcNow,
-                IsSystemGenerated = true,
-                SettlementId = settlement.Id
-            };
-            context.Set<FinancialTransaction>().Add(expense);
         }
         else
         {
@@ -142,22 +126,6 @@ public class SettlementService(DbContext context) : ISettlementService
             pettyCash.Status = "Settled";
             pettyCash.SpentAmount = settlement.TotalAmount; // The actual spent amount
             pettyCash.ReturnAmount = 0;
-
-            // Register total spent amount as project expense
-            var expense = new FinancialTransaction
-            {
-                ProjectId = projectId,
-                TenantId = settlement.TenantId,
-                Type = TransactionType.Expense,
-                Amount = settlement.TotalAmount,
-                Description = $"Petty Cash Settlement - Spent Amount: {pettyCash.Reason}",
-                PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
-                TransactionDate = DateTime.UtcNow,
-                PaymentDate = DateTime.UtcNow,
-                IsSystemGenerated = true,
-                SettlementId = settlement.Id
-            };
-            context.Set<FinancialTransaction>().Add(expense);
 
             if (netDifference < 0)
             {
@@ -178,6 +146,61 @@ public class SettlementService(DbContext context) : ISettlementService
                 };
                 context.Set<PettyCash>().Add(reimbursementRequest);
             }
+        }
+
+        // Remove any previous un-audited or single expense transactions for this settlement to avoid duplicates
+        var existingTxs = await context.Set<FinancialTransaction>()
+            .Where(t => t.SettlementId == settlement.Id)
+            .ToListAsync();
+        if (existingTxs.Any())
+        {
+            context.Set<FinancialTransaction>().RemoveRange(existingTxs);
+        }
+
+        // Automatically create corresponding Expense entries in FinancialTransactions for each item/invoice in the settlement
+        if (settlement.Lines != null && settlement.Lines.Any())
+        {
+            foreach (var line in settlement.Lines)
+            {
+                var expense = new FinancialTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = projectId,
+                    TenantId = settlement.TenantId,
+                    Type = TransactionType.Expense,
+                    Amount = line.Amount,
+                    Description = string.IsNullOrWhiteSpace(line.Description)
+                        ? $"Petty Cash Settlement Item ({line.Category}) - {pettyCash.Reason}"
+                        : line.Description,
+                    PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
+                    ReceiptPhotoUrl = line.InvoiceUrl,
+                    TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
+                    PaymentDate = DateTime.UtcNow,
+                    IsSystemGenerated = true,
+                    IsAudited = true,
+                    SettlementId = settlement.Id
+                };
+                context.Set<FinancialTransaction>().Add(expense);
+            }
+        }
+        else
+        {
+            var expense = new FinancialTransaction
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = projectId,
+                TenantId = settlement.TenantId,
+                Type = TransactionType.Expense,
+                Amount = settlement.TotalAmount,
+                Description = $"Petty Cash Settlement - Spent Amount: {pettyCash.Reason}",
+                PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
+                TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
+                PaymentDate = DateTime.UtcNow,
+                IsSystemGenerated = true,
+                IsAudited = true,
+                SettlementId = settlement.Id
+            };
+            context.Set<FinancialTransaction>().Add(expense);
         }
 
         try

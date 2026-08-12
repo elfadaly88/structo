@@ -10,7 +10,7 @@ import { FinancialService } from '../../../core/services/financial.service';
 import { ImageUploadService } from '../../../core/services/image-upload.service';
 import { ProjectDto } from '../../../core/models/project.models';
 import { PettyCashMobileDto, PaginatedList, PettyCashCreateDto, PettyCashSettleDto } from '../../../core/models/petty-cash.models';
-import { FinancialTransactionMobileDto } from '../../../core/models/financial.models';
+import { FinancialTransactionMobileDto, ProjectFinancialSummaryDto } from '../../../core/models/financial.models';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -978,6 +978,7 @@ export class FinancialsComponent implements OnInit {
   readonly pendingApprovals = signal<any[]>([]);
   readonly myPettyCash = signal<any[]>([]);
   readonly transactions = signal<FinancialTransactionMobileDto[]>([]);
+  readonly financialSummary = signal<ProjectFinancialSummaryDto | null>(null);
   readonly isDeletingTx = signal(false);
 
   // Track project expenses for burn rates
@@ -1048,14 +1049,23 @@ export class FinancialsComponent implements OnInit {
   };
 
   get totalIncome(): number {
+    if (this.financialSummary()) {
+      return this.financialSummary()!.totalIncome;
+    }
     return this.transactions().filter((t) => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
   }
 
   get totalExpenses(): number {
-    return this.transactions().filter((t) => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+    if (this.financialSummary()) {
+      return this.financialSummary()!.totalExpenses;
+    }
+    return this.transactions().filter((t) => t.type === 'Expense' || t.type === 'DirectProjectExpense').reduce((sum, t) => sum + t.amount, 0);
   }
 
   get netBalance(): number {
+    if (this.financialSummary()) {
+      return this.financialSummary()!.netBalance;
+    }
     return this.totalIncome - this.totalExpenses;
   }
 
@@ -1080,15 +1090,11 @@ export class FinancialsComponent implements OnInit {
 
           // Preload expenses for all projects to compute burn rates
           response.data.forEach(p => {
-            this.financialService.getProjectTransactions(p.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            this.financialService.getProjectFinancialSummary(p.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
               next: (res) => {
                 if (res.data) {
-                  const totalExp = res.data.items
-                    .filter(t => t.type === 'Expense')
-                    .reduce((sum, t) => sum + t.amount, 0);
-
                   this.projectExpenses.update(map => {
-                    map.set(p.id, totalExp);
+                    map.set(p.id, res.data.totalExpenses);
                     return new Map(map);
                   });
                 }
@@ -1148,10 +1154,20 @@ export class FinancialsComponent implements OnInit {
       this.pendingApprovals.set([]);
       this.myPettyCash.set([]);
       this.transactions.set([]);
+      this.financialSummary.set(null);
       return;
     }
 
     this.loading.set(true);
+
+    // Fetch financial summary
+    this.financialService.getProjectFinancialSummary(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.financialSummary.set(res.data);
+        }
+      }
+    });
 
     // Fetch petty cash requests
     this.pettyCashService.getProjectPettyCash(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

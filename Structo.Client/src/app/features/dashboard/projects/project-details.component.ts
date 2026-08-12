@@ -3210,7 +3210,7 @@ export class ProjectDetailsComponent implements OnInit {
 
   readonly totalExpenses = computed(() =>
     this.transactions()
-      .filter(t => t.type === 'Expense')
+      .filter(t => t.type === 'Expense' || t.type === 'DirectProjectExpense')
       .reduce((sum, t) => sum + t.amount, 0)
   );
 

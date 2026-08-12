@@ -88,6 +88,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
+        await EnsureSettlementExpensesMaterializedAsync(projectId);
+
         var query = context.Set<FinancialTransaction>()
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.TransactionDate);
@@ -425,6 +427,156 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         // 5. الـ SuperAdmin أو أي رول تانية مش متوضحة فوق بتتحظر أوتوماتيكياً
         return false;
+    }
+
+    public async Task EnsureSettlementExpensesMaterializedAsync(Guid projectId)
+    {
+        var approvedSettlements = await context.Set<Settlement>()
+            .Include(s => s.Lines)
+            .Include(s => s.PettyCash)
+            .Where(s => s.ProjectId == projectId &&
+                (s.Status == SettlementStatus.Approved || s.Status == SettlementStatus.ApprovedPendingRefund || s.Status == SettlementStatus.Refunded))
+            .ToListAsync();
+
+        bool modified = false;
+
+        foreach (var settlement in approvedSettlements)
+        {
+            var existingTxs = await context.Set<FinancialTransaction>()
+                .Where(t => t.SettlementId == settlement.Id && t.Type == TransactionType.Expense)
+                .ToListAsync();
+
+            if (!existingTxs.Any())
+            {
+                if (settlement.Lines != null && settlement.Lines.Any())
+                {
+                    foreach (var line in settlement.Lines)
+                    {
+                        var expense = new FinancialTransaction
+                        {
+                            Id = Guid.NewGuid(),
+                            ProjectId = projectId,
+                            TenantId = settlement.TenantId,
+                            Type = TransactionType.Expense,
+                            Amount = line.Amount,
+                            Description = string.IsNullOrWhiteSpace(line.Description)
+                                ? $"Petty Cash Settlement Item ({line.Category})"
+                                : line.Description,
+                            PaymentMethod = settlement.PettyCash?.SettlementPaymentMethod ?? PaymentMethod.Cash,
+                            ReceiptPhotoUrl = line.InvoiceUrl,
+                            TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
+                            PaymentDate = DateTime.UtcNow,
+                            IsSystemGenerated = true,
+                            IsAudited = true,
+                            SettlementId = settlement.Id
+                        };
+                        context.Set<FinancialTransaction>().Add(expense);
+                    }
+                }
+                else
+                {
+                    var expense = new FinancialTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        ProjectId = projectId,
+                        TenantId = settlement.TenantId,
+                        Type = TransactionType.Expense,
+                        Amount = settlement.TotalAmount,
+                        Description = $"Petty Cash Settlement - Spent Amount: {settlement.PettyCash?.Reason ?? string.Empty}",
+                        PaymentMethod = settlement.PettyCash?.SettlementPaymentMethod ?? PaymentMethod.Cash,
+                        TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
+                        PaymentDate = DateTime.UtcNow,
+                        IsSystemGenerated = true,
+                        IsAudited = true,
+                        SettlementId = settlement.Id
+                    };
+                    context.Set<FinancialTransaction>().Add(expense);
+                }
+                modified = true;
+            }
+            else
+            {
+                foreach (var tx in existingTxs)
+                {
+                    if (!tx.IsAudited)
+                    {
+                        tx.IsAudited = true;
+                        modified = true;
+                    }
+                }
+            }
+        }
+
+        // Also handle settled PettyCash items without a Settlement entity
+        var settledPettyCashes = await context.Set<PettyCash>()
+            .Where(p => p.ProjectId == projectId && p.IsSettled && p.SpentAmount > 0 && !p.IsReimbursement)
+            .ToListAsync();
+
+        foreach (var pc in settledPettyCashes)
+        {
+            var hasSettlement = approvedSettlements.Any(s => s.PettyCashId == pc.Id);
+            if (!hasSettlement)
+            {
+                var hasTx = await context.Set<FinancialTransaction>()
+                    .AnyAsync(t => t.ProjectId == projectId && t.Type == TransactionType.Expense && t.Amount == pc.SpentAmount);
+
+                if (!hasTx)
+                {
+                    var expense = new FinancialTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        ProjectId = projectId,
+                        TenantId = pc.TenantId,
+                        Type = TransactionType.Expense,
+                        Amount = pc.SpentAmount,
+                        Description = $"Petty Cash Settlement - {pc.Reason}",
+                        PaymentMethod = pc.SettlementPaymentMethod ?? PaymentMethod.Cash,
+                        ReceiptPhotoUrl = pc.ReceiptPhotoUrl,
+                        TransactionDate = pc.ExpenseDate ?? DateTime.UtcNow,
+                        PaymentDate = pc.ExpenseDate ?? DateTime.UtcNow,
+                        IsSystemGenerated = true,
+                        IsAudited = true
+                    };
+                    context.Set<FinancialTransaction>().Add(expense);
+                    modified = true;
+                }
+            }
+        }
+
+        if (modified)
+        {
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<ProjectFinancialSummaryDto> GetProjectFinancialSummaryAsync(Guid projectId, string userRole)
+    {
+        if (userRole == "SuperAdmin")
+            throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
+
+        await EnsureSettlementExpensesMaterializedAsync(projectId);
+
+        var totalIncome = await context.Set<FinancialTransaction>()
+            .Where(t => t.ProjectId == projectId && t.Type == TransactionType.Income)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        var totalExpenses = await context.Set<FinancialTransaction>()
+            .Where(t => t.ProjectId == projectId && (t.Type == TransactionType.Expense || t.Type == TransactionType.DirectProjectExpense))
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        var netBalance = totalIncome - totalExpenses;
+
+        var pendingApprovalsCount = await context.Set<PettyCash>()
+            .CountAsync(p => p.ProjectId == projectId && p.Status == "Pending");
+
+        return new ProjectFinancialSummaryDto
+        {
+            ProjectId = projectId,
+            TotalIncome = totalIncome,
+            TotalExpenses = totalExpenses,
+            NetBalance = netBalance,
+            PendingApprovalsCount = pendingApprovalsCount
+        };
     }
 }
 

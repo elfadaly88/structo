@@ -114,6 +114,38 @@ public class FinancialTransactionsController : ControllerBase
         }
     }
 
+    [HttpGet("summary")]
+    [Authorize(Roles = "TenantOwner, Accountant, Manager, SiteEngineer, DesignEngineer")]
+    public async Task<ActionResult<ApiResponse<ProjectFinancialSummaryDto>>> GetSummary([FromRoute] Guid projectId)
+    {
+        try
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<ProjectFinancialSummaryDto> { Success = false, Message = "User is not authenticated." });
+            }
+
+            if (!await _financialTransactionService.UserHasAccessToProjectAsync(User, projectId))
+            {
+                return Forbid();
+            }
+
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value ?? CurrentUserRole;
+            var data = await _financialTransactionService.GetProjectFinancialSummaryAsync(projectId, role);
+            return Ok(new ApiResponse<ProjectFinancialSummaryDto>
+            {
+                Data = data,
+                Success = true,
+                CurrentUserRole = role
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching financial summary for project {ProjectId}", projectId);
+            return BadRequest(new ApiResponse<ProjectFinancialSummaryDto> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+        }
+    }
+
     [HttpPost("inject-capital")]
     [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> InjectCapital([FromRoute] Guid projectId, [FromBody] CapitalInjectDto dto)
