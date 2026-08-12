@@ -950,6 +950,14 @@ import { LanguageService } from '../../../core/services/language.service';
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.VOUCHERS_TITLE' | translate }}</h3>
             <div class="flex items-center gap-3">
+              @if (isOwnerOrAccountant()) {
+                <button
+                  (click)="openDisburseModal()"
+                  [disabled]="project()?.status === 'Closed'"
+                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
+                  تعزيز عهدة مباشر
+                </button>
+              }
               @if ((isEngineer() || isTenantOwner()) && project()?.status !== 'Closed') {
                 <button
                   (click)="openRequestModal()"
@@ -1294,14 +1302,6 @@ import { LanguageService } from '../../../core/services/language.service';
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
             <div class="flex items-center gap-3">
-              @if (isOwnerOrAccountant()) {
-                <button
-                  (click)="openDisburseModal()"
-                  [disabled]="project()?.status === 'Closed'"
-                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:hover:scale-100 disabled:active:scale-100 disabled:pointer-events-none">
-                  تعزيز عهدة مباشر / Direct Disbursement
-                </button>
-              }
               <span class="text-xs text-slate-500 font-semibold">{{ transactions().length }} {{ 'DETAILS.ENTRIES' | translate }}</span>
             </div>
           </div>
@@ -2146,7 +2146,7 @@ import { LanguageService } from '../../../core/services/language.service';
         <div class="absolute inset-0"></div>
         <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">تعزيز عهدة مباشر / Direct Disbursement</h3>
+            <h3 class="text-xl font-bold text-white font-cairo">تعزيز عهدة مباشر</h3>
             <button (click)="closeDisburseModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

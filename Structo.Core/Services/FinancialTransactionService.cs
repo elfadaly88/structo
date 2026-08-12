@@ -185,6 +185,20 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         context.Set<FinancialTransaction>().Add(transaction);
         await context.SaveChangesAsync();
 
+        // Recalculate cash pool totals strictly from all income transactions and petty cash disbursements
+        var totalInjected = await context.Set<FinancialTransaction>()
+            .Where(t => t.ProjectId == projectId && t.Type == TransactionType.Income && t.SourceType == dto.SourceType)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        var totalDisbursed = await context.Set<PettyCash>()
+            .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
+            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+        pool.TotalInjected = totalInjected;
+        pool.AvailableBalance = totalInjected - totalDisbursed;
+
+        await context.SaveChangesAsync();
+
         return (true, "Capital injected successfully.");
     }
 
@@ -193,9 +207,51 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
-        return await context.Set<ProjectCashPool>()
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null) return Enumerable.Empty<ProjectCashPool>();
+
+        var existingPools = await context.Set<ProjectCashPool>()
             .Where(p => p.ProjectId == projectId)
             .ToListAsync();
+
+        // Ensure all pool source types exist
+        foreach (var sourceType in Enum.GetValues<CashPoolSourceType>())
+        {
+            var pool = existingPools.FirstOrDefault(p => p.SourceType == sourceType);
+            if (pool == null)
+            {
+                pool = new ProjectCashPool
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = projectId,
+                    TenantId = project.TenantId,
+                    SourceType = sourceType,
+                    TotalInjected = 0,
+                    AvailableBalance = 0,
+                    CreatedAt = DateTime.UtcNow
+                };
+                context.Set<ProjectCashPool>().Add(pool);
+                existingPools.Add(pool);
+            }
+        }
+
+        // Dynamically aggregate ALL income transactions for each pool (SUM(Amount) WHERE SourceType = sourceType AND ProjectId = id)
+        foreach (var pool in existingPools)
+        {
+            var totalInjected = await context.Set<FinancialTransaction>()
+                .Where(t => t.ProjectId == projectId && t.Type == TransactionType.Income && t.SourceType == pool.SourceType)
+                .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+            var totalDisbursed = await context.Set<PettyCash>()
+                .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
+                .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+            pool.TotalInjected = totalInjected;
+            pool.AvailableBalance = totalInjected - totalDisbursed;
+        }
+
+        await context.SaveChangesAsync();
+        return existingPools;
     }
 
     public async Task<(bool Success, string Message)> UpdateTransactionAsync(Guid projectId, Guid id, FinancialTransactionUpdateDto dto, string userRole)
