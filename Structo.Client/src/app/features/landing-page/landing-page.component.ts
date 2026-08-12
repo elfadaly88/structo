@@ -102,94 +102,133 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
         </a>
       </header>
 
-      <!-- Interactive Pricing Calculator Section -->
-      <section id="pricing" class="py-16 px-6 max-w-4xl mx-auto border-t border-slate-900">
-        <div class="text-center mb-10">
-          <h2 class="text-3xl font-extrabold tracking-tight mb-2 font-cairo">
-            {{ langService.currentLang() === 'ar' ? 'حاسبة الأسعار التفاعلية' : 'Interactive Pricing Calculator' }}
+      <!-- Modern 3-Card Pricing Section -->
+      <section id="pricing" class="py-20 px-6 max-w-6xl mx-auto border-t border-slate-900">
+        <!-- Section Header -->
+        <div class="text-center mb-14 max-w-3xl mx-auto">
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3 font-cairo text-white">
+            {{ langService.currentLang() === 'ar' ? 'خطط أسعار مرنة تناسب حجم أعمالك' : 'Transparent & Flexible Pricing' }}
           </h2>
-          <p class="text-slate-400 font-cairo text-sm max-w-lg mx-auto">
-            {{ langService.currentLang() === 'ar' ? 'اختر عدد المشاريع التي تحتاج لإدارتها وشاهد التكلفة فوراً.' : 'Select the number of projects you need to manage and see the cost instantly.' }}
+          <p class="text-slate-400 font-cairo text-sm sm:text-base leading-relaxed">
+            {{ langService.currentLang() === 'ar' ? 'جميع الأسعار بالجنيه المصري والدفع مرة واحدة بدون أي اشتراكات شهرية متكررة.' : 'All prices in EGP with one-time payment and zero recurring monthly fees.' }}
           </p>
         </div>
 
-        <div class="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
-          <div class="absolute -right-16 -top-16 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
-          <div class="absolute -left-16 -bottom-16 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+        <!-- 3-Card Pricing Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
 
-          <!-- Left side: Slider -->
-          <div class="w-full md:w-3/5 space-y-6">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <span class="text-sm font-semibold text-slate-400 font-cairo">
-                {{ langService.currentLang() === 'ar' ? 'عدد المشاريع المطلوبة' : 'Number of Projects' }}
-              </span>
-              <div class="flex items-center gap-2 rtl:space-x-reverse">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">
-                  {{ langService.currentLang() === 'ar' ? pricingInfo().planNameAr : pricingInfo().planNameEn }}
-                </span>
-                <span class="text-2xl font-extrabold text-indigo-400 font-mono">
-                  {{ sliderVal() }} @if (sliderVal() === 7) { + }
-                </span>
-              </div>
-            </div>
-
-            <div class="relative pt-2">
-              <input 
-                type="range" 
-                min="1" 
-                max="7" 
-                [value]="sliderVal()" 
-                (input)="onSliderInput($event)"
-                class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none">
-              
-              <div class="flex justify-between text-[10px] text-slate-500 mt-2 font-mono">
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7+</span>
-              </div>
-            </div>
-
-            <!-- Features Included Dynamic text -->
-            <div class="p-4 bg-slate-950/40 border border-slate-800/80 rounded-2xl flex items-center gap-3">
-              <div class="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-                💡
-              </div>
-              <p class="text-xs text-slate-300 font-cairo">
-                {{ langService.currentLang() === 'ar' ? pricingInfo().noteAr : pricingInfo().noteEn }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Right side: Price display card -->
-          <div class="w-full md:w-2/5 p-6 bg-slate-950 border border-slate-800/80 rounded-2xl flex flex-col justify-between text-center min-h-[180px] shadow-lg">
+          <!-- Card 1: Free Lifetime Plan -->
+          <div class="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-slate-700 transition-all duration-300 shadow-xl relative group">
             <div>
-              <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 font-cairo block mb-1">
-                {{ langService.currentLang() === 'ar' ? 'التكلفة الإجمالية' : 'Total Price' }}
-              </span>
-              <div class="text-3xl font-extrabold text-white font-mono my-2 tracking-tight">
-                {{ pricingInfo().price }}
+              <div class="flex items-center justify-between mb-4">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">🎁 مجاناً للأبد</span>
+                <span class="text-xs font-mono text-slate-500 font-bold">0 EGP</span>
               </div>
-              <span class="text-[10px] text-slate-400 font-cairo">
-                {{ langService.currentLang() === 'ar' ? pricingInfo().periodAr : pricingInfo().periodEn }}
-              </span>
+              <h3 class="text-xl font-bold text-white font-cairo mb-2">الباقة المجانية / Free</h3>
+              <div class="my-4">
+                <span class="text-3xl font-extrabold text-emerald-400 font-mono">0 ج.م</span>
+                <span class="text-xs text-slate-400 font-cairo block mt-1">مجاني مدى الحياة / Free Forever</span>
+              </div>
+              <ul class="space-y-3 my-6 text-xs text-slate-300 font-cairo">
+                <li class="flex items-center gap-2">
+                  <span class="text-emerald-400 font-bold">✓</span>
+                  <span>2 مشاريع مجاناً مدى الحياة (2 Lifetime Projects)</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-emerald-400 font-bold">✓</span>
+                  <span>إمكانية تجربة كامل ميزات المنصة</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-emerald-400 font-bold">✓</span>
+                  <span>بدون أي بطاقة إئتمانية</span>
+                </li>
+              </ul>
             </div>
-
-            <button 
-              (click)="onPricingAction()"
-              class="w-full mt-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white font-cairo transition-all duration-150 flex items-center justify-center gap-2 active:scale-95 shadow-md cursor-pointer">
-              {{ pricingInfo().isCustom 
-                  ? (langService.currentLang() === 'ar' ? 'تواصل مع الإدارة' : 'Contact Support') 
-                  : (langService.currentLang() === 'ar' ? 'ابدأ الآن' : 'Get Started') }}
-            </button>
+            <a 
+              routerLink="/auth/register"
+              class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-md cursor-pointer block">
+              <span>ابدأ مجاناً الان / Start Free</span>
+            </a>
           </div>
+
+          <!-- Card 2: +1 Single Project Topup -->
+          <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-xl relative group">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">📦 مشروع إضافي</span>
+                <span class="text-xs font-mono text-slate-400 font-bold">250 EGP</span>
+              </div>
+              <h3 class="text-xl font-bold text-white font-cairo mb-2">مشروع إضافي / Single Project</h3>
+              <div class="my-4">
+                <span class="text-3xl font-extrabold text-white font-mono">250 ج.م</span>
+                <span class="text-xs text-slate-400 font-cairo block mt-1">دفع مرة واحدة / One-Time Payment</span>
+              </div>
+              <ul class="space-y-3 my-6 text-xs text-slate-300 font-cairo">
+                <li class="flex items-center gap-2">
+                  <span class="text-indigo-400 font-bold">✓</span>
+                  <span>إضافة مشروع 1 إضافي لرصيدك الحالي</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-indigo-400 font-bold">✓</span>
+                  <span>تفعيل فوري ومباشر</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-indigo-400 font-bold">✓</span>
+                  <span>الملكية دائمة بدون اشتراك شهري</span>
+                </li>
+              </ul>
+            </div>
+            <a 
+              routerLink="/auth/register"
+              class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-lg shadow-indigo-600/30 cursor-pointer block">
+              <span>شراء مشروع إضافي / Buy Single Project</span>
+            </a>
+          </div>
+
+          <!-- Card 3: +5 Projects Package (Highlighted Card) -->
+          <div class="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-amber-950/30 border-2 border-indigo-500 shadow-xl shadow-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-indigo-400 transition-all duration-300 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-indigo-600 text-white text-[10px] font-black uppercase px-3.5 py-1 rounded-bl-2xl font-cairo shadow-md">
+              ⭐️ الأكثر مبيعاً - توفير 300 ج.م
+            </div>
+            <div class="pt-2">
+              <div class="flex items-center justify-between mb-4">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 font-cairo">🚀 حزمة 5 مشاريع</span>
+                <span class="text-xs font-mono text-amber-400 font-bold">950 EGP</span>
+              </div>
+              <h3 class="text-xl font-extrabold text-white font-cairo mb-2">حزمة 5 مشاريع / +5 Projects</h3>
+              <div class="my-4">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-extrabold text-amber-400 font-mono">950 ج.م</span>
+                  <span class="text-sm text-slate-500 line-through font-mono">1,250 ج.م</span>
+                </div>
+                <span class="text-xs text-amber-300/90 font-cairo block mt-1">دفع مرة واحدة بدلاً من 1250 ج.م</span>
+              </div>
+              <ul class="space-y-3 my-6 text-xs text-slate-200 font-cairo">
+                <li class="flex items-center gap-2">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span>إضافة 5 مشاريع كاملة لرصيدك الحالي</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span>توفير 300 ج.م فوراً</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span>أولوية والدعم الفني</span>
+                </li>
+              </ul>
+            </div>
+            <a 
+              routerLink="/auth/register"
+              class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-xl shadow-indigo-600/30 active:scale-[0.98] ring-2 ring-amber-500/30 cursor-pointer block">
+              <span>اشترِ الحزمة ووفر الان / Buy Package & Save</span>
+            </a>
+          </div>
+
         </div>
 
         <!-- Scroll Down Cue to Directory -->
-        <div class="mt-8 text-center flex flex-col items-center">
+        <div class="mt-12 text-center flex flex-col items-center">
           <a href="#marketplace" class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 hover:bg-indigo-950/30 text-xs font-bold text-slate-300 hover:text-indigo-300 transition-all duration-300 shadow-lg group cursor-pointer font-cairo">
             <span>{{ langService.currentLang() === 'ar' ? 'تصفح قائمة الشركات والمشاريع المشتركة معنا' : 'Browse Subscribed Companies & Projects Directory' }}</span>
             <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 animate-bounce">
