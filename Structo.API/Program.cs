@@ -624,6 +624,22 @@ if (!string.IsNullOrEmpty(port))
     Console.WriteLine($"[Startup] Dynamically binding to PORT={port}");
 }
 
+// 🛡️ Automatic Database Migration on Startup (Railway / Cloud Deployment)
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
+        Console.WriteLine("[Startup] Applying pending database migrations...");
+        dbContext.Database.Migrate();
+        Console.WriteLine("[Startup] Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Startup Error] Failed to apply database migrations: {ex.Message}");
+    }
+}
+
 app.Run();
 
 // ------------------------------
