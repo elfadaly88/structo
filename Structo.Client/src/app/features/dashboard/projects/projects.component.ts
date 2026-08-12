@@ -750,6 +750,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   <option value="Residential">{{ 'PROJECTS.CATEGORIES.Residential' | translate }}</option>
                   <option value="Commercial">{{ 'PROJECTS.CATEGORIES.Commercial' | translate }}</option>
                   <option value="Industrial">{{ 'PROJECTS.CATEGORIES.Industrial' | translate }}</option>
+                  <option value="Other">{{ 'PROJECTS.CATEGORIES.Other' | translate }}</option>
                 </select>
               </div>
             </div>

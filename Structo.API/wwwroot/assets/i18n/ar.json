@@ -148,7 +148,8 @@
     "CATEGORIES": {
       "Residential": "سكني",
       "Commercial": "تجاري / إداري",
-      "Industrial": "صناعي"
+      "Industrial": "صناعي",
+      "Other": "أخرى"
     }
   },
   "DETAILS": {

@@ -810,8 +810,14 @@ import { LanguageService } from '../../../core/services/language.service';
           } @else {
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               @for (photo of galleryPhotos(); track photo.id) {
-                <div class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
-                  <img [src]="photo.photoUrl" alt="Gallery image" class="w-full h-full object-cover">
+                <div class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md flex items-center justify-center">
+                  <img [src]="photo.photoUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover">
+                  <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
+                  </div>
                   
                   @if (isTenantOwner()) {
                     <button
@@ -4190,6 +4196,18 @@ export class ProjectDetailsComponent implements OnInit {
     const waUrl = this.getWhatsAppShareUrl();
     if (waUrl && waUrl !== '#' && typeof window !== 'undefined') {
       window.open(waUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+      const fallback = img.nextElementSibling as HTMLElement;
+      if (fallback) {
+        fallback.classList.remove('hidden');
+        fallback.classList.add('flex');
+      }
     }
   }
 }

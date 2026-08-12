@@ -150,7 +150,8 @@
     "CATEGORIES": {
       "Residential": "Residential",
       "Commercial": "Commercial",
-      "Industrial": "Industrial"
+      "Industrial": "Industrial",
+      "Other": "Other"
     }
   },
   "DETAILS": {

@@ -231,10 +231,11 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                 [(ngModel)]="categoryFilter" 
                 (ngModelChange)="onFilterChange()"
                 class="w-full px-3 py-2 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                <option value="">All Categories</option>
-                <option value="Residential">Residential</option>
-                <option value="Commercial">Commercial</option>
-                <option value="Industrial">Industrial</option>
+                <option value="">{{ langService.currentLang() === 'ar' ? 'جميع التصنيفات' : 'All Categories' }}</option>
+                <option value="Residential">{{ 'PROJECTS.CATEGORIES.Residential' | translate }}</option>
+                <option value="Commercial">{{ 'PROJECTS.CATEGORIES.Commercial' | translate }}</option>
+                <option value="Industrial">{{ 'PROJECTS.CATEGORIES.Industrial' | translate }}</option>
+                <option value="Other">{{ 'PROJECTS.CATEGORIES.Other' | translate }}</option>
               </select>
             </div>
 
@@ -268,9 +269,14 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                     <div class="flex items-center gap-4 mb-4">
                       <!-- Company Logo -->
                       @if (comp.logoUrl) {
-                        <img [src]="comp.logoUrl" alt="Logo" class="h-12 w-12 rounded-xl object-cover border border-slate-700 bg-slate-950">
+                        <div class="relative h-12 w-12 rounded-xl border border-slate-700 bg-slate-950 overflow-hidden flex items-center justify-center shrink-0">
+                          <img [src]="comp.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
+                          <div class="hidden h-full w-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md font-cairo">
+                            {{ comp.name.substring(0,2) }}
+                          </div>
+                        </div>
                       } @else {
-                        <div class="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md">
+                        <div class="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md font-cairo shrink-0">
                           {{ comp.name.substring(0,2) }}
                         </div>
                       }
@@ -327,7 +333,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
             <!-- Banner Image -->
             <div class="relative h-44 w-full bg-gradient-to-r from-indigo-950 via-purple-950 to-pink-950 border-b border-slate-800">
               @if (selectedCompany()!.bannerUrl) {
-                <img [src]="selectedCompany()!.bannerUrl" alt="Banner" class="w-full h-full object-cover">
+                <img [src]="selectedCompany()!.bannerUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover">
               }
               <button 
                 (click)="closeModal()"
@@ -343,9 +349,14 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
               <!-- Float Logo -->
               <div class="absolute -top-12 left-6 md:left-8">
                 @if (selectedCompany()!.logoUrl) {
-                  <img [src]="selectedCompany()!.logoUrl" alt="Logo" class="h-20 w-20 rounded-2xl object-cover border-4 border-slate-900 bg-slate-950 shadow-lg">
+                  <div class="relative h-20 w-20 rounded-2xl border-4 border-slate-900 bg-slate-950 shadow-lg overflow-hidden flex items-center justify-center">
+                    <img [src]="selectedCompany()!.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
+                    <div class="hidden h-full w-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-2xl font-cairo">
+                      {{ selectedCompany()!.name.substring(0,2) }}
+                    </div>
+                  </div>
                 } @else {
-                  <div class="h-20 w-20 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-2xl border-4 border-slate-900 shadow-lg">
+                  <div class="h-20 w-20 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-2xl border-4 border-slate-900 shadow-lg font-cairo">
                     {{ selectedCompany()!.name.substring(0,2) }}
                   </div>
                 }
@@ -394,7 +405,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                         <div>
                           <h4 class="text-base font-bold text-white">{{ proj.name }}</h4>
                           <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-xs border border-indigo-500/20 mt-1 inline-block font-cairo">
-                            {{ 'PROJECTS.CATEGORIES.' + proj.category | translate }}
+                            {{ getCategoryTranslation(proj.category) | translate }}
                           </span>
                         </div>
                         <span class="text-xs text-slate-500 font-mono">{{ proj.startDate | date:'dd/MM/yyyy' }} @if (proj.endDate) { - {{ proj.endDate | date:'dd/MM/yyyy' }} } @else { - Present }</span>
@@ -403,11 +414,17 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                       <p class="text-slate-400 text-sm leading-relaxed">{{ proj.description || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>
 
                       <!-- Project Images Grid -->
-                      @if (proj.sitePhotos.length > 0) {
+                      @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
                           @for (photo of proj.sitePhotos; track photo) {
-                            <div class="relative group aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm cursor-pointer">
-                              <img [src]="photo" alt="Project gallery" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                            <div class="relative group aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-sm cursor-pointer flex items-center justify-center">
+                              <img [src]="photo" (error)="onImgError($event)" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                              <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
+                              </div>
                             </div>
                           }
                         </div>
@@ -707,6 +724,41 @@ export class LandingPageComponent implements OnInit {
     this.isModalOpen.set(false);
     this.selectedCompany.set(null);
     this.renderer.removeClass(this.document.body, 'overflow-hidden');
+  }
+
+  getCategoryTranslation(cat?: string): string {
+    if (!cat) return 'PROJECTS.CATEGORIES.Other';
+    const trimmed = cat.trim();
+    const normalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+    const known = ['Residential', 'Commercial', 'Industrial', 'Other'];
+    if (known.includes(normalized)) {
+      return `PROJECTS.CATEGORIES.${normalized}`;
+    }
+    return 'PROJECTS.CATEGORIES.Other';
+  }
+
+  onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+      const fallback = img.nextElementSibling as HTMLElement;
+      if (fallback) {
+        fallback.classList.remove('hidden');
+        fallback.classList.add('flex');
+      }
+    }
+  }
+
+  onLogoError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+      const fallback = img.nextElementSibling as HTMLElement;
+      if (fallback) {
+        fallback.classList.remove('hidden');
+        fallback.classList.add('flex');
+      }
+    }
   }
 
   navigateToLogin() {
