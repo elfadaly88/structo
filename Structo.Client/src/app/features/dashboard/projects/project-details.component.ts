@@ -1201,177 +1201,324 @@ import { LanguageService } from '../../../core/services/language.service';
 
       <!-- Tab Content: Settlements -->
       @if (activeTab() === 'settlements') {
-        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
-          <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-            <h3 class="text-base font-bold text-white font-cairo">طلبات تسوية العهد / Settlements</h3>
-            <span class="text-xs text-slate-500 font-semibold font-cairo">{{ settlements().length }} سجل / Records</span>
+        <div class="space-y-4">
+          <!-- Header Bar with Stats & Quick Actions -->
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-cairo">طلبات تسوية العهد / Settlements</h3>
+                <p class="text-xs text-slate-400 font-cairo">متابعة ومطابقة فواتير ومصروفات العهد النقدية</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-3 py-1 rounded-xl text-xs font-bold font-cairo bg-slate-800 text-slate-300 border border-slate-700/60">
+                {{ settlements().length }} سجل / Records
+              </span>
+              @if (settlements().length > 1) {
+                <button
+                  type="button"
+                  (click)="expandAllSettlements()"
+                  class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-colors font-cairo cursor-pointer">
+                  توسيع الكل
+                </button>
+                <button
+                  type="button"
+                  (click)="collapseAllSettlements()"
+                  class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-colors font-cairo cursor-pointer">
+                  طي الكل
+                </button>
+              }
+            </div>
           </div>
 
           @if (isLoadingSettlements()) {
-            <div class="flex justify-center py-12">
-              <svg class="animate-spin h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center justify-center py-16 bg-slate-900/20 border border-slate-800/60 rounded-2xl">
+              <svg class="animate-spin h-8 w-8 text-indigo-500 mb-3" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
+              <span class="text-xs text-slate-400 font-cairo font-medium">جاري تحميل طلبات التسوية...</span>
             </div>
           } @else {
-            <div class="w-full overflow-x-auto block font-sans">
-              <table class="w-full text-left rtl:text-right min-w-[900px]">
-                <thead>
-                  <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
-                    <th class="px-6 py-4 font-cairo">صاحب العهدة / Engineer</th>
-                    <th class="px-6 py-4 font-cairo">مبلغ العهدة / Custody</th>
-                    <th class="px-6 py-4 font-cairo">المبلغ المصروف / Spent</th>
-                    <th class="px-6 py-4 font-cairo">الفرق / Difference</th>
-                    <th class="px-6 py-4 font-cairo">الحالة / Status</th>
-                    <th class="px-6 py-4 font-cairo">التاريخ / Date</th>
-                    <th class="px-6 py-4 text-center font-cairo">العمليات / Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60 text-sm">
-                  @for (s of settlements(); track s.id) {
-                    <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
-                      <td class="px-6 py-4">
-                        <div class="font-semibold text-white">{{ s.issuedTo }}</div>
-                        <div class="text-xs text-slate-500 max-w-xs truncate">{{ s.custodyReason }}</div>
-                      </td>
-                      <td class="px-6 py-4 font-mono font-bold text-slate-400">{{ s.custodyAmount | number:'1.2-2' }} EGP</td>
-                      <td class="px-6 py-4 font-mono font-bold text-amber-400">{{ s.totalAmount | number:'1.2-2' }} EGP</td>
-                      <td class="px-6 py-4 font-mono font-bold" [class.text-emerald-400]="s.netDifference > 0" [class.text-rose-400]="s.netDifference < 0">
-                        {{ s.netDifference | number:'1.2-2' }} EGP
-                      </td>
-                      <td class="px-6 py-4">
-                        @if (s.status === 'Draft') {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-500/20 text-slate-400">Draft / مسودة</span>
-                        } @else if (s.status === 'Approved') {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400">Approved</span>
-                        } @else if (s.status === 'ApprovedPendingRefund') {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-orange-500/10 text-orange-400">Pending Refund</span>
-                        } @else if (s.status === 'Refunded') {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400">Refunded</span>
-                        } @else if (s.status === 'Rejected') {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/10 text-rose-400">Rejected</span>
-                        } @else {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400">Pending Approval</span>
-                        }
-                      </td>
-                      <td class="px-6 py-4 text-slate-400 text-xs">{{ s.submittedAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                      <td class="px-6 py-4">
-                        <div class="flex items-center justify-center gap-2">
+            @if (settlements().length === 0) {
+              <div class="text-center py-16 px-4 bg-slate-900/20 border border-dashed border-slate-800/80 rounded-2xl">
+                <div class="w-12 h-12 rounded-2xl bg-slate-800/60 text-slate-500 flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h4 class="text-sm font-bold text-slate-300 font-cairo mb-1">لا توجد طلبات تسوية مقدمة حالياً</h4>
+                <p class="text-xs text-slate-500 font-cairo">No settlements submitted yet for this project.</p>
+              </div>
+            } @else {
+              <!-- Accordion Cards List -->
+              <div class="space-y-3">
+                @for (s of settlements(); track s.id) {
+                  <div class="bg-slate-900/40 hover:bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl overflow-hidden transition-all duration-200 shadow-md">
+                    <!-- Accordion Card Header (Clickable) -->
+                    <div
+                      (click)="toggleExpand(s.id)"
+                      class="p-4 sm:p-5 cursor-pointer select-none transition-colors hover:bg-slate-800/20 flex flex-col gap-4">
+                      
+                      <!-- Top Row: Status, Engineer Meta, Date & Actions -->
+                      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0 flex-wrap">
+                          <!-- Status Pill -->
+                          @if (s.status === 'Draft') {
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-300 border border-slate-500/20 shrink-0 font-cairo">
+                              مسودة / Draft
+                            </span>
+                          } @else if (s.status === 'Approved') {
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shrink-0 font-cairo">
+                              مكتملة / Approved
+                            </span>
+                          } @else if (s.status === 'ApprovedPendingRefund') {
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/20 shrink-0 font-cairo">
+                              بانتظار المرتجع / Pending Refund
+                            </span>
+                          } @else if (s.status === 'Refunded') {
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/20 shrink-0 font-cairo">
+                              تم الاسترداد / Refunded
+                            </span>
+                          } @else if (s.status === 'Rejected') {
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/20 shrink-0 font-cairo">
+                              مرفوضة / Rejected
+                            </span>
+                          } @else {
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-yellow-500/15 text-yellow-400 border border-yellow-500/20 shrink-0 font-cairo">
+                              قيد المراجعة / Pending Approval
+                            </span>
+                          }
+
+                          <!-- Engineer & Reason -->
+                          <div class="min-w-0">
+                            <div class="text-sm font-bold text-white font-cairo flex items-center gap-1.5 truncate">
+                              <span class="text-slate-400">👤</span>
+                              <span>{{ s.issuedTo }}</span>
+                            </div>
+                            @if (s.custodyReason) {
+                              <div class="text-xs text-slate-400 truncate max-w-md font-cairo mt-0.5">
+                                {{ s.custodyReason }}
+                              </div>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- Actions & Chevron Wrapper -->
+                        <div class="flex items-center gap-2 self-end lg:self-center shrink-0 flex-wrap">
                           @if (s.status === 'Pending' && isOwnerOrAccountant()) {
                             <button
-                              (click)="onApproveSettlement(s.id)"
+                              type="button"
+                              (click)="$event.stopPropagation(); onApproveSettlement(s.id)"
                               [disabled]="project()?.status === 'Closed'"
-                              class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold rounded-lg text-white font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:pointer-events-none">
+                              class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-xs font-bold rounded-xl text-white font-cairo shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                               اعتماد
                             </button>
                             <button
-                              (click)="onRejectSettlement(s.id)"
+                              type="button"
+                              (click)="$event.stopPropagation(); onRejectSettlement(s.id)"
                               [disabled]="project()?.status === 'Closed'"
-                              class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-xs font-semibold rounded-lg text-white font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:pointer-events-none">
+                              class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-xs font-bold rounded-xl text-white font-cairo shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                               رفض
                             </button>
                           }
                           @if (s.status === 'ApprovedPendingRefund' && isOwnerOrAccountant()) {
                             <button
-                              (click)="onConfirmRefund(s.id)"
+                              type="button"
+                              (click)="$event.stopPropagation(); onConfirmRefund(s.id)"
                               [disabled]="project()?.status === 'Closed'"
-                              class="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-xs font-semibold rounded-lg text-white font-cairo disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:pointer-events-none">
+                              class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-xs font-bold rounded-xl text-white font-cairo shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                               تأكيد استلام المرتجع
                             </button>
                           }
                           <button
-                            (click)="printSettlementReport(s)"
-                            class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-300 hover:text-white border border-slate-700 transition-all font-cairo flex items-center gap-1 active:scale-95 cursor-pointer">
-                            طباعة / Print 🖨️
+                            type="button"
+                            (click)="$event.stopPropagation(); printSettlementReport(s)"
+                            class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-xl text-slate-300 hover:text-white border border-slate-700/80 transition-all font-cairo flex items-center gap-1.5 cursor-pointer">
+                            <span>طباعة</span>
+                            <span class="text-xs">🖨️</span>
                           </button>
+
+                          <!-- Expand / Collapse Indicator Button -->
+                          <div class="p-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white border border-slate-700/60 transition-all">
+                            <svg
+                              class="w-4 h-4 transition-transform duration-200"
+                              [class.rotate-180]="isExpanded(s.id)"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                    <!-- Difference Clarification Sub-Row -->
-                    @if (s.netDifference !== 0 && s.status !== 'Pending' && s.status !== 'Draft' && s.status !== 'Rejected') {
-                      <tr class="bg-slate-950/30">
-                        <td colspan="7" class="px-6 py-2.5 border-b border-slate-800/30">
-                          @if (s.netDifference < 0) {
-                            <div class="flex items-center gap-2.5">
-                              <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-500/15 shrink-0">
-                                <svg class="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
-                              </span>
-                              <div>
-                                <span class="text-[11px] font-bold text-rose-300 font-cairo">⚡ المهندس صرف أكثر من العهدة بـ {{ (s.netDifference * -1) | number:'1.2-2' }} EGP</span>
-                                <span class="text-[10px] text-rose-400/70 font-cairo mr-2 rtl:mr-0 rtl:ml-2">— تم توليد طلب تعويض تلقائي (Reimbursement) يتطلب اعتماد المحاسب وصرفه من محفظة الصندوق</span>
+                      </div>
+
+                      <!-- Bottom Row: Financial KPI Pills & Date -->
+                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-800/50">
+                        <!-- Custody Amount -->
+                        <div class="bg-slate-950/50 border border-slate-800/60 rounded-xl p-2.5">
+                          <span class="text-[10px] font-bold text-slate-500 font-cairo block uppercase">مبلغ العهدة / Custody</span>
+                          <span class="text-xs sm:text-sm font-mono font-bold text-slate-300">{{ s.custodyAmount | number:'1.2-2' }} <span class="text-[10px] text-slate-500 font-cairo">EGP</span></span>
+                        </div>
+
+                        <!-- Spent Amount -->
+                        <div class="bg-slate-950/50 border border-slate-800/60 rounded-xl p-2.5">
+                          <span class="text-[10px] font-bold text-amber-500/80 font-cairo block uppercase">المصروف / Spent</span>
+                          <span class="text-xs sm:text-sm font-mono font-bold text-amber-400">{{ s.totalAmount | number:'1.2-2' }} <span class="text-[10px] text-amber-500/60 font-cairo">EGP</span></span>
+                        </div>
+
+                        <!-- Difference -->
+                        <div class="bg-slate-950/50 border border-slate-800/60 rounded-xl p-2.5">
+                          <span class="text-[10px] font-bold text-slate-500 font-cairo block uppercase">الفرق / Difference</span>
+                          <span
+                            class="text-xs sm:text-sm font-mono font-bold"
+                            [class.text-emerald-400]="s.netDifference > 0"
+                            [class.text-rose-400]="s.netDifference < 0"
+                            [class.text-slate-400]="s.netDifference === 0">
+                            {{ s.netDifference | number:'1.2-2' }} <span class="text-[10px] opacity-70 font-cairo">EGP</span>
+                          </span>
+                        </div>
+
+                        <!-- Date & Invoiced items count -->
+                        <div class="bg-slate-950/50 border border-slate-800/60 rounded-xl p-2.5 flex flex-col justify-center">
+                          <span class="text-[10px] font-bold text-slate-500 font-cairo block uppercase">التاريخ / البنود</span>
+                          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                            <span>{{ s.submittedAt | date:'dd/MM/yyyy' }}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-300 text-[10px] font-cairo font-bold">
+                              {{ s.lines.length }} بند
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Accordion Card Expanded Body -->
+                    @if (isExpanded(s.id)) {
+                      <div class="border-t border-slate-800/80 bg-slate-950/60 p-4 sm:p-5 space-y-4">
+                        <!-- Difference Clarification Alert Banner -->
+                        @if (s.netDifference !== 0 && s.status !== 'Pending' && s.status !== 'Draft' && s.status !== 'Rejected') {
+                          <div class="p-3.5 rounded-xl border"
+                            [class.bg-rose-500/10]="s.netDifference < 0"
+                            [class.border-rose-500/20]="s.netDifference < 0"
+                            [class.bg-amber-500/10]="s.netDifference > 0 && s.status === 'ApprovedPendingRefund'"
+                            [class.border-amber-500/20]="s.netDifference > 0 && s.status === 'ApprovedPendingRefund'"
+                            [class.bg-cyan-500/10]="s.netDifference > 0 && s.status === 'Refunded'"
+                            [class.border-cyan-500/20]="s.netDifference > 0 && s.status === 'Refunded'"
+                            [class.bg-emerald-500/10]="s.netDifference > 0 && s.status !== 'ApprovedPendingRefund' && s.status !== 'Refunded'"
+                            [class.border-emerald-500/20]="s.netDifference > 0 && s.status !== 'ApprovedPendingRefund' && s.status !== 'Refunded'">
+                            
+                            @if (s.netDifference < 0) {
+                              <div class="flex items-start gap-2.5">
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 shrink-0 mt-0.5">
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-xs font-bold text-rose-300 font-cairo block">⚡ المهندس صرف أكثر من العهدة بـ {{ (s.netDifference * -1) | number:'1.2-2' }} EGP</span>
+                                  <span class="text-[11px] text-rose-400/80 font-cairo leading-relaxed">تم توليد طلب تعويض تلقائي (Reimbursement) يتطلب اعتماد المحاسب وصرفه من محفظة الصندوق.</span>
+                                </div>
                               </div>
-                            </div>
+                            } @else if (s.status === 'ApprovedPendingRefund') {
+                              <div class="flex items-start gap-2.5">
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-xs font-bold text-amber-300 font-cairo block">💰 مرتجع {{ s.netDifference | number:'1.2-2' }} EGP بانتظار تأكيد استلام المحاسب</span>
+                                  <span class="text-[11px] text-amber-400/80 font-cairo leading-relaxed">المهندس صرف أقل من العهدة والباقي يجب إرجاعه للصندوق وتأكيده.</span>
+                                </div>
+                              </div>
+                            } @else if (s.status === 'Refunded') {
+                              <div class="flex items-start gap-2.5">
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 shrink-0 mt-0.5">
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-xs font-bold text-cyan-300 font-cairo block">✅ تم استرداد {{ s.netDifference | number:'1.2-2' }} EGP بنجاح وإعادتها للصندوق</span>
+                                  <span class="text-[11px] text-cyan-400/80 font-cairo leading-relaxed">المرتجع مُؤَكَّد ومُسجَّل كـ RefundToTreasury.</span>
+                                </div>
+                              </div>
+                            } @else {
+                              <div class="flex items-start gap-2.5">
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </span>
+                                <div>
+                                  <span class="text-xs font-bold text-emerald-300 font-cairo">المهندس صرف أقل من العهدة — فائض {{ s.netDifference | number:'1.2-2' }} EGP</span>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+
+                        <!-- Invoiced Lines Section -->
+                        <div>
+                          <div class="flex items-center justify-between mb-3">
+                            <h5 class="text-xs font-bold text-slate-300 font-cairo flex items-center gap-1.5">
+                              <span>🧾 تفاصيل البنود المصروفة / Invoiced Lines</span>
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">
+                                {{ s.lines.length }}
+                              </span>
+                            </h5>
+                          </div>
+
+                          @if (s.lines.length === 0) {
+                            <p class="text-xs text-slate-500 font-cairo py-2">لا توجد بنود مفصلة مضافة لهذه التسوية.</p>
                           } @else {
-                            <div class="flex items-center gap-2.5">
-                              @if (s.status === 'ApprovedPendingRefund') {
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/15 shrink-0">
-                                  <svg class="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </span>
-                                <div>
-                                  <span class="text-[11px] font-bold text-orange-300 font-cairo">💰 مرتجع {{ s.netDifference | number:'1.2-2' }} EGP بانتظار تأكيد استلام المحاسب</span>
-                                  <span class="text-[10px] text-orange-400/70 font-cairo mr-2 rtl:mr-0 rtl:ml-2">— المهندس صرف أقل من العهدة والباقي يجب إرجاعه للصندوق</span>
-                                </div>
-                              } @else if (s.status === 'Refunded') {
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500/15 shrink-0">
-                                  <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </span>
-                                <div>
-                                  <span class="text-[11px] font-bold text-cyan-300 font-cairo">✅ تم استرداد {{ s.netDifference | number:'1.2-2' }} EGP بنجاح وإعادتها للصندوق</span>
-                                  <span class="text-[10px] text-cyan-400/70 font-cairo mr-2 rtl:mr-0 rtl:ml-2">— المرتجع مُؤَكَّد ومُسجَّل كـ RefundToTreasury</span>
-                                </div>
-                              } @else {
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/15 shrink-0">
-                                  <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </span>
-                                <div>
-                                  <span class="text-[11px] font-bold text-emerald-300 font-cairo">المهندس صرف أقل من العهدة — فائض {{ s.netDifference | number:'1.2-2' }} EGP</span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                              @for (line of s.lines; track line.id) {
+                                <div class="bg-slate-900/70 border border-slate-800/80 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 hover:border-slate-700/80 transition-colors">
+                                  <div class="flex items-start justify-between gap-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700/50 font-cairo">
+                                        {{ line.category }}
+                                      </span>
+                                      @if (line.isBillableToClient) {
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-cairo flex items-center gap-1">
+                                          <span>🟢</span> <span>عميل</span>
+                                        </span>
+                                      } @else {
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 font-cairo flex items-center gap-1">
+                                          <span>🔴</span> <span>خسارة شركة</span>
+                                        </span>
+                                      }
+                                    </div>
+                                    <span class="text-xs font-bold text-amber-400 font-mono shrink-0">
+                                      {{ line.amount | number:'1.2-2' }} EGP
+                                    </span>
+                                  </div>
+
+                                  <div class="text-xs text-slate-200 font-medium font-cairo leading-relaxed">
+                                    {{ line.description }}
+                                  </div>
+
+                                  @if (line.invoiceUrl) {
+                                    <div class="pt-2 border-t border-slate-800/50 flex justify-end">
+                                      <a
+                                        [href]="line.invoiceUrl"
+                                        target="_blank"
+                                        (click)="$event.stopPropagation()"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 text-[11px] font-bold font-cairo border border-indigo-500/30 transition-colors">
+                                        <span>📄 عرض الفاتورة</span>
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                      </a>
+                                    </div>
+                                  }
                                 </div>
                               }
                             </div>
                           }
-                        </td>
-                      </tr>
-                    }
-                    <!-- Nested Lines View -->
-                    <tr class="bg-slate-950/20">
-                      <td colspan="7" class="px-6 py-3 border-b border-slate-800/40">
-                        <div class="text-xs font-bold text-slate-400 mb-2 font-cairo">تفاصيل البنود المصروفة / Invoiced Lines:</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          @for (line of s.lines; track line.id) {
-                            <div class="bg-slate-900/50 border border-slate-800/50 rounded-xl p-3 flex justify-between items-center">
-                              <div>
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-300 font-cairo">{{ line.category }}</span>
-                                  @if (line.isBillableToClient) {
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-cairo">🟢 عميل</span>
-                                  } @else {
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 font-cairo">🔴 خسارة شركة</span>
-                                  }
-                                </div>
-                                <div class="text-xs text-white mt-1 font-semibold">{{ line.description }}</div>
-                              </div>
-                              <div class="text-right">
-                                <div class="text-xs font-bold text-amber-400 font-mono">{{ line.amount }} EGP</div>
-                                @if (line.invoiceUrl) {
-                                  <a [href]="line.invoiceUrl" target="_blank" class="text-[10px] text-indigo-400 hover:underline font-cairo mt-1 block">📄 الفاتورة</a>
-                                }
-                              </div>
-                            </div>
-                          }
                         </div>
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="7" class="px-6 py-14 text-center text-slate-500 text-sm font-cairo">
-                        لا توجد طلبات تسوية مقدمة حالياً / No settlements submitted yet.
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
           }
         </div>
       }
@@ -2929,6 +3076,32 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingSettlements = signal(false);
   readonly activePreviewPhotoUrl = signal<string | null>(null);
 
+  // Accordion card state for settlements
+  expandedSettlements = new Set<string>();
+
+  toggleExpand(id: string): void {
+    if (this.expandedSettlements.has(id)) {
+      this.expandedSettlements.delete(id);
+    } else {
+      this.expandedSettlements.add(id);
+    }
+    this.cdr.markForCheck();
+  }
+
+  isExpanded(id: string): boolean {
+    return this.expandedSettlements.has(id);
+  }
+
+  expandAllSettlements(): void {
+    this.settlements().forEach(s => this.expandedSettlements.add(s.id));
+    this.cdr.markForCheck();
+  }
+
+  collapseAllSettlements(): void {
+    this.expandedSettlements.clear();
+    this.cdr.markForCheck();
+  }
+
   readonly settlementForm: FormGroup = this.fb.group({
     lines: this.fb.array([])
   });
@@ -4326,8 +4499,12 @@ export class ProjectDetailsComponent implements OnInit {
         if (res.success && res.data) {
           this.settlements.set(res.data);
         }
+        this.cdr.markForCheck();
       },
-      error: () => this.isLoadingSettlements.set(false)
+      error: () => {
+        this.isLoadingSettlements.set(false);
+        this.cdr.markForCheck();
+      }
     });
   }
 
