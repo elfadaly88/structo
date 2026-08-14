@@ -14,6 +14,12 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Structo.API.Controllers;
 
+/// <summary>
+/// Manages site gallery photos for projects.
+/// IMPORTANT: This controller exclusively handles the SitePhotos table.
+/// Financial receipt images are stored as ReceiptPhotoUrl strings on FinancialTransaction
+/// and are completely separate from this gallery.
+/// </summary>
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer,DesignEngineer")]
@@ -21,6 +27,10 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
+    /// <summary>
+    /// Upload a site gallery photo with an optional caption.
+    /// Creates a SitePhoto entry — receipts MUST use the dedicated receipt endpoint instead.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> UploadPhoto([FromRoute] Guid projectId, [FromForm] Models.SitePhotoUploadDto dto)
     {
@@ -33,7 +43,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
 
         var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         Directory.CreateDirectory(uploadFolder);
-        
+
         var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
         var fileName = $"{Guid.NewGuid()}{ext}";
         var filePath = Path.Combine(uploadFolder, fileName);
@@ -46,12 +56,18 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
         var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         Guid.TryParse(userIdString, out var userId);
 
+        // Sanitize caption — max 200 chars
+        var rawCaption = dto.Caption?.Trim();
+        var sanitizedCaption = string.IsNullOrWhiteSpace(rawCaption)
+            ? null
+            : Structo.Core.Helpers.HtmlSanitizer.Sanitize(rawCaption.Length > 200 ? rawCaption[..200] : rawCaption);
+
         var photo = new SitePhoto
         {
             ProjectId = projectId,
-            UploadedByUserId = userId, 
+            UploadedByUserId = userId,
             PhotoUrl = $"/uploads/{fileName}",
-            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description),
+            Caption = sanitizedCaption,
             UploadedAt = DateTime.UtcNow
         };
 
@@ -61,12 +77,18 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
         return Ok(new ApiResponse<bool> { Data = true, Message = "Photo uploaded successfully", CurrentUserRole = CurrentUserRole });
     }
 
+    /// <summary>
+    /// Returns paginated site gallery photos for a project.
+    /// Queries ONLY the SitePhotos table — financial receipts are NOT included.
+    /// </summary>
     [HttpGet("mobile")]
     public async Task<ActionResult<ApiResponse<PaginatedList<SitePhotoMobileDto>>>> GetMobilePhotos(
-        [FromRoute] Guid projectId, 
-        [FromQuery] int pageNumber = 1, 
+        [FromRoute] Guid projectId,
+        [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
+        // Explicitly query only SitePhotos for this project.
+        // FinancialTransaction.ReceiptPhotoUrl is a separate field on a separate table — never mixed here.
         var query = context.SitePhotos
             .Include(p => p.UploadedByUser)
             .Where(p => p.ProjectId == projectId)
@@ -81,7 +103,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
             {
                 Id = p.Id,
                 PhotoUrl = p.PhotoUrl,
-                Description = p.Description,
+                Caption = p.Caption,
                 UploadedAt = p.UploadedAt,
                 UploadedBy = p.UploadedByUser != null ? p.UploadedByUser.FirstName + " " + p.UploadedByUser.LastName : string.Empty
             })
@@ -116,4 +138,3 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
         return Ok(new ApiResponse<bool> { Data = true, Message = "Photo deleted successfully", CurrentUserRole = CurrentUserRole });
     }
 }
-

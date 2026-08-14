@@ -141,8 +141,15 @@ public class ImageUploadController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Upload a project gallery image. Stores the URL in the SitePhotos table.
+    /// Accepts an optional caption (max 200 chars) to display in the gallery grid.
+    /// </summary>
     [HttpPost("project-gallery/{projectId}")]
-    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery([FromRoute] Guid projectId, IFormFile file)
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery(
+        [FromRoute] Guid projectId,
+        IFormFile file,
+        [FromForm] string? caption = null)
     {
         var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
         if (!isValid)
@@ -173,13 +180,19 @@ public class ImageUploadController : ControllerBase
             var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             Guid.TryParse(userIdString, out var userId);
 
+            // Sanitize and truncate caption
+            var rawCaption = caption?.Trim();
+            var sanitizedCaption = string.IsNullOrWhiteSpace(rawCaption)
+                ? null
+                : HtmlSanitizer.Sanitize(rawCaption.Length > 200 ? rawCaption[..200] : rawCaption);
+
             var photo = new SitePhoto
             {
                 ProjectId = projectId,
                 TenantId = tenantId.Value,
                 UploadedByUserId = userId,
                 PhotoUrl = dbUrl,
-                Description = "Gallery upload",
+                Caption = sanitizedCaption,
                 UploadedAt = DateTime.UtcNow
             };
 
@@ -197,6 +210,64 @@ public class ImageUploadController : ControllerBase
         {
             _logger.LogError(ex, "An error occurred while uploading project gallery image.");
             return StatusCode(500, new ApiResponse<UploadResultDto> { Success = false, Message = "An unexpected error occurred. Please contact support." });
+        }
+    }
+
+    /// <summary>
+    /// Upload a financial receipt image for a project.
+    /// This is the DEDICATED receipt endpoint — it uploads to the receipts/ path in R2
+    /// and returns the URL WITHOUT creating any entry in the SitePhotos table.
+    /// Use this for PettyCash, FinancialTransaction, and Settlement receipt attachments.
+    /// </summary>
+    [HttpPost("project-receipt/{projectId}")]
+    public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadReceiptAsync(
+        [FromRoute] Guid projectId,
+        IFormFile file)
+    {
+        var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
+        if (!isValid)
+        {
+            _logger.LogWarning("🚨 Security Warn: Refused receipt upload attempt. Reason: {Error}. File Name: {FileName}", errorMessage, file?.FileName);
+            return BadRequest(new ApiResponse<string> { Success = false, Message = errorMessage });
+        }
+        if (file == null || file.Length == 0)
+            return BadRequest(new ApiResponse<UploadResultDto> { Success = false, Message = "No file uploaded." });
+
+        var tenantId = _tenantAccessor.GetCurrentTenantId();
+        if (tenantId == null)
+            return Unauthorized(new ApiResponse<UploadResultDto> { Success = false, Message = "Tenant ID claim missing or invalid." });
+
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        if (project == null)
+            return NotFound(new ApiResponse<UploadResultDto> { Success = false, Message = "Project not found or access denied." });
+
+        try
+        {
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            // Receipts go to the dedicated receipts/ bucket path — completely separate from gallery images/
+            string customKey = $"{tenantId}/projects/{projectId}/receipts/{Guid.NewGuid()}{extension}";
+
+            using var stream = file.OpenReadStream();
+            // Upload to R2 under receipts/ path and return URL — NO SitePhoto row is created.
+            string receiptUrl = await _storageService.UploadFileDirectAsync(stream, file.FileName, file.ContentType, customKey);
+
+            _logger.LogInformation("Receipt uploaded for project {ProjectId}. URL: {Url}", projectId, receiptUrl);
+
+            return Ok(new ApiResponse<UploadResultDto>
+            {
+                Success = true,
+                Message = "Receipt uploaded successfully.",
+                Data = new UploadResultDto { Url = receiptUrl }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while uploading receipt for project {ProjectId}.", projectId);
+            return StatusCode(500, new ApiResponse<UploadResultDto>
+            {
+                Success = false,
+                Message = "An internal error occurred while processing your receipt. Please try again later."
+            });
         }
     }
 

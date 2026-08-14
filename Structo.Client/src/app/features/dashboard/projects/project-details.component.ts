@@ -877,13 +877,7 @@ import { LanguageService } from '../../../core/services/language.service';
                   {{ 'DETAILS.UPLOAD_IMAGE' | translate }}
                 }
               </button>
-              <!-- <input
-                #galleryFileInput
-                type="file"
-                class="hidden"
-                (change)="onGalleryFileSelected($event)"
-                accept="image/*"> -->
-                <input
+              <input
                   #galleryFileInput
                   type="file"
                   class="hidden"
@@ -902,37 +896,52 @@ import { LanguageService } from '../../../core/services/language.service';
           } @else {
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               @for (photo of galleryPhotos(); track photo.id; let idx = $index) {
-                <div 
-                  (click)="openLightbox(galleryPhotos(), idx, $event)"
-                  class="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md flex items-center justify-center cursor-pointer">
-                  <img [src]="photo.photoUrl" (error)="onImgError($event)" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span class="px-2.5 py-1 bg-slate-950/80 backdrop-blur-md rounded-lg text-[11px] font-bold text-white font-cairo flex items-center gap-1">
-                      🔍 معاينة
-                    </span>
-                  </div>
-                  <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
-                  </div>
-                  
-                  @if (isTenantOwner()) {
-                    <button
-                      type="button"
-                      (click)="onDeletePhoto(photo.id)"
-                      class="absolute top-2 right-2 rtl:left-2 rtl:right-auto p-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 cursor-pointer shadow-lg z-20">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <!-- Photo card: image on top, caption bar below -->
+                <div class="flex flex-col rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                  <!-- Image wrapper (clickable) -->
+                  <div
+                    (click)="openLightbox(galleryPhotos(), idx, $event)"
+                    class="group relative aspect-video flex items-center justify-center cursor-pointer overflow-hidden">
+                    <img [src]="photo.photoUrl" (error)="onImgError($event)" [alt]="photo.caption || ''" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span class="px-2.5 py-1 bg-slate-950/80 backdrop-blur-md rounded-lg text-[11px] font-bold text-white font-cairo flex items-center gap-1">
+                        🔍 معاينة
+                      </span>
+                    </div>
+                    <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                    </button>
-                  }
+                      <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
+                    </div>
 
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end">
-                    <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</p>
-                    <p class="text-[10px] text-slate-400 truncate mt-0.5">By: {{ photo.uploadedBy || 'Owner' }}</p>
+                    @if (isTenantOwner()) {
+                      <button
+                        type="button"
+                        (click)="$event.stopPropagation(); onDeletePhoto(photo.id)"
+                        class="absolute top-2 right-2 rtl:left-2 rtl:right-auto p-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 cursor-pointer shadow-lg z-20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    }
+
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end pointer-events-none">
+                      <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                      <p class="text-[10px] text-slate-400 truncate mt-0.5">By: {{ photo.uploadedBy || 'Owner' }}</p>
+                    </div>
                   </div>
+
+                  <!-- Caption bar — only rendered if photo has a caption -->
+                  @if (photo.caption) {
+                    <div class="px-3 py-2 bg-slate-900/70 border-t border-slate-800/60 shrink-0">
+                      <p
+                        class="text-[11px] text-slate-300 font-cairo truncate leading-snug"
+                        [title]="photo.caption">
+                        {{ photo.caption }}
+                      </p>
+                    </div>
+                  }
                 </div>
               } @empty {
                 <div class="col-span-2 sm:col-span-3 lg:col-span-4 py-16 text-center text-slate-500 text-sm font-cairo">
@@ -942,6 +951,77 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           }
         </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             Caption Upload Dialog — shows before upload to enter caption
+             ═══════════════════════════════════════════════════════════════ -->
+        @if (showCaptionDialog()) {
+          <div class="fixed inset-0 z-[9000] flex items-center justify-center p-4" style="max-height:92vh">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" (click)="cancelGalleryUpload()"></div>
+            <!-- Dialog -->
+            <div class="relative w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="max-height:88vh">
+              <!-- Header -->
+              <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
+                <h4 class="text-sm font-bold text-white font-cairo flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  إضافة وصف للصورة
+                </h4>
+                <button type="button" (click)="cancelGalleryUpload()" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <!-- Body -->
+              <div class="flex flex-col gap-4 px-5 py-5 overflow-y-auto min-h-0">
+                @if (pendingGalleryFile()) {
+                  <div class="flex items-center gap-2 px-3 py-2 bg-slate-800/60 rounded-lg border border-slate-700/50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-xs text-slate-300 font-mono truncate">{{ pendingGalleryFile()!.name }}</span>
+                  </div>
+                }
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-slate-300 font-cairo" for="galleryCaptionInput">
+                    وصف الصورة <span class="text-slate-500 font-normal">(اختياري)</span>
+                  </label>
+                  <textarea
+                    id="galleryCaptionInput"
+                    [value]="pendingCaption()"
+                    (input)="pendingCaption.set($any($event.target).value)"
+                    rows="3"
+                    maxlength="200"
+                    placeholder="مثال: صورة الموقع من الجهة الشمالية..."
+                    class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 font-cairo focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none transition-all"></textarea>
+                  <p class="text-[10px] text-slate-500 text-end font-mono">{{ pendingCaption().length }} / 200</p>
+                </div>
+              </div>
+              <!-- Footer -->
+              <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
+                <button
+                  type="button"
+                  (click)="cancelGalleryUpload()"
+                  class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-all duration-150 cursor-pointer font-cairo">
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  (click)="confirmGalleryUpload()"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white shadow-lg transition-all duration-150 hover:scale-[1.02] active:scale-95 cursor-pointer font-cairo">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                  رفع الصورة
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
       }
 
       <!-- Tab Content: Petty Cash -->
@@ -3167,6 +3247,10 @@ export class ProjectDetailsComponent implements OnInit {
   readonly galleryPhotos = signal<SitePhotoDto[]>([]);
   readonly isLoadingGallery = signal(false);
   readonly isUploadingGallery = signal(false);
+  // Caption dialog state
+  readonly showCaptionDialog = signal(false);
+  readonly pendingGalleryFile = signal<File | null>(null);
+  readonly pendingCaption = signal('');
 
   readonly isSettleModalOpen = signal(false);
   readonly isSettling = signal(false);
@@ -3335,6 +3419,8 @@ export class ProjectDetailsComponent implements OnInit {
           message: 'لا يمكن رفع أكثر من 5 صور لكل مشروع. برجاء مسح بعض الصور القديمة أولاً. / A project can have a maximum of 5 site photos. Please delete old ones first.',
           type: 'info'
         });
+        // Reset input so the same file can be re-selected if needed
+        input.value = '';
         return;
       }
       const file = input.files[0];
@@ -3344,19 +3430,44 @@ export class ProjectDetailsComponent implements OnInit {
           message: 'حجم الملف كبير جداً! الحد الأقصى للملفات 5 ميجا. / The maximum file size is 5MB.',
           type: 'error'
         });
+        input.value = '';
         return;
       }
-      this.isUploadingGallery.set(true);
-      this.uploadService.uploadProjectGallery(this.projectId, file).subscribe({
-        next: (res) => {
-          this.isUploadingGallery.set(false);
-          if (res.success) {
-            this.fetchGalleryPhotos();
-          }
-        },
-        error: () => this.isUploadingGallery.set(false)
-      });
+      // Store the file and open the caption dialog before uploading
+      this.pendingGalleryFile.set(file);
+      this.pendingCaption.set('');
+      this.showCaptionDialog.set(true);
+      input.value = '';
     }
+  }
+
+  confirmGalleryUpload(): void {
+    const file = this.pendingGalleryFile();
+    if (!file) return;
+    const caption = this.pendingCaption().trim();
+    this.showCaptionDialog.set(false);
+    this.isUploadingGallery.set(true);
+    this.uploadService.uploadProjectGallery(this.projectId, file, caption || undefined).subscribe({
+      next: (res) => {
+        this.isUploadingGallery.set(false);
+        this.pendingGalleryFile.set(null);
+        this.pendingCaption.set('');
+        if (res.success) {
+          this.fetchGalleryPhotos();
+        }
+      },
+      error: () => {
+        this.isUploadingGallery.set(false);
+        this.pendingGalleryFile.set(null);
+        this.pendingCaption.set('');
+      }
+    });
+  }
+
+  cancelGalleryUpload(): void {
+    this.showCaptionDialog.set(false);
+    this.pendingGalleryFile.set(null);
+    this.pendingCaption.set('');
   }
 
   onDeletePhoto(photoId: string): void {

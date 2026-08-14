@@ -11,7 +11,8 @@ export interface UploadResult {
 export interface SitePhotoDto {
   id: string;
   photoUrl: string;
-  description: string;
+  /** Optional caption entered by the uploader (max 200 chars) */
+  caption?: string | null;
   uploadedAt: string;
   uploadedBy: string;
 }
@@ -42,10 +43,28 @@ export class ImageUploadService {
     return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/tenant-banner`, formData);
   }
 
-  uploadProjectGallery(projectId: string, file: File): Observable<ApiResponse<UploadResult>> {
+  /**
+   * Upload a project gallery image with an optional caption.
+   * Creates a SitePhoto record in the database.
+   */
+  uploadProjectGallery(projectId: string, file: File, caption?: string): Observable<ApiResponse<UploadResult>> {
     const formData = new FormData();
     formData.append('file', file);
+    if (caption && caption.trim().length > 0) {
+      formData.append('caption', caption.trim().substring(0, 200));
+    }
     return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-gallery/${projectId}`, formData);
+  }
+
+  /**
+   * Upload a financial receipt image for a project.
+   * This uses the dedicated receipts/ path and does NOT create a SitePhoto record.
+   * Use this for PettyCash, FinancialTransaction, and Settlement receipt attachments.
+   */
+  uploadReceipt(projectId: string, file: File): Observable<ApiResponse<UploadResult>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-receipt/${projectId}`, formData);
   }
 
   getProjectPhotos(projectId: string, pageNumber: number = 1, pageSize: number = 24): Observable<ApiResponse<PaginatedList<SitePhotoDto>>> {
@@ -64,4 +83,3 @@ export class ImageUploadService {
     return this.http.delete<ApiResponse<boolean>>(`${environment.apiUrl}/projects/${projectId}/SitePhotos/${photoId}`);
   }
 }
-

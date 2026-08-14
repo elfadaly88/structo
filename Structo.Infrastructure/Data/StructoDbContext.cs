@@ -173,7 +173,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.PhotoUrl).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Caption).HasMaxLength(200).IsRequired(false);
 
             entity.HasOne(e => e.Tenant)
                   .WithMany()
