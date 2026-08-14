@@ -22,6 +22,7 @@ namespace Structo.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
+[Route("api/projects/{projectId}/photos")]
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer,DesignEngineer")]
 public class SitePhotosController(StructoDbContext context) : ControllerBase
 {
@@ -79,8 +80,9 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
 
     /// <summary>
     /// Returns paginated site gallery photos for a project.
-    /// Queries ONLY the SitePhotos table — financial receipts are NOT included.
+    /// Queries ONLY the SitePhotos table — financial receipts are strictly filtered out and NOT included.
     /// </summary>
+    [HttpGet]
     [HttpGet("mobile")]
     public async Task<ActionResult<ApiResponse<PaginatedList<SitePhotoMobileDto>>>> GetMobilePhotos(
         [FromRoute] Guid projectId,
@@ -89,9 +91,10 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
     {
         // Explicitly query only SitePhotos for this project.
         // FinancialTransaction.ReceiptPhotoUrl is a separate field on a separate table — never mixed here.
+        // Exclude any records where URL contains '/receipts/' or 'receipt'
         var query = context.SitePhotos
             .Include(p => p.UploadedByUser)
-            .Where(p => p.ProjectId == projectId)
+            .Where(p => p.ProjectId == projectId && !p.PhotoUrl.Contains("/receipts/") && !p.PhotoUrl.ToLower().Contains("receipt"))
             .OrderByDescending(p => p.UploadedAt);
 
         var totalCount = await query.CountAsync();

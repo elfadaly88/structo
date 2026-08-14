@@ -97,7 +97,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             // Must have AT LEAST 1 project with site photos/portfolio images
             // Exclude empty profiles with 0 projects or 0 photos
             var publicProjectsWithPhotos = tenantProjects
-                .Where(p => p.IsPublicPortfolio && p.SitePhotos.Any())
+                .Where(p => p.IsPublicPortfolio && p.SitePhotos.Any(sp => !string.IsNullOrEmpty(sp.PhotoUrl) && !sp.PhotoUrl.Contains("/receipts/") && !sp.PhotoUrl.ToLower().Contains("receipt")))
                 .ToList();
 
             if (!publicProjectsWithPhotos.Any())
@@ -212,7 +212,10 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                     Category = p.Category ?? "Other",
                     Status = p.Status.ToString(),
                     IsClosed = p.Status == ProjectStatus.Closed,
-                    SitePhotos = p.SitePhotos.Select(sp => sp.PhotoUrl).ToList()
+                    SitePhotos = p.SitePhotos
+                        .Where(sp => !string.IsNullOrEmpty(sp.PhotoUrl) && !sp.PhotoUrl.Contains("/receipts/") && !sp.PhotoUrl.ToLower().Contains("receipt"))
+                        .Select(sp => sp.PhotoUrl)
+                        .ToList()
                 });
             }
         }

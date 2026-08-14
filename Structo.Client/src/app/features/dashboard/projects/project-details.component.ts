@@ -896,52 +896,48 @@ import { LanguageService } from '../../../core/services/language.service';
           } @else {
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               @for (photo of galleryPhotos(); track photo.id; let idx = $index) {
-                <!-- Photo card: image on top, caption bar below -->
-                <div class="flex flex-col rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
-                  <!-- Image wrapper (clickable) -->
-                  <div
-                    (click)="openLightbox(galleryPhotos(), idx, $event)"
-                    class="group relative aspect-video flex items-center justify-center cursor-pointer overflow-hidden">
-                    <img [src]="photo.photoUrl" (error)="onImgError($event)" [alt]="photo.caption || ''" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span class="px-2.5 py-1 bg-slate-950/80 backdrop-blur-md rounded-lg text-[11px] font-bold text-white font-cairo flex items-center gap-1">
-                        🔍 معاينة
-                      </span>
-                    </div>
-                    <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
-                    </div>
+                <!-- Fixed-aspect ratio container with strict overflow clipping and GPU-accelerated transforms -->
+                <div
+                  (click)="openLightbox(galleryPhotos(), idx, $event)"
+                  class="group relative aspect-video w-full overflow-hidden rounded-xl bg-slate-900 border border-slate-800 transition-all duration-200 hover:border-indigo-500/50 shadow-md cursor-pointer">
+                  <img
+                    [src]="photo.photoUrl"
+                    (error)="onImgError($event)"
+                    [alt]="photo.caption || 'Project Image'"
+                    class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 transform-gpu"
+                    loading="lazy"
+                  />
 
-                    @if (isTenantOwner()) {
-                      <button
-                        type="button"
-                        (click)="$event.stopPropagation(); onDeletePhoto(photo.id)"
-                        class="absolute top-2 right-2 rtl:left-2 rtl:right-auto p-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 cursor-pointer shadow-lg z-20">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    }
-
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end pointer-events-none">
-                      <p class="text-[10px] text-slate-300 font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</p>
-                      <p class="text-[10px] text-slate-400 truncate mt-0.5">By: {{ photo.uploadedBy || 'Owner' }}</p>
-                    </div>
+                  <!-- Image Error Fallback -->
+                  <div class="hidden flex-col items-center justify-center p-3 text-slate-600 font-cairo text-xs gap-1.5 w-full h-full bg-slate-950/80">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-[11px] text-slate-500 font-cairo">صورة غير متاحة</span>
                   </div>
 
-                  <!-- Caption bar — only rendered if photo has a caption -->
-                  @if (photo.caption) {
-                    <div class="px-3 py-2 bg-slate-900/70 border-t border-slate-800/60 shrink-0">
-                      <p
-                        class="text-[11px] text-slate-300 font-cairo truncate leading-snug"
-                        [title]="photo.caption">
-                        {{ photo.caption }}
-                      </p>
-                    </div>
+                  <!-- Delete Button (Tenant Owner) -->
+                  @if (isTenantOwner()) {
+                    <button
+                      type="button"
+                      (click)="$event.stopPropagation(); onDeletePhoto(photo.id)"
+                      class="absolute top-2 right-2 rtl:left-2 rtl:right-auto p-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-pointer shadow-lg z-20 pointer-events-auto">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   }
+
+                  <!-- Hover Overlay (Absolute - does NOT alter DOM layout) -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3 flex flex-col justify-end pointer-events-none">
+                    @if (photo.caption) {
+                      <p class="text-xs text-white font-medium truncate font-cairo mb-0.5">{{ photo.caption }}</p>
+                    }
+                    <div class="flex items-center justify-between text-[10px] text-slate-400">
+                      <span class="font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="truncate">By: {{ photo.uploadedBy || 'Owner' }}</span>
+                    </div>
+                  </div>
                 </div>
               } @empty {
                 <div class="col-span-2 sm:col-span-3 lg:col-span-4 py-16 text-center text-slate-500 text-sm font-cairo">
@@ -3403,7 +3399,10 @@ export class ProjectDetailsComponent implements OnInit {
       next: (response) => {
         this.isLoadingGallery.set(false);
         if (response.success && response.data) {
-          this.galleryPhotos.set(response.data.items);
+          const items = (response.data.items || []).filter(
+            p => !p.photoUrl?.includes('/receipts/') && !p.photoUrl?.toLowerCase().includes('receipt')
+          );
+          this.galleryPhotos.set(items);
         }
       },
       error: () => this.isLoadingGallery.set(false)

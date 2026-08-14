@@ -266,6 +266,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             PublicDescription = BuildLegacyDescription(project),
             ProgressPercentage = 45, // Mocked progress calculation
             RecentPhotoUrls = project.SitePhotos
+                .Where(sp => !string.IsNullOrEmpty(sp.PhotoUrl) && !sp.PhotoUrl.Contains("/receipts/") && !sp.PhotoUrl.ToLower().Contains("receipt"))
                 .OrderByDescending(sp => sp.UploadedAt)
                 .Take(5)
                 .Select(sp => sp.PhotoUrl)
