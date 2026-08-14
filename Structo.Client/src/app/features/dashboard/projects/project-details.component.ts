@@ -1302,15 +1302,13 @@ import { LanguageService } from '../../../core/services/language.service';
           }
         </div>
       }
-
-      <!-- Tab Content: Financial Transactions -->
+                                   <!-- Tab Content: Financial Transactions -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl shadow-xl w-full">
-          <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-            <h3 class="text-base font-bold text-white font-cairo">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-slate-500 font-semibold font-mono">{{ transactions().length }} {{ 'DETAILS.ENTRIES' | translate }}</span>
-            </div>
+        <!-- Ledger Section Wrapper -->
+        <div class="w-full bg-[#0d1322] border border-slate-800 rounded-xl p-4 my-4 font-cairo">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-white">الدفتر العام</h3>
+            <span class="text-xs text-slate-400 font-mono">{{ transactions().length }} قيود</span>
           </div>
 
           @if (isLoadingTransactions()) {
@@ -1321,111 +1319,61 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <!-- Desktop Table (md+) -->
+            <!-- Desktop Table (md and above) -->
             <div class="hidden md:block w-full overflow-x-auto">
-              <table class="w-full border-collapse text-left rtl:text-right font-sans text-sm">
+              <table class="w-full text-right text-xs border-collapse font-sans">
                 <thead>
-                  <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
-                    <th class="px-4 py-3">{{ 'DETAILS.TH_DATE' | translate }}</th>
-                    <th class="px-4 py-3">Method</th>
-                    <th class="px-4 py-3">{{ 'PROJECTS.FIELD_DESC' | translate }}</th>
-                    <th class="px-4 py-3">{{ 'DETAILS.TH_STATUS' | translate }}</th>
-                    <th class="px-4 py-3">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
-                    <th class="px-4 py-3 text-center">Receipt</th>
-                    @if (isOwnerOrAccountant()) {
-                      <th class="px-4 py-3 text-center">{{ 'DETAILS.TH_ACTION' | translate }}</th>
-                    }
+                  <tr class="border-b border-slate-800 text-slate-400 font-cairo">
+                    <th class="py-3 px-2">التاريخ</th>
+                    <th class="py-3 px-2">METHOD</th>
+                    <th class="py-3 px-2">الوصف</th>
+                    <th class="py-3 px-2 text-center">الحالة</th>
+                    <th class="py-3 px-2 text-left">المبلغ</th>
+                    <th class="py-3 px-2 text-center">RECEIPT</th>
+                    <th class="py-3 px-2 text-center">الإجراء</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/60 text-sm">
-                  @for (t of transactions(); track t.id) {
-                    <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
-                      <td class="px-4 py-3 text-slate-400 font-mono text-xs whitespace-nowrap">
-                        <div>{{ (t?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</div>
-                        @if (t?.paymentDate) {
-                          <div class="text-[10px] text-slate-500 mt-0.5">Paid: {{ (t?.paymentDate) | date:'dd/MM/yyyy' }}</div>
-                        }
+                <tbody class="divide-y divide-slate-800/60">
+                  @for (tx of transactions(); track tx.id) {
+                    <tr class="hover:bg-slate-800/30 transition-colors">
+                      <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">{{ tx.paymentMethod || 'CASH' }}</span></td>
+                      <td class="py-3 px-2 text-white max-w-[200px] truncate cursor-pointer hover:text-sky-400 font-cairo" [title]="tx.description" (click)="openTransactionInspectionModal(tx)">{{ tx.description }}</td>
+                      <td class="py-3 px-2 text-center whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold font-cairo" 
+                          [class.bg-emerald-950/60]="tx.type === 'Income'" 
+                          [class.text-emerald-400]="tx.type === 'Income'" 
+                          [class.bg-rose-950/60]="tx.type !== 'Income'" 
+                          [class.text-rose-400]="tx.type !== 'Income'">
+                          {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
+                        </span>
                       </td>
-                      <td class="px-4 py-3 whitespace-nowrap">
-                        @if (t.paymentMethod) {
-                          <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-300">
-                            {{ t.paymentMethod }}
-                          </span>
+                      <td class="py-3 px-2 text-left whitespace-nowrap font-mono font-bold" 
+                        [class.text-emerald-400]="tx.type === 'Income'" 
+                        [class.text-rose-400]="tx.type !== 'Income'">
+                        {{ tx.type === 'Income' ? '+' : '-' }}{{ (tx.amount || 0) | number:'1.2-2' }} <span class="text-[10px] text-slate-400">ج.م</span>
+                      </td>
+                      <td class="py-3 px-2 text-center whitespace-nowrap">
+                        @if (tx.receiptPhotoUrl) {
+                          <a [href]="tx.receiptPhotoUrl" target="_blank" class="px-2 py-1 text-[11px] rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800 hover:bg-indigo-900 inline-block font-cairo">معاينة</a>
                         } @else {
-                          <span class="text-xs text-slate-600">-</span>
+                          <span class="text-slate-600">-</span>
                         }
                       </td>
-                      <td class="px-4 py-3 font-medium text-white max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
-                          [title]="t.description"
-                          (click)="openTransactionInspectionModal(t)">
-                        {{ t.description }}
-                      </td>
-                      <td class="px-4 py-3 whitespace-nowrap">
-                        @if (t.type === 'Income') {
-                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            {{ 'DETAILS.BADGE_INCOME' | translate }}
-                          </span>
-                        } @else {
-                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                            {{ 'DETAILS.BADGE_EXPENSE' | translate }}
-                          </span>
+                      <td class="py-3 px-2 text-center whitespace-nowrap">
+                        @if (tx?.isLocked || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                          <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700 font-cairo">🔒 مقفلة</span>
+                        } @else if (isOwnerOrAccountant()) {
+                          <div class="flex items-center justify-center gap-1 font-cairo">
+                            <button (click)="openEditTransactionModal(tx)" [disabled]="project()?.status === 'Closed'" class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 hover:bg-amber-900 cursor-pointer disabled:opacity-40">Edit</button>
+                            <button (click)="onDeleteTransaction(tx.id)" [disabled]="isDeletingTransaction() || project()?.status === 'Closed'" class="px-2 py-0.5 text-[10px] rounded bg-rose-950 text-rose-300 border border-rose-800 hover:bg-rose-900 disabled:opacity-40 cursor-pointer">Delete</button>
+                          </div>
                         }
                       </td>
-                      <td class="px-4 py-3 font-mono font-bold whitespace-nowrap"
-                          [class.text-emerald-400]="t.type === 'Income'"
-                          [class.text-rose-400]="t.type !== 'Income'">
-                        {{ t.type === 'Income' ? '+' : '-' }}{{ (t?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
-                      </td>
-                      <td class="px-4 py-3 text-center whitespace-nowrap">
-                        @if (t.receiptPhotoUrl) {
-                          <a [href]="t.receiptPhotoUrl" target="_blank" 
-                             class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm" 
-                             title="View Receipt">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>معاينة الإيصال</span>
-                          </a>
-                        } @else {
-                          <span class="text-xs text-slate-600">-</span>
-                        }
-                      </td>
-                      @if (isOwnerOrAccountant()) {
-                        <td class="px-4 py-3 text-center whitespace-nowrap">
-                          @if (t?.isLocked || t?.canEdit === false || t?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
-                            <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
-                              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                              </svg>
-                              🔒 مقفلة
-                            </span>
-                          } @else {
-                            <div class="flex items-center justify-center gap-1.5">
-                              <button
-                                (click)="openEditTransactionModal(t)"
-                                [disabled]="project()?.status === 'Closed'"
-                                title="Edit transaction"
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
-                                Edit
-                              </button>
-                              <button
-                                (click)="onDeleteTransaction(t.id)"
-                                [disabled]="isDeletingTransaction() || project()?.status === 'Closed'"
-                                title="Delete transaction and roll back pool"
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Delete
-                              </button>
-                            </div>
-                          }
-                        </td>
-                      }
                     </tr>
                   } @empty {
                     <tr>
-                      <td [attr.colspan]="isOwnerOrAccountant() ? 7 : 6" class="px-6 py-14 text-center text-slate-500 text-sm font-cairo">
+                      <td colspan="7" class="py-8 text-center text-slate-500 font-cairo">
                         {{ 'DETAILS.NO_TRANSACTIONS' | translate }}
                       </td>
                     </tr>
@@ -1434,91 +1382,36 @@ import { LanguageService } from '../../../core/services/language.service';
               </table>
             </div>
 
-            <!-- Mobile Cards (block md:hidden) -->
-            <div class="block md:hidden p-4 space-y-3">
-              @for (t of transactions(); track t.id) {
-                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
-                  <!-- Header: Type Badge & Amount -->
-                  <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border font-cairo"
-                      [class.bg-emerald-500/10]="t.type === 'Income'"
-                      [class.text-emerald-400]="t.type === 'Income'"
-                      [class.border-emerald-500/20]="t.type === 'Income'"
-                      [class.bg-rose-500/10]="t.type !== 'Income'"
-                      [class.text-rose-400]="t.type !== 'Income'"
-                      [class.border-rose-500/20]="t.type !== 'Income'"
-                    >
-                      {{ t.type === 'Income' ? ('DETAILS.BADGE_INCOME' | translate) : ('DETAILS.BADGE_EXPENSE' | translate) }}
-                    </span>
-                    <span class="font-mono font-bold text-sm"
-                      [class.text-emerald-400]="t.type === 'Income'"
-                      [class.text-rose-400]="t.type !== 'Income'"
-                    >
-                      {{ t.type === 'Income' ? '+' : '-' }}{{ (t?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+            <!-- Mobile Cards (sm and below) -->
+            <div class="block md:hidden space-y-3 font-cairo">
+              @for (tx of transactions(); track tx.id) {
+                <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs font-mono text-slate-400">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="font-mono font-bold text-sm" [class.text-emerald-400]="tx.type === 'Income'" [class.text-rose-400]="tx.type !== 'Income'">
+                      {{ tx.type === 'Income' ? '+' : '-' }}{{ (tx.amount || 0) | number:'1.2-2' }} ج.م
                     </span>
                   </div>
-
-                  <!-- Description -->
-                  <p class="text-xs text-white font-medium cursor-pointer hover:text-sky-400 transition-colors font-cairo"
-                     [title]="t.description"
-                     (click)="openTransactionInspectionModal(t)">
-                    {{ t.description }}
-                  </p>
-
-                  <!-- Payment Method & Receipt -->
-                  <div class="flex items-center justify-between gap-2 text-xs">
-                    <div class="flex items-center gap-1.5">
-                      @if (t.paymentMethod) {
-                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-300">
-                          {{ t.paymentMethod }}
-                        </span>
-                      }
-                    </div>
-                    @if (t.receiptPhotoUrl) {
-                      <a [href]="t.receiptPhotoUrl" target="_blank"
-                         class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 font-cairo transition-all">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>معاينة الإيصال</span>
-                      </a>
+                  <p class="text-xs text-white break-words cursor-pointer hover:text-sky-400" (click)="openTransactionInspectionModal(tx)">{{ tx.description }}</p>
+                  <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
+                    <span class="px-2 py-0.5 rounded text-[10px]" [class.bg-emerald-950]="tx.type === 'Income'" [class.text-emerald-400]="tx.type === 'Income'" [class.bg-rose-950]="tx.type !== 'Income'" [class.text-rose-400]="tx.type !== 'Income'">
+                      {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
+                    </span>
+                    @if (tx.receiptPhotoUrl) {
+                      <a [href]="tx.receiptPhotoUrl" target="_blank" class="px-2 py-0.5 text-[10px] rounded bg-indigo-950 text-indigo-300 border border-indigo-800">معاينة الإيصال</a>
                     }
-                  </div>
-
-                  <!-- Footer: Date & Actions -->
-                  <div class="flex items-center justify-between text-xs text-slate-500 font-mono pt-2 border-t border-slate-800/60">
-                    <div class="flex flex-col text-[11px]">
-                      <span>📅 {{ (t?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
-                      @if (t?.paymentDate) {
-                        <span class="text-[10px] text-slate-500">Paid: {{ (t?.paymentDate) | date:'dd/MM/yyyy' }}</span>
-                      }
-                    </div>
-                    @if (isOwnerOrAccountant()) {
-                      @if (t?.isLocked || t?.canEdit === false || t?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
-                        <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg select-none font-cairo">
-                          🔒 مقفلة
-                        </span>
-                      } @else {
-                        <div class="flex items-center gap-1.5">
-                          <button
-                            (click)="openEditTransactionModal(t)"
-                            [disabled]="project()?.status === 'Closed'"
-                            class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo hover:bg-amber-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            تعديل
-                          </button>
-                          <button
-                            (click)="onDeleteTransaction(t.id)"
-                            [disabled]="isDeletingTransaction() || project()?.status === 'Closed'"
-                            class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo hover:bg-rose-500/20 disabled:opacity-40 transition-all cursor-pointer">
-                            حذف
-                          </button>
-                        </div>
-                      }
+                    @if (tx?.isLocked || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                      <span class="text-[10px] text-slate-400">🔒 مقفلة</span>
+                    } @else if (isOwnerOrAccountant()) {
+                      <div class="flex items-center gap-1">
+                        <button (click)="openEditTransactionModal(tx)" [disabled]="project()?.status === 'Closed'" class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 disabled:opacity-40">Edit</button>
+                        <button (click)="onDeleteTransaction(tx.id)" [disabled]="isDeletingTransaction() || project()?.status === 'Closed'" class="px-2 py-0.5 text-[10px] rounded bg-rose-950 text-rose-300 border border-rose-800 disabled:opacity-40">Delete</button>
+                      </div>
                     }
                   </div>
                 </div>
               } @empty {
-                <div class="py-12 text-center text-slate-500 text-sm font-cairo">
+                <div class="py-8 text-center text-slate-500 text-sm font-cairo">
                   {{ 'DETAILS.NO_TRANSACTIONS' | translate }}
                 </div>
               }

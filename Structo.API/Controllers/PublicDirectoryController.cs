@@ -122,7 +122,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                 .ToList();
 
             int reviewsCount = ratedProjects.Count;
-            double avgRating = reviewsCount > 0 ? ratedProjects.Average() : 5.0;
+            double avgRating = reviewsCount > 0 ? ratedProjects.Average() : 0.0;
 
             int completedProjectsCount = tenantProjects.Count(p => p.Status == ProjectStatus.Closed);
             int activeProjectsCount = tenantProjects.Count(p => p.Status == ProjectStatus.Active);
@@ -151,7 +151,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                 CreatedAt = t.CreatedAt
             };
 
-            if (minRating.HasValue && dto.Rating < minRating.Value)
+            if (minRating.HasValue && (reviewsCount == 0 || dto.Rating < minRating.Value))
             {
                 continue;
             }
@@ -159,16 +159,20 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             dtos.Add(dto);
         }
 
-        // 2️⃣ Smart Ranking Algorithm (Rating-Driven):
-        // 1. AverageRating (Descending - highest rated 5.0 first)
-        // 2. TotalReviewsCount (Descending - more reviews breaks ties)
-        // 3. CompletedProjectsCount (Descending)
-        // 4. ActiveProjectsCount (Descending)
+        // 2️⃣ Smart Ranking Algorithm (Rating-Driven & Verified-First):
+        // 1. Verified reviews first (ReviewsCount > 0)
+        // 2. AverageRating (Descending - highest rated first)
+        // 3. TotalReviewsCount (Descending - more reviews breaks ties)
+        // 4. CompletedProjectsCount (Descending)
+        // 5. ActiveProjectsCount (Descending)
+        // 6. CreatedAt (Descending)
         var resultList = dtos
-            .OrderByDescending(dto => dto.Rating)
+            .OrderByDescending(dto => dto.ReviewsCount > 0 ? 1 : 0)
+            .ThenByDescending(dto => dto.Rating)
             .ThenByDescending(dto => dto.ReviewsCount)
             .ThenByDescending(dto => dto.CompletedProjectsCount)
             .ThenByDescending(dto => dto.ActiveProjectsCount)
+            .ThenByDescending(dto => dto.CreatedAt)
             .ToList();
 
         return Ok(new ApiResponse<List<TenantDto>> { Data = resultList, Success = true });
@@ -215,7 +219,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
 
         var ratedProjects = projects.Where(p => p.ClientRating.HasValue && !p.IsReviewHidden).Select(p => p.ClientRating!.Value).ToList();
         int reviewsCount = ratedProjects.Count;
-        double avgRating = reviewsCount > 0 ? ratedProjects.Average() : 5.0;
+        double avgRating = reviewsCount > 0 ? ratedProjects.Average() : 0.0;
 
         int completedProjectsCount = projects.Count(p => p.Status == ProjectStatus.Closed);
         int activeProjectsCount = projects.Count(p => p.Status == ProjectStatus.Active);

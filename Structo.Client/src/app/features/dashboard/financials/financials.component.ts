@@ -445,14 +445,17 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
       <!-- TAB 2: سجل المعاملات المالية (Financial Transactions) -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl mb-8 space-y-6 w-full">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.TRANSACTIONS' | translate }}</h2>
-            <span class="text-xs text-slate-400 font-cairo">إجمالي النتائج: <strong class="text-indigo-400 font-mono">{{ filteredTransactions.length }}</strong></span>
+        <!-- Ledger Section Wrapper -->
+        <div class="w-full bg-[#0d1322] border border-slate-800 rounded-xl p-4 my-4 font-cairo">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center gap-3">
+              <h3 class="text-lg font-bold text-white">الدفتر العام</h3>
+              <span class="text-xs text-slate-400 font-mono">({{ filteredTransactions.length }} قيود)</span>
+            </div>
           </div>
 
           <!-- Clean Ledger Filter Bar -->
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 font-cairo shadow-inner">
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 font-cairo shadow-inner mb-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <!-- Search Query -->
               <div>
@@ -504,76 +507,61 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
             </div>
           </div>
 
-          <!-- Desktop Ledger Table (md+) -->
+          <!-- Desktop Table (md and above) -->
           <div class="hidden md:block w-full overflow-x-auto">
-            <table class="w-full border-collapse text-left rtl:text-right font-sans">
+            <table class="w-full text-right text-xs border-collapse font-sans">
               <thead>
-                <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
-                  <th class="px-3 py-3 font-cairo">{{ 'FINANCE.DATE' | translate }}</th>
-                  <th class="px-3 py-3 font-cairo">{{ 'FINANCE.DESCRIPTION' | translate }}</th>
-                  <th class="px-3 py-3 font-cairo">{{ 'FINANCE.TYPE' | translate }}</th>
-                  <th class="px-3 py-3 text-center font-cairo">{{ 'FINANCE.AMOUNT' | translate }}</th>
-                  @if (isOwnerOrAccountant()) {
-                    <th class="px-3 py-3 text-center font-cairo">{{ 'FINANCE.ACTIONS' | translate }}</th>
-                  }
+                <tr class="border-b border-slate-800 text-slate-400 font-cairo">
+                  <th class="py-3 px-2">التاريخ</th>
+                  <th class="py-3 px-2">METHOD</th>
+                  <th class="py-3 px-2">الوصف</th>
+                  <th class="py-3 px-2 text-center">الحالة</th>
+                  <th class="py-3 px-2 text-left">المبلغ</th>
+                  <th class="py-3 px-2 text-center">RECEIPT</th>
+                  <th class="py-3 px-2 text-center">الإجراء</th>
                 </tr>
               </thead>
-              <tbody class="text-sm divide-y divide-slate-800/60 text-slate-300">
-                @for (transaction of filteredTransactions; track transaction.id) {
-                  <tr class="hover:bg-slate-950/20 transition-colors">
-                    <td class="px-3 py-3 text-slate-400 font-mono tabular-nums text-xs whitespace-nowrap">{{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
-                    <td class="px-3 py-3 text-white font-medium max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
-                        [title]="transaction.description"
-                        (click)="openTransactionInspectionModal(transaction)">
-                      {{ transaction.description }}
-                    </td>
-                    <td class="px-3 py-3 whitespace-nowrap">
-                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
-                        [class.bg-emerald-500/10]="transaction.type === 'Income'" 
-                        [class.text-emerald-400]="transaction.type === 'Income'"
-                        [class.border-emerald-500/20]="transaction.type === 'Income'"
-                        [class.bg-rose-500/10]="transaction.type === 'Expense'" 
-                        [class.text-rose-400]="transaction.type === 'Expense'"
-                        [class.border-rose-500/20]="transaction.type === 'Expense'"
-                      >
-                        {{ transaction.type === 'Income' ? ('FINANCE.INCOME' | translate) : ('FINANCE.EXPENSE' | translate) }}
+              <tbody class="divide-y divide-slate-800/60">
+                @for (tx of filteredTransactions; track tx.id) {
+                  <tr class="hover:bg-slate-800/30 transition-colors">
+                    <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">{{ tx.paymentMethod || 'CASH' }}</span></td>
+                    <td class="py-3 px-2 text-white max-w-[200px] truncate cursor-pointer hover:text-sky-400 font-cairo" [title]="tx.description" (click)="openTransactionInspectionModal(tx)">{{ tx.description }}</td>
+                    <td class="py-3 px-2 text-center whitespace-nowrap">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold font-cairo" 
+                        [class.bg-emerald-950/60]="tx.type === 'Income'" 
+                        [class.text-emerald-400]="tx.type === 'Income'" 
+                        [class.bg-rose-950/60]="tx.type !== 'Income'" 
+                        [class.text-rose-400]="tx.type !== 'Income'">
+                        {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
                       </span>
                     </td>
-                    <td class="px-3 py-3 text-center font-bold font-mono tabular-nums whitespace-nowrap" 
-                      [class.text-emerald-400]="transaction.type === 'Income'" 
-                      [class.text-rose-400]="transaction.type === 'Expense'"
-                    >
-                      {{ transaction.type === 'Income' ? '+' : '-' }}{{ (transaction?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                    <td class="py-3 px-2 text-left whitespace-nowrap font-mono font-bold" 
+                      [class.text-emerald-400]="tx.type === 'Income'" 
+                      [class.text-rose-400]="tx.type !== 'Income'">
+                      {{ tx.type === 'Income' ? '+' : '-' }}{{ (tx.amount || 0) | number:'1.2-2' }} <span class="text-[10px] text-slate-400">ج.م</span>
                     </td>
-                    @if (isOwnerOrAccountant()) {
-                      <td class="px-3 py-3 text-center whitespace-nowrap">
-                        @if (transaction?.isLocked || transaction?.canEdit === false || transaction?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
-                          <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2.5 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
-                            🔒 مقفلة
-                          </span>
-                        } @else {
-                          <div class="flex items-center justify-center gap-1.5">
-                            <button
-                              (click)="openEditTransactionModal(transaction)"
-                              title="Edit transaction"
-                              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer font-cairo">
-                              تعديل
-                            </button>
-                            <button
-                              (click)="onDeleteTransaction(transaction.id, selectedProjectId())"
-                              [disabled]="isDeletingTx()"
-                              title="Delete transaction"
-                              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer font-cairo">
-                              حذف
-                            </button>
-                          </div>
-                        }
-                      </td>
-                    }
+                    <td class="py-3 px-2 text-center whitespace-nowrap">
+                      @if (tx.receiptPhotoUrl) {
+                        <a [href]="tx.receiptPhotoUrl" target="_blank" class="px-2 py-1 text-[11px] rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800 hover:bg-indigo-900 inline-block font-cairo">معاينة</a>
+                      } @else {
+                        <span class="text-slate-600">-</span>
+                      }
+                    </td>
+                    <td class="py-3 px-2 text-center whitespace-nowrap">
+                      @if (tx?.isLocked || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700 font-cairo">🔒 مقفلة</span>
+                      } @else if (isOwnerOrAccountant()) {
+                        <div class="flex items-center justify-center gap-1 font-cairo">
+                          <button (click)="openEditTransactionModal(tx)" class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 hover:bg-amber-900 cursor-pointer">Edit</button>
+                          <button (click)="onDeleteTransaction(tx.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2 py-0.5 text-[10px] rounded bg-rose-950 text-rose-300 border border-rose-800 hover:bg-rose-900 disabled:opacity-40 cursor-pointer">Delete</button>
+                        </div>
+                      }
+                    </td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td [attr.colspan]="isOwnerOrAccountant() ? 5 : 4" class="py-12 text-center text-slate-500 font-cairo">
+                    <td colspan="7" class="py-8 text-center text-slate-500 font-cairo">
                       {{ 'FINANCE.NO_TRANSACTIONS' | translate }}
                     </td>
                   </tr>
@@ -582,44 +570,31 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
             </table>
           </div>
 
-          <!-- Mobile Stacked Cards (< md) -->
-          <div class="block md:hidden space-y-3">
-            @for (transaction of filteredTransactions; track transaction.id) {
-              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
-                <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
-                    [class.bg-emerald-500/10]="transaction.type === 'Income'" 
-                    [class.text-emerald-400]="transaction.type === 'Income'"
-                    [class.border-emerald-500/20]="transaction.type === 'Income'"
-                    [class.bg-rose-500/10]="transaction.type === 'Expense'" 
-                    [class.text-rose-400]="transaction.type === 'Expense'"
-                    [class.border-rose-500/20]="transaction.type === 'Expense'"
-                  >
-                    {{ transaction.type === 'Income' ? ('FINANCE.INCOME' | translate) : ('FINANCE.EXPENSE' | translate) }}
-                  </span>
-                  <span class="font-bold font-mono tabular-nums text-sm"
-                    [class.text-emerald-400]="transaction.type === 'Income'" 
-                    [class.text-rose-400]="transaction.type === 'Expense'"
-                  >
-                    {{ transaction.type === 'Income' ? '+' : '-' }}{{ (transaction?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+          <!-- Mobile Cards (sm and below) -->
+          <div class="block md:hidden space-y-3 font-cairo">
+            @for (tx of filteredTransactions; track tx.id) {
+              <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-mono text-slate-400">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="font-mono font-bold text-sm" [class.text-emerald-400]="tx.type === 'Income'" [class.text-rose-400]="tx.type !== 'Income'">
+                    {{ tx.type === 'Income' ? '+' : '-' }}{{ (tx.amount || 0) | number:'1.2-2' }} ج.م
                   </span>
                 </div>
-                <p class="text-xs text-white font-medium font-cairo cursor-pointer hover:text-sky-400 transition-colors" (click)="openTransactionInspectionModal(transaction)">
-                  {{ transaction.description }}
-                </p>
-                <div class="flex items-center justify-between text-xs text-slate-500 font-mono tabular-nums pt-2 border-t border-slate-800/60">
-                  <span>📅 {{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
-                  @if (isOwnerOrAccountant()) {
-                    @if (transaction?.isLocked || transaction?.canEdit === false || transaction?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
-                      <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-lg select-none font-cairo">
-                        🔒 مقفلة
-                      </span>
-                    } @else {
-                      <div class="flex items-center gap-1.5">
-                        <button (click)="openEditTransactionModal(transaction)" class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo hover:bg-amber-500/20 transition-all cursor-pointer">تعديل</button>
-                        <button (click)="onDeleteTransaction(transaction.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo hover:bg-rose-500/20 disabled:opacity-40 transition-all cursor-pointer">حذف</button>
-                      </div>
-                    }
+                <p class="text-xs text-white break-words cursor-pointer hover:text-sky-400" (click)="openTransactionInspectionModal(tx)">{{ tx.description }}</p>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
+                  <span class="px-2 py-0.5 rounded text-[10px]" [class.bg-emerald-950]="tx.type === 'Income'" [class.text-emerald-400]="tx.type === 'Income'" [class.bg-rose-950]="tx.type !== 'Income'" [class.text-rose-400]="tx.type !== 'Income'">
+                    {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
+                  </span>
+                  @if (tx.receiptPhotoUrl) {
+                    <a [href]="tx.receiptPhotoUrl" target="_blank" class="px-2 py-0.5 text-[10px] rounded bg-indigo-950 text-indigo-300 border border-indigo-800">معاينة الإيصال</a>
+                  }
+                  @if (tx?.isLocked || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                    <span class="text-[10px] text-slate-400">🔒 مقفلة</span>
+                  } @else if (isOwnerOrAccountant()) {
+                    <div class="flex items-center gap-1">
+                      <button (click)="openEditTransactionModal(tx)" class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800">Edit</button>
+                      <button (click)="onDeleteTransaction(tx.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2 py-0.5 text-[10px] rounded bg-rose-950 text-rose-300 border border-rose-800">Delete</button>
+                    </div>
                   }
                 </div>
               </div>
@@ -631,7 +606,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           </div>
         </div>
       }
-    </div>
+      </div>
 
 <!-- Sticky Mobile Action Bar for Site Engineers -->
       @if (isSiteEngineer()) {

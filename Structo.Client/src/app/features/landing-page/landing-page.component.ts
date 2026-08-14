@@ -327,15 +327,22 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                         </div>
                       </div>
 
-                      <!-- Top Badge: Prominent Star Rating & Reviews Count (e.g. ⭐ 4.9 (18 تقييم)) -->
-                      <button
-                        (click)="openReviewsModal($event, comp.id, comp.name)"
-                        title="View client reviews"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all cursor-pointer font-bold text-xs shrink-0 shadow-sm">
-                        <span>⭐</span>
-                        <span class="font-mono text-sm font-black">{{ (comp.rating || 5.0) | number:'1.1-1' }}</span>
-                        <span class="text-[11px] text-amber-300/80 font-cairo font-medium">({{ comp.reviewsCount || 0 }} {{ langService.currentLang() === 'ar' ? 'تقييم' : 'reviews' }})</span>
-                      </button>
+                      <!-- Top Badge: Prominent Star Rating & Reviews Count OR New Member Badge -->
+                      @if ((comp.reviewsCount || 0) > 0) {
+                        <button
+                          (click)="openReviewsModal($event, comp.id, comp.name)"
+                          title="View client reviews"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all cursor-pointer font-bold text-xs shrink-0 shadow-sm">
+                          <span>⭐</span>
+                          <span class="font-mono text-sm font-black">{{ comp.rating | number:'1.1-1' }}</span>
+                          <span class="text-[11px] text-amber-300/80 font-cairo font-medium">({{ comp.reviewsCount }} {{ langService.currentLang() === 'ar' ? 'تقييم' : 'reviews' }})</span>
+                        </button>
+                      } @else {
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs font-bold font-cairo shrink-0 shadow-sm">
+                          <span>✨</span>
+                          <span>{{ langService.currentLang() === 'ar' ? 'عضو جديد' : 'New Member' }}</span>
+                        </span>
+                      }
                     </div>
 
                     <!-- Project Indicators Badges: [ 🏆 X مكتمل ] [ 🟢 Y جاري التنفيذ ] -->
@@ -432,14 +439,21 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                           📍 {{ selectedCompany()!.region || 'مصر' }}
                         </span>
                         <span class="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
-                        <button
-                          (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
-                          title="View all client reviews"
-                          class="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-slate-950/60 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                          <span>⭐</span>
-                          <span class="font-mono text-sm font-black">{{ (selectedCompany()!.rating || 5.0) | number:'1.1-1' }}</span>
-                          <span class="text-[10px] text-amber-400/80 font-normal">({{ selectedCompany()!.reviewsCount || 0 }} تقييم)</span>
-                        </button>
+                        @if ((selectedCompany()!.reviewsCount || 0) > 0) {
+                          <button
+                            (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
+                            title="View all client reviews"
+                            class="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-slate-950/60 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                            <span>⭐</span>
+                            <span class="font-mono text-sm font-black">{{ selectedCompany()!.rating | number:'1.1-1' }}</span>
+                            <span class="text-[10px] text-amber-400/80 font-normal">({{ selectedCompany()!.reviewsCount }} {{ langService.currentLang() === 'ar' ? 'تقييم' : 'reviews' }})</span>
+                          </button>
+                        } @else {
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs font-bold font-cairo">
+                            <span>✨</span>
+                            <span>{{ langService.currentLang() === 'ar' ? 'عضو جديد' : 'New Member' }}</span>
+                          </span>
+                        }
                         @if ((selectedCompany()!.completedProjectsCount || 0) > 0) {
                           <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
                             🏆 {{ selectedCompany()!.completedProjectsCount }} {{ langService.currentLang() === 'ar' ? 'مكتمل' : 'Completed' }}
