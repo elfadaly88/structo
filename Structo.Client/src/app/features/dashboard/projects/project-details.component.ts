@@ -1334,42 +1334,55 @@ import { LanguageService } from '../../../core/services/language.service';
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60">
-                  @for (tx of transactions(); track tx.id) {
+                  @for (tx of (transactions?.() || transactions || []); track (tx.id || $index)) {
                     <tr class="hover:bg-slate-800/30 transition-colors">
+                      <!-- Date -->
                       <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">
-                        {{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}
+                        {{ (tx.date || tx.transactionDate || tx.TransactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}
                       </td>
+
+                      <!-- Method -->
                       <td class="py-3 px-2 whitespace-nowrap">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 uppercase">
-                          {{ tx.method || tx.paymentMethod || 'CASH' }}
+                          {{ tx.method || tx.paymentMethod || tx.PaymentMethod || 'CASH' }}
                         </span>
                       </td>
-                      <td class="py-3 px-2 text-white max-w-[200px] truncate font-cairo" [title]="tx.description || tx.notes || '-'">
-                        {{ tx.description || tx.notes || '-' }}
+
+                      <!-- Description -->
+                      <td class="py-3 px-2 text-white max-w-[200px] truncate font-cairo" [title]="tx.description || tx.Description || tx.notes || '-'">
+                        {{ tx.description || tx.Description || tx.notes || '-' }}
                       </td>
+
+                      <!-- Status / Type -->
                       <td class="py-3 px-2 text-center whitespace-nowrap">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold font-cairo"
-                          [class.bg-emerald-950/60]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
-                          [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
-                          [class.bg-rose-950/60]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'"
-                          [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
-                          {{ (tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? 'إيراد' : 'مصروف' }}
+                          [class.bg-emerald-950/60]="tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
+                          [class.text-emerald-400]="tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
+                          [class.bg-rose-950/60]="tx.type !== 'Income' && tx.Type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'"
+                          [class.text-rose-400]="tx.type !== 'Income' && tx.Type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
+                          {{ (tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? 'إيراد' : 'مصروف' }}
                         </span>
                       </td>
+
+                      <!-- Amount -->
                       <td class="py-3 px-2 text-left whitespace-nowrap font-mono font-bold"
-                        [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
-                        [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
-                        {{ (tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? '+' : '-' }}{{ (tx.amount ?? tx.value ?? 0) | number:'1.2-2' }} <span class="text-[10px] text-slate-400">ج.م</span>
+                        [class.text-emerald-400]="tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
+                        [class.text-rose-400]="tx.type !== 'Income' && tx.Type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
+                        {{ (tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? '+' : '-' }}{{ (tx.amount ?? tx.Amount ?? tx.value ?? 0) | number:'1.2-2' }} <span class="text-[10px] text-slate-400">ج.م</span>
                       </td>
+
+                      <!-- Receipt -->
                       <td class="py-3 px-2 text-center whitespace-nowrap">
-                        @if (tx.receiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl) {
-                          <a [href]="tx.receiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl" target="_blank" class="px-2 py-1 text-[11px] rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800 hover:bg-indigo-900 inline-block font-cairo">معاينة</a>
+                        @if (tx.receiptPhotoUrl || tx.ReceiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl) {
+                          <a [href]="tx.receiptPhotoUrl || tx.ReceiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl" target="_blank" class="px-2 py-1 text-[11px] rounded bg-indigo-950/60 text-indigo-300 border border-indigo-800 hover:bg-indigo-900 inline-block font-cairo">معاينة</a>
                         } @else {
                           <span class="text-slate-600">-</span>
                         }
                       </td>
+
+                      <!-- Actions / Locked -->
                       <td class="py-3 px-2 text-center whitespace-nowrap">
-                        @if (tx?.isLocked || tx?.isClosed || tx?.canEdit === false) {
+                        @if (tx?.isLocked || tx?.IsLocked || tx?.isClosed || tx?.canEdit === false) {
                           <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700 font-cairo">🔒 مقفلة</span>
                         } @else {
                           <div class="flex items-center justify-center gap-1 font-cairo">
@@ -1392,29 +1405,29 @@ import { LanguageService } from '../../../core/services/language.service';
 
             <!-- Mobile Cards (sm and below) -->
             <div class="block md:hidden space-y-3 font-cairo">
-              @for (tx of transactions(); track tx.id) {
+              @for (tx of (transactions?.() || transactions || []); track (tx.id || $index)) {
                 <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
                   <div class="flex justify-between items-center">
-                    <span class="text-xs font-mono text-slate-400">{{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="text-xs font-mono text-slate-400">{{ (tx.date || tx.transactionDate || tx.TransactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</span>
                     <span class="font-mono font-bold text-sm" 
-                      [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
-                      [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
-                      {{ (tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? '+' : '-' }}{{ (tx.amount ?? tx.value ?? 0) | number:'1.2-2' }} ج.م
+                      [class.text-emerald-400]="tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
+                      [class.text-rose-400]="tx.type !== 'Income' && tx.Type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
+                      {{ (tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? '+' : '-' }}{{ (tx.amount ?? tx.Amount ?? tx.value ?? 0) | number:'1.2-2' }} ج.م
                     </span>
                   </div>
-                  <p class="text-xs text-white break-words cursor-pointer hover:text-sky-400" (click)="openTransactionInspectionModal(tx)">{{ tx.description || tx.notes || '-' }}</p>
+                  <p class="text-xs text-white break-words cursor-pointer hover:text-sky-400" (click)="openTransactionInspectionModal(tx)">{{ tx.description || tx.Description || tx.notes || '-' }}</p>
                   <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
                     <span class="px-2 py-0.5 rounded text-[10px]" 
-                      [class.bg-emerald-950]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
-                      [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
-                      [class.bg-rose-950]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'" 
-                      [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
-                      {{ (tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? 'إيراد' : 'مصروف' }}
+                      [class.bg-emerald-950]="tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
+                      [class.text-emerald-400]="tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
+                      [class.bg-rose-950]="tx.type !== 'Income' && tx.Type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'" 
+                      [class.text-rose-400]="tx.type !== 'Income' && tx.Type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
+                      {{ (tx.type === 'Income' || tx.Type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? 'إيراد' : 'مصروف' }}
                     </span>
-                    @if (tx.receiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl) {
-                      <a [href]="tx.receiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl" target="_blank" class="px-2 py-0.5 text-[10px] rounded bg-indigo-950 text-indigo-300 border border-indigo-800">معاينة الإيصال</a>
+                    @if (tx.receiptPhotoUrl || tx.ReceiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl) {
+                      <a [href]="tx.receiptPhotoUrl || tx.ReceiptPhotoUrl || tx.receiptUrl || tx.invoiceUrl" target="_blank" class="px-2 py-0.5 text-[10px] rounded bg-indigo-950 text-indigo-300 border border-indigo-800">معاينة الإيصال</a>
                     }
-                    @if (tx?.isLocked || tx?.isClosed || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                    @if (tx?.isLocked || tx?.IsLocked || tx?.isClosed || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
                       <span class="text-[10px] text-slate-400">🔒 مقفلة</span>
                     } @else if (isOwnerOrAccountant()) {
                       <div class="flex items-center gap-1">
@@ -3241,15 +3254,15 @@ export class ProjectDetailsComponent implements OnInit {
 
   // Computed financial KPIs from transaction data
   readonly totalIncome = computed(() =>
-    this.transactions()
-      .filter(t => t.type === 'Income' || t.type === 0 || t.transactionType === 'Income')
-      .reduce((sum, t) => sum + (t.amount ?? t.value ?? 0), 0)
+    (this.transactions() || [])
+      .filter((t: any) => t.type === 'Income' || t.Type === 'Income' || t.type === 0 || t.transactionType === 'Income')
+      .reduce((sum: number, t: any) => sum + (t.amount ?? t.Amount ?? t.value ?? 0), 0)
   );
 
   readonly totalExpenses = computed(() =>
-    this.transactions()
-      .filter(t => t.type === 'Expense' || t.type === 1 || t.transactionType === 'Expense' || t.type === 'DirectProjectExpense')
-      .reduce((sum, t) => sum + (t.amount ?? t.value ?? 0), 0)
+    (this.transactions() || [])
+      .filter((t: any) => t.type === 'Expense' || t.Type === 'Expense' || t.type === 1 || t.transactionType === 'Expense' || t.type === 'DirectProjectExpense' || t.Type === 'DirectProjectExpense')
+      .reduce((sum: number, t: any) => sum + (t.amount ?? t.Amount ?? t.value ?? 0), 0)
   );
 
   readonly netBalance = computed(() => this.totalIncome() - this.totalExpenses());
@@ -3610,10 +3623,12 @@ export class ProjectDetailsComponent implements OnInit {
         this.zone.run(() => {
           this.isLoadingTransactions.set(false);
           console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
-          if (response.success && response.data) {
-            const rawItems = response.data.items || (Array.isArray(response.data) ? response.data : []);
+          if (response) {
+            const resData = response.data !== undefined ? response.data : response;
+            const rawItems = (resData as any)?.items || (resData as any)?.Items || (resData as any)?.transactions || (resData as any)?.Transactions || (Array.isArray(resData) ? resData : []);
             this.transactions.set(rawItems);
           }
+          console.log('Project Ledger Transactions:', this.transactions);
           console.log('Ledger Transactions State:', this.transactions());
           this.cdr.markForCheck();
           this.cdr.detectChanges();
