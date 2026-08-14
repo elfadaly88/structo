@@ -674,10 +674,6 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        Console.WriteLine("[Startup] Applying pending database migrations...");
-        dbContext.Database.Migrate();
-        Console.WriteLine("[Startup] Database migrations applied successfully.");
-
         // 1. Ensure Category column exists
         dbContext.Database.ExecuteSqlRaw(@"
             ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" VARCHAR(50) DEFAULT 'SiteProgress';

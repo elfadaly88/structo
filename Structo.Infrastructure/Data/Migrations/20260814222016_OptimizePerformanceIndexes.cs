@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -18,13 +18,7 @@ namespace Structo.Infrastructure.Data.Migrations
                 name: "IX_ProjectCashPools_ProjectId",
                 table: "ProjectCashPools");
 
-            migrationBuilder.AddColumn<string>(
-                name: "Category",
-                table: "SitePhotos",
-                type: "character varying(50)",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "SiteProgress");
+            migrationBuilder.Sql(@"ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" character varying(50) NOT NULL DEFAULT 'SiteProgress';");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Settlements_Project_Status",
