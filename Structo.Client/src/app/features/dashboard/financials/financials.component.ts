@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, DestroyRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -184,7 +184,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           <span>💳 سجل المعاملات المالية</span>
           <span class="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono"
                 [class]="activeTab() === 'transactions' ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'">
-            {{ filteredTransactions.length }}
+            {{ filteredTransactions().length }}
           </span>
         </button>
       </div>
@@ -450,7 +450,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div class="flex items-center gap-3">
               <h3 class="text-lg font-bold text-white">الدفتر العام</h3>
-              <span class="text-xs text-slate-400 font-mono">({{ filteredTransactions.length }} قيود)</span>
+              <span class="text-xs text-slate-400 font-mono">({{ filteredTransactions().length }} قيود)</span>
             </div>
           </div>
 
@@ -522,7 +522,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/60">
-                @for (tx of filteredTransactions; track tx.id) {
+                @for (tx of filteredTransactions(); track tx.id) {
                   <tr class="hover:bg-slate-800/30 transition-colors">
                     <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 uppercase">{{ tx.method || tx.paymentMethod || 'CASH' }}</span></td>
@@ -572,7 +572,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
           <!-- Mobile Cards (sm and below) -->
           <div class="block md:hidden space-y-3 font-cairo">
-            @for (tx of filteredTransactions; track tx.id) {
+            @for (tx of filteredTransactions(); track tx.id) {
               <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
                 <div class="flex justify-between items-center">
                   <span class="text-xs font-mono text-slate-400">{{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</span>
@@ -1092,7 +1092,7 @@ export class FinancialsComponent implements OnInit {
   readonly dateFromFilter = signal<string>('');
   readonly dateToFilter = signal<string>('');
 
-  get filteredTransactions(): FinancialTransactionMobileDto[] {
+  readonly filteredTransactions = computed<FinancialTransactionMobileDto[]>(() => {
     return this.transactions().filter(t => {
       if (this.typeFilter() !== 'All' && t.type !== this.typeFilter()) {
         return false;
@@ -1100,11 +1100,11 @@ export class FinancialsComponent implements OnInit {
       const query = this.searchQuery().toLowerCase().trim();
       if (query) {
         const matchDesc = t.description ? t.description.toLowerCase().includes(query) : false;
-        const matchAmount = t.amount ? t.amount.toString().includes(query) : false;
+        const matchAmount = (t.amount ?? t.value) !== undefined ? (t.amount ?? t.value)!.toString().includes(query) : false;
         if (!matchDesc && !matchAmount) return false;
       }
       if (this.dateFromFilter()) {
-        const dateVal = t.transactionDate || t.paymentDate || t.createdAt;
+        const dateVal = t.date || t.transactionDate || t.paymentDate || t.createdAt;
         if (dateVal) {
           const txDate = new Date(dateVal);
           const fromDate = new Date(this.dateFromFilter());
@@ -1112,7 +1112,7 @@ export class FinancialsComponent implements OnInit {
         }
       }
       if (this.dateToFilter()) {
-        const dateVal = t.transactionDate || t.paymentDate || t.createdAt;
+        const dateVal = t.date || t.transactionDate || t.paymentDate || t.createdAt;
         if (dateVal) {
           const txDate = new Date(dateVal);
           const toDate = new Date(this.dateToFilter());
@@ -1122,7 +1122,7 @@ export class FinancialsComponent implements OnInit {
       }
       return true;
     });
-  }
+  });
 
   readonly selectedProjectId = signal<string>('');
   readonly showPettyCashModal = signal(false);
@@ -1340,19 +1340,25 @@ export class FinancialsComponent implements OnInit {
     // Fetch transactions
     this.financialService.getProjectTransactions(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.loading.set(false);
-        console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
-        if (response.success && response.data) {
-          const rawItems = response.data.items || (Array.isArray(response.data) ? response.data : []);
-          this.transactions.set(rawItems);
-        }
-        console.log('Ledger Transactions State:', this.transactions());
-        queueMicrotask(() => this.cdr.detectChanges());
+        this.zone.run(() => {
+          this.loading.set(false);
+          console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
+          if (response.success && response.data) {
+            const rawItems = response.data.items || (Array.isArray(response.data) ? response.data : []);
+            this.transactions.set(rawItems);
+          }
+          console.log('Ledger Transactions State:', this.transactions());
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
-        this.loading.set(false);
-        console.error('Ledger Transactions Fetch Error:', err);
-        queueMicrotask(() => this.cdr.detectChanges());
+        this.zone.run(() => {
+          this.loading.set(false);
+          console.error('Ledger Transactions Fetch Error:', err);
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       }
     });
   }
