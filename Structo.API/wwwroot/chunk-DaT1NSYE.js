@@ -1,0 +1,1 @@
+import {D,at as et,aK as fh,aB as N}from'./main-ZNHRSQAP.js';function w(t){t||(t=D(et));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(fh(i))}export{w};

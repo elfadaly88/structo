@@ -1338,7 +1338,7 @@ import { LanguageService } from '../../../core/services/language.service';
                     <tr class="hover:bg-slate-800/30 transition-colors">
                       <!-- Date -->
                       <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">
-                        {{ (tx.date || tx.transactionDate || tx.TransactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}
+                        {{ formatTxDate(tx) }}
                       </td>
 
                       <!-- Method -->
@@ -3642,6 +3642,21 @@ export class ProjectDetailsComponent implements OnInit {
   isSettleFieldInvalid(fieldName: string): boolean {
     const field = this.settleForm.get(fieldName);
     return !!field && field.invalid && (field.dirty || field.touched);
+  }
+
+  formatTxDate(tx: any): string {
+    try {
+      const raw = tx?.date || tx?.transactionDate || tx?.TransactionDate || tx?.paymentDate || tx?.createdAt;
+      if (!raw) return '';
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return '';
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+    } catch { return ''; }
   }
 
   openSettleModal(item: PettyCashMobileDto): void {

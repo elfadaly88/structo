@@ -524,7 +524,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               <tbody class="divide-y divide-slate-800/60">
                 @for (tx of filteredTransactions(); track tx.id) {
                   <tr class="hover:bg-slate-800/30 transition-colors">
-                    <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ formatTxDate(tx) }}</td>
                     <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 uppercase">{{ tx.method || tx.paymentMethod || 'CASH' }}</span></td>
                     <td class="py-3 px-2 text-white max-w-[200px] truncate cursor-pointer hover:text-sky-400 font-cairo" [title]="tx.description || tx.notes || '-'" (click)="openTransactionInspectionModal(tx)">{{ tx.description || tx.notes || '-' }}</td>
                     <td class="py-3 px-2 text-center whitespace-nowrap">
@@ -1154,6 +1154,21 @@ export class FinancialsComponent implements OnInit {
     expenseDate: new Date().toISOString().substring(0, 10),
     receiptPhotoUrl: ''
   };
+
+  formatTxDate(tx: any): string {
+    try {
+      const raw = tx?.date || tx?.transactionDate || tx?.TransactionDate || tx?.paymentDate || tx?.createdAt;
+      if (!raw) return '';
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return '';
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+    } catch { return ''; }
+  }
 
   getPoolSourceLabel(sourceType: string, detailed: boolean = false): string {
     if (!sourceType) return '';
