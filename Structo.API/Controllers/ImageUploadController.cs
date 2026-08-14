@@ -193,6 +193,7 @@ public class ImageUploadController : ControllerBase
                 UploadedByUserId = userId,
                 PhotoUrl = dbUrl,
                 Caption = sanitizedCaption,
+                Category = "SiteProgress",
                 UploadedAt = DateTime.UtcNow
             };
 

@@ -174,6 +174,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.PhotoUrl).IsRequired().HasMaxLength(1000);
             entity.Property(e => e.Caption).HasMaxLength(200).IsRequired(false);
+            entity.Property(e => e.Category).HasMaxLength(50).HasDefaultValue("SiteProgress");
 
             entity.HasOne(e => e.Tenant)
                   .WithMany()

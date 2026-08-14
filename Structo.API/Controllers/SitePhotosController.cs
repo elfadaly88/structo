@@ -69,6 +69,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
             UploadedByUserId = userId,
             PhotoUrl = $"/uploads/{fileName}",
             Caption = sanitizedCaption,
+            Category = "SiteProgress",
             UploadedAt = DateTime.UtcNow
         };
 
@@ -81,6 +82,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
     /// <summary>
     /// Returns paginated site gallery photos for a project.
     /// Queries ONLY the SitePhotos table — financial receipts are strictly filtered out and NOT included.
+    /// Strictly filters by Category == 'SiteProgress' to ensure only site progress photos are returned.
     /// </summary>
     [HttpGet]
     [HttpGet("mobile")]
@@ -91,10 +93,13 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
     {
         // Explicitly query only SitePhotos for this project.
         // FinancialTransaction.ReceiptPhotoUrl is a separate field on a separate table — never mixed here.
-        // Exclude any records where URL contains '/receipts/' or 'receipt'
+        // Exclude any records where URL contains '/receipts/' or 'receipt', and ensure Category is SiteProgress
         var query = context.SitePhotos
             .Include(p => p.UploadedByUser)
-            .Where(p => p.ProjectId == projectId && !p.PhotoUrl.Contains("/receipts/") && !p.PhotoUrl.ToLower().Contains("receipt"))
+            .Where(p => p.ProjectId == projectId 
+                && (p.Category == "SiteProgress" || string.IsNullOrEmpty(p.Category)) 
+                && !p.PhotoUrl.Contains("/receipts/") 
+                && !p.PhotoUrl.ToLower().Contains("receipt"))
             .OrderByDescending(p => p.UploadedAt);
 
         var totalCount = await query.CountAsync();

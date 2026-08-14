@@ -21,6 +21,13 @@ public class SitePhoto : ITenantEntity
     [MaxLength(200)]
     public string? Caption { get; set; }
 
+    /// <summary>
+    /// Category / classification for the photo (e.g. "SiteProgress", "SiteInspection").
+    /// Financial receipts are never stored in SitePhotos.
+    /// </summary>
+    [MaxLength(50)]
+    public string Category { get; set; } = "SiteProgress";
+
     public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties

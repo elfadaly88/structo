@@ -339,6 +339,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""LastActiveAt"" timestamp with time zone NULL;
             ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""IsCleanupExempt"" boolean NOT NULL DEFAULT false;
             ALTER TABLE ""SettlementLines"" ADD COLUMN IF NOT EXISTS ""IsBillableToClient"" boolean NOT NULL DEFAULT true;
+            ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" character varying(50) NOT NULL DEFAULT 'SiteProgress';
         ");
         context.Database.Migrate();
     }
@@ -633,19 +634,56 @@ if (!string.IsNullOrEmpty(port))
     Console.WriteLine($"[Startup] Dynamically binding to PORT={port}");
 }
 
-// 🛡️ Automatic Database Migration on Startup (Railway / Cloud Deployment)
+// 🛡️ Automatic Database Migration & Photo Sanitation Audit on Startup (Railway / Cloud Deployment)
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
     try
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
         Console.WriteLine("[Startup] Applying pending database migrations...");
         dbContext.Database.Migrate();
         Console.WriteLine("[Startup] Database migrations applied successfully.");
+
+        // 1. Ensure Category column exists
+        dbContext.Database.ExecuteSqlRaw(@"
+            ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" VARCHAR(50) DEFAULT 'SiteProgress';
+        ");
+
+        // 2. Perform safe Update
+        int receiptRows = dbContext.Database.ExecuteSqlRaw(@"
+            UPDATE ""SitePhotos""
+            SET ""Category"" = 'Receipt'
+            WHERE (""PhotoUrl"" IN (
+                SELECT ""ReceiptPhotoUrl"" FROM ""PettyCashes"" WHERE ""ReceiptPhotoUrl"" IS NOT NULL
+                UNION
+                SELECT ""ReceiptPhotoUrl"" FROM ""FinancialTransactions"" WHERE ""ReceiptPhotoUrl"" IS NOT NULL
+                UNION
+                SELECT ""InvoiceUrl"" FROM ""SettlementLines"" WHERE ""InvoiceUrl"" IS NOT NULL
+            )
+            OR ""PhotoUrl"" ILIKE '%/receipts/%'
+            OR ""PhotoUrl"" ILIKE '%receipt%'
+            OR ""PhotoUrl"" ILIKE '%invoice%')
+            AND ""Category"" != 'Receipt';
+        ");
+
+        int progressRows = dbContext.Database.ExecuteSqlRaw(@"
+            UPDATE ""SitePhotos""
+            SET ""Category"" = 'SiteProgress'
+            WHERE ""Category"" IS NULL OR ""Category"" = '';
+        ");
+
+        // 3. Log counts for verification
+        var siteProgressCount = dbContext.SitePhotos.IgnoreQueryFilters().Count(p => p.Category == "SiteProgress");
+        var receiptCount = dbContext.SitePhotos.IgnoreQueryFilters().Count(p => p.Category == "Receipt");
+
+        logger.LogInformation("✅ [PHOTO SANITATION AUDIT] Reclassified {ReceiptRows} receipts. Current counts => SiteProgress: {ProgressCount}, Receipts: {ReceiptCount}", 
+            receiptRows, siteProgressCount, receiptCount);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[Startup Error] Failed to apply database migrations: {ex.Message}");
+        logger.LogError(ex, "❌ [PHOTO SANITATION ERROR] Failed to run photo migration");
     }
 }
 
