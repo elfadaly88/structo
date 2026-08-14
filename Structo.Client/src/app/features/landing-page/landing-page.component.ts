@@ -993,7 +993,17 @@ export class LandingPageComponent implements OnInit {
     this.directoryService.getTenantPortfolio(id).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.selectedCompany.set(res.data);
+          const portfolio = res.data;
+          if (portfolio.projects) {
+            portfolio.projects.forEach(p => {
+              if (p.sitePhotos) {
+                p.sitePhotos = p.sitePhotos.filter(
+                  url => !url.includes('/receipts/') && !url.toLowerCase().includes('receipt') && !url.toLowerCase().includes('invoice')
+                );
+              }
+            });
+          }
+          this.selectedCompany.set(portfolio);
           this.isModalOpen.set(true);
           this.renderer.addClass(this.document.body, 'overflow-hidden');
         }

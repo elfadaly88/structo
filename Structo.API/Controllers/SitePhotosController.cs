@@ -97,9 +97,10 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
         var query = context.SitePhotos
             .Include(p => p.UploadedByUser)
             .Where(p => p.ProjectId == projectId 
-                && (p.Category == "SiteProgress" || string.IsNullOrEmpty(p.Category)) 
+                && p.Category == "SiteProgress" 
                 && !p.PhotoUrl.Contains("/receipts/") 
-                && !p.PhotoUrl.ToLower().Contains("receipt"))
+                && !p.PhotoUrl.ToLower().Contains("receipt")
+                && !p.PhotoUrl.ToLower().Contains("invoice"))
             .OrderByDescending(p => p.UploadedAt);
 
         var totalCount = await query.CountAsync();
