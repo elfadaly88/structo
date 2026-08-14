@@ -3620,27 +3620,21 @@ export class ProjectDetailsComponent implements OnInit {
     this.isLoadingTransactions.set(true);
     this.financialService.getProjectTransactions(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.zone.run(() => {
-          this.isLoadingTransactions.set(false);
-          console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
-          if (response) {
-            const resData = response.data !== undefined ? response.data : response;
-            const rawItems = (resData as any)?.items || (resData as any)?.Items || (resData as any)?.transactions || (resData as any)?.Transactions || (Array.isArray(resData) ? resData : []);
-            this.transactions.set(rawItems);
-          }
-          console.log('Project Ledger Transactions:', this.transactions);
-          console.log('Ledger Transactions State:', this.transactions());
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        this.isLoadingTransactions.set(false);
+        console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
+        if (response) {
+          const resData = response.data !== undefined ? response.data : response;
+          const rawItems = (resData as any)?.items || (resData as any)?.Items || (resData as any)?.transactions || (resData as any)?.Transactions || (Array.isArray(resData) ? resData : []);
+          this.transactions.set(rawItems);
+        }
+        console.log('Project Ledger Transactions:', this.transactions);
+        console.log('Ledger Transactions State:', this.transactions());
+        this.cdr.markForCheck();
       },
       error: (err) => {
-        this.zone.run(() => {
-          console.error('Ledger Transactions Fetch Error:', err);
-          this.isLoadingTransactions.set(false);
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        console.error('Ledger Transactions Fetch Error:', err);
+        this.isLoadingTransactions.set(false);
+        this.cdr.markForCheck();
       }
     });
   }

@@ -1210,15 +1210,12 @@ export class FinancialsComponent implements OnInit {
       next: (response) => {
         if (response.data) {
           const projectsList = response.data;
-          this.zone.run(() => {
-            this.projects.set(projectsList);
-            if (projectsList.length > 0 && !this.selectedProjectId()) {
-              this.selectedProjectId.set(projectsList[0].id);
-              this.loadData();
-            }
-            this.cdr.markForCheck();
-            this.cdr.detectChanges();
-          });
+          this.projects.set(projectsList);
+          if (projectsList.length > 0 && !this.selectedProjectId()) {
+            this.selectedProjectId.set(projectsList[0].id);
+            this.loadData();
+          }
+          this.cdr.markForCheck();
 
           // Preload expenses for all projects to compute burn rates
           response.data.forEach(p => {
@@ -1226,14 +1223,11 @@ export class FinancialsComponent implements OnInit {
               next: (res) => {
                 if (res.data) {
                   const summaryData = res.data;
-                  this.zone.run(() => {
-                    this.projectExpenses.update(map => {
-                      map.set(p.id, summaryData.totalExpenses);
-                      return new Map(map);
-                    });
-                    this.cdr.markForCheck();
-                    this.cdr.detectChanges();
+                  this.projectExpenses.update(map => {
+                    map.set(p.id, summaryData.totalExpenses);
+                    return new Map(map);
                   });
+                  this.cdr.markForCheck();
                 }
               }
             });
@@ -1340,25 +1334,19 @@ export class FinancialsComponent implements OnInit {
     // Fetch transactions
     this.financialService.getProjectTransactions(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.zone.run(() => {
-          this.loading.set(false);
-          console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
-          if (response.success && response.data) {
-            const rawItems = response.data.items || (Array.isArray(response.data) ? response.data : []);
-            this.transactions.set(rawItems);
-          }
-          console.log('Ledger Transactions State:', this.transactions());
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        this.loading.set(false);
+        console.log('Ledger Transactions Payload:', response?.data?.items || response?.data);
+        if (response.success && response.data) {
+          const rawItems = response.data.items || (Array.isArray(response.data) ? response.data : []);
+          this.transactions.set(rawItems);
+        }
+        console.log('Ledger Transactions State:', this.transactions());
+        this.cdr.markForCheck();
       },
       error: (err) => {
-        this.zone.run(() => {
-          this.loading.set(false);
-          console.error('Ledger Transactions Fetch Error:', err);
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        this.loading.set(false);
+        console.error('Ledger Transactions Fetch Error:', err);
+        this.cdr.markForCheck();
       }
     });
   }

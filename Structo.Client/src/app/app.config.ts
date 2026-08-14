@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, ErrorHandler } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withFetch, HttpClient } from '@angular/common/http';
 import { DATE_PIPE_DEFAULT_OPTIONS } from '@angular/common';
 import { routes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
@@ -17,7 +17,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([jwtInterceptor, rateLimitInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([jwtInterceptor, rateLimitInterceptor])),
     provideTranslateService({
       defaultLanguage: 'ar',
       loader: {
