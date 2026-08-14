@@ -216,6 +216,8 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IProjectService, Structo.Core
 builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialTransactionService, Structo.Core.Services.FinancialTransactionService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.Core.Services.SettlementService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.ITenantCleanupService, Structo.Core.Services.TenantCleanupService>();
+builder.Services.AddHostedService<Structo.Infrastructure.Storage.TenantCleanupWorker>();
 
 // Notification Services
 builder.Services.AddHttpClient("OneSignal");
@@ -334,6 +336,8 @@ using (var scope = app.Services.CreateScope())
         context.Database.ExecuteSqlRaw(@"
             ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsAudited"" boolean NOT NULL DEFAULT false;
             ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsClosed"" boolean NOT NULL DEFAULT false;
+            ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""LastActiveAt"" timestamp with time zone NULL;
+            ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""IsCleanupExempt"" boolean NOT NULL DEFAULT false;
         ");
         context.Database.Migrate();
     }

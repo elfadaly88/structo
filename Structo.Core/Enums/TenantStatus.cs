@@ -5,5 +5,6 @@ public enum TenantStatus
     PendingApproval,
     Active,
     Suspended,
-    Deleted
+    Deleted,
+    PendingDeletion
 }

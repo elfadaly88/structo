@@ -69,7 +69,8 @@ public class SettlementService(DbContext context) : ISettlementService
                 Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.Category) ?? string.Empty,
                 Amount = lineDto.Amount,
                 Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.Description) ?? string.Empty,
-                InvoiceUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.InvoiceUrl) ?? string.Empty
+                InvoiceUrl = Structo.Core.Helpers.HtmlSanitizer.Sanitize(lineDto.InvoiceUrl) ?? string.Empty,
+                IsBillableToClient = lineDto.IsBillableToClient
             });
         }
 
@@ -162,6 +163,15 @@ public class SettlementService(DbContext context) : ISettlementService
         {
             foreach (var line in settlement.Lines)
             {
+                var baseDescription = string.IsNullOrWhiteSpace(line.Description)
+                    ? $"Petty Cash Settlement Item ({line.Category}) - {pettyCash.Reason}"
+                    : line.Description;
+
+                // Tag non-billable items so they are separated from billable client progress claims
+                var finalDescription = line.IsBillableToClient
+                    ? baseDescription
+                    : $"{baseDescription} [مصاريف تحملها المكتب / خسارة غير محملة على العميل]";
+
                 var expense = new FinancialTransaction
                 {
                     Id = Guid.NewGuid(),
@@ -169,9 +179,7 @@ public class SettlementService(DbContext context) : ISettlementService
                     TenantId = settlement.TenantId,
                     Type = TransactionType.Expense,
                     Amount = line.Amount,
-                    Description = string.IsNullOrWhiteSpace(line.Description)
-                        ? $"Petty Cash Settlement Item ({line.Category}) - {pettyCash.Reason}"
-                        : line.Description,
+                    Description = finalDescription,
                     PaymentMethod = pettyCash.SettlementPaymentMethod ?? PaymentMethod.Cash,
                     ReceiptPhotoUrl = line.InvoiceUrl,
                     TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
@@ -374,7 +382,8 @@ public class SettlementService(DbContext context) : ISettlementService
                 Category = l.Category ?? string.Empty,
                 Amount = l.Amount,
                 Description = l.Description ?? string.Empty,
-                InvoiceUrl = l.InvoiceUrl ?? string.Empty
+                InvoiceUrl = l.InvoiceUrl ?? string.Empty,
+                IsBillableToClient = l.IsBillableToClient
             }).ToList()
         });
     }

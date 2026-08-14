@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Structo.Core.DTOs.Common;
+using Structo.Core.DTOs.Tenants;
 using Structo.Core.DTOs.Users;
 using Structo.Core.Entities;
 using Structo.Core.Enums;
@@ -12,25 +13,29 @@ using Structo.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/superadmin")]
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = "SuperAdmin,PlatformOwner")]
 public class SuperAdminController : ControllerBase
 {
     private readonly StructoDbContext _context;
+    private readonly ITenantCleanupService _tenantCleanupService;
     private readonly ILogger<SuperAdminController> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
     public SuperAdminController(
         StructoDbContext context,
+        ITenantCleanupService tenantCleanupService,
         ILogger<SuperAdminController> logger,
         IServiceScopeFactory scopeFactory)
     {
         _context = context;
+        _tenantCleanupService = tenantCleanupService;
         _logger = logger;
         _scopeFactory = scopeFactory;
     }
@@ -256,6 +261,147 @@ public class SuperAdminController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred during approval process."
+            });
+        }
+    }
+
+    /// <summary>
+    /// GET /api/admin/tenants/lifecycle-summary & GET /api/superadmin/tenants/lifecycle-summary
+    /// Returns counts of Active, Suspended, and Pending-Deletion tenants, along with estimated total project count.
+    /// </summary>
+    [HttpGet("tenants/lifecycle-summary")]
+    [HttpGet("/api/admin/tenants/lifecycle-summary")]
+    public async Task<ActionResult<ApiResponse<TenantLifecycleSummaryDto>>> GetLifecycleSummary(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var summary = await _tenantCleanupService.GetLifecycleSummaryAsync(cancellationToken);
+            return Ok(new ApiResponse<TenantLifecycleSummaryDto>
+            {
+                Success = true,
+                Message = "Tenant lifecycle summary retrieved successfully.",
+                Data = summary
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve tenant lifecycle summary.");
+            return StatusCode(500, new ApiResponse<TenantLifecycleSummaryDto>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving tenant lifecycle summary."
+            });
+        }
+    }
+
+    /// <summary>
+    /// GET /api/admin/tenants & GET /api/superadmin/tenants
+    /// Returns paginated list of tenants with PlanType, LastActiveAt, DaysInactive, Status, and storage footprint.
+    /// </summary>
+    [HttpGet("tenants")]
+    [HttpGet("/api/admin/tenants")]
+    public async Task<ActionResult<ApiResponse<AdminTenantPagedResultDto>>> GetAdminTenants(
+        [FromQuery] AdminTenantQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _tenantCleanupService.GetAdminTenantsAsync(query, cancellationToken);
+            return Ok(new ApiResponse<AdminTenantPagedResultDto>
+            {
+                Success = true,
+                Message = "Tenants retrieved successfully.",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve tenants list for admin.");
+            return StatusCode(500, new ApiResponse<AdminTenantPagedResultDto>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving tenants."
+            });
+        }
+    }
+
+    /// <summary>
+    /// POST /api/admin/tenants/{id}/force-purge & POST /api/superadmin/tenants/{id}/force-purge
+    /// Manually triggers immediate hard purge (Database + Storage) for that tenant.
+    /// </summary>
+    [HttpPost("tenants/{id}/force-purge")]
+    [HttpPost("/api/admin/tenants/{id}/force-purge")]
+    public async Task<ActionResult<ApiResponse<ForcePurgeResultDto>>> ForcePurge(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogWarning("[ADMIN FORCE PURGE] Manual hard purge requested by admin for Tenant: {TenantId}", id);
+            var result = await _tenantCleanupService.PurgeTenantAsync(id, isAutomatic: false, cancellationToken);
+            
+            if (!result.Success)
+            {
+                return BadRequest(new ApiResponse<ForcePurgeResultDto>
+                {
+                    Success = false,
+                    Message = result.Message,
+                    Data = result
+                });
+            }
+
+            return Ok(new ApiResponse<ForcePurgeResultDto>
+            {
+                Success = true,
+                Message = result.Message,
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to execute force purge for Tenant: {TenantId}", id);
+            return StatusCode(500, new ApiResponse<ForcePurgeResultDto>
+            {
+                Success = false,
+                Message = $"An error occurred during tenant force purge: {ex.Message}"
+            });
+        }
+    }
+
+    /// <summary>
+    /// POST /api/admin/tenants/{id}/exempt & POST /api/superadmin/tenants/{id}/exempt
+    /// Sets an exemption flag to bypass automated cleanup routines.
+    /// </summary>
+    [HttpPost("tenants/{id}/exempt")]
+    [HttpPost("/api/admin/tenants/{id}/exempt")]
+    public async Task<ActionResult<ApiResponse<ExemptionToggleResponseDto>>> ToggleExemption(
+        Guid id,
+        [FromBody] ExemptionToggleRequestDto? dto,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _tenantCleanupService.ToggleCleanupExemptionAsync(id, dto?.IsExempt, cancellationToken);
+            return Ok(new ApiResponse<ExemptionToggleResponseDto>
+            {
+                Success = true,
+                Message = result.Message,
+                Data = result
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new ApiResponse<ExemptionToggleResponseDto>
+            {
+                Success = false,
+                Message = "Tenant not found."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to toggle cleanup exemption for Tenant: {TenantId}", id);
+            return StatusCode(500, new ApiResponse<ExemptionToggleResponseDto>
+            {
+                Success = false,
+                Message = "An error occurred while updating cleanup exemption."
             });
         }
     }

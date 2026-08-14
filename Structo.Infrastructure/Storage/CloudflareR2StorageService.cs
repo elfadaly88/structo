@@ -122,9 +122,36 @@ public class CloudflareR2StorageService(
             await s3Client.DeleteObjectAsync(_settings.BucketName, key);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to delete R2 object {FileUrl}", fileUrl);
             return false;
         }
+    }
+
+    public async Task<int> DeleteFilesAsync(IEnumerable<string> fileUrls)
+    {
+        if (fileUrls == null) return 0;
+        int deletedCount = 0;
+        var validUrls = fileUrls.Where(u => !string.IsNullOrEmpty(u) && u.StartsWith(_settings.PublicBaseUrl)).ToList();
+        if (validUrls.Count == 0) return 0;
+
+        foreach (var url in validUrls)
+        {
+            try
+            {
+                var key = url.Replace(_settings.PublicBaseUrl, "").TrimStart('/');
+                if (!string.IsNullOrEmpty(key))
+                {
+                    await s3Client.DeleteObjectAsync(_settings.BucketName, key);
+                    deletedCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to delete storage blob {Url} during batch purge.", url);
+            }
+        }
+        return deletedCount;
     }
 }

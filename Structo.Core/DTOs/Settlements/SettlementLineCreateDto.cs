@@ -18,4 +18,6 @@ public class SettlementLineCreateDto
 
     [MaxLength(1000)]
     public string InvoiceUrl { get; set; } = string.Empty;
+
+    public bool IsBillableToClient { get; set; } = true;
 }

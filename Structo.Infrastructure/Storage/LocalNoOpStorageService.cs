@@ -31,4 +31,11 @@ public class LocalNoOpStorageService(ILogger<LocalNoOpStorageService> logger) : 
         logger.LogWarning("[NoOp Storage] DeleteFileAsync called for: {Url} — returning true (no-op)", fileUrl);
         return Task.FromResult(true);
     }
+
+    public Task<int> DeleteFilesAsync(IEnumerable<string> fileUrls)
+    {
+        var count = fileUrls?.Count() ?? 0;
+        logger.LogWarning("[NoOp Storage] DeleteFilesAsync called for {Count} files — returning {Count} (no-op)", count, count);
+        return Task.FromResult(count);
+    }
 }

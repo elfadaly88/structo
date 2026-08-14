@@ -25,6 +25,7 @@ export interface SettlementLineDto {
   amount: number;
   description: string;
   invoiceUrl: string;
+  isBillableToClient: boolean;
 }
 
 export interface SettlementCreateDto {
@@ -39,6 +40,7 @@ export interface SettlementLineMobileDto {
   amount: number;
   description: string;
   invoiceUrl: string;
+  isBillableToClient: boolean;
 }
 
 export interface SettlementMobileDto {

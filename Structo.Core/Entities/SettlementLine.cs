@@ -14,6 +14,12 @@ public class SettlementLine : ITenantEntity // 🚀 اخليه يورث من ه�
     public string Description { get; set; } = string.Empty;
     public string? InvoiceUrl { get; set; }
 
+    /// <summary>
+    /// If true (default), this line item is billable to the client (مسترد لاحقاً).
+    /// If false, this is a company loss / non-billable expense (مصاريف تحملها الشركة).
+    /// </summary>
+    public bool IsBillableToClient { get; set; } = true;
+
     // Navigation property
     public Settlement? Settlement { get; set; }
     public Tenant? Tenant { get; set; } // اختياري لربط النفيجيشن

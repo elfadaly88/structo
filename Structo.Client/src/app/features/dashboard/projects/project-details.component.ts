@@ -1268,7 +1268,14 @@ import { LanguageService } from '../../../core/services/language.service';
                           @for (line of s.lines; track line.id) {
                             <div class="bg-slate-900/50 border border-slate-800/50 rounded-xl p-3 flex justify-between items-center">
                               <div>
-                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-300 font-cairo">{{ line.category }}</span>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-300 font-cairo">{{ line.category }}</span>
+                                  @if (line.isBillableToClient) {
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-cairo">🟢 عميل</span>
+                                  } @else {
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30 font-cairo">🔴 خسارة شركة</span>
+                                  }
+                                </div>
                                 <div class="text-xs text-white mt-1 font-semibold">{{ line.description }}</div>
                               </div>
                               <div class="text-right">
@@ -2293,6 +2300,7 @@ import { LanguageService } from '../../../core/services/language.service';
                       <th class="py-2.5 px-3">البيان / رقم الفاتورة</th>
                       <th class="py-2.5 px-3 w-32">المبلغ</th>
                       <th class="py-2.5 px-3 w-44">الإيصال</th>
+                      <th class="py-2.5 px-3 w-48">تحمّل البند</th>
                       <th class="py-2.5 px-3 text-center w-16">إجراءات</th>
                     </tr>
                   </thead>
@@ -2330,6 +2338,16 @@ import { LanguageService } from '../../../core/services/language.service';
                             @if (line.get('uploading')?.value) {
                               <span class="text-[10px] text-indigo-400 animate-pulse font-cairo">جاري الرفع...</span>
                             }
+                          </div>
+                        </td>
+                        <td class="py-2 px-3">
+                          <div class="flex gap-1">
+                            <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 hover:border-emerald-500/30 cursor-pointer'">
+                              🟢 عميل
+                            </button>
+                            <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 hover:border-rose-500/30 cursor-pointer'">
+                              🔴 شركة
+                            </button>
                           </div>
                         </td>
                         <td class="py-2 px-3 text-center">
@@ -2400,6 +2418,18 @@ import { LanguageService } from '../../../core/services/language.service';
                           @if (line.get('uploading')?.value) {
                             <span class="text-[10px] text-indigo-400 animate-pulse">جاري الرفع...</span>
                           }
+                        </div>
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1.5">تحمّل البند</label>
+                        <div class="flex gap-2">
+                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 cursor-pointer'">
+                            🟢 يُحمّل على العميل
+                          </button>
+                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 cursor-pointer'">
+                            🔴 خسارة شركة
+                          </button>
                         </div>
                       </div>
 
@@ -2822,6 +2852,7 @@ export class ProjectDetailsComponent implements OnInit {
       amount: [null, [Validators.required, Validators.min(0.01)]],
       description: ['', [Validators.required, Validators.minLength(3)]],
       invoiceUrl: [''],
+      isBillableToClient: [true],
       uploading: [false],
       localPreviewUrl: ['']
     }));
@@ -3854,7 +3885,7 @@ export class ProjectDetailsComponent implements OnInit {
       case 'OwnerCapital':
       case 'OwnerLoan':
       case 'OwnerInjection':
-        return detailed ? 'تمويل شخصي من المالك (جاري المالك - يسترد لاحقاً)' : 'تمويل شخصي من المالك';
+        return detailed ? 'تمويل مؤقت من الشركة / المالك (لحين السداد)' : 'تمويل مؤقت (شركة/مالك)';
       case 'ExternalLoan':
       case 'Loan':
         return 'تمويل إضافي';
@@ -4267,7 +4298,8 @@ export class ProjectDetailsComponent implements OnInit {
         category: l.category,
         amount: l.amount,
         description: l.description,
-        invoiceUrl: l.invoiceUrl
+        invoiceUrl: l.invoiceUrl,
+        isBillableToClient: l.isBillableToClient ?? true
       })),
       isDraft: isDraft
     };

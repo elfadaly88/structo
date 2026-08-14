@@ -1064,7 +1064,7 @@ export class FinancialsComponent implements OnInit {
       case 'OwnerCapital':
       case 'OwnerLoan':
       case 'OwnerInjection':
-        return detailed ? 'تمويل شخصي من المالك (جاري المالك - يسترد لاحقاً)' : 'تمويل شخصي من المالك';
+        return detailed ? 'تمويل مؤقت من الشركة / المالك (لحين السداد)' : 'تمويل مؤقت (شركة/مالك)';
       case 'ExternalLoan':
       case 'Loan':
         return 'تمويل إضافي';

@@ -19,6 +19,8 @@ public class Tenant
     public double Rating { get; set; }
     public TenantStatus Status { get; set; } = TenantStatus.Active;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? LastActiveAt { get; set; }
+    public bool IsCleanupExempt { get; set; } = false;
 
     public string Location { get; set; } = string.Empty;
     public string? CommercialRegister { get; set; }

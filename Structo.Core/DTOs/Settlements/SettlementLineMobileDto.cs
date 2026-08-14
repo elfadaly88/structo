@@ -9,4 +9,5 @@ public class SettlementLineMobileDto
     public decimal Amount { get; set; }
     public string Description { get; set; } = string.Empty;
     public string InvoiceUrl { get; set; } = string.Empty;
+    public bool IsBillableToClient { get; set; } = true;
 }
