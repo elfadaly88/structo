@@ -1,15 +1,22 @@
 export interface FinancialTransactionMobileDto {
   id: string;
-  amount: number;
-  type: string; // 'Income' or 'Expense'
-  description: string;
+  amount?: number;
+  value?: number;
+  type?: string | number;
+  transactionType?: string | number;
+  description?: string;
+  notes?: string;
   transactionDate?: string;
   paymentDate?: string;
   createdAt?: string;
   date?: string;
+  method?: string;
   paymentMethod?: string;
   receiptPhotoUrl?: string;
+  receiptUrl?: string;
+  invoiceUrl?: string;
   isLocked?: boolean;
+  isClosed?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
 }
