@@ -1336,20 +1336,28 @@ import { LanguageService } from '../../../core/services/language.service';
                 <tbody class="divide-y divide-slate-800/60">
                   @for (tx of transactions(); track tx.id) {
                     <tr class="hover:bg-slate-800/30 transition-colors">
-                      <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
-                      <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 uppercase">{{ tx.method || tx.paymentMethod || 'CASH' }}</span></td>
-                      <td class="py-3 px-2 text-white max-w-[200px] truncate cursor-pointer hover:text-sky-400 font-cairo" [title]="tx.description || tx.notes || '-'" (click)="openTransactionInspectionModal(tx)">{{ tx.description || tx.notes || '-' }}</td>
+                      <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">
+                        {{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}
+                      </td>
+                      <td class="py-3 px-2 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 uppercase">
+                          {{ tx.method || tx.paymentMethod || 'CASH' }}
+                        </span>
+                      </td>
+                      <td class="py-3 px-2 text-white max-w-[200px] truncate font-cairo" [title]="tx.description || tx.notes || '-'">
+                        {{ tx.description || tx.notes || '-' }}
+                      </td>
                       <td class="py-3 px-2 text-center whitespace-nowrap">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold font-cairo" 
-                          [class.bg-emerald-950/60]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
-                          [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
-                          [class.bg-rose-950/60]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'" 
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold font-cairo"
+                          [class.bg-emerald-950/60]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
+                          [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
+                          [class.bg-rose-950/60]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'"
                           [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
                           {{ (tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? 'إيراد' : 'مصروف' }}
                         </span>
                       </td>
-                      <td class="py-3 px-2 text-left whitespace-nowrap font-mono font-bold" 
-                        [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
+                      <td class="py-3 px-2 text-left whitespace-nowrap font-mono font-bold"
+                        [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'"
                         [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
                         {{ (tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income') ? '+' : '-' }}{{ (tx.amount ?? tx.value ?? 0) | number:'1.2-2' }} <span class="text-[10px] text-slate-400">ج.م</span>
                       </td>
@@ -1361,12 +1369,12 @@ import { LanguageService } from '../../../core/services/language.service';
                         }
                       </td>
                       <td class="py-3 px-2 text-center whitespace-nowrap">
-                        @if (tx?.isLocked || tx?.isClosed || tx?.canEdit === false || tx?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                        @if (tx?.isLocked || tx?.isClosed || tx?.canEdit === false) {
                           <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700 font-cairo">🔒 مقفلة</span>
-                        } @else if (isOwnerOrAccountant()) {
+                        } @else {
                           <div class="flex items-center justify-center gap-1 font-cairo">
-                            <button (click)="openEditTransactionModal(tx)" [disabled]="project()?.status === 'Closed'" class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800 hover:bg-amber-900 cursor-pointer disabled:opacity-40">Edit</button>
-                            <button (click)="onDeleteTransaction(tx.id)" [disabled]="isDeletingTransaction() || project()?.status === 'Closed'" class="px-2 py-0.5 text-[10px] rounded bg-rose-950 text-rose-300 border border-rose-800 hover:bg-rose-900 disabled:opacity-40 cursor-pointer">Delete</button>
+                            <button (click)="openEditTransactionModal(tx)" class="px-2 py-0.5 text-[10px] rounded bg-amber-950 text-amber-300 border border-amber-800">Edit</button>
+                            <button (click)="onDeleteTransaction(tx.id)" class="px-2 py-0.5 text-[10px] rounded bg-rose-950 text-rose-300 border border-rose-800">Delete</button>
                           </div>
                         }
                       </td>
