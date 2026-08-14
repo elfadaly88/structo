@@ -338,6 +338,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsClosed"" boolean NOT NULL DEFAULT false;
             ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""LastActiveAt"" timestamp with time zone NULL;
             ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""IsCleanupExempt"" boolean NOT NULL DEFAULT false;
+            ALTER TABLE ""SettlementLines"" ADD COLUMN IF NOT EXISTS ""IsBillableToClient"" boolean NOT NULL DEFAULT true;
         ");
         context.Database.Migrate();
     }
