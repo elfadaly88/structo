@@ -259,11 +259,9 @@
   box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.3) !important;
 }
 
-/* 🛡️ Financial General Ledger Table Container Overflow Rules */
+/* 🛡️ Financial General Ledger Clean Static Container Rules */
 .ledger-table-container {
+  width: 100% !important;
+  max-width: 100% !important;
   overflow-x: auto !important;
-  overflow-y: visible !important;
-  min-height: 350px !important;
-  height: auto !important;
-  max-height: none !important;
 }

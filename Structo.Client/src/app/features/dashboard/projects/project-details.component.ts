@@ -1305,11 +1305,11 @@ import { LanguageService } from '../../../core/services/language.service';
 
       <!-- Tab Content: Financial Transactions -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl shadow-xl ledger-table-container overflow-x-auto overflow-y-visible min-h-[350px] h-auto w-full">
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl shadow-xl w-full">
           <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-            <h3 class="text-base font-bold text-white">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
+            <h3 class="text-base font-bold text-white font-cairo">{{ 'DETAILS.LEDGER_TITLE' | translate }}</h3>
             <div class="flex items-center gap-3">
-              <span class="text-xs text-slate-500 font-semibold">{{ transactions().length }} {{ 'DETAILS.ENTRIES' | translate }}</span>
+              <span class="text-xs text-slate-500 font-semibold font-mono">{{ transactions().length }} {{ 'DETAILS.ENTRIES' | translate }}</span>
             </div>
           </div>
 
@@ -1321,61 +1321,62 @@ import { LanguageService } from '../../../core/services/language.service';
               </svg>
             </div>
           } @else {
-            <div class="w-full overflow-x-auto overflow-y-visible min-h-[350px]">
-              <table class="w-full border-collapse text-left rtl:text-right min-w-[800px]">
+            <!-- Desktop Table (md+) -->
+            <div class="hidden md:block w-full overflow-x-auto">
+              <table class="w-full border-collapse text-left rtl:text-right font-sans text-sm">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wide">
-                    <th class="px-6 py-4">{{ 'DETAILS.TH_DATE' | translate }}</th>
-                    <th class="px-6 py-4">Method</th>
-                    <th class="px-6 py-4">{{ 'PROJECTS.FIELD_DESC' | translate }}</th>
-                    <th class="px-6 py-4">{{ 'DETAILS.TH_STATUS' | translate }}</th>
-                    <th class="px-6 py-4">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
-                    <th class="px-6 py-4 text-center">Receipt</th>
+                    <th class="px-4 py-3">{{ 'DETAILS.TH_DATE' | translate }}</th>
+                    <th class="px-4 py-3">Method</th>
+                    <th class="px-4 py-3">{{ 'PROJECTS.FIELD_DESC' | translate }}</th>
+                    <th class="px-4 py-3">{{ 'DETAILS.TH_STATUS' | translate }}</th>
+                    <th class="px-4 py-3">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
+                    <th class="px-4 py-3 text-center">Receipt</th>
                     @if (isOwnerOrAccountant()) {
-                      <th class="px-6 py-4 text-center">{{ 'DETAILS.TH_ACTION' | translate }}</th>
+                      <th class="px-4 py-3 text-center">{{ 'DETAILS.TH_ACTION' | translate }}</th>
                     }
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60 text-sm">
                   @for (t of transactions(); track t.id) {
                     <tr class="hover:bg-slate-900/30 transition-colors duration-150 text-slate-300">
-                      <td class="px-6 py-4 text-slate-400">
+                      <td class="px-4 py-3 text-slate-400 font-mono text-xs whitespace-nowrap">
                         <div>{{ (t?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</div>
                         @if (t?.paymentDate) {
-                          <div class="text-[10px] text-slate-500 mt-1">Paid: {{ (t?.paymentDate) | date:'dd/MM/yyyy' }}</div>
+                          <div class="text-[10px] text-slate-500 mt-0.5">Paid: {{ (t?.paymentDate) | date:'dd/MM/yyyy' }}</div>
                         }
                       </td>
-                      <td class="px-6 py-4">
+                      <td class="px-4 py-3 whitespace-nowrap">
                         @if (t.paymentMethod) {
-                          <span class="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-300">
+                          <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-300">
                             {{ t.paymentMethod }}
                           </span>
                         } @else {
                           <span class="text-xs text-slate-600">-</span>
                         }
                       </td>
-                      <td class="px-6 py-4 font-medium text-white max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                      <td class="px-4 py-3 font-medium text-white max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
                           [title]="t.description"
                           (click)="openTransactionInspectionModal(t)">
                         {{ t.description }}
                       </td>
-                      <td class="px-6 py-4">
+                      <td class="px-4 py-3 whitespace-nowrap">
                         @if (t.type === 'Income') {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             {{ 'DETAILS.BADGE_INCOME' | translate }}
                           </span>
                         } @else {
-                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-rose-500/10 text-rose-400">
+                          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-rose-500/10 text-rose-400 border border-rose-500/20">
                             {{ 'DETAILS.BADGE_EXPENSE' | translate }}
                           </span>
                         }
                       </td>
-                      <td class="px-6 py-4 font-mono font-bold"
+                      <td class="px-4 py-3 font-mono font-bold whitespace-nowrap"
                           [class.text-emerald-400]="t.type === 'Income'"
                           [class.text-rose-400]="t.type !== 'Income'">
                         {{ t.type === 'Income' ? '+' : '-' }}{{ (t?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
                       </td>
-                      <td class="px-6 py-4 text-center">
+                      <td class="px-4 py-3 text-center whitespace-nowrap">
                         @if (t.receiptPhotoUrl) {
                           <a [href]="t.receiptPhotoUrl" target="_blank" 
                              class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm" 
@@ -1390,7 +1391,7 @@ import { LanguageService } from '../../../core/services/language.service';
                         }
                       </td>
                       @if (isOwnerOrAccountant()) {
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
                           @if (t?.isLocked || t?.canEdit === false || t?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
                             <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                               <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1404,14 +1405,14 @@ import { LanguageService } from '../../../core/services/language.service';
                                 (click)="openEditTransactionModal(t)"
                                 [disabled]="project()?.status === 'Closed'"
                                 title="Edit transaction"
-                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-800/10 disabled:text-slate-500 disabled:border-slate-800/20 disabled:pointer-events-none">
                                 Edit
                               </button>
                               <button
                                 (click)="onDeleteTransaction(t.id)"
                                 [disabled]="isDeletingTransaction() || project()?.status === 'Closed'"
                                 title="Delete transaction and roll back pool"
-                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
@@ -1424,13 +1425,103 @@ import { LanguageService } from '../../../core/services/language.service';
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="4" class="px-6 py-14 text-center text-slate-500 text-sm">
+                      <td [attr.colspan]="isOwnerOrAccountant() ? 7 : 6" class="px-6 py-14 text-center text-slate-500 text-sm font-cairo">
                         {{ 'DETAILS.NO_TRANSACTIONS' | translate }}
                       </td>
                     </tr>
                   }
                 </tbody>
               </table>
+            </div>
+
+            <!-- Mobile Cards (block md:hidden) -->
+            <div class="block md:hidden p-4 space-y-3">
+              @for (t of transactions(); track t.id) {
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
+                  <!-- Header: Type Badge & Amount -->
+                  <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border font-cairo"
+                      [class.bg-emerald-500/10]="t.type === 'Income'"
+                      [class.text-emerald-400]="t.type === 'Income'"
+                      [class.border-emerald-500/20]="t.type === 'Income'"
+                      [class.bg-rose-500/10]="t.type !== 'Income'"
+                      [class.text-rose-400]="t.type !== 'Income'"
+                      [class.border-rose-500/20]="t.type !== 'Income'"
+                    >
+                      {{ t.type === 'Income' ? ('DETAILS.BADGE_INCOME' | translate) : ('DETAILS.BADGE_EXPENSE' | translate) }}
+                    </span>
+                    <span class="font-mono font-bold text-sm"
+                      [class.text-emerald-400]="t.type === 'Income'"
+                      [class.text-rose-400]="t.type !== 'Income'"
+                    >
+                      {{ t.type === 'Income' ? '+' : '-' }}{{ (t?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                    </span>
+                  </div>
+
+                  <!-- Description -->
+                  <p class="text-xs text-white font-medium cursor-pointer hover:text-sky-400 transition-colors font-cairo"
+                     [title]="t.description"
+                     (click)="openTransactionInspectionModal(t)">
+                    {{ t.description }}
+                  </p>
+
+                  <!-- Payment Method & Receipt -->
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-1.5">
+                      @if (t.paymentMethod) {
+                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-300">
+                          {{ t.paymentMethod }}
+                        </span>
+                      }
+                    </div>
+                    @if (t.receiptPhotoUrl) {
+                      <a [href]="t.receiptPhotoUrl" target="_blank"
+                         class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 font-cairo transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>معاينة الإيصال</span>
+                      </a>
+                    }
+                  </div>
+
+                  <!-- Footer: Date & Actions -->
+                  <div class="flex items-center justify-between text-xs text-slate-500 font-mono pt-2 border-t border-slate-800/60">
+                    <div class="flex flex-col text-[11px]">
+                      <span>📅 {{ (t?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
+                      @if (t?.paymentDate) {
+                        <span class="text-[10px] text-slate-500">Paid: {{ (t?.paymentDate) | date:'dd/MM/yyyy' }}</span>
+                      }
+                    </div>
+                    @if (isOwnerOrAccountant()) {
+                      @if (t?.isLocked || t?.canEdit === false || t?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
+                        <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg select-none font-cairo">
+                          🔒 مقفلة
+                        </span>
+                      } @else {
+                        <div class="flex items-center gap-1.5">
+                          <button
+                            (click)="openEditTransactionModal(t)"
+                            [disabled]="project()?.status === 'Closed'"
+                            class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo hover:bg-amber-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            تعديل
+                          </button>
+                          <button
+                            (click)="onDeleteTransaction(t.id)"
+                            [disabled]="isDeletingTransaction() || project()?.status === 'Closed'"
+                            class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo hover:bg-rose-500/20 disabled:opacity-40 transition-all cursor-pointer">
+                            حذف
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              } @empty {
+                <div class="py-12 text-center text-slate-500 text-sm font-cairo">
+                  {{ 'DETAILS.NO_TRANSACTIONS' | translate }}
+                </div>
+              }
             </div>
           }
         </div>

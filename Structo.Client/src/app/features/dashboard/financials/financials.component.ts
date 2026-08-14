@@ -267,32 +267,34 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           </div>
         } @else if (isSiteEngineer()) {
           <!-- Site Engineer My Petty Cash Requests -->
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 shadow-xl">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 mb-8 shadow-xl">
             <h2 class="text-xl font-bold text-white mb-6 font-cairo">{{ 'FINANCE.MY_PETTY_CASH' | translate }}</h2>
-            <div class="overflow-x-auto">
+            
+            <!-- Desktop Table (md+) -->
+            <div class="hidden md:block w-full overflow-x-auto">
               <table class="w-full text-left rtl:text-right font-sans">
                 <thead>
                   <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
-                    <th class="pb-4 font-cairo">{{ 'FINANCE.PROJECT' | translate }}</th>
-                    <th class="pb-4 font-cairo">{{ 'FINANCE.AMOUNT' | translate }}</th>
-                    <th class="pb-4 font-cairo">{{ 'FINANCE.REASON' | translate }}</th>
-                    <th class="pb-4 font-cairo">{{ 'FINANCE.DATE' | translate }}</th>
-                    <th class="pb-4 text-center font-cairo">{{ 'FINANCE.STATUS' | translate }}</th>
-                    <th class="pb-4 text-center font-cairo">{{ 'FINANCE.ACTIONS' | translate }}</th>
+                    <th class="px-3 py-3 font-cairo">{{ 'FINANCE.PROJECT' | translate }}</th>
+                    <th class="px-3 py-3 font-cairo">{{ 'FINANCE.AMOUNT' | translate }}</th>
+                    <th class="px-3 py-3 font-cairo">{{ 'FINANCE.REASON' | translate }}</th>
+                    <th class="px-3 py-3 font-cairo">{{ 'FINANCE.DATE' | translate }}</th>
+                    <th class="px-3 py-3 text-center font-cairo">{{ 'FINANCE.STATUS' | translate }}</th>
+                    <th class="px-3 py-3 text-center font-cairo">{{ 'FINANCE.ACTIONS' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-800/60 text-slate-300">
                   @for (request of myPettyCash(); track request.id) {
-                    <tr class="hover:bg-slate-950/20">
-                      <td class="py-4 text-white font-medium">{{ getProjectName(request) }}</td>
-                      <td class="py-4 text-amber-400 font-bold font-mono">{{ (request?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
-                      <td class="py-4 text-slate-400 max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                    <tr class="hover:bg-slate-950/20 transition-colors">
+                      <td class="px-3 py-3 text-white font-medium whitespace-nowrap">{{ getProjectName(request) }}</td>
+                      <td class="px-3 py-3 text-amber-400 font-bold font-mono whitespace-nowrap">{{ (request?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</td>
+                      <td class="px-3 py-3 text-slate-400 max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
                           [title]="request.reason"
                           (click)="openMyPettyCashReasonModal(request)">
                         {{ request.reason }}
                       </td>
-                      <td class="py-4 text-slate-400 font-mono">{{ (request?.issuedAt || '') | date:'dd/MM/yyyy HH:mm' }}</td>
-                      <td class="py-4 text-center">
+                      <td class="px-3 py-3 text-slate-400 font-mono text-xs whitespace-nowrap">{{ (request?.issuedAt || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-3 py-3 text-center whitespace-nowrap">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
                           [class.bg-emerald-500/10]="request.status === 'Settled'" 
                           [class.text-emerald-400]="request.status === 'Settled'"
@@ -318,11 +320,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                           }
                         </span>
                       </td>
-                      <td class="py-4 text-center">
+                      <td class="px-3 py-3 text-center whitespace-nowrap">
                         @if (request.status === 'Issued') {
                           <button 
                             (click)="openSettleModal(request)"
-                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo"
                           >
                             {{ 'FINANCE.SUBMIT_RECEIPTS' | translate }}
                           </button>
@@ -366,13 +368,84 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 </tbody>
               </table>
             </div>
+
+            <!-- Mobile Cards (< md) -->
+            <div class="block md:hidden space-y-3">
+              @for (request of myPettyCash(); track request.id) {
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
+                  <!-- Header: Project & Amount -->
+                  <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                    <span class="text-white font-medium font-cairo text-sm">{{ getProjectName(request) }}</span>
+                    <span class="text-amber-400 font-bold font-mono text-sm">{{ (request?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</span>
+                  </div>
+
+                  <!-- Reason -->
+                  <p class="text-xs text-slate-400 font-cairo cursor-pointer hover:text-sky-400 transition-colors"
+                     [title]="request.reason"
+                     (click)="openMyPettyCashReasonModal(request)">
+                    {{ request.reason }}
+                  </p>
+
+                  <!-- Status & Actions -->
+                  <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/60">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
+                      [class.bg-emerald-500/10]="request.status === 'Settled'" 
+                      [class.text-emerald-400]="request.status === 'Settled'"
+                      [class.border-emerald-500/20]="request.status === 'Settled'"
+                      [class.bg-amber-500/10]="request.status === 'Issued'" 
+                      [class.text-amber-400]="request.status === 'Issued'"
+                      [class.border-amber-500/20]="request.status === 'Issued'"
+                      [class.bg-blue-500/10]="request.status === 'Pending'" 
+                      [class.text-blue-400]="request.status === 'Pending'"
+                      [class.border-blue-500/20]="request.status === 'Pending'"
+                      [class.bg-rose-500/10]="request.status === 'Rejected'" 
+                      [class.text-rose-400]="request.status === 'Rejected'"
+                      [class.border-rose-500/20]="request.status === 'Rejected'"
+                    >
+                      @if (request.status === 'Pending') {
+                        {{ 'FINANCE.PENDING' | translate }}
+                      } @else if (request.status === 'Issued') {
+                        Approved
+                      } @else if (request.status === 'Rejected') {
+                        Rejected
+                      } @else {
+                        {{ 'FINANCE.SETTLED' | translate }}
+                      }
+                    </span>
+
+                    <div>
+                      @if (request.status === 'Issued') {
+                        <button 
+                          (click)="openSettleModal(request)"
+                          class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-lg text-xs font-bold font-cairo cursor-pointer"
+                        >
+                          {{ 'FINANCE.SUBMIT_RECEIPTS' | translate }}
+                        </button>
+                      } @else if (request.status === 'Settled' && request.receiptPhotoUrl) {
+                        <a [href]="request.receiptPhotoUrl" target="_blank" 
+                           class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">
+                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>معاينة</span>
+                        </a>
+                      }
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="py-12 text-center text-slate-500 font-cairo">
+                  {{ 'FINANCE.NO_PETTY_CASH' | translate }}
+                </div>
+              }
+            </div>
           </div>
         }
       }
 
       <!-- TAB 2: سجل المعاملات المالية (Financial Transactions) -->
       @if (activeTab() === 'transactions') {
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-8 space-y-6 ledger-table-container overflow-x-auto overflow-y-visible min-h-[350px] h-auto w-full">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl mb-8 space-y-6 w-full">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.TRANSACTIONS' | translate }}</h2>
             <span class="text-xs text-slate-400 font-cairo">إجمالي النتائج: <strong class="text-indigo-400 font-mono">{{ filteredTransactions.length }}</strong></span>
@@ -432,29 +505,29 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           </div>
 
           <!-- Desktop Ledger Table (md+) -->
-          <div class="hidden md:block w-full overflow-x-auto overflow-y-visible min-h-[350px]">
+          <div class="hidden md:block w-full overflow-x-auto">
             <table class="w-full border-collapse text-left rtl:text-right font-sans">
               <thead>
                 <tr class="text-slate-400 text-xs font-bold uppercase border-b border-slate-800/80">
-                  <th class="pb-4 font-cairo">{{ 'FINANCE.DATE' | translate }}</th>
-                  <th class="pb-4 font-cairo">{{ 'FINANCE.DESCRIPTION' | translate }}</th>
-                  <th class="pb-4 font-cairo">{{ 'FINANCE.TYPE' | translate }}</th>
-                  <th class="pb-4 text-center font-cairo">{{ 'FINANCE.AMOUNT' | translate }}</th>
+                  <th class="px-3 py-3 font-cairo">{{ 'FINANCE.DATE' | translate }}</th>
+                  <th class="px-3 py-3 font-cairo">{{ 'FINANCE.DESCRIPTION' | translate }}</th>
+                  <th class="px-3 py-3 font-cairo">{{ 'FINANCE.TYPE' | translate }}</th>
+                  <th class="px-3 py-3 text-center font-cairo">{{ 'FINANCE.AMOUNT' | translate }}</th>
                   @if (isOwnerOrAccountant()) {
-                    <th class="pb-4 text-center font-cairo">{{ 'FINANCE.ACTIONS' | translate }}</th>
+                    <th class="px-3 py-3 text-center font-cairo">{{ 'FINANCE.ACTIONS' | translate }}</th>
                   }
                 </tr>
               </thead>
               <tbody class="text-sm divide-y divide-slate-800/60 text-slate-300">
                 @for (transaction of filteredTransactions; track transaction.id) {
-                  <tr class="hover:bg-slate-950/20">
-                    <td class="py-4 text-slate-400 font-mono tabular-nums">{{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
-                    <td class="py-4 text-white font-medium max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
+                  <tr class="hover:bg-slate-950/20 transition-colors">
+                    <td class="px-3 py-3 text-slate-400 font-mono tabular-nums text-xs whitespace-nowrap">{{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="px-3 py-3 text-white font-medium max-w-[220px] lg:max-w-[320px] truncate cursor-pointer hover:text-sky-400 transition-colors"
                         [title]="transaction.description"
                         (click)="openTransactionInspectionModal(transaction)">
                       {{ transaction.description }}
                     </td>
-                    <td class="py-4">
+                    <td class="px-3 py-3 whitespace-nowrap">
                       <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
                         [class.bg-emerald-500/10]="transaction.type === 'Income'" 
                         [class.text-emerald-400]="transaction.type === 'Income'"
@@ -466,14 +539,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                         {{ transaction.type === 'Income' ? ('FINANCE.INCOME' | translate) : ('FINANCE.EXPENSE' | translate) }}
                       </span>
                     </td>
-                    <td class="py-4 text-center font-bold font-mono tabular-nums" 
+                    <td class="px-3 py-3 text-center font-bold font-mono tabular-nums whitespace-nowrap" 
                       [class.text-emerald-400]="transaction.type === 'Income'" 
                       [class.text-rose-400]="transaction.type === 'Expense'"
                     >
                       {{ transaction.type === 'Income' ? '+' : '-' }}{{ (transaction?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
                     </td>
                     @if (isOwnerOrAccountant()) {
-                      <td class="py-4 text-center">
+                      <td class="px-3 py-3 text-center whitespace-nowrap">
                         @if (transaction?.isLocked || transaction?.canEdit === false || transaction?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
                           <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2.5 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
                             🔒 مقفلة
@@ -500,7 +573,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="5" class="py-12 text-center text-slate-500 font-cairo">
+                    <td [attr.colspan]="isOwnerOrAccountant() ? 5 : 4" class="py-12 text-center text-slate-500 font-cairo">
                       {{ 'FINANCE.NO_TRANSACTIONS' | translate }}
                     </td>
                   </tr>
@@ -512,8 +585,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           <!-- Mobile Stacked Cards (< md) -->
           <div class="block md:hidden space-y-3">
             @for (transaction of filteredTransactions; track transaction.id) {
-              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5 shadow-md">
-                <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
+                <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
                     [class.bg-emerald-500/10]="transaction.type === 'Income'" 
                     [class.text-emerald-400]="transaction.type === 'Income'"
@@ -531,20 +604,20 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                     {{ transaction.type === 'Income' ? '+' : '-' }}{{ (transaction?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
                   </span>
                 </div>
-                <p class="text-xs text-white font-medium font-cairo cursor-pointer" (click)="openTransactionInspectionModal(transaction)">
+                <p class="text-xs text-white font-medium font-cairo cursor-pointer hover:text-sky-400 transition-colors" (click)="openTransactionInspectionModal(transaction)">
                   {{ transaction.description }}
                 </p>
-                <div class="flex items-center justify-between text-xs text-slate-500 font-mono tabular-nums pt-1">
+                <div class="flex items-center justify-between text-xs text-slate-500 font-mono tabular-nums pt-2 border-t border-slate-800/60">
                   <span>📅 {{ (transaction?.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
                   @if (isOwnerOrAccountant()) {
                     @if (transaction?.isLocked || transaction?.canEdit === false || transaction?.description?.toLowerCase()?.startsWith('petty cash settlement -')) {
-                      <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none font-cairo">
+                      <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-lg select-none font-cairo">
                         🔒 مقفلة
                       </span>
                     } @else {
                       <div class="flex items-center gap-1.5">
-                        <button (click)="openEditTransactionModal(transaction)" class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo">تعديل</button>
-                        <button (click)="onDeleteTransaction(transaction.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo">حذف</button>
+                        <button (click)="openEditTransactionModal(transaction)" class="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-cairo hover:bg-amber-500/20 transition-all cursor-pointer">تعديل</button>
+                        <button (click)="onDeleteTransaction(transaction.id, selectedProjectId())" [disabled]="isDeletingTx()" class="px-2.5 py-1 text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg font-cairo hover:bg-rose-500/20 disabled:opacity-40 transition-all cursor-pointer">حذف</button>
                       </div>
                     }
                   }
