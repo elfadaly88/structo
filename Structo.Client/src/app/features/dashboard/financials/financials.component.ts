@@ -524,7 +524,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               <tbody class="divide-y divide-slate-800/60">
                 @for (tx of filteredTransactions; track tx.id) {
                   <tr class="hover:bg-slate-800/30 transition-colors">
-                    <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.transactionDate || tx.paymentDate || tx.createdAt || tx.date) | date:'dd/MM/yyyy HH:mm' }}</td>
                     <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">{{ tx.paymentMethod || 'CASH' }}</span></td>
                     <td class="py-3 px-2 text-white max-w-[200px] truncate cursor-pointer hover:text-sky-400 font-cairo" [title]="tx.description" (click)="openTransactionInspectionModal(tx)">{{ tx.description }}</td>
                     <td class="py-3 px-2 text-center whitespace-nowrap">
@@ -575,7 +575,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
             @for (tx of filteredTransactions; track tx.id) {
               <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-xs font-mono text-slate-400">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="text-xs font-mono text-slate-400">{{ (tx.transactionDate || tx.paymentDate || tx.createdAt || tx.date) | date:'dd/MM/yyyy HH:mm' }}</span>
                   <span class="font-mono font-bold text-sm" [class.text-emerald-400]="tx.type === 'Income'" [class.text-rose-400]="tx.type !== 'Income'">
                     {{ tx.type === 'Income' ? '+' : '-' }}{{ (tx.amount || 0) | number:'1.2-2' }} ج.م
                   </span>
@@ -608,39 +608,37 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
       }
       </div>
 
-<!-- Sticky Mobile Action Bar for Site Engineers -->
+      <!-- Sticky Mobile Action Bar for Site Engineers -->
       @if (isSiteEngineer()) {
-        <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 z-30 flex items-center justify-center shadow-2xl">
-          <button 
-            (click)="openPettyCashModal()"
-            [disabled]="isClosedProjectSelected()"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold font-cairo text-sm shadow-lg shadow-indigo-600/30 active:scale-95 disabled:opacity-50 transition-all"
-          >
-            ➕ {{ 'FINANCE.REQUEST_PETTY_CASH' | translate }}
+        <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 z-30 flex items-center justify-between">
+          <button (click)="showPettyCashModal.set(true)" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 text-xs font-cairo flex items-center justify-center gap-2 cursor-pointer">
+            <span>+</span>
+            <span>{{ 'FINANCE.REQUEST_PETTY_CASH' | translate }}</span>
           </button>
         </div>
       }
 
-    <!-- Petty Cash Request Modal -->
-    @if (showPettyCashModal()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div (click)="closePettyCashModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.REQUEST_PETTY_CASH' | translate }}</h3>
-            <button (click)="closePettyCashModal()" class="text-slate-400 hover:text-white cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <form (ngSubmit)="submitPettyCashRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+      <!-- Petty Cash Request Modal -->
+      @if (showPettyCashModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+          <div (click)="closePettyCashModal()" class="absolute inset-0"></div>
+          <form (ngSubmit)="submitPettyCashRequest()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+            <!-- 1. Fixed Modal Header -->
+            <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+              <h3 class="text-lg font-bold text-white">{{ 'FINANCE.REQUEST_PETTY_CASH' | translate }}</h3>
+              <button type="button" (click)="closePettyCashModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.PROJECT' | translate }}</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.PROJECT' | translate }} <span class="text-red-400">*</span></label>
               <select 
                 [(ngModel)]="pettyCashForm.projectId" 
                 name="projectId"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-cairo"
                 required
               >
                 <option value="">{{ 'FINANCE.SELECT_PROJECT' | translate }}</option>
@@ -650,21 +648,22 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.AMOUNT' | translate }}</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.AMOUNT' | translate }} <span class="text-red-400">*</span></label>
               <input 
                 type="number" 
                 [(ngModel)]="pettyCashForm.amount" 
                 name="amount"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 font-mono"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-mono"
+                placeholder="0.00"
                 required
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.CATEGORY' | translate }}</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.CATEGORY' | translate }} <span class="text-red-400">*</span></label>
               <select 
                 [(ngModel)]="pettyCashForm.category" 
                 name="category"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-cairo"
                 required
               >
                 <option value="">{{ 'FINANCE.SELECT_CATEGORY' | translate }}</option>
@@ -676,258 +675,292 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.REASON' | translate }}</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.REASON' | translate }} <span class="text-red-400">*</span></label>
               <textarea 
                 [(ngModel)]="pettyCashForm.reason" 
                 name="reason"
                 rows="3"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 resize-none"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none font-cairo"
+                placeholder="مثال: شراء نثريات للموقع، مواد عاجلة..."
                 required
               ></textarea>
             </div>
-            <div class="flex gap-3 pt-4">
-              <button 
-                type="button"
-                (click)="closePettyCashModal()"
-                class="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-200 cursor-pointer font-cairo text-sm"
-              >
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button 
-                type="submit"
-                [disabled]="loading() || !pettyCashForm.projectId || pettyCashForm.amount <= 0 || !pettyCashForm.reason"
-                class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-bold transition-all duration-200 disabled:opacity-50 cursor-pointer font-cairo text-sm"
-              >
-                {{ loading() ? ('COMMON.LOADING' | translate) : ('FINANCE.SUBMIT_REQUEST' | translate) }}
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button 
+              type="button"
+              (click)="closePettyCashModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+            >
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button 
+              type="submit"
+              [disabled]="loading() || !pettyCashForm.projectId || pettyCashForm.amount <= 0 || !pettyCashForm.reason"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              @if (loading()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>{{ 'FINANCE.SUBMIT_REQUEST' | translate }}</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Settle Petty Cash Modal -->
     @if (showSettleModal()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
         <div (click)="closeSettleModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">{{ 'FINANCE.SUBMIT_RECEIPTS' | translate }}</h3>
-            <button (click)="closeSettleModal()" class="text-slate-400 hover:text-white cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+        <form (ngSubmit)="submitSettleRequest()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">{{ 'FINANCE.SUBMIT_RECEIPTS' | translate }}</h3>
+            <button type="button" (click)="closeSettleModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form (ngSubmit)="submitSettleRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
-              <div class="text-sm text-slate-400 mb-1 font-cairo">{{ 'FINANCE.ISSUED_AMOUNT' | translate }}</div>
+              <div class="text-xs text-slate-400 mb-1 font-cairo">{{ 'FINANCE.ISSUED_AMOUNT' | translate }}</div>
               <div class="text-xl font-bold text-white font-mono">{{ (settleRequest()?.amount || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.SPENT_AMOUNT' | translate }}</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.SPENT_AMOUNT' | translate }} <span class="text-red-400">*</span></label>
               <input 
                 type="number" 
                 [(ngModel)]="settleForm.spentAmount" 
                 name="spentAmount"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 font-mono"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-mono"
                 required
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.RETURN_AMOUNT' | translate }}</label>
-              <div class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-400 font-mono">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.RETURN_AMOUNT' | translate }}</label>
+              <div class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-400 font-mono text-sm">
                 {{ (getCalculatedReturnAmount() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">تاريخ الصرف الفعلي <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">تاريخ الصرف الفعلي <span class="text-red-400">*</span></label>
               <input 
                 type="date" 
                 [(ngModel)]="settleForm.expenseDate" 
                 name="expenseDate"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 font-mono"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-mono"
                 required
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">إرفاق الفاتورة / إيصال الصرف (اختياري)</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">إرفاق الفاتورة / إيصال الصرف (اختياري)</label>
               <input 
                 type="file" 
-                (change)="onFileSelect($event)"
+                (change)="onFileSelect($event)" 
                 accept="image/*"
-                class="w-full bg-slate-955 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-xs focus:outline-none focus:border-indigo-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer font-cairo"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">{{ 'FINANCE.RECEIPT_NOTES' | translate }}</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'FINANCE.RECEIPT_NOTES' | translate }} <span class="text-red-400">*</span></label>
               <textarea 
                 [(ngModel)]="settleForm.notes" 
                 name="notes"
                 rows="3"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 resize-none"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none font-cairo"
                 required
                 placeholder="مثال: شراء نثريات للموقع، حوافز عمال، فواتير نقل..."
               ></textarea>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Payment Method / طريقة الدفع <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">طريقة الدفع / Payment Method <span class="text-red-400">*</span></label>
               <select 
                 [(ngModel)]="settleForm.settlementPaymentMethod" 
                 name="settlementPaymentMethod"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-cairo"
                 required
               >
-                <option value="">Select Method...</option>
+                <option value="">اختر طريقة الدفع...</option>
                 <option value="Cash">كاش (Cash)</option>
                 <option value="InstaPay">إنستا باي (InstaPay)</option>
                 <option value="BankTransfer">تحويل بنكي (Bank Transfer)</option>
                 <option value="Cheque">شيك (Cheque)</option>
               </select>
             </div>
-            <div class="flex gap-3 pt-4">
-              <button 
-                type="button"
-                (click)="closeSettleModal()"
-                class="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-200 cursor-pointer font-cairo text-sm"
-              >
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button 
-                type="submit"
-                [disabled]="loading() || settleForm.spentAmount <= 0 || settleForm.spentAmount > (settleRequest()?.amount || 0) || !settleForm.notes || !settleForm.settlementPaymentMethod || !settleForm.expenseDate"
-                class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-bold transition-all duration-200 disabled:opacity-50 cursor-pointer font-cairo text-sm"
-              >
-                {{ loading() ? ('COMMON.LOADING' | translate) : 'تأكيد التسوية' }}
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button 
+              type="button"
+              (click)="closeSettleModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+            >
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button 
+              type="submit"
+              [disabled]="loading() || settleForm.spentAmount <= 0 || settleForm.spentAmount > (settleRequest()?.amount || 0) || !settleForm.notes || !settleForm.settlementPaymentMethod || !settleForm.expenseDate"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              @if (loading()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>تأكيد التسوية</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Reject Comments Modal -->
     @if (showRejectModal()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
         <div (click)="closeRejectModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">Reject Petty Cash Request</h3>
-            <button (click)="closeRejectModal()" class="text-slate-400 hover:text-white cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+        <form (ngSubmit)="submitRejectRequest()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">رفض طلب العهدة / Reject Petty Cash</h3>
+            <button type="button" (click)="closeRejectModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form (ngSubmit)="submitRejectRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Rejection Comments / Reason <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">سبب الرفض / Rejection Comments <span class="text-red-400">*</span></label>
               <textarea 
                 [(ngModel)]="rejectComments" 
                 name="comments"
-                rows="3"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 resize-none"
+                rows="4"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none font-cairo"
                 required
-                placeholder="Type the reason for rejection..."
+                placeholder="اكتب سبب الرفض بالتفصيل..."
               ></textarea>
             </div>
-            <div class="flex gap-3 pt-4">
-              <button 
-                type="button"
-                (click)="closeRejectModal()"
-                class="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-200 cursor-pointer font-cairo text-sm"
-              >
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button 
-                type="submit"
-                [disabled]="loading() || !rejectComments.trim()"
-                class="flex-1 bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 rounded-xl font-bold transition-all duration-200 disabled:opacity-50 cursor-pointer font-cairo text-sm"
-              >
-                Reject Request
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button 
+              type="button"
+              (click)="closeRejectModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+            >
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button 
+              type="submit"
+              [disabled]="loading() || !rejectComments.trim()"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              @if (loading()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>تأكيد الرفض</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Approve Modal -->
     @if (showApproveModal()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
         <div (click)="closeApproveModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">Approve Petty Cash</h3>
-            <button (click)="closeApproveModal()" class="text-slate-400 hover:text-white cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+        <form (ngSubmit)="submitApproveRequest()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">اعتماد العهدة / Approve Petty Cash</h3>
+            <button type="button" (click)="closeApproveModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form (ngSubmit)="submitApproveRequest()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Source Cash Pool <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">مصدر التمويل (الصندوق) / Source Cash Pool <span class="text-red-400">*</span></label>
               <select 
                 [(ngModel)]="approveSourcePoolId" 
                 name="sourcePoolId"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-cairo"
                 required>
-                <option value="" disabled>Select cash pool...</option>
+                <option value="" disabled>اختر مصدر التمويل...</option>
                 @for (pool of currentProjectPools(); track pool.id) {
                   <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ (pool?.availableBalance || 0) | number:'1.0-2' }} ج.م)</option>
                 }
               </select>
             </div>
-            <div class="flex gap-3 pt-4">
-              <button 
-                type="button"
-                (click)="closeApproveModal()"
-                class="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-200 cursor-pointer font-cairo text-sm"
-              >
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button 
-                type="submit"
-                [disabled]="loading() || !approveSourcePoolId"
-                class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold transition-all duration-200 disabled:opacity-50 cursor-pointer font-cairo text-sm"
-              >
-                {{ loading() ? ('COMMON.LOADING' | translate) : ('FINANCE.APPROVE' | translate) }}
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button 
+              type="button"
+              (click)="closeApproveModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+            >
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button 
+              type="submit"
+              [disabled]="loading() || !approveSourcePoolId"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              @if (loading()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>{{ 'FINANCE.APPROVE' | translate }}</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Edit Transaction Modal -->
     @if (isEditTransactionModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
         <div (click)="closeEditTransactionModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">تعديل الحركة المالية (Edit Transaction)</h3>
-            <button (click)="closeEditTransactionModal()" class="text-slate-400 hover:text-white cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+        <form [formGroup]="editTransactionForm" (ngSubmit)="submitEditTransaction()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">تعديل الحركة المالية / Edit Transaction</h3>
+            <button type="button" (click)="closeEditTransactionModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form [formGroup]="editTransactionForm" (ngSubmit)="submitEditTransaction()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Amount</label>
-              <input type="number" formControlName="amount" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40" required />
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المبلغ / Amount <span class="text-red-400">*</span></label>
+              <input type="number" formControlName="amount" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 font-mono" required />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2 font-cairo">Description</label>
-              <textarea formControlName="description" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none" required></textarea>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">البيان / Description <span class="text-red-400">*</span></label>
+              <textarea formControlName="description" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none font-cairo" required></textarea>
             </div>
-            <div class="flex gap-3 pt-4">
-              <button type="button" (click)="closeEditTransactionModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-200 cursor-pointer font-cairo text-sm">Cancel</button>
-              <button type="submit" [disabled]="editTransactionForm.invalid || isSavingTransaction()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-bold transition-all duration-200 disabled:opacity-50 cursor-pointer font-cairo text-sm">Save</button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeEditTransactionModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button type="submit" [disabled]="editTransactionForm.invalid || isSavingTransaction()" class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isSavingTransaction()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>حفظ التعديل</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
     } @else {
@@ -938,10 +971,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
     <!-- Quick Inspection Modal for Truncated Text -->
     @if (activeTextInspection()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in font-sans">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in font-sans">
         <div (click)="closeTextInspectionModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/80 p-5 sm:p-6 shadow-2xl z-10 transition-all">
-          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+        <div class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10 font-cairo">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
             <div class="flex items-center gap-3">
               <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -949,23 +983,27 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                 </svg>
               </div>
               <div>
-                <h3 class="text-base font-bold text-white font-cairo">{{ activeTextInspection()!.title }}</h3>
+                <h3 class="text-base font-bold text-white">{{ activeTextInspection()!.title }}</h3>
                 @if (activeTextInspection()!.subtitle) {
-                  <p class="text-xs text-slate-400 font-cairo mt-0.5">{{ activeTextInspection()!.subtitle }}</p>
+                  <p class="text-xs text-slate-400 mt-0.5">{{ activeTextInspection()!.subtitle }}</p>
                 }
               </div>
             </div>
-            <button (click)="closeTextInspectionModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button type="button" (click)="closeTextInspectionModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <div class="overflow-y-auto min-h-0 pr-1 space-y-3 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-cairo bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 selection:bg-sky-500/30 selection:text-sky-200">
-            {{ activeTextInspection()!.content }}
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar">
+            <div class="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 selection:bg-sky-500/30 selection:text-sky-200">
+              {{ activeTextInspection()!.content }}
+            </div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
-            <button (click)="closeTextInspectionModal()" class="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer font-cairo">
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeTextInspectionModal()" class="px-5 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
               إغلاق / Close
             </button>
           </div>
@@ -1009,7 +1047,8 @@ export class FinancialsComponent implements OnInit {
 
   openTransactionInspectionModal(transaction: FinancialTransactionMobileDto): void {
     if (!transaction.description) return;
-    const dateStr = transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleString('en-GB') : '';
+    const rawDate = transaction.transactionDate || transaction.paymentDate || transaction.createdAt;
+    const dateStr = rawDate ? new Date(rawDate).toLocaleString('en-GB') : '';
     this.openTextInspectionModal('تفاصيل المعاملة المالية', transaction.description, dateStr);
   }
   readonly authService = inject(AuthService);
@@ -1059,15 +1098,21 @@ export class FinancialsComponent implements OnInit {
         if (!matchDesc && !matchAmount) return false;
       }
       if (this.dateFromFilter()) {
-        const txDate = new Date(t.transactionDate);
-        const fromDate = new Date(this.dateFromFilter());
-        if (txDate < fromDate) return false;
+        const dateVal = t.transactionDate || t.paymentDate || t.createdAt;
+        if (dateVal) {
+          const txDate = new Date(dateVal);
+          const fromDate = new Date(this.dateFromFilter());
+          if (txDate < fromDate) return false;
+        }
       }
       if (this.dateToFilter()) {
-        const txDate = new Date(t.transactionDate);
-        const toDate = new Date(this.dateToFilter());
-        toDate.setHours(23, 59, 59, 999);
-        if (txDate > toDate) return false;
+        const dateVal = t.transactionDate || t.paymentDate || t.createdAt;
+        if (dateVal) {
+          const txDate = new Date(dateVal);
+          const toDate = new Date(this.dateToFilter());
+          toDate.setHours(23, 59, 59, 999);
+          if (txDate > toDate) return false;
+        }
       }
       return true;
     });

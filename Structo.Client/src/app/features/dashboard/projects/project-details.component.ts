@@ -1336,7 +1336,7 @@ import { LanguageService } from '../../../core/services/language.service';
                 <tbody class="divide-y divide-slate-800/60">
                   @for (tx of transactions(); track tx.id) {
                     <tr class="hover:bg-slate-800/30 transition-colors">
-                      <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="py-3 px-2 whitespace-nowrap text-slate-300 font-mono">{{ (tx.transactionDate || tx.paymentDate || tx.createdAt || tx.date) | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="py-3 px-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">{{ tx.paymentMethod || 'CASH' }}</span></td>
                       <td class="py-3 px-2 text-white max-w-[200px] truncate cursor-pointer hover:text-sky-400 font-cairo" [title]="tx.description" (click)="openTransactionInspectionModal(tx)">{{ tx.description }}</td>
                       <td class="py-3 px-2 text-center whitespace-nowrap">
@@ -1387,7 +1387,7 @@ import { LanguageService } from '../../../core/services/language.service';
               @for (tx of transactions(); track tx.id) {
                 <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
                   <div class="flex justify-between items-center">
-                    <span class="text-xs font-mono text-slate-400">{{ (tx.transactionDate || '') | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="text-xs font-mono text-slate-400">{{ (tx.transactionDate || tx.paymentDate || tx.createdAt || tx.date) | date:'dd/MM/yyyy HH:mm' }}</span>
                     <span class="font-mono font-bold text-sm" [class.text-emerald-400]="tx.type === 'Income'" [class.text-rose-400]="tx.type !== 'Income'">
                       {{ tx.type === 'Income' ? '+' : '-' }}{{ (tx.amount || 0) | number:'1.2-2' }} ج.م
                     </span>
@@ -1561,54 +1561,55 @@ import { LanguageService } from '../../../core/services/language.service';
 
     <!-- Settle Petty Cash Modal -->
     @if (isSettleModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
-          <div class="flex items-start justify-between mb-2">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeSettleModal()" class="absolute inset-0"></div>
+        <form [formGroup]="settleForm" (ngSubmit)="onSettleSubmit()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
             <div>
-              <h3 class="text-xl font-bold text-white">{{ 'DETAILS.MODAL_SETTLE_TITLE' | translate }}</h3>
-              <p class="text-xs text-slate-400 mt-1">{{ 'DETAILS.MODAL_SETTLE_SUBTITLE' | translate }}</p>
+              <h3 class="text-lg font-bold text-white">{{ 'DETAILS.MODAL_SETTLE_TITLE' | translate }}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">{{ 'DETAILS.MODAL_SETTLE_SUBTITLE' | translate }}</p>
             </div>
             <button
+              type="button"
               (click)="closeSettleModal()"
-              class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors duration-150 cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          <!-- Voucher Info Card -->
-          @if (activePettyCash()) {
-            <div class="my-5 p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 space-y-2">
-              <div class="flex justify-between">
-                <span class="text-slate-500">{{ 'DETAILS.INFO_ISSUED_TO' | translate }}</span>
-                <span class="font-semibold">{{ activePettyCash()!.issuedTo || 'Staff' }}</span>
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
+            <!-- Voucher Info Card -->
+            @if (activePettyCash()) {
+              <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-slate-500 font-cairo">{{ 'DETAILS.INFO_ISSUED_TO' | translate }}</span>
+                  <span class="font-semibold text-white">{{ activePettyCash()!.issuedTo || 'Staff' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500 font-cairo">{{ 'DETAILS.INFO_ISSUED_AMOUNT' | translate }}</span>
+                  <span class="font-bold text-amber-400 font-mono">{{ activePettyCash()!.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500 font-cairo">{{ 'DETAILS.INFO_REASON' | translate }}</span>
+                  <span class="font-semibold text-right max-w-[200px] truncate text-slate-200">{{ activePettyCash()!.reason }}</span>
+                </div>
               </div>
-              <div class="flex justify-between">
-                <span class="text-slate-500">{{ 'DETAILS.INFO_ISSUED_AMOUNT' | translate }}</span>
-                <span class="font-bold text-amber-400 font-mono">{{ activePettyCash()!.amount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-500">{{ 'DETAILS.INFO_REASON' | translate }}</span>
-                <span class="font-semibold text-right max-w-[180px] truncate">{{ activePettyCash()!.reason }}</span>
-              </div>
-            </div>
-          }
+            }
 
-          <!-- Settle Errors -->
-          @if (settleErrors().length > 0) {
-            <div class="mb-4 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
-              <span class="font-bold block mb-1">{{ 'DETAILS.SETTLE_FAILED' | translate }}</span>
-              @for (err of settleErrors(); track err) {
-                <div>• {{ err }}</div>
-              }
-            </div>
-          }
+            <!-- Settle Errors -->
+            @if (settleErrors().length > 0) {
+              <div class="rounded-xl bg-red-500/10 border border-red-500/30 p-3.5 text-xs text-red-400 space-y-1 font-cairo">
+                <span class="font-bold block mb-1">{{ 'DETAILS.SETTLE_FAILED' | translate }}</span>
+                @for (err of settleErrors(); track err) {
+                  <div>• {{ err }}</div>
+                }
+              </div>
+            }
 
-          <form [formGroup]="settleForm" (ngSubmit)="onSettleSubmit()" class="space-y-4 overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
-              <label for="spentAmount" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label for="spentAmount" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'DETAILS.INPUT_SPENT' | translate }} <span class="text-red-400">*</span>
               </label>
               <input
@@ -1617,34 +1618,34 @@ import { LanguageService } from '../../../core/services/language.service';
                 formControlName="spentAmount"
                 step="0.01"
                 min="0"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-mono transition-all"
                 placeholder="0.00">
               @if (isSettleFieldInvalid('spentAmount')) {
-                <span class="text-xs text-red-400 mt-1 block">
+                <span class="text-xs text-red-400 mt-1 block font-cairo">
                   {{ 'DETAILS.INPUT_SPENT_ERR' | translate }}
                 </span>
               }
             </div>
 
             <div>
-              <label for="receiptDescription" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label for="receiptDescription" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'DETAILS.INPUT_NOTES' | translate }} <span class="text-red-400">*</span>
               </label>
               <textarea
                 id="receiptDescription"
                 formControlName="receiptDescription"
                 rows="3"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 resize-none font-cairo transition-all"
                 placeholder="مثال: شراء مستلزمات للموقع، حوافز عمال، فواتير نقل..."></textarea>
               @if (isSettleFieldInvalid('receiptDescription')) {
-                <span class="text-xs text-red-400 mt-1 block">
+                <span class="text-xs text-red-400 mt-1 block font-cairo">
                   {{ 'DETAILS.INPUT_NOTES_ERR' | translate }}
                 </span>
               }
             </div>
 
             <div>
-              <label for="expenseDate" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label for="expenseDate" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 تاريخ الصرف الفعلي <span class="text-red-400">*</span>
               </label>
               <div class="relative">
@@ -1654,7 +1655,7 @@ import { LanguageService } from '../../../core/services/language.service';
                   [value]="formatDisplayDate(settleForm.get('expenseDate')?.value)"
                   (input)="onDateInputChanged($event, 'expenseDate', settleForm)"
                   placeholder="DD/MM/YYYY"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 font-mono pr-10">
+                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all font-mono pr-10">
                 <input
                   #expenseDatePicker
                   type="date"
@@ -1672,42 +1673,42 @@ import { LanguageService } from '../../../core/services/language.service';
                 </button>
               </div>
               @if (isSettleFieldInvalid('expenseDate')) {
-                <span class="text-xs text-red-400 mt-1 block">Expense Date is required.</span>
+                <span class="text-xs text-red-400 mt-1 block font-cairo">Expense Date is required.</span>
               }
             </div>
 
             <div>
-              <label for="settlementPaymentMethod" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                Payment Method / طريقة الدفع <span class="text-red-400">*</span>
+              <label for="settlementPaymentMethod" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                طريقة الدفع / Payment Method <span class="text-red-400">*</span>
               </label>
               <select
                 id="settlementPaymentMethod"
                 formControlName="settlementPaymentMethod"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                <option [ngValue]="null" disabled>Select Method</option>
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-cairo transition-all">
+                <option [ngValue]="null" disabled>اختر طريقة الدفع...</option>
                 <option value="Cash">كاش (Cash)</option>
                 <option value="InstaPay">إنستا باي (InstaPay)</option>
                 <option value="BankTransfer">تحويل بنكي (Bank Transfer)</option>
                 <option value="Cheque">شيك (Cheque)</option>
               </select>
               @if (isSettleFieldInvalid('settlementPaymentMethod')) {
-                <span class="text-xs text-red-400 mt-1 block">
+                <span class="text-xs text-red-400 mt-1 block font-cairo">
                   Payment Method is required.
                 </span>
               }
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 إرفاق الفاتورة / إيصال الصرف (اختياري)
               </label>
               <input
                 type="file"
                 (change)="onSettleReceiptSelected($event)"
                 accept="image/*,application/pdf"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 cursor-pointer">
+                class="w-full px-3.5 py-2 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 cursor-pointer font-cairo">
               @if (isUploadingSettleReceipt()) {
-                <span class="text-xs text-indigo-400 mt-1 flex items-center gap-2">
+                <span class="text-xs text-indigo-400 mt-1 flex items-center gap-2 font-cairo">
                   <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1716,68 +1717,65 @@ import { LanguageService } from '../../../core/services/language.service';
                 </span>
               }
             </div>
+          </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                (click)="closeSettleModal()"
-                class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer">
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button
-                type="submit"
-                [disabled]="settleForm.invalid || isSettling()"
-                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer">
-                @if (isSettling()) {
-                  <span class="flex items-center gap-2">
-                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {{ 'DETAILS.PROCESSING' | translate }}
-                  </span>
-                } @else {
-                  تأكيد التسوية
-                }
-              </button>
-            </div>
-          </form>
-        </div>
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button
+              type="button"
+              (click)="closeSettleModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button
+              type="submit"
+              [disabled]="settleForm.invalid || isSettling()"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isSettling()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>{{ 'DETAILS.PROCESSING' | translate }}</span>
+              } @else {
+                <span>تأكيد التسوية</span>
+              }
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Request Petty Cash Modal -->
     @if (isRequestModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10">
-          <div class="flex items-start justify-between mb-2">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeRequestModal()" class="absolute inset-0"></div>
+        <form [formGroup]="requestForm" (ngSubmit)="onRequestSubmit()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
             <div>
-              <h3 class="text-xl font-bold text-white">{{ 'DETAILS.MODAL_REQUEST_TITLE' | translate }}</h3>
-              <p class="text-xs text-slate-400 mt-1">{{ 'DETAILS.MODAL_REQUEST_SUBTITLE' | translate }}</p>
+              <h3 class="text-lg font-bold text-white">{{ 'DETAILS.MODAL_REQUEST_TITLE' | translate }}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">{{ 'DETAILS.MODAL_REQUEST_SUBTITLE' | translate }}</p>
             </div>
             <button
+              type="button"
               (click)="closeRequestModal()"
-              class="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors duration-150 cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          <!-- Request Errors -->
-          @if (requestErrors().length > 0) {
-            <div class="mb-4 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
-              <span class="font-bold block mb-1">{{ 'DETAILS.REQUEST_FAILED' | translate }}</span>
-              @for (err of requestErrors(); track err) {
-                <div>• {{ err }}</div>
-              }
-            </div>
-          }
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
+            <!-- Request Errors -->
+            @if (requestErrors().length > 0) {
+              <div class="rounded-xl bg-red-500/10 border border-red-500/30 p-3.5 text-xs text-red-400 space-y-1 font-cairo">
+                <span class="font-bold block mb-1">{{ 'DETAILS.REQUEST_FAILED' | translate }}</span>
+                @for (err of requestErrors(); track err) {
+                  <div>• {{ err }}</div>
+                }
+              </div>
+            }
 
-          <form [formGroup]="requestForm" (ngSubmit)="onRequestSubmit()" class="space-y-4 overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
-              <label for="req-amount" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label for="req-amount" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'DETAILS.INPUT_AMOUNT' | translate }} <span class="text-red-400">*</span>
               </label>
               <input
@@ -1786,10 +1784,10 @@ import { LanguageService } from '../../../core/services/language.service';
                 formControlName="amount"
                 step="0.01"
                 min="0.01"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-mono transition-all"
                 placeholder="0.00">
               @if (isRequestFieldInvalid('amount')) {
-                <span class="text-xs text-red-400 mt-1 block">
+                <span class="text-xs text-red-400 mt-1 block font-cairo">
                   {{ 'DETAILS.INPUT_AMOUNT_ERR' | translate }}
                 </span>
               }
@@ -1798,21 +1796,20 @@ import { LanguageService } from '../../../core/services/language.service';
                   المبلغ المطلوب للعهدة أكبر من الرصيد المتاح في الصندوق المحدد! / The requested amount exceeds the available balance!
                 </span>
               }
-
             </div>
 
             <div>
-              <label for="req-reason" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label for="req-reason" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'DETAILS.INPUT_REASON' | translate }} <span class="text-red-400">*</span>
               </label>
               <textarea
                 id="req-reason"
                 formControlName="reason"
                 rows="3"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 resize-none font-cairo transition-all"
                 placeholder="e.g. Scaffolding rental or site supplies purchase."></textarea>
               @if (isRequestFieldInvalid('reason')) {
-                <span class="text-xs text-red-400 mt-1 block">
+                <span class="text-xs text-red-400 mt-1 block font-cairo">
                   {{ 'DETAILS.INPUT_REASON_ERR' | translate }}
                 </span>
               }
@@ -1820,80 +1817,76 @@ import { LanguageService } from '../../../core/services/language.service';
 
             @if (isTenantOwner()) {
               <div>
-                <label for="req-source" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                <label for="req-source" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                   Disburse From Pool <span class="text-red-400">*</span>
                 </label>
                 <select
                   id="req-source"
                   formControlName="sourcePoolId"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-cairo transition-all">
                   <option [ngValue]="null" disabled>Select funding source...</option>
                   @for (pool of cashPools(); track pool.id) {
                     <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)</option>
                   }
                 </select>
                 @if (isRequestFieldInvalid('sourcePoolId')) {
-                  <span class="text-xs text-red-400 mt-1 block">Please select a funding source pool.</span>
+                  <span class="text-xs text-red-400 mt-1 block font-cairo">Please select a funding source pool.</span>
                 }
               </div>
             }
+          </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                (click)="closeRequestModal()"
-                class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer">
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button
-                type="submit"
-                [disabled]="requestForm.invalid || isRequesting()"
-                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer">
-                @if (isRequesting()) {
-                  <span class="flex items-center gap-2">
-                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {{ 'DETAILS.BTN_SUBMITTING' | translate }}
-                  </span>
-                } @else {
-                  {{ 'DETAILS.BTN_REQUEST_SUBMIT' | translate }}
-                }
-              </button>
-            </div>
-          </form>
-        </div>
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button
+              type="button"
+              (click)="closeRequestModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button
+              type="submit"
+              [disabled]="requestForm.invalid || isRequesting()"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isRequesting()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>{{ 'DETAILS.BTN_SUBMITTING' | translate }}</span>
+              } @else {
+                <span>{{ 'DETAILS.BTN_REQUEST_SUBMIT' | translate }}</span>
+              }
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Inject Capital Modal -->
     @if (isInjectModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 !overflow-hidden box-border deposit-modal-container scrollbar-none" style="overflow: hidden !important;">
-          <div class="flex justify-between items-center mb-6 shrink-0">
-            <h3 class="text-xl font-bold text-white font-cairo">{{ 'DETAILS.INJECT_CAPITAL' | translate }}</h3>
-            <button (click)="closeInjectModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeInjectModal()" class="absolute inset-0"></div>
+        <form [formGroup]="injectForm" (ngSubmit)="submitCapitalInjection()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">{{ 'DETAILS.INJECT_CAPITAL' | translate }}</h3>
+            <button type="button" (click)="closeInjectModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          @if (injectErrors().length > 0) {
-            <div class="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 mb-4 shrink-0">
-              <ul class="list-disc list-inside text-xs text-rose-400">
-                @for (error of injectErrors(); track error) {
-                  <li>{{ error }}</li>
-                }
-              </ul>
-            </div>
-          }
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
+            @if (injectErrors().length > 0) {
+              <div class="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3.5 shrink-0 font-cairo">
+                <ul class="list-disc list-inside text-xs text-rose-400">
+                  @for (error of injectErrors(); track error) {
+                    <li>{{ error }}</li>
+                  }
+                </ul>
+              </div>
+            }
 
-          <form [formGroup]="injectForm" (ngSubmit)="submitCapitalInjection()" class="space-y-5 font-sans !overflow-x-hidden !overflow-y-hidden deposit-modal-body min-h-0 pr-1 pb-2 flex-1 box-border scrollbar-none" style="overflow-x: hidden !important; overflow-y: hidden !important;">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'FINANCE.AMOUNT' | translate }} <span class="text-red-400">*</span>
               </label>
               <input
@@ -1901,17 +1894,17 @@ import { LanguageService } from '../../../core/services/language.service';
                 formControlName="amount"
                 step="0.01"
                 min="0.01"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 font-mono"
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-mono transition-all"
                 placeholder="0.00">
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'FINANCE.SOURCE_TYPE' | translate }} <span class="text-red-400">*</span>
               </label>
               <select
                 formControlName="sourceType"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-cairo transition-all">
                 <option [ngValue]="null" disabled>{{ 'FINANCE.SELECT_SOURCE' | translate }}</option>
                 <option value="ClientDeposit">{{ 'FINANCE.CLIENT_DEPOSIT' | translate }}</option>
                 <option value="OwnerCapital">{{ 'FINANCE.OWNER_CAPITAL' | translate }}</option>
@@ -1919,42 +1912,23 @@ import { LanguageService } from '../../../core/services/language.service';
               </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Payment Date <span class="text-red-400">*</span>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
+                  Payment Date / تاريخ الدفع <span class="text-red-400">*</span>
                 </label>
-                <div class="relative">
-                  <input
-                    type="text"
-                    [value]="formatDisplayDate(injectForm.get('paymentDate')?.value)"
-                    (input)="onDateInputChanged($event, 'paymentDate', injectForm)"
-                    placeholder="DD/MM/YYYY"
-                    class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 font-mono pr-10">
-                  <input
-                    #injectDatePicker
-                    type="date"
-                    [value]="injectForm.get('paymentDate')?.value"
-                    (change)="onNativeDatePicked($event, 'paymentDate', injectForm)"
-                    class="sr-only opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
-                    style="clip: rect(0,0,0,0);">
-                  <button
-                    type="button"
-                    (click)="openDatePicker(injectDatePicker)"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors cursor-pointer z-20">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                </div>
+                <input
+                  type="date"
+                  formControlName="paymentDate"
+                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-mono transition-all">
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                   Payment Method <span class="text-red-400">*</span>
                 </label>
                 <select
                   formControlName="paymentMethod"
-                  class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
+                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-cairo transition-all">
                   <option [ngValue]="null" disabled>Select Method</option>
                   <option value="Cash">Cash</option>
                   <option value="BankTransfer">Bank Transfer</option>
@@ -1965,71 +1939,74 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 {{ 'FINANCE.NOTES_REFERENCE' | translate }} <span class="text-red-400">*</span>
               </label>
               <textarea
                 formControlName="description"
                 rows="2"
-                class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200 resize-none"
+                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 resize-none font-cairo transition-all"
                 placeholder="e.g. Received check #12345 from Client"></textarea>
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
                 Receipt / Proof of Payment <span class="text-xs font-normal text-slate-500">(Optional)</span>
               </label>
               <input 
                 type="file" 
                 accept="image/*" 
                 (change)="onInjectReceiptSelected($event)" 
-                class="w-full text-slate-200 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-slate-800 file:text-indigo-400 hover:file:bg-slate-700 cursor-pointer">
+                class="w-full px-3.5 py-2 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 cursor-pointer font-cairo">
             </div>
+          </div>
 
-            <div class="flex justify-end gap-3 pt-4 pb-1 mb-1">
-              <button
-                type="button"
-                (click)="closeInjectModal()"
-                class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer font-cairo focus:outline-none focus:ring-0">
-                {{ 'COMMON.CANCEL' | translate }}
-              </button>
-              <button
-                type="submit"
-                [disabled]="injectForm.invalid || isInjecting()"
-                class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-0 cursor-pointer font-cairo shadow-lg shadow-indigo-600/20 box-border">
-                @if (isInjecting()) {
-                  {{ 'COMMON.LOADING' | translate }}
-                } @else {
-                  {{ 'DETAILS.INJECT_CAPITAL' | translate }}
-                }
-              </button>
-            </div>
-          </form>
-        </div>
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button
+              type="button"
+              (click)="closeInjectModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button
+              type="submit"
+              [disabled]="injectForm.invalid || isInjecting()"
+              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isInjecting()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>{{ 'COMMON.LOADING' | translate }}</span>
+              } @else {
+                <span>{{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
+              }
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Edit Petty Cash Modal -->
     @if (isEditPettyCashModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">تعديل العهدة النقدية (Edit Petty Cash)</h3>
-            <button (click)="closeEditPettyCashModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeEditPettyCashModal()" class="absolute inset-0"></div>
+        <form [formGroup]="editPettyCashForm" (ngSubmit)="submitEditPettyCash()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">تعديل العهدة النقدية (Edit Petty Cash)</h3>
+            <button type="button" (click)="closeEditPettyCashModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form [formGroup]="editPettyCashForm" (ngSubmit)="submitEditPettyCash()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Amount / المبلغ</label>
-              <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Amount / المبلغ <span class="text-red-400">*</span></label>
+              <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono">
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Category / التصنيف</label>
-              <select formControlName="category" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Category / التصنيف <span class="text-red-400">*</span></label>
+              <select formControlName="category" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-cairo">
                 <option value="Cement">Cement / أسمنت</option>
                 <option value="Logistics">Logistics / خدمات لوجستية</option>
                 <option value="Materials">Materials / مواد بناء</option>
@@ -2038,74 +2015,94 @@ import { LanguageService } from '../../../core/services/language.service';
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Reason / السبب</label>
-              <textarea formControlName="reason" rows="3" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Reason / السبب <span class="text-red-400">*</span></label>
+              <textarea formControlName="reason" rows="3" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none font-cairo"></textarea>
             </div>
-            <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeEditPettyCashModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
-              <button type="submit" [disabled]="editPettyCashForm.invalid || isEditingPettyCash()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">حفظ التغيرات</button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeEditPettyCashModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button type="submit" [disabled]="editPettyCashForm.invalid || isEditingPettyCash()" class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isEditingPettyCash()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>حفظ التغيرات</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Edit Transaction Modal -->
     @if (isEditTransactionModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">تعديل الحركة المالية (Edit Transaction)</h3>
-            <button (click)="closeEditTransactionModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeEditTransactionModal()" class="absolute inset-0"></div>
+        <form [formGroup]="editTransactionForm" (ngSubmit)="submitEditTransaction()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">تعديل الحركة المالية (Edit Transaction)</h3>
+            <button type="button" (click)="closeEditTransactionModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form [formGroup]="editTransactionForm" (ngSubmit)="submitEditTransaction()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Amount / المبلغ</label>
-              <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Amount / المبلغ <span class="text-red-400">*</span></label>
+              <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono">
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Description / الوصف</label>
-              <textarea formControlName="description" rows="3" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Description / الوصف <span class="text-red-400">*</span></label>
+              <textarea formControlName="description" rows="3" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none font-cairo"></textarea>
             </div>
-            <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeEditTransactionModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
-              <button type="submit" [disabled]="editTransactionForm.invalid || isSavingTransaction()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">حفظ التغيرات</button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeEditTransactionModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button type="submit" [disabled]="editTransactionForm.invalid || isSavingTransaction()" class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isSavingTransaction()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>حفظ التغيرات</span>
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Revise Budget Modal -->
     @if (isReviseBudgetModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">تعديل ميزانية المشروع (Revise Budget)</h3>
-            <button (click)="closeReviseBudgetModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeReviseBudgetModal()" class="absolute inset-0"></div>
+        <form [formGroup]="reviseBudgetForm" (ngSubmit)="submitReviseBudget()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">تعديل ميزانية المشروع (Revise Budget)</h3>
+            <button type="button" (click)="closeReviseBudgetModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <form [formGroup]="reviseBudgetForm" (ngSubmit)="submitReviseBudget()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">New Budget / الميزانية الجديدة <span class="text-red-400">*</span></label>
-              <input type="number" formControlName="newBudget" step="0.01" min="0.01" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              <input type="number" formControlName="newBudget" step="0.01" min="0.01" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono">
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Reason / سبب التغيير <span class="text-red-400">*</span></label>
-              <textarea formControlName="reasonForChange" rows="3" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none" placeholder="e.g. Scope revision or cost adjustment..."></textarea>
+              <textarea formControlName="reasonForChange" rows="3" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none font-cairo" placeholder="e.g. Scope revision or cost adjustment..."></textarea>
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">BOQ Document / جدول الكميات (PDF, Excel) <span class="text-xs font-normal text-slate-500">(Optional)</span></label>
-              <input type="file" accept=".pdf,.xlsx,.xls,image/*" (change)="onBoqFileSelected($event)" class="w-full text-slate-200 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-slate-800 file:text-indigo-400 hover:file:bg-slate-700 cursor-pointer">
+              <input type="file" accept=".pdf,.xlsx,.xls,image/*" (change)="onBoqFileSelected($event)" class="w-full px-3.5 py-2 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 cursor-pointer font-cairo">
               @if (isUploadingBoq()) {
                 <span class="text-xs text-indigo-400 mt-1 flex items-center gap-2 font-cairo">
                   <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
@@ -2116,47 +2113,52 @@ import { LanguageService } from '../../../core/services/language.service';
                 </span>
               }
             </div>
-            <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeReviseBudgetModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
-              <button type="submit" [disabled]="reviseBudgetForm.invalid || isRevisingBudget() || isUploadingBoq()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 font-cairo">
-                @if (isRevisingBudget()) {
-                  {{ 'COMMON.LOADING' | translate }}
-                } @else {
-                  حفظ التغيرات
-                }
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeReviseBudgetModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button type="submit" [disabled]="reviseBudgetForm.invalid || isRevisingBudget() || isUploadingBoq()" class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isRevisingBudget()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>{{ 'COMMON.LOADING' | translate }}</span>
+              } @else {
+                <span>حفظ التغيرات</span>
+              }
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Direct Disbursement Modal -->
     @if (isDisburseModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
-        <div class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-white font-cairo">تعزيز عهدة مباشر</h3>
-            <button (click)="closeDisburseModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+        <div (click)="closeDisburseModal()" class="absolute inset-0"></div>
+        <form [formGroup]="disburseForm" (ngSubmit)="onDisburseSubmit()" class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
+            <h3 class="text-lg font-bold text-white">تعزيز عهدة مباشر</h3>
+            <button type="button" (click)="closeDisburseModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          @if (disburseErrors().length > 0) {
-            <div class="mb-4 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold">
-              @for (err of disburseErrors(); track err) {
-                <div>{{ err }}</div>
-              }
-            </div>
-          }
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
+            @if (disburseErrors().length > 0) {
+              <div class="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold font-cairo">
+                @for (err of disburseErrors(); track err) {
+                  <div>{{ err }}</div>
+                }
+              </div>
+            }
 
-          <form [formGroup]="disburseForm" (ngSubmit)="onDisburseSubmit()" class="space-y-4 font-sans overflow-y-auto min-h-0 pr-1 flex-1">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المهندس <span class="text-slate-500 text-[10px] normal-case">(اختياري — إذا فارغ، ستُسجل العهدة لحسابك)</span></label>
-              <select formControlName="userId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              <select formControlName="userId" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-cairo">
                 <option [ngValue]="null">-- لنفسي (الأدمن الحالي) --</option>
                 @for (u of usersList(); track u.id) {
                   <option [value]="u.id">{{ u.firstName }} {{ u.lastName }} ({{ u.role }})</option>
@@ -2164,14 +2166,14 @@ import { LanguageService } from '../../../core/services/language.service';
               </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">المبلغ <span class="text-red-400">*</span></label>
-                <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+                <input type="number" formControlName="amount" step="0.01" min="0.01" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono">
               </div>
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">طريقة الدفع <span class="text-red-400">*</span></label>
-                <select formControlName="paymentMethod" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+                <select formControlName="paymentMethod" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-cairo">
                   <option value="Cash">نقدي</option>
                   <option value="BankTransfer">تحويل بنكي</option>
                   <option value="InstaPay">InstaPay</option>
@@ -2182,7 +2184,7 @@ import { LanguageService } from '../../../core/services/language.service';
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">مصدر التمويل <span class="text-red-400">*</span></label>
-              <select formControlName="sourcePoolId" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/40">
+              <select formControlName="sourcePoolId" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-cairo">
                 <option [ngValue]="null" disabled>اختر الصندوق</option>
                 @for (pool of cashPools(); track pool.id) {
                   <option [value]="pool.id">{{ getPoolSourceLabel(pool.sourceType) }} (الرصيد: {{ pool.availableBalance | number:'1.0-2' }} ج.م)</option>
@@ -2192,57 +2194,60 @@ import { LanguageService } from '../../../core/services/language.service';
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">البيان <span class="text-red-400">*</span></label>
-              <textarea formControlName="description" rows="2" class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm resize-none"></textarea>
+              <textarea formControlName="description" rows="2" class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 resize-none font-cairo"></textarea>
             </div>
+          </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-              <button type="button" (click)="closeDisburseModal()" class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 bg-slate-950 border border-slate-800 font-cairo">إلغاء</button>
-              <button type="submit" [disabled]="disburseForm.invalid || isDisbursing()" class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 font-cairo">
-                @if (isDisbursing()) {
-                  جاري التحويل...
-                } @else {
-                  تأكيد التحويل
-                }
-              </button>
-            </div>
-          </form>
-        </div>
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeDisburseModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button type="submit" [disabled]="disburseForm.invalid || isDisbursing()" class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer">
+              @if (isDisbursing()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>جاري التحويل...</span>
+              } @else {
+                <span>تأكيد التحويل</span>
+              }
+            </button>
+          </div>
+        </form>
       </div>
     }
 
     <!-- Settlement Modal (Refactored Inline Dynamic Table) -->
+    <!-- Settlement Modal (Refactored Inline Dynamic Table) -->
     @if (isSettlementModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm font-cairo">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
         <div (click)="closeSettlementModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-4xl mx-auto max-h-[92vh] flex flex-col overflow-hidden rounded-2xl bg-slate-900 border border-slate-700/60 p-4 sm:p-6 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div class="relative w-full max-w-4xl bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10">
           
-          <!-- Header -->
-          <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
             <div>
-              <h3 class="text-xl font-bold text-white">تسوية عهدة</h3>
-              <p class="text-xs text-slate-400 mt-1">
+              <h3 class="text-lg font-bold text-white">تسوية عهدة</h3>
+              <p class="text-xs text-slate-400 mt-0.5">
                 بيان العهدة: <span class="text-slate-200 font-bold">{{ selectedPettyCashForSettlement()?.reason }}</span>
               </p>
             </div>
-            <button (click)="closeSettlementModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button type="button" (click)="closeSettlementModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          @if (settlementErrors().length > 0) {
-            <div class="mb-4 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold">
-              @for (err of settlementErrors(); track err) {
-                <div>{{ err }}</div>
-              }
-            </div>
-          }
+          <!-- 2. Scrollable Modal Form Body -->
+          <form [formGroup]="settlementForm" class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar flex flex-col font-sans">
+            @if (settlementErrors().length > 0) {
+              <div class="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold shrink-0 font-cairo">
+                @for (err of settlementErrors(); track err) {
+                  <div>{{ err }}</div>
+                }
+              </div>
+            }
 
-          <form [formGroup]="settlementForm" class="flex flex-col flex-1 min-h-0 space-y-4">
-            
             <!-- 1️⃣ Sticky Petty Cash Live Calculation Summary -->
-            <div class="bg-slate-950/60 border border-slate-800 p-3 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-3 text-xs shadow-md">
+            <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs shadow-md shrink-0 font-cairo">
               <div class="flex items-center gap-2.5 bg-slate-900/60 rounded-lg px-3 py-2.5 border border-slate-800/60">
                 <span class="text-amber-400 text-base">🟡</span>
                 <div class="flex flex-col">
@@ -2271,242 +2276,238 @@ import { LanguageService } from '../../../core/services/language.service';
               </div>
             </div>
 
-            <!-- Scrollable Content Area -->
-            <div class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-3">
-              
-              <!-- 2️⃣ Compact Dynamic Inline Table (Desktop Viewport - md+) -->
-              <div formArrayName="lines" class="hidden md:block overflow-x-auto border border-slate-800/80 rounded-xl bg-slate-950/40">
-                <table class="w-full text-right rtl:text-right font-sans text-xs">
-                  <thead>
-                    <tr class="bg-slate-900/90 text-slate-400 text-[11px] font-bold border-b border-slate-800 font-cairo">
-                      <th class="py-2.5 px-3 text-center w-10">#</th>
-                      <th class="py-2.5 px-3 w-40">التصنيف</th>
-                      <th class="py-2.5 px-3">البيان / رقم الفاتورة</th>
-                      <th class="py-2.5 px-3 w-32">المبلغ</th>
-                      <th class="py-2.5 px-3 w-44">الإيصال</th>
-                      <th class="py-2.5 px-3 w-48">تحمّل البند</th>
-                      <th class="py-2.5 px-3 text-center w-16">إجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-800/60 text-slate-200">
-                    @for (line of settlementLines.controls; track line; let idx = $index) {
-                      <tr [formGroupName]="idx" class="hover:bg-slate-900/40 transition-colors">
-                        <td class="py-2 px-3 text-center font-bold text-indigo-400 font-mono">{{ idx + 1 }}</td>
-                        <td class="py-2 px-3">
-                          <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
-                            <option value="Cement">أسمنت</option>
-                            <option value="Logistics">خدمات لوجستية</option>
-                            <option value="Materials">مواد بناء</option>
-                            <option value="Labor">حوافز وأجور عمال</option>
-                            <option value="Other">أخرى</option>
-                          </select>
-                        </td>
-                        <td class="py-2 px-3">
-                          <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
-                        </td>
-                        <td class="py-2 px-3">
-                          <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
-                        </td>
-                        <td class="py-2 px-3">
-                          <div class="flex items-center gap-2">
-                            <label class="cursor-pointer px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1 font-cairo">
-                              <span>📎</span>
-                              <span>اختر ملف</span>
-                              <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
-                            </label>
-                            @if (line.get('localPreviewUrl')?.value) {
-                              <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-7 h-7 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer hover:scale-110 transition-transform shrink-0" title="معاينة الإيصال">
-                                <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
-                              </div>
-                            }
-                            @if (line.get('uploading')?.value) {
-                              <span class="text-[10px] text-indigo-400 animate-pulse font-cairo">جاري الرفع...</span>
-                            }
-                          </div>
-                        </td>
-                        <td class="py-2 px-3">
-                          <div class="flex gap-1">
-                            <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 hover:border-emerald-500/30 cursor-pointer'">
-                              🟢 عميل
-                            </button>
-                            <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 hover:border-rose-500/30 cursor-pointer'">
-                              🔴 شركة
-                            </button>
-                          </div>
-                        </td>
-                        <td class="py-2 px-3 text-center">
-                          @if (!isSettlementLocked()) {
-                            <button type="button" (click)="removeSettlementLine(idx)" class="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer" [disabled]="settlementLines.length === 1" title="حذف البند">
-                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          }
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- 3️⃣ Responsive Mobile Card Layout (block md:hidden) -->
-              <div formArrayName="lines" class="block md:hidden space-y-3">
-                @for (line of settlementLines.controls; track line; let idx = $index) {
-                  <details [open]="idx === settlementLines.length - 1" class="group bg-slate-950 border border-slate-800 rounded-xl overflow-hidden font-cairo shadow-md">
-                    <summary class="flex items-center justify-between p-3 bg-slate-900/90 cursor-pointer select-none">
-                      <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs font-bold font-mono">#{{ idx + 1 }}</span>
-                        <span class="text-xs font-bold text-white truncate max-w-[140px]">{{ line.get('description')?.value || line.get('category')?.value || 'بند جديد' }}</span>
-                      </div>
-                      <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-mono font-bold text-emerald-400">{{ line.get('amount')?.value || 0 | number:'1.2-2' }} EGP</span>
-                        <span class="text-slate-400 transition-transform group-open:rotate-180 text-[10px]">▼</span>
-                      </div>
-                    </summary>
-
-                    <div [formGroupName]="idx" class="p-3.5 space-y-3 border-t border-slate-800/80 bg-slate-900/40">
-                      <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">التصنيف</label>
-                        <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+            <!-- 2️⃣ Compact Dynamic Inline Table (Desktop Viewport - md+) -->
+            <div formArrayName="lines" class="hidden md:block overflow-x-auto border border-slate-800/80 rounded-xl bg-slate-950/40 shrink-0">
+              <table class="w-full text-right rtl:text-right font-sans text-xs">
+                <thead>
+                  <tr class="bg-slate-900/90 text-slate-400 text-[11px] font-bold border-b border-slate-800 font-cairo">
+                    <th class="py-2.5 px-3 text-center w-10">#</th>
+                    <th class="py-2.5 px-3 w-40">التصنيف</th>
+                    <th class="py-2.5 px-3">البيان / رقم الفاتورة</th>
+                    <th class="py-2.5 px-3 w-32">المبلغ</th>
+                    <th class="py-2.5 px-3 w-44">الإيصال</th>
+                    <th class="py-2.5 px-3 w-48">تحمّل البند</th>
+                    <th class="py-2.5 px-3 text-center w-16">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 text-slate-200">
+                  @for (line of settlementLines.controls; track line; let idx = $index) {
+                    <tr [formGroupName]="idx" class="hover:bg-slate-900/40 transition-colors">
+                      <td class="py-2 px-3 text-center font-bold text-indigo-400 font-mono">{{ idx + 1 }}</td>
+                      <td class="py-2 px-3">
+                        <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
                           <option value="Cement">أسمنت</option>
                           <option value="Logistics">خدمات لوجستية</option>
                           <option value="Materials">مواد بناء</option>
                           <option value="Labor">حوافز وأجور عمال</option>
                           <option value="Other">أخرى</option>
                         </select>
-                      </div>
-
-                      <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">البيان / رقم الفاتورة</label>
-                        <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                      </div>
-
-                      <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">المبلغ المصروف</label>
+                      </td>
+                      <td class="py-2 px-3">
+                        <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
+                      </td>
+                      <td class="py-2 px-3">
                         <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
-                      </div>
-
-                      <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">إيصال الفاتورة</label>
+                      </td>
+                      <td class="py-2 px-3">
                         <div class="flex items-center gap-2">
-                          <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1">
+                          <label class="cursor-pointer px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1 font-cairo">
                             <span>📎</span>
                             <span>اختر ملف</span>
                             <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
                           </label>
                           @if (line.get('localPreviewUrl')?.value) {
-                            <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-8 h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer shrink-0">
+                            <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-7 h-7 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer hover:scale-110 transition-transform shrink-0" title="معاينة الإيصال">
                               <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
                             </div>
                           }
                           @if (line.get('uploading')?.value) {
-                            <span class="text-[10px] text-indigo-400 animate-pulse">جاري الرفع...</span>
+                            <span class="text-[10px] text-indigo-400 animate-pulse font-cairo">جاري الرفع...</span>
                           }
                         </div>
-                      </div>
-
-                      <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1.5">تحمّل البند</label>
-                        <div class="flex gap-2">
-                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 cursor-pointer'">
-                            🟢 يُحمّل على العميل
+                      </td>
+                      <td class="py-2 px-3">
+                        <div class="flex gap-1">
+                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 hover:border-emerald-500/30 cursor-pointer'">
+                            🟢 عميل
                           </button>
-                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 cursor-pointer'">
-                            🔴 خسارة شركة
+                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 hover:border-rose-500/30 cursor-pointer'">
+                            🔴 شركة
                           </button>
                         </div>
-                      </div>
-
-                      @if (!isSettlementLocked()) {
-                        <div class="flex justify-end pt-1">
-                          <button type="button" (click)="removeSettlementLine(idx)" class="px-3 py-1.5 text-[11px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1" [disabled]="settlementLines.length === 1">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      </td>
+                      <td class="py-2 px-3 text-center">
+                        @if (!isSettlementLocked()) {
+                          <button type="button" (click)="removeSettlementLine(idx)" class="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer" [disabled]="settlementLines.length === 1" title="حذف البند">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            حذف البند
                           </button>
-                        </div>
-                      }
-                    </div>
-                  </details>
-                }
-              </div>
-
-              <!-- Add Row Button -->
-              @if (!isSettlementLocked()) {
-                <button type="button" (click)="addSettlementLine()" class="w-full py-2.5 text-xs font-bold text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 border border-dashed border-indigo-500/30 hover:border-indigo-500/50 rounded-xl transition-all cursor-pointer font-cairo flex items-center justify-center gap-1.5">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  إضافة فاتورة / بند جديد
-                </button>
-              }
-
-              <!-- Ledger summary & Net calculation -->
-              <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                <div class="flex justify-between text-xs text-slate-400 font-cairo">
-                  <span>إجمالي مبلغ العهدة الأصلي:</span>
-                  <span class="font-mono font-semibold text-slate-300">{{ selectedPettyCashForSettlement()?.amount | number:'1.2-2' }} EGP</span>
-                </div>
-                <div class="flex justify-between text-xs text-slate-400 font-cairo">
-                  <span>إجمالي المبالغ المصروفة بالفواتير:</span>
-                  <span class="font-mono font-semibold text-amber-400">{{ calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
-                </div>
-                <div class="border-t border-slate-800/80 pt-2 flex justify-between text-sm font-bold font-cairo">
-                  @if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() > 0) {
-                    <span class="text-emerald-400">متبقي يجب إرجاعه للخزينة:</span>
-                    <span class="text-emerald-400 font-mono">+{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
-                  } @else if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() < 0) {
-                    <span class="text-rose-400">مستحق للمهندس:</span>
-                    <span class="text-rose-400 font-mono">{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
-                  } @else {
-                    <span class="text-slate-300">تسوية متطابقة تماماً:</span>
-                    <span class="text-slate-300 font-mono">0.00 EGP</span>
+                        }
+                      </td>
+                    </tr>
                   }
-                </div>
-              </div>
-            </div> <!-- End of Scrollable Content Area -->
+                </tbody>
+              </table>
+            </div>
 
-            <!-- 4️⃣ Action Bar (Clean Arabic Labels) -->
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-800">
-              <button type="button" (click)="closeSettlementModal()" class="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all font-cairo cursor-pointer">إغلاق</button>
-              
-              @if (!isSettlementLocked()) {
-                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                  <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-750 border border-slate-700 disabled:opacity-50 transition-all font-cairo cursor-pointer">
-                    @if (isSubmittingSettlement()) {
-                      جاري الحفظ...
-                    } @else {
-                      💾 حفظ كمسودة
-                    }
-                  </button>
+            <!-- 3️⃣ Responsive Mobile Card Layout (block md:hidden) -->
+            <div formArrayName="lines" class="block md:hidden space-y-3 shrink-0">
+              @for (line of settlementLines.controls; track line; let idx = $index) {
+                <details [open]="idx === settlementLines.length - 1" class="group bg-slate-950 border border-slate-800 rounded-xl overflow-hidden font-cairo shadow-md">
+                  <summary class="flex items-center justify-between p-3 bg-slate-900/90 cursor-pointer select-none">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 text-xs font-bold font-mono">#{{ idx + 1 }}</span>
+                      <span class="text-xs font-bold text-white truncate max-w-[140px]">{{ line.get('description')?.value || line.get('category')?.value || 'بند جديد' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-xs font-mono font-bold text-emerald-400">{{ line.get('amount')?.value || 0 | number:'1.2-2' }} EGP</span>
+                      <span class="text-slate-400 transition-transform group-open:rotate-180 text-[10px]">▼</span>
+                    </div>
+                  </summary>
 
-                  <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50 transition-all font-cairo cursor-pointer">
-                    @if (isSubmittingSettlement()) {
-                      جاري التقديم...
-                    } @else {
-                      🚀 تقديم للمراجعة النهائية
+                  <div [formGroupName]="idx" class="p-3.5 space-y-3 border-t border-slate-800/80 bg-slate-900/40">
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1">التصنيف</label>
+                      <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <option value="Cement">أسمنت</option>
+                        <option value="Logistics">خدمات لوجستية</option>
+                        <option value="Materials">مواد بناء</option>
+                        <option value="Labor">حوافز وأجور عمال</option>
+                        <option value="Other">أخرى</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1">البيان / رقم الفاتورة</label>
+                      <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1">المبلغ المصروف</label>
+                      <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1">إيصال الفاتورة</label>
+                      <div class="flex items-center gap-2">
+                        <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1">
+                          <span>📎</span>
+                          <span>اختر ملف</span>
+                          <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
+                        </label>
+                        @if (line.get('localPreviewUrl')?.value) {
+                          <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-8 h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer shrink-0">
+                            <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
+                          </div>
+                        }
+                        @if (line.get('uploading')?.value) {
+                          <span class="text-[10px] text-indigo-400 animate-pulse">جاري الرفع...</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] font-bold text-slate-400 mb-1.5">تحمّل البند</label>
+                      <div class="flex gap-2">
+                        <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 cursor-pointer'">
+                          🟢 يُحمّل على العميل
+                        </button>
+                        <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 cursor-pointer'">
+                          🔴 خسارة شركة
+                        </button>
+                      </div>
+                    </div>
+
+                    @if (!isSettlementLocked()) {
+                      <div class="flex justify-end pt-1">
+                        <button type="button" (click)="removeSettlementLine(idx)" class="px-3 py-1.5 text-[11px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1" [disabled]="settlementLines.length === 1">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          حذف البند
+                        </button>
+                      </div>
                     }
-                  </button>
-                </div>
+                  </div>
+                </details>
               }
             </div>
 
-            <!-- Image Preview Lightbox Modal -->
-            @if (activePreviewPhotoUrl()) {
-              <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-                <div (click)="activePreviewPhotoUrl.set(null)" class="absolute inset-0"></div>
-                <div class="relative max-w-4xl max-h-[85vh] z-10">
-                  <button (click)="activePreviewPhotoUrl.set(null)" class="absolute -top-12 right-0 text-white/80 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 p-2 rounded-full cursor-pointer transition-colors shadow-lg">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                  <img [src]="activePreviewPhotoUrl()" class="max-w-full max-h-[80vh] rounded-2xl object-contain border border-slate-750 shadow-2xl">
-                </div>
+            <!-- Add Row Button -->
+            @if (!isSettlementLocked()) {
+              <button type="button" (click)="addSettlementLine()" class="w-full py-2.5 text-xs font-bold text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 border border-dashed border-indigo-500/30 hover:border-indigo-500/50 rounded-xl transition-all cursor-pointer font-cairo flex items-center justify-center gap-1.5 shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                إضافة فاتورة / بند جديد
+              </button>
+            }
+
+            <!-- Ledger summary & Net calculation -->
+            <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2 shrink-0 font-cairo">
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>إجمالي مبلغ العهدة الأصلي:</span>
+                <span class="font-mono font-semibold text-slate-300">{{ selectedPettyCashForSettlement()?.amount | number:'1.2-2' }} EGP</span>
+              </div>
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>إجمالي المبالغ المصروفة بالفواتير:</span>
+                <span class="font-mono font-semibold text-amber-400">{{ calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+              </div>
+              <div class="border-t border-slate-800/80 pt-2 flex justify-between text-sm font-bold">
+                @if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() > 0) {
+                  <span class="text-emerald-400">متبقي يجب إرجاعه للخزينة:</span>
+                  <span class="text-emerald-400 font-mono">+{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+                } @else if (selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() < 0) {
+                  <span class="text-rose-400">مستحق للمهندس:</span>
+                  <span class="text-rose-400 font-mono">{{ selectedPettyCashForSettlement()!.amount - calculateSettlementTotal() | number:'1.2-2' }} EGP</span>
+                } @else {
+                  <span class="text-slate-300">تسوية متطابقة تماماً:</span>
+                  <span class="text-slate-300 font-mono">0.00 EGP</span>
+                }
+              </div>
+            </div>
+          </form>
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex flex-col sm:flex-row justify-between items-center gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeSettlementModal()" class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">إغلاق</button>
+            
+            @if (!isSettlementLocked()) {
+              <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <button type="button" (click)="onSettlementSubmit(true)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 transition-all cursor-pointer">
+                  @if (isSubmittingSettlement()) {
+                    جاري الحفظ...
+                  } @else {
+                    💾 حفظ كمسودة
+                  }
+                </button>
+
+                <button type="button" (click)="onSettlementSubmit(false)" [disabled]="settlementForm.invalid || isSubmittingSettlement()" class="w-full sm:w-auto px-6 py-2.5 text-sm font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50 transition-all cursor-pointer">
+                  @if (isSubmittingSettlement()) {
+                    جاري التقديم...
+                  } @else {
+                    🚀 تقديم للمراجعة النهائية
+                  }
+                </button>
               </div>
             }
-          </form>
+          </div>
+
+          <!-- Image Preview Lightbox Modal -->
+          @if (activePreviewPhotoUrl()) {
+            <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+              <div (click)="activePreviewPhotoUrl.set(null)" class="absolute inset-0"></div>
+              <div class="relative max-w-4xl max-h-[85vh] z-10">
+                <button (click)="activePreviewPhotoUrl.set(null)" class="absolute -top-12 right-0 text-white/80 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 p-2 rounded-full cursor-pointer transition-colors shadow-lg">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <img [src]="activePreviewPhotoUrl()" class="max-w-full max-h-[80vh] rounded-2xl object-contain border border-slate-750 shadow-2xl">
+              </div>
+            </div>
+          }
         </div>
       </div>
     }
@@ -2601,10 +2602,11 @@ import { LanguageService } from '../../../core/services/language.service';
 
     <!-- Quick Inspection Modal for Truncated Text -->
     @if (activeTextInspection()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in font-sans">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in font-sans">
         <div (click)="closeTextInspectionModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/80 p-5 sm:p-6 shadow-2xl z-10 transition-all">
-          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+        <div class="relative w-full max-w-lg bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10 font-cairo">
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
             <div class="flex items-center gap-3">
               <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2612,23 +2614,27 @@ import { LanguageService } from '../../../core/services/language.service';
                 </svg>
               </div>
               <div>
-                <h3 class="text-base font-bold text-white font-cairo">{{ activeTextInspection()!.title }}</h3>
+                <h3 class="text-base font-bold text-white">{{ activeTextInspection()!.title }}</h3>
                 @if (activeTextInspection()!.subtitle) {
-                  <p class="text-xs text-slate-400 font-cairo mt-0.5">{{ activeTextInspection()!.subtitle }}</p>
+                  <p class="text-xs text-slate-400 mt-0.5">{{ activeTextInspection()!.subtitle }}</p>
                 }
               </div>
             </div>
-            <button (click)="closeTextInspectionModal()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button type="button" (click)="closeTextInspectionModal()" class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <div class="overflow-y-auto min-h-0 pr-1 space-y-3 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-cairo bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 selection:bg-sky-500/30 selection:text-sky-200">
-            {{ activeTextInspection()!.content }}
+
+          <!-- 2. Scrollable Modal Form Body -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar">
+            <div class="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 selection:bg-sky-500/30 selection:text-sky-200">
+              {{ activeTextInspection()!.content }}
+            </div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
-            <button (click)="closeTextInspectionModal()" class="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer font-cairo">
+
+          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
+          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
+            <button type="button" (click)="closeTextInspectionModal()" class="px-5 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
               إغلاق / Close
             </button>
           </div>
@@ -2704,7 +2710,8 @@ export class ProjectDetailsComponent implements OnInit {
 
   openTransactionInspectionModal(t: FinancialTransactionMobileDto): void {
     if (!t.description) return;
-    const dateStr = t.transactionDate ? new Date(t.transactionDate).toLocaleString('en-GB') : '';
+    const rawDate = t.transactionDate || t.paymentDate || t.createdAt;
+    const dateStr = rawDate ? new Date(rawDate).toLocaleString('en-GB') : '';
     this.openTextInspectionModal('تفاصيل المعاملة المالية', t.description, dateStr);
   }
 
@@ -3205,10 +3212,10 @@ export class ProjectDetailsComponent implements OnInit {
 
   readonly injectForm: FormGroup = this.fb.group({
     amount: [null, [Validators.required, Validators.min(0.01)]],
-    sourceType: [null, Validators.required],
+    sourceType: ['ClientDeposit', Validators.required],
     paymentDate: [new Date().toISOString().substring(0, 10), Validators.required],
-    paymentMethod: [null, Validators.required],
-    description: ['', [Validators.required, Validators.minLength(5)]]
+    paymentMethod: ['Cash', Validators.required],
+    description: ['', [Validators.required]]
   });
 
   readonly selectedInjectReceipt = signal<File | null>(null);
@@ -3784,9 +3791,12 @@ export class ProjectDetailsComponent implements OnInit {
 
   openInjectModal(): void {
     this.injectErrors.set([]);
+    this.selectedInjectReceipt.set(null);
     this.injectForm.reset({
       amount: null,
-      sourceType: null,
+      sourceType: 'ClientDeposit',
+      paymentDate: new Date().toISOString().substring(0, 10),
+      paymentMethod: 'Cash',
       description: ''
     });
     this.isInjectModalOpen.set(true);
@@ -3795,12 +3805,22 @@ export class ProjectDetailsComponent implements OnInit {
 
   closeInjectModal(): void {
     this.isInjectModalOpen.set(false);
-    this.injectForm.reset();
+    this.selectedInjectReceipt.set(null);
+    this.injectForm.reset({
+      amount: null,
+      sourceType: 'ClientDeposit',
+      paymentDate: new Date().toISOString().substring(0, 10),
+      paymentMethod: 'Cash',
+      description: ''
+    });
     this.confirmService.toggleBodyScroll(false);
   }
 
   async submitCapitalInjection(): Promise<void> {
-    if (this.injectForm.invalid) return;
+    if (this.injectForm.invalid) {
+      this.injectForm.markAllAsTouched();
+      return;
+    }
 
     this.isInjecting.set(true);
     this.injectErrors.set([]);
@@ -3821,11 +3841,14 @@ export class ProjectDetailsComponent implements OnInit {
     }
 
     const formVal = this.injectForm.value;
+    const paymentDateIso = new Date(formVal.paymentDate || Date.now()).toISOString();
+
     const dto = {
       amount: formVal.amount,
       sourceType: formVal.sourceType,
       description: formVal.description,
-      paymentDate: new Date(formVal.paymentDate).toISOString(),
+      paymentDate: paymentDateIso,
+      transactionDate: paymentDateIso,
       paymentMethod: formVal.paymentMethod,
       receiptPhotoUrl: receiptUrl
     };

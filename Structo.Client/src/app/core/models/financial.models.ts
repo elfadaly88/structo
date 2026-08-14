@@ -3,8 +3,10 @@ export interface FinancialTransactionMobileDto {
   amount: number;
   type: string; // 'Income' or 'Expense'
   description: string;
-  transactionDate: string;
+  transactionDate?: string;
   paymentDate?: string;
+  createdAt?: string;
+  date?: string;
   paymentMethod?: string;
   receiptPhotoUrl?: string;
   isLocked?: boolean;
