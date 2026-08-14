@@ -575,7 +575,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
             @for (tx of filteredTransactions(); track tx.id) {
               <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-xs font-mono text-slate-400">{{ (tx.date || tx.transactionDate || tx.paymentDate || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="text-xs font-mono text-slate-400">{{ formatTxDate(tx) }}</span>
                   <span class="font-mono font-bold text-sm" 
                     [class.text-emerald-400]="tx.type === 'Income' || tx.type === 0 || tx.transactionType === 'Income'" 
                     [class.text-rose-400]="tx.type !== 'Income' && tx.type !== 0 && tx.transactionType !== 'Income'">
@@ -1104,17 +1104,18 @@ export class FinancialsComponent implements OnInit {
         if (!matchDesc && !matchAmount) return false;
       }
       if (this.dateFromFilter()) {
-        const dateVal = t.date || t.transactionDate || t.paymentDate || t.createdAt;
-        if (dateVal) {
-          const txDate = new Date(dateVal);
+        const rawDate = (t as any).transactionDate || (t as any).TransactionDate || (t as any).paymentDate || (t as any).PaymentDate || (t as any).date || (t as any).createdAt;
+        const txDate = this.parseTxDate(rawDate);
+        if (txDate) {
           const fromDate = new Date(this.dateFromFilter());
+          fromDate.setHours(0, 0, 0, 0);
           if (txDate < fromDate) return false;
         }
       }
       if (this.dateToFilter()) {
-        const dateVal = t.date || t.transactionDate || t.paymentDate || t.createdAt;
-        if (dateVal) {
-          const txDate = new Date(dateVal);
+        const rawDate = (t as any).transactionDate || (t as any).TransactionDate || (t as any).paymentDate || (t as any).PaymentDate || (t as any).date || (t as any).createdAt;
+        const txDate = this.parseTxDate(rawDate);
+        if (txDate) {
           const toDate = new Date(this.dateToFilter());
           toDate.setHours(23, 59, 59, 999);
           if (txDate > toDate) return false;
@@ -1155,19 +1156,64 @@ export class FinancialsComponent implements OnInit {
     receiptPhotoUrl: ''
   };
 
+  parseTxDate(raw: any): Date | null {
+    if (!raw) return null;
+    if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+    if (typeof raw === 'number') {
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (typeof raw === 'string') {
+      const str = raw.trim();
+      if (!str) return null;
+
+      // Match "DD/MM/YYYY HH:mm:ss" or "DD/MM/YYYY HH:mm" or "DD/MM/YYYY"
+      const dmyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+      if (dmyMatch) {
+        const day = parseInt(dmyMatch[1], 10);
+        const month = parseInt(dmyMatch[2], 10) - 1;
+        const year = parseInt(dmyMatch[3], 10);
+        const hour = dmyMatch[4] ? parseInt(dmyMatch[4], 10) : 0;
+        const min = dmyMatch[5] ? parseInt(dmyMatch[5], 10) : 0;
+        const sec = dmyMatch[6] ? parseInt(dmyMatch[6], 10) : 0;
+        const parsed = new Date(year, month, day, hour, min, sec);
+        return isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      // Match ISO strings (e.g. 2026-08-15T...)
+      const d = new Date(str);
+      if (!isNaN(d.getTime()) && d.getFullYear() >= 1970) {
+        return d;
+      }
+    }
+    return null;
+  }
+
   formatTxDate(tx: any): string {
     try {
-      const raw = tx?.transactionDate || tx?.TransactionDate || tx?.paymentDate || tx?.PaymentDate || tx?.date || tx?.createdAt;
+      const raw = tx?.transactionDate || tx?.TransactionDate || 
+                  tx?.paymentDate || tx?.PaymentDate || 
+                  tx?.date || tx?.Date || 
+                  tx?.createdAt || tx?.CreatedAt;
       if (!raw) return '';
-      const d = new Date(raw);
-      if (isNaN(d.getTime()) || d.getFullYear() < 1970) return '';
+
+      const d = this.parseTxDate(raw);
+      if (!d || d.getFullYear() < 1970) {
+        if (typeof raw === 'string' && /^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+          return raw.substring(0, 16);
+        }
+        return '';
+      }
+
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
       const hh = String(d.getHours()).padStart(2, '0');
       const min = String(d.getMinutes()).padStart(2, '0');
       return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-    } catch { return ''; }
+    } catch { 
+      return ''; 
+    }
   }
 
   getPoolSourceLabel(sourceType: string, detailed: boolean = false): string {

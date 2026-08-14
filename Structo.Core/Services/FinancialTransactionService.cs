@@ -545,6 +545,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                 {
                     foreach (var line in settlement.Lines)
                     {
+                        var expenseDate = settlement.SubmittedAt != default && settlement.SubmittedAt > new DateTime(1970, 1, 1)
+                            ? settlement.SubmittedAt
+                            : (settlement.ResolvedAt.HasValue && settlement.ResolvedAt.Value > new DateTime(1970, 1, 1) ? settlement.ResolvedAt.Value : DateTime.UtcNow);
+
                         var expense = new FinancialTransaction
                         {
                             Id = Guid.NewGuid(),
@@ -557,8 +561,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                                 : line.Description,
                             PaymentMethod = settlement.PettyCash?.SettlementPaymentMethod ?? PaymentMethod.Cash,
                             ReceiptPhotoUrl = line.InvoiceUrl,
-                            TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
-                            PaymentDate = DateTime.UtcNow,
+                            TransactionDate = expenseDate,
+                            PaymentDate = expenseDate,
                             IsSystemGenerated = true,
                             IsAudited = true,
                             SettlementId = settlement.Id
@@ -568,6 +572,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                 }
                 else
                 {
+                    var expenseDate = settlement.SubmittedAt != default && settlement.SubmittedAt > new DateTime(1970, 1, 1)
+                        ? settlement.SubmittedAt
+                        : (settlement.ResolvedAt.HasValue && settlement.ResolvedAt.Value > new DateTime(1970, 1, 1) ? settlement.ResolvedAt.Value : DateTime.UtcNow);
+
                     var expense = new FinancialTransaction
                     {
                         Id = Guid.NewGuid(),
@@ -577,8 +585,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                         Amount = settlement.TotalAmount,
                         Description = $"Petty Cash Settlement - Spent Amount: {settlement.PettyCash?.Reason ?? string.Empty}",
                         PaymentMethod = settlement.PettyCash?.SettlementPaymentMethod ?? PaymentMethod.Cash,
-                        TransactionDate = settlement.SubmittedAt != default ? settlement.SubmittedAt : DateTime.UtcNow,
-                        PaymentDate = DateTime.UtcNow,
+                        TransactionDate = expenseDate,
+                        PaymentDate = expenseDate,
                         IsSystemGenerated = true,
                         IsAudited = true,
                         SettlementId = settlement.Id
@@ -615,6 +623,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
                 if (!hasTx)
                 {
+                    var pcDate = (pc.ExpenseDate.HasValue && pc.ExpenseDate.Value != default && pc.ExpenseDate.Value > new DateTime(1970, 1, 1))
+                        ? pc.ExpenseDate.Value
+                        : (pc.IssuedAt != default && pc.IssuedAt > new DateTime(1970, 1, 1) ? pc.IssuedAt : DateTime.UtcNow);
+
                     var expense = new FinancialTransaction
                     {
                         Id = Guid.NewGuid(),
@@ -625,8 +637,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                         Description = $"Petty Cash Settlement - {pc.Reason}",
                         PaymentMethod = pc.SettlementPaymentMethod ?? PaymentMethod.Cash,
                         ReceiptPhotoUrl = pc.ReceiptPhotoUrl,
-                        TransactionDate = pc.ExpenseDate ?? DateTime.UtcNow,
-                        PaymentDate = pc.ExpenseDate ?? DateTime.UtcNow,
+                        TransactionDate = pcDate,
+                        PaymentDate = pcDate,
                         IsSystemGenerated = true,
                         IsAudited = true
                     };

@@ -344,19 +344,36 @@ using (var scope = app.Services.CreateScope())
         context.Database.Migrate();
 
         // 🚀 Safe Backfill for Transactions with Empty/Default Dates
-        context.Database.ExecuteSqlRaw(@"
-            UPDATE ""FinancialTransactions""
-            SET ""TransactionDate"" = COALESCE(
-                NULLIF(""PaymentDate"", '0001-01-01 00:00:00'::timestamp),
-                (SELECT s.""SubmittedAt"" FROM ""Settlements"" s WHERE s.""Id"" = ""FinancialTransactions"".""SettlementId"" LIMIT 1),
-                NOW()
-            )
-            WHERE ""TransactionDate"" IS NULL OR ""TransactionDate"" <= '1970-01-01 00:00:00'::timestamp;
+        try
+        {
+            context.Database.ExecuteSqlRaw(@"
+                ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""CreatedAt"" timestamp with time zone DEFAULT NOW();
+            ");
 
-            UPDATE ""FinancialTransactions""
-            SET ""PaymentDate"" = ""TransactionDate""
-            WHERE ""PaymentDate"" IS NULL OR ""PaymentDate"" <= '1970-01-01 00:00:00'::timestamp;
-        ");
+            context.Database.ExecuteSqlRaw(@"
+                UPDATE ""FinancialTransactions""
+                SET ""TransactionDate"" = COALESCE(
+                    NULLIF(""CreatedAt"", '0001-01-01 00:00:00+00'::timestamptz),
+                    NULLIF(""PaymentDate"", '0001-01-01 00:00:00'::timestamp),
+                    (SELECT s.""SubmittedAt"" FROM ""Settlements"" s WHERE s.""Id"" = ""FinancialTransactions"".""SettlementId"" LIMIT 1),
+                    NOW()
+                )
+                WHERE ""TransactionDate"" IS NULL 
+                   OR ""TransactionDate"" <= '0001-01-02 00:00:00+00'::timestamptz
+                   OR ""TransactionDate"" <= '1970-01-01 00:00:00';
+
+                UPDATE ""FinancialTransactions""
+                SET ""PaymentDate"" = ""TransactionDate""
+                WHERE ""PaymentDate"" IS NULL 
+                   OR ""PaymentDate"" <= '0001-01-02 00:00:00+00'::timestamptz
+                   OR ""PaymentDate"" <= '1970-01-01 00:00:00';
+            ");
+            Console.WriteLine("[Startup] FinancialTransactions dates backfilled successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Migration date backfill warning: {ex.Message}");
+        }
     }
     catch (Exception ex)
     {
