@@ -340,6 +340,7 @@ public class SettlementService(DbContext context) : ISettlementService
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
         var query = context.Set<Settlement>()
+            .AsNoTracking()
             .Include(s => s.Lines)
             .Include(s => s.PettyCash)
             .ThenInclude(pc => pc!.IssuedToUser)

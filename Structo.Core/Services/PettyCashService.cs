@@ -224,6 +224,7 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
         var query = context.Set<PettyCash>()
+            .AsNoTracking()
             .Include(p => p.Project)
             .Include(p => p.IssuedToUser)
             .Where(t => t.ProjectId == projectId);

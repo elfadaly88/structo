@@ -69,7 +69,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
     public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole)
     {
-        var query = context.Set<Project>().AsQueryable();
+        var query = context.Set<Project>().AsNoTracking().AsQueryable();
 
         if (userRole != "SuperAdmin")
         {
@@ -246,7 +246,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
     public async Task<ProjectDto?> GetProjectByIdAsync(Guid id)
     {
-        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id);
+        var project = await context.Set<Project>().AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return null;
         return MapToDto(project);
     }
@@ -254,6 +254,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
     public async Task<ProjectClientViewDto?> GetProjectClientViewAsync(Guid id)
     {
         var project = await context.Set<Project>()
+            .AsNoTracking()
             .Include(p => p.SitePhotos)
             .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -317,6 +318,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
     public async Task<List<ProjectBudgetLog>> GetBudgetHistoryAsync(Guid id)
     {
         return await context.Set<ProjectBudgetLog>()
+            .AsNoTracking()
             .Where(l => l.ProjectId == id)
             .OrderByDescending(l => l.ChangedAt)
             .ToListAsync();
@@ -328,17 +330,21 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
     public async Task<ProjectReconciliationReportDto?> GetReconciliationReportAsync(Guid id, Guid tenantId)
     {
-        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
+        var project = await context.Set<Project>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
         if (project == null) return null;
 
         // Load all PettyCash for this project (not rejected)
         var pettyCashes = await context.Set<PettyCash>()
+            .AsNoTracking()
             .Include(pc => pc.IssuedToUser)
             .Where(pc => pc.ProjectId == id && pc.Status != "Rejected")
             .ToListAsync();
 
         // Load all FinancialTransactions for this project
         var transactions = await context.Set<FinancialTransaction>()
+            .AsNoTracking()
             .Where(t => t.ProjectId == id)
             .ToListAsync();
 

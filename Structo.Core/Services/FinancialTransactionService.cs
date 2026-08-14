@@ -54,7 +54,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             Amount = dto.Amount,
             Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Description),
             Type = dto.Type,
-            TransactionDate = dto.TransactionDate,
+            TransactionDate = dto.TransactionDate != default ? dto.TransactionDate : DateTime.UtcNow,
+            PaymentDate = dto.TransactionDate != default ? dto.TransactionDate : DateTime.UtcNow,
             IsOverrun = dto.ForceOverrun
         };
 
@@ -66,6 +67,9 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
     private static DateTime ToEgyptLocalTime(DateTime utcTime)
     {
+        if (utcTime == default || utcTime <= new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+            utcTime = DateTime.UtcNow;
+
         TimeZoneInfo egyptZone;
         try
         {
@@ -91,6 +95,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         await EnsureSettlementExpensesMaterializedAsync(projectId);
 
         var query = context.Set<FinancialTransaction>()
+            .AsNoTracking()
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.TransactionDate);
 
@@ -102,10 +107,12 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             .ToListAsync();
 
         var pools = await context.Set<ProjectCashPool>()
+            .AsNoTracking()
             .Where(p => p.ProjectId == projectId)
             .ToListAsync();
 
         var pettyCashes = await context.Set<PettyCash>()
+            .AsNoTracking()
             .Where(p => p.ProjectId == projectId && p.Status != "Rejected")
             .ToListAsync();
 
@@ -142,14 +149,22 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                 }
             }
 
+            var rawTxDate = t.TransactionDate != default && t.TransactionDate > new DateTime(1970, 1, 1)
+                ? t.TransactionDate
+                : (t.PaymentDate != default && t.PaymentDate > new DateTime(1970, 1, 1) ? t.PaymentDate : DateTime.UtcNow);
+
+            var rawPaymentDate = t.PaymentDate != default && t.PaymentDate > new DateTime(1970, 1, 1)
+                ? t.PaymentDate
+                : rawTxDate;
+
             return new FinancialTransactionMobileDto
             {
                 Id = t.Id,
                 Amount = t.Amount,
                 Type = t.Type.ToString(),
                 Description = t.Description,
-                TransactionDate = ToEgyptLocalTime(t.TransactionDate),
-                PaymentDate = ToEgyptLocalTime(t.PaymentDate),
+                TransactionDate = ToEgyptLocalTime(rawTxDate),
+                PaymentDate = ToEgyptLocalTime(rawPaymentDate),
                 PaymentMethod = t.PaymentMethod.HasValue ? t.PaymentMethod.ToString() : null,
                 ReceiptPhotoUrl = t.ReceiptPhotoUrl,
                 IsLocked = isLocked,

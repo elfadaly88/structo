@@ -342,10 +342,25 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" character varying(50) NOT NULL DEFAULT 'SiteProgress';
         ");
         context.Database.Migrate();
+
+        // 🚀 Safe Backfill for Transactions with Empty/Default Dates
+        context.Database.ExecuteSqlRaw(@"
+            UPDATE ""FinancialTransactions""
+            SET ""TransactionDate"" = COALESCE(
+                NULLIF(""PaymentDate"", '0001-01-01 00:00:00'::timestamp),
+                (SELECT s.""SubmittedAt"" FROM ""Settlements"" s WHERE s.""Id"" = ""FinancialTransactions"".""SettlementId"" LIMIT 1),
+                NOW()
+            )
+            WHERE ""TransactionDate"" IS NULL OR ""TransactionDate"" <= '1970-01-01 00:00:00'::timestamp;
+
+            UPDATE ""FinancialTransactions""
+            SET ""PaymentDate"" = ""TransactionDate""
+            WHERE ""PaymentDate"" IS NULL OR ""PaymentDate"" <= '1970-01-01 00:00:00'::timestamp;
+        ");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database migration failed: {ex.Message}");
+        Console.WriteLine($"Database migration/backfill failed: {ex.Message}");
         Console.WriteLine(ex.StackTrace);
     }
 

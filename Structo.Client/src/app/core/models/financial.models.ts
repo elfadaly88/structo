@@ -50,6 +50,9 @@ export interface SettlementLineMobileDto {
   description: string;
   invoiceUrl: string;
   isBillableToClient: boolean;
+  invoiceNumber?: string;
+  expenseResponsibility?: string;
+  receiptPhotoUrl?: string;
 }
 
 export interface SettlementMobileDto {
@@ -68,6 +71,15 @@ export interface SettlementMobileDto {
   netDifference: number;
   comments?: string;
   lines: SettlementLineMobileDto[];
+  engineerName?: string;
+  submittedBy?: string;
+  notes?: string;
+  description?: string;
+  spentAmount?: number;
+  difference?: number;
+  settlementDate?: string;
+  date?: string;
+  createdAt?: string;
 }
 
 export interface DirectDisbursementDto {

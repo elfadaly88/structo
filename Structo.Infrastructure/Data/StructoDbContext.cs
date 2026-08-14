@@ -135,6 +135,10 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
 
             entity.HasIndex(e => e.ProjectId);
             entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(f => new { f.ProjectId, f.Type, f.TransactionDate })
+                  .HasDatabaseName("IX_FinancialTransactions_Project_Type_Date");
+            entity.HasIndex(f => f.SettlementId)
+                  .HasDatabaseName("IX_FinancialTransactions_SettlementId");
         });
 
         modelBuilder.Entity<PettyCash>(entity =>
@@ -167,6 +171,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
 
             entity.HasIndex(e => e.ProjectId);
             entity.HasIndex(e => e.IssuedToUserId);
+            entity.HasIndex(p => new { p.ProjectId, p.Status, p.SourcePoolId })
+                  .HasDatabaseName("IX_PettyCash_Project_Status_Pool");
         });
 
         modelBuilder.Entity<SitePhoto>(entity =>
@@ -206,6 +212,9 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany()
                   .HasForeignKey(e => e.ProjectId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(cp => new { cp.ProjectId, cp.SourceType })
+                  .HasDatabaseName("IX_ProjectCashPool_Project_SourceType");
         });
         modelBuilder.Entity<ProjectBudgetLog>()
             .HasQueryFilter(p => CurrentTenantId == null || p.Project!.TenantId == CurrentTenantId);
@@ -261,6 +270,9 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .WithMany()
                   .HasForeignKey(e => e.ResolvedByUserId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(s => new { s.ProjectId, s.Status })
+                  .HasDatabaseName("IX_Settlements_Project_Status");
         });
 
         modelBuilder.Entity<SettlementLine>(entity =>

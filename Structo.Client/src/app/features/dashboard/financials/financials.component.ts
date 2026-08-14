@@ -1157,10 +1157,10 @@ export class FinancialsComponent implements OnInit {
 
   formatTxDate(tx: any): string {
     try {
-      const raw = tx?.date || tx?.transactionDate || tx?.TransactionDate || tx?.paymentDate || tx?.createdAt;
+      const raw = tx?.transactionDate || tx?.TransactionDate || tx?.paymentDate || tx?.PaymentDate || tx?.date || tx?.createdAt;
       if (!raw) return '';
       const d = new Date(raw);
-      if (isNaN(d.getTime())) return '';
+      if (isNaN(d.getTime()) || d.getFullYear() < 1970) return '';
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();

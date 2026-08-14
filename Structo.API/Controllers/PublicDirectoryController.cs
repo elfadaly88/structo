@@ -67,6 +67,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         // Query tenants without default tenant filters
         var query = context.Tenants
             .IgnoreQueryFilters()
+            .AsNoTracking()
             .AsQueryable();
 
         // 1️⃣ Landing Page Eligibility: Only include Active tenants
@@ -83,6 +84,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         // Query all projects with their site photos for these tenants in a single batch query
         var projects = await context.Projects
             .IgnoreQueryFilters()
+            .AsNoTracking()
             .Where(p => tenantIds.Contains(p.TenantId))
             .Include(p => p.SitePhotos)
             .ToListAsync();
@@ -188,6 +190,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
     {
         var tenant = await context.Tenants
             .IgnoreQueryFilters()
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (tenant == null)
@@ -196,6 +199,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         // Retrieve projects and include uploaded site photos
         var projects = await context.Projects
             .IgnoreQueryFilters()
+            .AsNoTracking()
             .Where(p => p.TenantId == tenant.Id)
             .Include(p => p.SitePhotos)
             .ToListAsync();
@@ -259,6 +263,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
     {
         var reviews = await context.Projects
             .IgnoreQueryFilters()
+            .AsNoTracking()
             .Where(p => p.TenantId == tenantId && p.ClientRating.HasValue && !p.IsReviewHidden)
             .Select(p => new PublicReviewDto
             {
