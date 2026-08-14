@@ -16,6 +16,9 @@ public class TenantDto
     public string? PersonalPhone { get; set; }
     public string? WhatsAppPhone { get; set; }
     public double Rating { get; set; }
+    public int ReviewsCount { get; set; }
+    public int CompletedProjectsCount { get; set; }
+    public int ActiveProjectsCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? AdminEmail { get; set; }

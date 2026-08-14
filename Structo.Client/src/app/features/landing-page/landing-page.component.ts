@@ -303,44 +303,66 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
           } @else {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               @for (comp of companies(); track comp.id) {
-                <div class="group flex flex-col justify-between bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 hover:border-indigo-500/40 hover:bg-slate-900/40 transition-all duration-300 shadow-xl">
+                <div class="group flex flex-col justify-between bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 hover:border-indigo-500/40 hover:bg-slate-900/40 transition-all duration-300 shadow-xl relative">
                   <div>
-                    <div class="flex items-center gap-4 mb-4">
-                      <!-- Company Logo -->
-                      @if (comp.logoUrl) {
-                        <div class="relative h-12 w-12 rounded-xl border border-slate-700 bg-slate-950 overflow-hidden flex items-center justify-center shrink-0">
-                          <img [src]="comp.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
-                          <div class="hidden h-full w-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md font-cairo">
+                    <!-- Top Row: Logo, Name & Prominent Star Rating Badge -->
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                      <div class="flex items-center gap-3.5 min-w-0">
+                        <!-- Company Logo -->
+                        @if (comp.logoUrl) {
+                          <div class="relative h-12 w-12 rounded-xl border border-slate-700 bg-slate-950 overflow-hidden flex items-center justify-center shrink-0">
+                            <img [src]="comp.logoUrl" (error)="onLogoError($event)" alt="" class="h-full w-full object-cover">
+                            <div class="hidden h-full w-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md font-cairo">
+                              {{ comp.name.substring(0,2) }}
+                            </div>
+                          </div>
+                        } @else {
+                          <div class="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md font-cairo shrink-0">
                             {{ comp.name.substring(0,2) }}
                           </div>
+                        }
+                        <div class="min-w-0">
+                          <h3 class="text-base font-bold text-white group-hover:text-indigo-400 transition-colors duration-200 font-cairo truncate">{{ comp.name }}</h3>
+                          <p class="text-xs text-slate-500 font-mono">{{ comp.region || 'مصر' }}</p>
                         </div>
-                      } @else {
-                        <div class="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white uppercase text-base shadow-md font-cairo shrink-0">
-                          {{ comp.name.substring(0,2) }}
-                        </div>
-                      }
-                      <div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors duration-200 font-cairo">{{ comp.name }}</h3>
-                        <p class="text-xs text-slate-500 font-mono">{{ comp.region || 'Global' }}</p>
                       </div>
+
+                      <!-- Top Badge: Prominent Star Rating & Reviews Count (e.g. ⭐ 4.9 (18 تقييم)) -->
+                      <button
+                        (click)="openReviewsModal($event, comp.id, comp.name)"
+                        title="View client reviews"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all cursor-pointer font-bold text-xs shrink-0 shadow-sm">
+                        <span>⭐</span>
+                        <span class="font-mono text-sm font-black">{{ (comp.rating || 5.0) | number:'1.1-1' }}</span>
+                        <span class="text-[11px] text-amber-300/80 font-cairo font-medium">({{ comp.reviewsCount || 0 }} {{ langService.currentLang() === 'ar' ? 'تقييم' : 'reviews' }})</span>
+                      </button>
                     </div>
 
-                    <p class="text-slate-400 text-sm leading-relaxed mb-6 line-clamp-3">
-                      {{ comp.companyDescription || 'No description available for this corporate portfolio yet.' }}
+                    <!-- Project Indicators Badges: [ 🏆 X مكتمل ] [ 🟢 Y جاري التنفيذ ] -->
+                    <div class="flex items-center gap-2 mb-4 flex-wrap">
+                      @if ((comp.completedProjectsCount || 0) > 0) {
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
+                          <span>🏆</span>
+                          <span>{{ comp.completedProjectsCount }} {{ langService.currentLang() === 'ar' ? 'مكتمل' : 'Completed' }}</span>
+                        </span>
+                      }
+                      @if ((comp.activeProjectsCount || 0) > 0) {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 font-cairo">
+                          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>{{ comp.activeProjectsCount }} {{ langService.currentLang() === 'ar' ? 'جاري التنفيذ' : 'In Progress' }}</span>
+                        </span>
+                      }
+                    </div>
+
+                    <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6 line-clamp-3 font-cairo">
+                      {{ comp.companyDescription || (langService.currentLang() === 'ar' ? 'شركة مقاولات وهندسة مسجلة ومعتمدة لدى منصة أُسُس.' : 'Verified engineering and contracting firm registered on Osos.') }}
                     </p>
                   </div>
 
                   <div class="flex items-center justify-between border-t border-slate-800/80 pt-4 mt-auto">
-                    <!-- Rating Indicator -->
-                    <button
-                      (click)="openReviewsModal($event, comp.id, comp.name)"
-                      title="View client reviews"
-                      class="flex items-center gap-1.5 cursor-pointer hover:underline text-amber-400 hover:text-amber-300 font-bold focus:outline-none bg-transparent border-0 p-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span class="text-sm font-bold">{{ comp.rating | number:'1.1-1' }}</span>
-                    </button>
+                    <span class="text-xs text-slate-500 font-mono">
+                      {{ (comp.completedProjectsCount || 0) + (comp.activeProjectsCount || 0) }} {{ langService.currentLang() === 'ar' ? 'مشاريع موثقة' : 'Projects' }}
+                    </span>
 
                     <button 
                       (click)="openPortfolioModal(comp.id)"
@@ -414,12 +436,20 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                           (click)="openReviewsModal($event, selectedCompany()!.id, selectedCompany()!.name)"
                           title="View all client reviews"
                           class="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 hover:underline cursor-pointer bg-slate-950/60 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span>{{ selectedCompany()!.rating | number:'1.1-1' }}</span>
-                          <span class="text-[10px] text-amber-400/80 font-normal">(تقييمات العملاء)</span>
+                          <span>⭐</span>
+                          <span class="font-mono text-sm font-black">{{ (selectedCompany()!.rating || 5.0) | number:'1.1-1' }}</span>
+                          <span class="text-[10px] text-amber-400/80 font-normal">({{ selectedCompany()!.reviewsCount || 0 }} تقييم)</span>
                         </button>
+                        @if ((selectedCompany()!.completedProjectsCount || 0) > 0) {
+                          <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
+                            🏆 {{ selectedCompany()!.completedProjectsCount }} {{ langService.currentLang() === 'ar' ? 'مكتمل' : 'Completed' }}
+                          </span>
+                        }
+                        @if ((selectedCompany()!.activeProjectsCount || 0) > 0) {
+                          <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 font-cairo">
+                            🟢 {{ selectedCompany()!.activeProjectsCount }} {{ langService.currentLang() === 'ar' ? 'جاري التنفيذ' : 'In Progress' }}
+                          </span>
+                        }
                       </div>
                     </div>
                   </div>
@@ -481,11 +511,22 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                           </div>
                         }
 
-                        <!-- Category / Classification Badge -->
+                        <!-- Category & Project Status Badges: [ 🏆 مكتمل ] / [ 🟢 جاري التنفيذ ] -->
                         <div class="absolute top-3 right-3 flex items-center gap-2">
                           <span class="px-3 py-1 rounded-xl text-xs font-bold bg-slate-950/80 backdrop-blur-md text-indigo-300 border border-indigo-500/30 font-cairo shadow-lg">
                             {{ meta.category || 'عام' }}
                           </span>
+                          @if (proj.status === 'Closed' || proj.isClosed) {
+                            <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-950/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30 font-cairo shadow-lg flex items-center gap-1">
+                              <span>🏆</span>
+                              <span>{{ langService.currentLang() === 'ar' ? 'مكتمل' : 'Completed' }}</span>
+                            </span>
+                          } @else {
+                            <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-sky-950/80 backdrop-blur-md text-sky-400 border border-sky-500/30 font-cairo shadow-lg flex items-center gap-1">
+                              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                              <span>{{ langService.currentLang() === 'ar' ? 'جاري التنفيذ' : 'In Progress' }}</span>
+                            </span>
+                          }
                         </div>
 
                         <!-- Photos Count Badge -->

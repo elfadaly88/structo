@@ -24,6 +24,8 @@ public class PublicProjectDto
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public string Category { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public bool IsClosed { get; set; }
     public List<string> SitePhotos { get; set; } = [];
 }
 
@@ -36,6 +38,9 @@ public class PublicTenantPortfolioDto
     public string Region { get; set; } = string.Empty;
     public string CompanyDescription { get; set; } = string.Empty;
     public double Rating { get; set; }
+    public int ReviewsCount { get; set; }
+    public int CompletedProjectsCount { get; set; }
+    public int ActiveProjectsCount { get; set; }
     public List<PublicProjectDto> Projects { get; set; } = [];
 }
 
@@ -64,7 +69,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             .IgnoreQueryFilters()
             .AsQueryable();
 
-        // Only show Active tenants in the public directory
+        // 1️⃣ Landing Page Eligibility: Only include Active tenants
         query = query.Where(t => t.Status == TenantStatus.Active);
 
         if (!string.IsNullOrEmpty(region))
@@ -73,31 +78,56 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         }
 
         var tenants = await query.ToListAsync();
-
-        // Query all projects for these tenants in a single batch query
         var tenantIds = tenants.Select(t => t.Id).ToList();
+
+        // Query all projects with their site photos for these tenants in a single batch query
         var projects = await context.Projects
             .IgnoreQueryFilters()
             .Where(p => tenantIds.Contains(p.TenantId))
+            .Include(p => p.SitePhotos)
             .ToListAsync();
 
-        // Filter by project category tag if provided
-        if (!string.IsNullOrEmpty(category))
+        var dtos = new List<TenantDto>();
+
+        foreach (var t in tenants)
         {
-            var matchingTenantIds = projects
-                .Where(p => p.IsPublicPortfolio && string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase))
-                .Select(p => p.TenantId)
-                .ToHashSet();
-
-            tenants = tenants.Where(t => matchingTenantIds.Contains(t.Id)).ToList();
-        }
-
-        var dtos = tenants.Select(t => {
             var tenantProjects = projects.Where(p => p.TenantId == t.Id).ToList();
-            var ratedProjects = tenantProjects.Where(p => p.ClientRating.HasValue).Select(p => p.ClientRating!.Value).ToList();
-            double avgRating = ratedProjects.Any() ? ratedProjects.Average() : 0.0;
 
-            return new TenantDto
+            // 1️⃣ Landing Page Eligibility Filter:
+            // Must have AT LEAST 1 project with site photos/portfolio images
+            // Exclude empty profiles with 0 projects or 0 photos
+            var publicProjectsWithPhotos = tenantProjects
+                .Where(p => p.IsPublicPortfolio && p.SitePhotos.Any())
+                .ToList();
+
+            if (!publicProjectsWithPhotos.Any())
+            {
+                continue;
+            }
+
+            // Filter by project category tag if provided
+            if (!string.IsNullOrEmpty(category))
+            {
+                bool matchesCategory = publicProjectsWithPhotos.Any(p => 
+                    string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase));
+                if (!matchesCategory)
+                {
+                    continue;
+                }
+            }
+
+            var ratedProjects = tenantProjects
+                .Where(p => p.ClientRating.HasValue && !p.IsReviewHidden)
+                .Select(p => p.ClientRating!.Value)
+                .ToList();
+
+            int reviewsCount = ratedProjects.Count;
+            double avgRating = reviewsCount > 0 ? ratedProjects.Average() : 5.0;
+
+            int completedProjectsCount = tenantProjects.Count(p => p.Status == ProjectStatus.Closed);
+            int activeProjectsCount = tenantProjects.Count(p => p.Status == ProjectStatus.Active);
+
+            var dto = new TenantDto
             {
                 Id = t.Id,
                 Name = t.Name,
@@ -114,17 +144,32 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                 Latitude = t.Latitude,
                 Longitude = t.Longitude,
                 Rating = avgRating,
+                ReviewsCount = reviewsCount,
+                CompletedProjectsCount = completedProjectsCount,
+                ActiveProjectsCount = activeProjectsCount,
                 Status = t.Status.ToString(),
                 CreatedAt = t.CreatedAt
             };
-        }).AsQueryable();
 
-        if (minRating.HasValue)
-        {
-            dtos = dtos.Where(dto => dto.Rating >= minRating.Value);
+            if (minRating.HasValue && dto.Rating < minRating.Value)
+            {
+                continue;
+            }
+
+            dtos.Add(dto);
         }
 
-        var resultList = dtos.OrderByDescending(dto => dto.Rating).ToList();
+        // 2️⃣ Smart Ranking Algorithm (Rating-Driven):
+        // 1. AverageRating (Descending - highest rated 5.0 first)
+        // 2. TotalReviewsCount (Descending - more reviews breaks ties)
+        // 3. CompletedProjectsCount (Descending)
+        // 4. ActiveProjectsCount (Descending)
+        var resultList = dtos
+            .OrderByDescending(dto => dto.Rating)
+            .ThenByDescending(dto => dto.ReviewsCount)
+            .ThenByDescending(dto => dto.CompletedProjectsCount)
+            .ThenByDescending(dto => dto.ActiveProjectsCount)
+            .ToList();
 
         return Ok(new ApiResponse<List<TenantDto>> { Data = resultList, Success = true });
     }
@@ -161,13 +206,19 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                     StartDate = p.StartDate,
                     EndDate = p.EndDate,
                     Category = p.Category ?? "Other",
+                    Status = p.Status.ToString(),
+                    IsClosed = p.Status == ProjectStatus.Closed,
                     SitePhotos = p.SitePhotos.Select(sp => sp.PhotoUrl).ToList()
                 });
             }
         }
 
-        var ratedProjects = projects.Where(p => p.ClientRating.HasValue).Select(p => p.ClientRating!.Value).ToList();
-        double avgRating = ratedProjects.Any() ? ratedProjects.Average() : 0.0;
+        var ratedProjects = projects.Where(p => p.ClientRating.HasValue && !p.IsReviewHidden).Select(p => p.ClientRating!.Value).ToList();
+        int reviewsCount = ratedProjects.Count;
+        double avgRating = reviewsCount > 0 ? ratedProjects.Average() : 5.0;
+
+        int completedProjectsCount = projects.Count(p => p.Status == ProjectStatus.Closed);
+        int activeProjectsCount = projects.Count(p => p.Status == ProjectStatus.Active);
 
         var portfolio = new PublicTenantPortfolioDto
         {
@@ -178,6 +229,9 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             Region = tenant.Region,
             CompanyDescription = tenant.CompanyDescription,
             Rating = avgRating,
+            ReviewsCount = reviewsCount,
+            CompletedProjectsCount = completedProjectsCount,
+            ActiveProjectsCount = activeProjectsCount,
             Projects = publicProjects
         };
 

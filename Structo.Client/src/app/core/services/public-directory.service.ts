@@ -17,6 +17,9 @@ export interface TenantDto {
   whatsAppPhone: string | null;
   location?: string | null;
   rating: number;
+  reviewsCount?: number;
+  completedProjectsCount?: number;
+  activeProjectsCount?: number;
   createdAt: string;
   status: string;
   latitude?: number | null;
@@ -45,6 +48,8 @@ export interface PublicProjectDto {
   startDate: string;
   endDate: string | null;
   category: string;
+  status?: string;
+  isClosed?: boolean;
   sitePhotos: string[];
 }
 
@@ -56,6 +61,9 @@ export interface PublicTenantPortfolioDto {
   region: string;
   companyDescription: string;
   rating: number;
+  reviewsCount?: number;
+  completedProjectsCount?: number;
+  activeProjectsCount?: number;
   projects: PublicProjectDto[];
 }
 
