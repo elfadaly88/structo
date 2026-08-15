@@ -252,7 +252,14 @@
       "Manager": "مدير مشروع",
       "Accountant": "محاسب",
       "SiteEngineer": "مهندس موقع",
-      "DesignEngineer": "مهندس تصميم"
+      "DesignEngineer": "مهندس تصميم",
+      "TenantOwner": "مالك المنشأة",
+      "TENANTOWNER": "مالك المنشأة",
+      "Owner": "مالك المنشأة",
+      "OWNER": "مالك المنشأة",
+      "SuperAdmin": "مسؤول النظام",
+      "Client": "عميل",
+      "CLIENT": "عميل"
     }
   },
   "MARKETPLACE": {

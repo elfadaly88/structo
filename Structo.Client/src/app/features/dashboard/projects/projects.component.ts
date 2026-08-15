@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -62,7 +62,7 @@ const GOVERNORATES: GovernorateOption[] = [
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, TenantProfileComponent],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, TenantProfileComponent, NgClass],
   template: `
     <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
@@ -401,126 +401,166 @@ const GOVERNORATES: GovernorateOption[] = [
           </div>
         </div>
 
-        <!-- Users Table View (Desktop md+) -->
+        <!-- Users Loading State -->
+        @if (isLoadingUsers()) {
+          <div class="flex justify-center items-center py-20">
+            <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        }
+
+        <!-- Users Table & Mobile Cards -->
         @if (!isLoadingUsers()) {
-          <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl">
-            <div class="hidden md:block overflow-x-auto font-sans">
-              <table class="w-full text-left rtl:text-right">
-                <thead>
-                  <tr class="border-b border-slate-800 text-slate-500 text-xs font-bold uppercase tracking-wider bg-slate-950/40">
-                    <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_FIRST_NAME' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_LAST_NAME' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_EMAIL' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">Contact</th>
-                    <th class="px-6 py-4 font-cairo">WhatsApp</th>
-                    <th class="px-6 py-4 text-center font-cairo">{{ 'USERS.TABLE_ROLE' | translate }}</th>
-                    <th class="px-6 py-4 font-cairo">{{ 'USERS.TABLE_CREATED_AT' | translate }}</th>
-                    <th class="px-6 py-4 text-center font-cairo">Action</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60 text-sm">
-                  @for (usr of users(); track usr.id) {
-                    <tr class="hover:bg-slate-900/40 transition-colors duration-150 text-slate-300">
-                      <td class="px-6 py-4">
-                        <div class="flex items-center justify-between gap-3">
-                          <div class="min-w-0">
-                            <div class="font-bold text-white truncate">{{ usr.firstName }}</div>
-                            <div class="mt-1 inline-flex items-center gap-2 text-xs font-semibold"
-                              [class.text-emerald-400]="usr.isActive"
-                              [class.text-rose-400]="!usr.isActive">
-                              <span class="h-2.5 w-2.5 rounded-full shadow-[0_0_10px_currentColor]"
-                                [class.bg-emerald-400]="usr.isActive"
-                                [class.bg-rose-400]="!usr.isActive"></span>
-                              {{ usr.isActive ? ('USERS.STATUS_ACTIVE' | translate) : ('USERS.STATUS_SUSPENDED' | translate) }}
+          <div class="space-y-4 font-cairo" dir="rtl">
+            
+            <!-- Desktop & Tablet Table (Hidden on small mobile) -->
+            <div class="hidden md:block bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+              <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                  <thead>
+                    <tr class="bg-slate-950/80 border-b border-slate-800 text-xs font-bold text-slate-400 select-none">
+                      <th class="py-3.5 px-4">المستخدم</th>
+                      <th class="py-3.5 px-4">البريد الإلكتروني</th>
+                      <th class="py-3.5 px-4">الهاتف / Contact</th>
+                      <th class="py-3.5 px-4">واتساب</th>
+                      <th class="py-3.5 px-4">الدور الوظيفي</th>
+                      <th class="py-3.5 px-4 text-center">الحالة</th>
+                      <th class="py-3.5 px-4 text-left">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800/60 text-sm">
+                    @for (user of users(); track user.id) {
+                      <tr class="hover:bg-slate-850/40 transition-colors">
+                        
+                        <!-- User Name -->
+                        <td class="py-3 px-4">
+                          <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200">
+                              {{ user.firstName?.charAt(0) || '👤' }}
                             </div>
-
-                            @if (usr.id === currentUserId()) {
-                              <span class="mt-2 inline-flex rounded-full border border-slate-700 bg-slate-900/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                {{ 'USERS.CURRENT_USER' | translate }}
-                              </span>
-                            }
+                            <div>
+                              <span class="font-bold text-white block">{{ user.firstName }} {{ user.lastName }}</span>
+                              <span class="text-[11px] text-slate-400 font-mono">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+                            </div>
                           </div>
+                        </td>
 
-                          <button
-                            type="button"
-                            (click)="toggleUserStatus(usr)"
-                            [disabled]="isUserToggleLoading(usr.id) || usr.id === currentUserId()"
-                            class="inline-flex items-center gap-2 rounded-full border px-2 py-1.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            [class.border-emerald-500/30]="usr.isActive"
-                            [class.bg-emerald-500/10]="usr.isActive"
-                            [class.text-emerald-400]="usr.isActive"
-                            [class.hover:bg-emerald-500/20]="usr.isActive"
-                            [class.border-rose-500/30]="!usr.isActive"
-                            [class.bg-rose-500/10]="!usr.isActive"
-                            [class.text-rose-400]="!usr.isActive"
-                            [class.hover:bg-rose-500/20]="!usr.isActive"
-                            [class.shadow-[0_0_18px_rgba(16,185,129,0.12)]]="usr.isActive"
-                            [class.shadow-[0_0_18px_rgba(244,63,94,0.12)]]="!usr.isActive">
-                            @if (isUserToggleLoading(usr.id)) {
-                              <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-                                <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            } @else if (usr.id === currentUserId()) {
-                              <span class="text-[10px] font-bold uppercase tracking-wider">
-                                {{ 'USERS.CURRENT_USER' | translate }}
-                              </span>
-                            } @else {
-                              <span class="h-2.5 w-2.5 rounded-full"
-                                [class.bg-emerald-400]="usr.isActive"
-                                [class.bg-rose-400]="!usr.isActive"></span>
-                              <span class="text-[10px] font-bold uppercase tracking-wider">
-                                {{ usr.isActive ? ('USERS.ACTION_SUSPEND' | translate) : ('USERS.ACTION_ACTIVATE' | translate) }}
-                              </span>
-                            }
-                          </button>
-                        </div>
-                      </td>
-                      <td class="px-6 py-4 font-medium text-slate-300">{{ usr.lastName }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.email }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.personalPhone || '—' }}</td>
-                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.whatsAppPhone || '—' }}</td>
-                      <td class="px-6 py-4 text-center">
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-cairo"
-                          [class.bg-indigo-500/10]="usr.role === 'Manager'"
-                          [class.text-indigo-400]="usr.role === 'Manager'"
-                          [class.border]="usr.role === 'Manager'"
-                          [class.border-indigo-500/20]="usr.role === 'Manager'"
-                          [class.bg-emerald-500/10]="usr.role === 'SiteEngineer' || usr.role === 'DesignEngineer'"
-                          [class.text-emerald-400]="usr.role === 'SiteEngineer' || usr.role === 'DesignEngineer'"
-                          [class.border-emerald-500/20]="usr.role === 'SiteEngineer' || usr.role === 'DesignEngineer'"
-                          [class.border]="usr.role === 'SiteEngineer' || usr.role === 'DesignEngineer'"
-                          [class.bg-purple-500/10]="usr.role === 'Accountant'"
-                          [class.text-purple-400]="usr.role === 'Accountant'"
-                          [class.border-purple-500/20]="usr.role === 'Accountant'"
-                          [class.border]="usr.role === 'Accountant'">
-                          {{ 'USERS.ROLES.' + usr.role | translate }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ usr.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                      <td class="px-6 py-4 text-center">
-                        @if (usr.whatsAppPhone) {
-                          <button
-                            type="button"
-                            (click)="openWhatsAppForUser(usr)"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer font-cairo">
-                            إرسال عبر الواتساب
-                          </button>
+                        <!-- Email -->
+                        <td class="py-3 px-4 font-mono text-xs text-slate-300">{{ user.email }}</td>
+
+                        <!-- Contact -->
+                        <td class="py-3 px-4 font-mono text-xs text-slate-300" dir="ltr">{{ user.personalPhone || user.phoneNumber || '-' }}</td>
+
+                        <!-- WhatsApp -->
+                        <td class="py-3 px-4 font-mono text-xs text-slate-300" dir="ltr">{{ user.whatsAppPhone || user.whatsappNumber || user.phoneNumber || '-' }}</td>
+
+                        <!-- Role Badge -->
+                        <td class="py-3 px-4">
+                          <span class="px-2.5 py-1 rounded-lg text-xs font-bold inline-block"
+                                [ngClass]="getRoleBadge(user.role).class">
+                            {{ getRoleBadge(user.role).label }}
+                          </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="py-3 px-4 text-center">
+                          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold"
+                                [ngClass]="user.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'">
+                            <span class="w-1.5 h-1.5 rounded-full" [ngClass]="user.isActive ? 'bg-emerald-400' : 'bg-rose-400'"></span>
+                            {{ user.isActive ? 'نشط' : 'معطل' }}
+                          </span>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-3 px-4 text-left">
+                          @if (user.id !== currentUserId() && !user.isCurrentAccount) {
+                            <button 
+                                    (click)="toggleUserStatus(user)" 
+                                    [disabled]="isUserToggleLoading(user.id)"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
+                                    [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
+                              @if (isUserToggleLoading(user.id)) {
+                                <span class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                              } @else {
+                                {{ user.isActive ? 'إيقاف' : 'تفعيل' }}
+                              }
+                            </button>
+                          } @else {
+                            <span class="text-xs text-slate-400 font-semibold px-2 py-1 bg-slate-800 rounded-lg">الحساب الحالي</span>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-500 font-cairo text-sm">
+                          <p class="font-bold text-slate-400 font-cairo">{{ 'USERS.NO_USERS' | translate }}</p>
+                          <p class="text-xs text-slate-500 mt-1 font-cairo">{{ 'USERS.CREATE_FIRST' | translate }}</p>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Mobile Card View (Visible on small screens) -->
+            <div class="block md:hidden space-y-3">
+              @for (user of users(); track user.id) {
+                <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-200">
+                        {{ user.firstName?.charAt(0) || '👤' }}
+                      </div>
+                      <div>
+                        <h4 class="text-sm font-bold text-white">{{ user.firstName }} {{ user.lastName }}</h4>
+                        <span class="text-[11px] text-slate-400">{{ user.email }}</span>
+                      </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-xs font-bold" [ngClass]="getRoleBadge(user.role).class">
+                      {{ getRoleBadge(user.role).label }}
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+                    <div>
+                      <span class="text-slate-400 block">الهاتف:</span>
+                      <span class="text-slate-200 font-mono" dir="ltr">{{ user.personalPhone || user.phoneNumber || '-' }}</span>
+                    </div>
+                    <div>
+                      <span class="text-slate-400 block">الحالة:</span>
+                      <span [ngClass]="user.isActive ? 'text-emerald-400' : 'text-rose-400'" class="font-bold">
+                        {{ user.isActive ? 'نشط' : 'معطل' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-500 font-mono">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+                    @if (user.id !== currentUserId() && !user.isCurrentAccount) {
+                      <button 
+                              (click)="toggleUserStatus(user)" 
+                              [disabled]="isUserToggleLoading(user.id)"
+                              class="px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
+                              [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
+                        @if (isUserToggleLoading(user.id)) {
+                          <span class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
                         } @else {
-                          <span class="text-slate-600 text-xs">—</span>
+                          {{ user.isActive ? 'إيقاف' : 'تفعيل' }}
                         }
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="8" class="px-6 py-12 text-center text-slate-500 font-cairo text-sm">
-                        <p class="font-bold text-slate-400 font-cairo">{{ 'USERS.NO_USERS' | translate }}</p>
-                        <p class="text-xs text-slate-500 mt-1 font-cairo">{{ 'USERS.CREATE_FIRST' | translate }}</p>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+                      </button>
+                    } @else {
+                      <span class="text-xs text-slate-400 font-semibold px-2 py-1 bg-slate-800 rounded-lg">الحساب الحالي</span>
+                    }
+                  </div>
+                </div>
+              } @empty {
+                <div class="py-8 text-center text-slate-500 font-cairo text-sm bg-slate-900/40 rounded-xl border border-slate-800">
+                  {{ 'USERS.NO_USERS' | translate }}
+                </div>
+              }
             </div>
           </div>
         }
@@ -1488,6 +1528,7 @@ export class ProjectsComponent implements OnInit {
   private readonly confirmService = inject(ConfirmModalService);
   private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
   @ViewChild('profileMapContainer') profileMapContainer?: ElementRef<HTMLDivElement>;
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
   readonly togglingUserId = signal<string | null>(null);
@@ -1495,6 +1536,26 @@ export class ProjectsComponent implements OnInit {
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
   readonly isEngineer = computed(() => ['manager', 'siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
+
+  getRoleBadge(role: string): { label: string; class: string } {
+    const normalized = (role || '').toUpperCase();
+    if (normalized.includes('TENANTOWNER') || normalized.includes('OWNER')) {
+      return { label: 'مالك المنشأة', class: 'bg-purple-500/10 text-purple-400 border border-purple-500/20' };
+    }
+    if (normalized.includes('ACCOUNTANT')) {
+      return { label: 'محاسب', class: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' };
+    }
+    if (normalized.includes('ENGINEER')) {
+      return { label: 'مهندس موقع', class: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' };
+    }
+    if (normalized.includes('MANAGER')) {
+      return { label: 'مدير مشروع', class: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' };
+    }
+    if (normalized.includes('CLIENT')) {
+      return { label: 'عميل', class: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
+    }
+    return { label: role || 'مستخدم', class: 'bg-slate-800 text-slate-300 border border-slate-700' };
+  }
 
   // Quota & Billing Signals
   readonly isUpgradeModalOpen = signal(false);
@@ -1886,6 +1947,7 @@ export class ProjectsComponent implements OnInit {
         } else {
           this.projectError.set(response.message || 'Failed to load projects.');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoadingProjects.set(false);
@@ -1894,6 +1956,7 @@ export class ProjectsComponent implements OnInit {
             ? 'Session expired. Please log in again.'
             : err.error?.message || 'Error connecting to backend.'
         );
+        this.cdr.markForCheck();
       }
     });
   }
@@ -1909,6 +1972,7 @@ export class ProjectsComponent implements OnInit {
         } else {
           this.userError.set(response.message || 'Failed to load users.');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoadingUsers.set(false);
@@ -1917,6 +1981,7 @@ export class ProjectsComponent implements OnInit {
             ? 'Session expired. Please log in again.'
             : err.error?.message || 'Error connecting to backend.'
         );
+        this.cdr.markForCheck();
       }
     });
   }
@@ -1958,6 +2023,7 @@ export class ProjectsComponent implements OnInit {
             'error'
           );
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.togglingUserId.set(null);
@@ -1966,6 +2032,7 @@ export class ProjectsComponent implements OnInit {
           this.translateService.instant(err.error?.message || err.message || 'USERS.STATUS_UPDATE_FAILED'),
           'error'
         );
+        this.cdr.markForCheck();
       }
     });
   }
@@ -2006,7 +2073,11 @@ export class ProjectsComponent implements OnInit {
                          res.data.longitude !== null && res.data.longitude !== undefined;
           const hasAddress = !!res.data.manualAddress && res.data.manualAddress.trim() !== '';
           this.authService.updateProfileCompletionStatus(hasMap && hasAddress);
+          this.cdr.markForCheck();
         }
+      },
+      error: () => {
+        this.cdr.markForCheck();
       }
     });
   }
@@ -2228,11 +2299,13 @@ export class ProjectsComponent implements OnInit {
         } else {
           this.projectValidationErrors.set(response.errors || [response.message || 'Failed to create project.']);
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isSavingProject.set(false);
         const errors = err.error?.errors || [err.error?.message || err.message || 'Error occurred.'];
         this.projectValidationErrors.set(Array.isArray(errors) ? errors : [errors]);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -2287,11 +2360,13 @@ export class ProjectsComponent implements OnInit {
         } else {
           this.userValidationErrors.set(response.errors || [response.message || 'Failed to add user.']);
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isSavingUser.set(false);
         const errors = err.error?.errors || [err.error?.message || err.message || 'Error occurred.'];
         this.userValidationErrors.set(Array.isArray(errors) ? errors : [errors]);
+        this.cdr.markForCheck();
       }
     });
   }

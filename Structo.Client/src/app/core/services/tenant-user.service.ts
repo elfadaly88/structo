@@ -12,8 +12,11 @@ export interface UserDto {
   email: string;
   personalPhone: string | null;
   whatsAppPhone: string | null;
-  role: 'SuperAdmin' | 'TenantOwner' | 'Manager' | 'Accountant' | 'SiteEngineer' | 'DesignEngineer';
+  phoneNumber?: string | null;
+  whatsappNumber?: string | null;
+  role: 'SuperAdmin' | 'TenantOwner' | 'Manager' | 'Accountant' | 'SiteEngineer' | 'DesignEngineer' | string;
   createdAt: string;
+  isCurrentAccount?: boolean;
 }
 
 export interface UserCreateDto {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, signal, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -100,20 +100,16 @@ export interface PendingUser {
                         <span class="text-xs text-slate-500 font-semibold">—</span>
                       }
                     </td>
-                    <td class="py-4 px-6 text-xs text-slate-400 font-mono tabular-nums">
+                    <td class="py-4 px-6 font-mono text-xs tabular-nums text-slate-400">
                       {{ user.createdAt | date: 'dd/MM/yyyy h:mm a' }}
                     </td>
                     <td class="py-4 px-6 text-right">
                       <button
                         (click)="approve(user)"
                         [disabled]="processingId() === user.id"
-                        class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/10 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-cairo"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50 font-cairo cursor-pointer"
                       >
-                        @if (processingId() === user.id) {
-                          Processing...
-                        } @else {
-                          تفعيل وتنشيط / Activate & Approve
-                        }
+                        {{ processingId() === user.id ? 'جاري التفعيل...' : 'تفعيل وتنشيط / Approve' }}
                       </button>
                     </td>
                   </tr>
@@ -123,37 +119,51 @@ export interface PendingUser {
           </table>
         </div>
 
-        <!-- Mobile Cards View (< md) -->
-        <div class="block md:hidden p-4 space-y-3">
+        <!-- Mobile Card View (< md) -->
+        <div class="block md:hidden divide-y divide-slate-800/60 font-cairo">
           @if (isLoading()) {
-            <div class="py-8 text-center text-slate-500 text-xs font-cairo animate-pulse">Loading...</div>
+            <div class="py-12 text-center text-slate-500 font-semibold animate-pulse">
+              Loading pending users...
+            </div>
           } @else if (pendingUsers().length === 0) {
-            <div class="py-8 text-center text-slate-500 text-xs font-cairo">لا يوجد مستخدمون بانتظار التفعيل حالياً.</div>
+            <div class="py-12 text-center text-slate-500 font-semibold">
+              لا يوجد مستخدمون بانتظار التفعيل حالياً / No pending users awaiting approval.
+            </div>
           } @else {
             @for (user of pendingUsers(); track user.id) {
-              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md">
-                <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+              <div class="p-4 space-y-3">
+                <div class="flex items-start justify-between">
                   <div>
-                    <div class="font-bold text-white text-sm font-cairo">{{ user.firstName }} {{ user.lastName }}</div>
-                    <div class="text-xs text-slate-400 font-mono tabular-nums">{{ user.email }}</div>
+                    <div class="font-bold text-white text-base">{{ user.firstName }} {{ user.lastName }}</div>
+                    <div class="text-xs text-slate-400 font-mono tabular-nums mt-0.5">{{ user.email }}</div>
                   </div>
                   @if (user.subscriptionPlan) {
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">{{ user.subscriptionPlan }}</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [ngClass]="{
+                        'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20': user.subscriptionPlan === 'Premium',
+                        'bg-blue-500/10 text-blue-400 border border-blue-500/20': user.subscriptionPlan === 'Standard',
+                        'bg-slate-500/10 text-slate-400 border border-slate-500/20': user.subscriptionPlan === 'Free'
+                      }">
+                      {{ user.subscriptionPlan }}
+                    </span>
                   }
                 </div>
+
                 @if (user.tenantName) {
-                  <div class="text-xs text-slate-300 font-cairo flex items-center justify-between">
-                    <span>🏢 {{ user.tenantName }}</span>
-                    <span class="font-mono tabular-nums text-slate-500 text-[10px]">ID: {{ user.tenantId }}</span>
+                  <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-xs">
+                    <div class="text-slate-400 font-semibold mb-0.5">الشركة التابعة:</div>
+                    <div class="font-bold text-white text-sm">{{ user.tenantName }}</div>
+                    <div class="text-[10px] text-slate-500 font-mono tabular-nums mt-0.5">ID: {{ user.tenantId }}</div>
                   </div>
                 }
+
                 <div class="text-[11px] text-slate-500 font-mono tabular-nums">
                   📅 {{ user.createdAt | date: 'dd/MM/yyyy h:mm a' }}
                 </div>
                 <button
                   (click)="approve(user)"
                   [disabled]="processingId() === user.id"
-                  class="w-full min-h-[44px] bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold font-cairo shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50"
+                  class="w-full min-h-[44px] bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold font-cairo shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {{ processingId() === user.id ? 'Processing...' : 'تفعيل وتنشيط / Activate & Approve' }}
                 </button>
@@ -169,6 +179,7 @@ export class PendingUsersComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly pendingUsers = signal<PendingUser[]>([]);
   readonly isLoading = signal(false);
@@ -188,10 +199,12 @@ export class PendingUsersComponent implements OnInit {
           if (res.success && res.data) {
             this.pendingUsers.set(res.data);
           }
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.isLoading.set(false);
           this.toast.show('خطأ / Error', 'Failed to load pending users.', 'error');
+          this.cdr.markForCheck();
         }
       });
   }
@@ -209,10 +222,12 @@ export class PendingUsersComponent implements OnInit {
           } else {
             this.toast.show('خطأ / Error', res.message || 'Failed to approve user.', 'error');
           }
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.processingId.set(null);
           this.toast.show('خطأ / Error', err.error?.message || err.message || 'Failed to approve user.', 'error');
+          this.cdr.markForCheck();
         }
       });
   }

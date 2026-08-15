@@ -254,7 +254,14 @@
       "Manager": "Project Manager",
       "Accountant": "Accountant",
       "SiteEngineer": "Site Engineer",
-      "DesignEngineer": "Design Engineer"
+      "DesignEngineer": "Design Engineer",
+      "TenantOwner": "Tenant Owner",
+      "TENANTOWNER": "Tenant Owner",
+      "Owner": "Owner",
+      "OWNER": "Owner",
+      "SuperAdmin": "Super Admin",
+      "Client": "Client",
+      "CLIENT": "Client"
     }
   },
   "MARKETPLACE": {
