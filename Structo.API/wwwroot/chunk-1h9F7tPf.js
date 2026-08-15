@@ -1,0 +1,1 @@
+import {D,at as et,aK as ph,aC as N}from'./main-JKHCFGUS.js';function w(t){t||(t=D(et));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(ph(i))}export{w};

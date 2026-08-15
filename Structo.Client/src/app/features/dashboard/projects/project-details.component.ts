@@ -3342,11 +3342,11 @@ export class ProjectDetailsComponent implements OnInit {
 
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
-  readonly isTenantOwner = computed(() => ['tenantowner', 'admin'].includes(this.currentUserRole().toLowerCase()));
-  readonly isProjectManager = computed(() => this.currentUserRole().toLowerCase() === 'manager');
-  readonly isAccountant = computed(() => this.currentUserRole().toLowerCase() === 'accountant');
+  readonly isTenantOwner = this.authService.isTenantOwner;
+  readonly isProjectManager = this.authService.isManager;
+  readonly isAccountant = this.authService.isAccountant;
   readonly isOwnerOrAccountant = computed(() => ['tenantowner', 'accountant', 'manager', 'admin'].includes(this.currentUserRole().toLowerCase()));
-  readonly isEngineer = computed(() => ['siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
+  readonly isEngineer = this.authService.isEngineer;
   readonly canManageMembers = computed(() => this.isTenantOwner() || this.isProjectManager());
   readonly canManageFinancials = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isAccountant());
 

@@ -25,6 +25,23 @@ export class AuthService {
   // Core signals for state management
   readonly currentUser = signal<UserSession | null>(null);
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isTenantOwner = computed(() => {
+    const role = this.currentUser()?.role?.toLowerCase() || '';
+    return ['tenantowner', 'admin'].includes(role);
+  });
+  readonly isSuperAdmin = computed(() => {
+    return this.currentUser()?.role?.toLowerCase() === 'superadmin';
+  });
+  readonly isAccountant = computed(() => {
+    return this.currentUser()?.role?.toLowerCase() === 'accountant';
+  });
+  readonly isManager = computed(() => {
+    return this.currentUser()?.role?.toLowerCase() === 'manager';
+  });
+  readonly isEngineer = computed(() => {
+    const role = this.currentUser()?.role?.toLowerCase() || '';
+    return ['siteengineer', 'designengineer'].includes(role);
+  });
 
   constructor() {
     this.hydrateAuthState();
