@@ -19,6 +19,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { take } from 'rxjs';
 import * as L from 'leaflet';
 import { TenantProfileComponent } from '../tenant-profile/tenant-profile.component';
+import { UsersComponent } from '../users/users.component';
 
 interface MapSearchResult {
   lat: string;
@@ -62,7 +63,7 @@ const GOVERNORATES: GovernorateOption[] = [
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, TenantProfileComponent, NgClass],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, TenantProfileComponent, UsersComponent, NgClass],
   template: `
     <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
@@ -385,185 +386,7 @@ const GOVERNORATES: GovernorateOption[] = [
 
       <!-- SECTION 2: COMPANY USERS MANAGEMENT -->
       @if (activeTab() === 'users' && currentUserRole() === 'TenantOwner') {
-        <!-- Users Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'USERS.STAT_TOTAL' | translate }}</span>
-            <h3 class="text-3xl font-extrabold text-white mt-1">{{ users().length }}</h3>
-          </div>
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'USERS.STAT_MANAGERS' | translate }}</span>
-            <h3 class="text-3xl font-extrabold text-indigo-400 mt-1">{{ managerCount() }}</h3>
-          </div>
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'USERS.STAT_ENGINEERS' | translate }}</span>
-            <h3 class="text-3xl font-extrabold text-emerald-400 mt-1">{{ engineerCount() }}</h3>
-          </div>
-        </div>
-
-        <!-- Users Loading State -->
-        @if (isLoadingUsers()) {
-          <div class="flex justify-center items-center py-20">
-            <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        }
-
-        <!-- Users Table & Mobile Cards -->
-        @if (!isLoadingUsers()) {
-          <div class="space-y-4 font-cairo" dir="rtl">
-            
-            <!-- Desktop & Tablet Table (Hidden on small mobile) -->
-            <div class="hidden md:block bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-              <div class="overflow-x-auto">
-                <table class="w-full text-right border-collapse">
-                  <thead>
-                    <tr class="bg-slate-950/80 border-b border-slate-800 text-xs font-bold text-slate-400 select-none">
-                      <th class="py-3.5 px-4">المستخدم</th>
-                      <th class="py-3.5 px-4">البريد الإلكتروني</th>
-                      <th class="py-3.5 px-4">الهاتف / Contact</th>
-                      <th class="py-3.5 px-4">واتساب</th>
-                      <th class="py-3.5 px-4">الدور الوظيفي</th>
-                      <th class="py-3.5 px-4 text-center">الحالة</th>
-                      <th class="py-3.5 px-4 text-left">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-800/60 text-sm">
-                    @for (user of users(); track user.id) {
-                      <tr class="hover:bg-slate-850/40 transition-colors">
-                        
-                        <!-- User Name -->
-                        <td class="py-3 px-4">
-                          <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200">
-                              {{ user.firstName?.charAt(0) || '👤' }}
-                            </div>
-                            <div>
-                              <span class="font-bold text-white block">{{ user.firstName }} {{ user.lastName }}</span>
-                              <span class="text-[11px] text-slate-400 font-mono">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <!-- Email -->
-                        <td class="py-3 px-4 font-mono text-xs text-slate-300">{{ user.email }}</td>
-
-                        <!-- Contact -->
-                        <td class="py-3 px-4 font-mono text-xs text-slate-300" dir="ltr">{{ user.personalPhone || user.phoneNumber || '-' }}</td>
-
-                        <!-- WhatsApp -->
-                        <td class="py-3 px-4 font-mono text-xs text-slate-300" dir="ltr">{{ user.whatsAppPhone || user.whatsappNumber || user.phoneNumber || '-' }}</td>
-
-                        <!-- Role Badge -->
-                        <td class="py-3 px-4">
-                          <span class="px-2.5 py-1 rounded-lg text-xs font-bold inline-block"
-                                [ngClass]="getRoleBadge(user.role).class">
-                            {{ getRoleBadge(user.role).label }}
-                          </span>
-                        </td>
-
-                        <!-- Status -->
-                        <td class="py-3 px-4 text-center">
-                          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold"
-                                [ngClass]="user.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'">
-                            <span class="w-1.5 h-1.5 rounded-full" [ngClass]="user.isActive ? 'bg-emerald-400' : 'bg-rose-400'"></span>
-                            {{ user.isActive ? 'نشط' : 'معطل' }}
-                          </span>
-                        </td>
-
-                        <!-- Actions -->
-                        <td class="py-3 px-4 text-left">
-                          @if (user.id !== currentUserId() && !user.isCurrentAccount) {
-                            <button 
-                                    (click)="toggleUserStatus(user)" 
-                                    [disabled]="isUserToggleLoading(user.id)"
-                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
-                                    [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
-                              @if (isUserToggleLoading(user.id)) {
-                                <span class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                              } @else {
-                                {{ user.isActive ? 'إيقاف' : 'تفعيل' }}
-                              }
-                            </button>
-                          } @else {
-                            <span class="text-xs text-slate-400 font-semibold px-2 py-1 bg-slate-800 rounded-lg">الحساب الحالي</span>
-                          }
-                        </td>
-                      </tr>
-                    } @empty {
-                      <tr>
-                        <td colspan="7" class="py-12 text-center text-slate-500 font-cairo text-sm">
-                          <p class="font-bold text-slate-400 font-cairo">{{ 'USERS.NO_USERS' | translate }}</p>
-                          <p class="text-xs text-slate-500 mt-1 font-cairo">{{ 'USERS.CREATE_FIRST' | translate }}</p>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Mobile Card View (Visible on small screens) -->
-            <div class="block md:hidden space-y-3">
-              @for (user of users(); track user.id) {
-                <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-200">
-                        {{ user.firstName?.charAt(0) || '👤' }}
-                      </div>
-                      <div>
-                        <h4 class="text-sm font-bold text-white">{{ user.firstName }} {{ user.lastName }}</h4>
-                        <span class="text-[11px] text-slate-400">{{ user.email }}</span>
-                      </div>
-                    </div>
-                    <span class="px-2 py-0.5 rounded text-xs font-bold" [ngClass]="getRoleBadge(user.role).class">
-                      {{ getRoleBadge(user.role).label }}
-                    </span>
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
-                    <div>
-                      <span class="text-slate-400 block">الهاتف:</span>
-                      <span class="text-slate-200 font-mono" dir="ltr">{{ user.personalPhone || user.phoneNumber || '-' }}</span>
-                    </div>
-                    <div>
-                      <span class="text-slate-400 block">الحالة:</span>
-                      <span [ngClass]="user.isActive ? 'text-emerald-400' : 'text-rose-400'" class="font-bold">
-                        {{ user.isActive ? 'نشط' : 'معطل' }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
-                    <span class="text-[11px] text-slate-500 font-mono">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
-                    @if (user.id !== currentUserId() && !user.isCurrentAccount) {
-                      <button 
-                              (click)="toggleUserStatus(user)" 
-                              [disabled]="isUserToggleLoading(user.id)"
-                              class="px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
-                              [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
-                        @if (isUserToggleLoading(user.id)) {
-                          <span class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                        } @else {
-                          {{ user.isActive ? 'إيقاف' : 'تفعيل' }}
-                        }
-                      </button>
-                    } @else {
-                      <span class="text-xs text-slate-400 font-semibold px-2 py-1 bg-slate-800 rounded-lg">الحساب الحالي</span>
-                    }
-                  </div>
-                </div>
-              } @empty {
-                <div class="py-8 text-center text-slate-500 font-cairo text-sm bg-slate-900/40 rounded-xl border border-slate-800">
-                  {{ 'USERS.NO_USERS' | translate }}
-                </div>
-              }
-            </div>
-          </div>
-        }
+        <app-users></app-users>
       }
 
       <!-- SECTION 3: CORPORATE PROFILE EDITOR -->
@@ -1337,146 +1160,140 @@ const GOVERNORATES: GovernorateOption[] = [
       </div>
     }
 
-    <!-- MODAL 2: REGISTER COMPANY USER -->
-    <!-- MODAL 2: REGISTER COMPANY USER -->
+    <!-- MODAL 2: REGISTER COMPANY USER (Compact Zero-Scroll Design) -->
     @if (isUserModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm" dir="rtl">
         <div (click)="closeUserModal()" class="absolute inset-0"></div>
 
-        <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" autocomplete="off" class="relative z-10 w-full max-w-2xl bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-          <!-- 1. Fixed Modal Header -->
-          <div class="flex items-center justify-between p-5 border-b border-slate-800 flex-shrink-0">
-            <div>
-              <h3 class="text-lg font-bold text-white">{{ 'USERS.MODAL_TITLE' | translate }}</h3>
-              <p class="text-xs text-slate-400 mt-0.5">{{ 'USERS.MODAL_SUBTITLE' | translate }}</p>
+        <div class="relative z-10 bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden font-cairo flex flex-col">
+          
+          <!-- Modal Header -->
+          <div class="px-5 py-3.5 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm">
+                👤
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white leading-tight">إضافة مستخدم للشركة</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">تسجيل مهندس موقع أو محاسب أو عضو جديد تحت حساب شركتك</p>
+              </div>
             </div>
-            <button
-              type="button"
-              (click)="closeUserModal()"
-              class="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button type="button" (click)="closeUserModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+              ✕
             </button>
           </div>
 
-          <!-- 2. Scrollable Modal Form Body -->
-          <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 custom-scrollbar font-sans">
+          <!-- Modal Form Body (Compact & No Inner Scrollbar) -->
+          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" class="p-5 space-y-3.5">
+            
+            <!-- Name Grid (2 Columns on Tablet/Desktop, 1 on Mobile) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">
+                  الاسم الأول <span class="text-rose-400">*</span>
+                </label>
+                <input type="text" 
+                       formControlName="firstName" 
+                       placeholder="أحمد" 
+                       class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-cairo">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">
+                  اسم العائلة <span class="text-rose-400">*</span>
+                </label>
+                <input type="text" 
+                       formControlName="lastName" 
+                       placeholder="علي" 
+                       class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-cairo">
+              </div>
+            </div>
+
+            <!-- Email Field -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">
+                البريد الإلكتروني <span class="text-rose-400">*</span>
+              </label>
+              <input type="email" 
+                     formControlName="email" 
+                     placeholder="name@company.com" 
+                     class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono">
+              <p class="text-[10px] text-indigo-300/80 mt-1 flex items-center gap-1">
+                <span>💡</span>
+                <span>إذا تم استخدام بريد Gmail، يمكن للموظف تسجيل الدخول مباشرة عبر 'Google Sign-in'.</span>
+              </p>
+            </div>
+
+            <!-- Phone Numbers Grid (2 Columns on Tablet/Desktop, 1 on Mobile) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">الهاتف الشخصي</label>
+                <input type="tel" 
+                       formControlName="personalPhone" 
+                       placeholder="01000000000" 
+                       class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono text-left" 
+                       dir="ltr">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">رقم الواتساب</label>
+                <input type="tel" 
+                       formControlName="whatsAppPhone" 
+                       placeholder="01000000000" 
+                       class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono text-left" 
+                       dir="ltr">
+              </div>
+            </div>
+
+            <!-- Password & Role Grid (2 Columns on Tablet/Desktop) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">
+                  كلمة المرور المؤقتة <span class="text-rose-400">*</span>
+                </label>
+                <input type="password" 
+                       formControlName="password" 
+                       placeholder="••••••••" 
+                       class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">
+                  الدور الوظيفي <span class="text-rose-400">*</span>
+                </label>
+                <select formControlName="role" 
+                        class="w-full px-3 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white outline-none transition-colors cursor-pointer font-cairo">
+                  <option value="SiteEngineer">مهندس موقع</option>
+                  <option value="Accountant">محاسب</option>
+                  <option value="Manager">مدير مشاريع</option>
+                  <option value="DesignEngineer">مهندس تصميم</option>
+                </select>
+              </div>
+            </div>
+
             @if (userValidationErrors().length > 0) {
-              <div class="rounded-xl bg-red-500/10 border border-red-500/30 p-3.5 text-xs text-red-400 space-y-1 font-cairo">
-                <span class="font-bold block mb-1">{{ 'PROJECTS.VALIDATION_TITLE' | translate }}</span>
+              <div class="rounded-xl bg-red-500/10 border border-red-500/30 p-2.5 text-xs text-red-400 space-y-0.5 font-cairo">
                 @for (err of userValidationErrors(); track err) {
                   <div>• {{ err }}</div>
                 }
               </div>
             }
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="usr-first" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_FIRST_NAME' | translate }} <span class="text-red-400">*</span></label>
-                <input
-                  id="usr-first"
-                  type="text"
-                  formControlName="firstName"
-                  autocomplete="off"
-                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all placeholder-slate-600 font-cairo"
-                  placeholder="e.g. Ahmed">
-              </div>
-
-              <div>
-                <label for="usr-last" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_LAST_NAME' | translate }} <span class="text-red-400">*</span></label>
-                <input
-                  id="usr-last"
-                  type="text"
-                  formControlName="lastName"
-                  autocomplete="off"
-                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all placeholder-slate-600 font-cairo"
-                  placeholder="e.g. Ali">
-              </div>
+            <!-- Actions Bar -->
+            <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-800/80">
+              <button type="button" 
+                      (click)="closeUserModal()" 
+                      class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+                إلغاء
+              </button>
+              <button type="submit" 
+                      [disabled]="userForm.invalid || isSavingUser()" 
+                      class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+                @if (isSavingUser()) {
+                  <span class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                }
+                <span>{{ isSavingUser() ? 'جاري الإضافة...' : 'إضافة مستخدم' }}</span>
+              </button>
             </div>
-
-            <div>
-              <label for="usr-email" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_EMAIL' | translate }} <span class="text-red-400">*</span></label>
-              <input
-                id="usr-email"
-                type="email"
-                formControlName="email"
-                autocomplete="off"
-                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all placeholder-slate-600 font-mono"
-                placeholder="e.g. ahmed.ali@company.com">
-              <p class="mt-1.5 text-xs text-indigo-400/80 font-cairo leading-relaxed">
-                💡 Tip: If you enter the employee's Gmail, they can log in instantly using 'Sign in with Google' without needing to enter a password!
-              </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="usr-contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">Personal Phone</label>
-                <input
-                  id="usr-contact-phone"
-                  type="tel"
-                  formControlName="personalPhone"
-                  inputmode="numeric"
-                  maxlength="11"
-                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all placeholder-slate-600 font-mono"
-                  placeholder="01xxxxxxxxx">
-              </div>
-
-              <div>
-                <label for="usr-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">WhatsApp Phone</label>
-                <input
-                  id="usr-whatsapp-phone"
-                  type="tel"
-                  formControlName="whatsAppPhone"
-                  inputmode="numeric"
-                  maxlength="11"
-                  class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all placeholder-slate-600 font-mono"
-                  placeholder="01xxxxxxxxx">
-              </div>
-            </div>
-
-            <div>
-              <label for="usr-pass" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_PASSWORD' | translate }} <span class="text-red-400">*</span></label>
-              <input
-                id="usr-pass"
-                type="password"
-                formControlName="password"
-                autocomplete="new-password"
-                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all placeholder-slate-600"
-                placeholder="Min 6 characters">
-            </div>
-
-            <div>
-              <label for="usr-role" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">{{ 'USERS.FIELD_ROLE' | translate }} <span class="text-red-400">*</span></label>
-              <select
-                id="usr-role"
-                formControlName="role"
-                class="w-full px-3.5 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 font-cairo transition-all">
-                <option value="Manager">{{ 'USERS.ROLES.Manager' | translate }}</option>
-                <option value="Accountant">{{ 'USERS.ROLES.Accountant' | translate }}</option>
-                <option value="SiteEngineer">{{ 'USERS.ROLES.SiteEngineer' | translate }}</option>
-                <option value="DesignEngineer">{{ 'USERS.ROLES.DesignEngineer' | translate }}</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 3. ALWAYS VISIBLE Sticky Footer Actions -->
-          <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end gap-3 flex-shrink-0 font-cairo">
-            <button
-              type="button"
-              (click)="closeUserModal()"
-              class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer">
-              {{ 'COMMON.CANCEL' | translate }}
-            </button>
-            <button
-              type="submit"
-              [disabled]="userForm.invalid || isSavingUser()"
-              class="px-6 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer">
-              @if (isSavingUser()) {
-                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              }
-              <span>{{ 'USERS.BTN_CREATE' | translate }}</span>
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     }
 
@@ -2333,6 +2150,18 @@ export class ProjectsComponent implements OnInit {
 
   closeUserModal(): void {
     this.isUserModalOpen.set(false);
+  }
+
+  closeModal(): void {
+    this.closeUserModal();
+  }
+
+  submitUser(): void {
+    this.onUserSubmit();
+  }
+
+  get isSubmitting(): boolean {
+    return this.isSavingUser();
   }
 
   onUserSubmit(): void {

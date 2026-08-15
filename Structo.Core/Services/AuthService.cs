@@ -14,8 +14,11 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
 {
     public async Task<(bool Success, LoginResponseDto? Data, string Message)> LoginAsync(LoginDto dto)
     {
+        var normalizedEmail = dto.Email?.Trim().ToLower() ?? string.Empty;
         var usersDbSet = context.Set<User>();
-        var user = await usersDbSet.IgnoreQueryFilters().Include(u => u.Tenant).FirstOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await usersDbSet.IgnoreQueryFilters()
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
         {

@@ -71,7 +71,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
-        loadComponent: () => import('./features/dashboard/projects/projects.component').then(m => m.ProjectsComponent),
+        loadComponent: () => import('./features/dashboard/users/users.component').then(m => m.UsersComponent),
         data: { roles: ['TenantOwner'] }
       },
       {

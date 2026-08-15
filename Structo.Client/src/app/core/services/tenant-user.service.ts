@@ -17,6 +17,8 @@ export interface UserDto {
   role: 'SuperAdmin' | 'TenantOwner' | 'Manager' | 'Accountant' | 'SiteEngineer' | 'DesignEngineer' | string;
   createdAt: string;
   isCurrentAccount?: boolean;
+  displayName?: string;
+  roleLabel?: string;
 }
 
 export interface UserCreateDto {

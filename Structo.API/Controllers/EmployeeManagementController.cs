@@ -68,10 +68,12 @@ namespace Structo.API.Controllers
                 });
             }
 
-            // Generate a cryptographically secure temporary password
-            var randomBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(12);
-            var secureTempPassword = Convert.ToBase64String(randomBytes) + "!1aA";
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(secureTempPassword);
+            // Determine password: use provided password or generate secure temporary password
+            string passwordToHash = !string.IsNullOrWhiteSpace(dto.Password)
+                ? dto.Password
+                : Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(12)) + "!1aA";
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(passwordToHash);
 
             var tenantId = _tenantAccessor.GetCurrentTenantId();
 
