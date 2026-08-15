@@ -15,10 +15,10 @@
       <button
         type="button"
         (click)="loadUsers()"
-        [disabled]="isLoading"
+        [disabled]="isLoading()"
         class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
       >
-        <svg class="w-3.5 h-3.5" [class.animate-spin]="isLoading" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-3.5 h-3.5" [class.animate-spin]="isLoading()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         <span>تحديث</span>
@@ -41,20 +41,20 @@
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
     <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
       <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">إجمالي المستخدمين</span>
-      <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">{{ users.length }}</h3>
+      <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">{{ users().length }}</h3>
     </div>
     <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
       <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">الحسابات النشطة</span>
-      <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ activeUsersCount }}</h3>
+      <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ activeUsersCount() }}</h3>
     </div>
     <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
       <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">المهندسون والمشرفون</span>
-      <h3 class="text-2xl sm:text-3xl font-extrabold text-indigo-400 mt-1 font-mono tabular-nums">{{ engineersCount }}</h3>
+      <h3 class="text-2xl sm:text-3xl font-extrabold text-indigo-400 mt-1 font-mono tabular-nums">{{ engineersCount() }}</h3>
     </div>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16 gap-3">
+  <div *ngIf="isLoading()" class="flex flex-col items-center justify-center py-16 gap-3">
     <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -63,7 +63,7 @@
   </div>
 
   <!-- Zero-Error Safe Desktop Table -->
-  <div *ngIf="!isLoading" class="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl font-cairo" dir="rtl">
+  <div *ngIf="!isLoading()" class="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl font-cairo" dir="rtl">
     <div class="overflow-x-auto">
       <table class="w-full text-right border-collapse min-w-[700px]">
         <thead>
@@ -78,7 +78,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800/60 text-sm">
-          <tr *ngFor="let user of users; trackBy: trackByUserId" class="hover:bg-slate-850/40 transition-colors">
+          <tr *ngFor="let user of users(); trackBy: trackByUserId" class="hover:bg-slate-850/40 transition-colors">
             
             <!-- Name & Avatar -->
             <td class="py-3 px-4">
@@ -123,18 +123,18 @@
               <button *ngIf="!user.isCurrentAccount" 
                       type="button"
                       (click)="toggleStatus(user)" 
-                      [disabled]="togglingUserId === user.id"
+                      [disabled]="togglingUserId() === user.id"
                       class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
                       [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
-                <span *ngIf="togglingUserId === user.id" class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                <span *ngIf="togglingUserId !== user.id">{{ user.isActive ? 'إيقاف' : 'تفعيل' }}</span>
+                <span *ngIf="togglingUserId() === user.id" class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                <span *ngIf="togglingUserId() !== user.id">{{ user.isActive ? 'إيقاف' : 'تفعيل' }}</span>
               </button>
               <span *ngIf="user.isCurrentAccount" class="text-xs text-slate-400 font-semibold px-2 py-1 bg-slate-800 rounded-lg">الحساب الحالي</span>
             </td>
           </tr>
 
           <!-- Empty State -->
-          <tr *ngIf="users.length === 0">
+          <tr *ngIf="users().length === 0">
             <td colspan="7" class="py-12 text-center text-slate-500 font-cairo text-sm">
               <p class="font-bold text-slate-400">لا يوجد مستخدمون حالياً</p>
               <p class="text-xs text-slate-500 mt-1">يمكنك إضافة مستخدمين جدد عبر النقر على زر "إضافة مستخدم جديد".</p>
@@ -146,8 +146,8 @@
   </div>
 
   <!-- Mobile Card View (< md) -->
-  <div *ngIf="!isLoading" class="block md:hidden space-y-3 font-cairo" dir="rtl">
-    <div *ngFor="let user of users; trackBy: trackByUserId" class="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 shadow-lg">
+  <div *ngIf="!isLoading()" class="block md:hidden space-y-3 font-cairo" dir="rtl">
+    <div *ngFor="let user of users(); trackBy: trackByUserId" class="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-3 shadow-lg">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-200 uppercase shrink-0">
@@ -183,11 +183,11 @@
           <button 
             type="button"
             (click)="toggleStatus(user)" 
-            [disabled]="togglingUserId === user.id"
+            [disabled]="togglingUserId() === user.id"
             class="px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
             [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
-            <span *ngIf="togglingUserId === user.id" class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-            <span *ngIf="togglingUserId !== user.id">{{ user.isActive ? 'إيقاف' : 'تفعيل' }}</span>
+            <span *ngIf="togglingUserId() === user.id" class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+            <span *ngIf="togglingUserId() !== user.id">{{ user.isActive ? 'إيقاف' : 'تفعيل' }}</span>
           </button>
         </div>
         <span *ngIf="user.isCurrentAccount" class="text-xs text-slate-400 font-semibold px-2 py-1 bg-slate-800 rounded-lg">الحساب الحالي</span>
@@ -195,14 +195,14 @@
     </div>
 
     <!-- Mobile Empty State -->
-    <div *ngIf="users.length === 0" class="py-8 text-center text-slate-500 font-cairo text-sm bg-slate-900/40 rounded-xl border border-slate-800">
+    <div *ngIf="users().length === 0" class="py-8 text-center text-slate-500 font-cairo text-sm bg-slate-900/40 rounded-xl border border-slate-800">
       <p class="font-bold text-slate-400">لا يوجد مستخدمون حالياً</p>
       <p class="text-xs text-slate-500 mt-1">انقر على زر "إضافة مستخدم جديد" لإنشاء أول حساب موظف.</p>
     </div>
   </div>
 
   <!-- ADD USER MODAL (Strict Responsive 92vh Independent Scroll Design) -->
-  <div *ngIf="isUserModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm" dir="rtl">
+  <div *ngIf="isUserModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm" dir="rtl">
     <div (click)="closeUserModal()" class="absolute inset-0"></div>
 
     <div class="relative z-10 bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden font-cairo flex flex-col max-h-[92vh]">
@@ -308,8 +308,8 @@
           </div>
         </div>
 
-        <div *ngIf="userValidationErrors.length > 0" class="rounded-xl bg-rose-500/10 border border-rose-500/30 p-2.5 text-xs text-rose-400 space-y-0.5 font-cairo">
-          <div *ngFor="let err of userValidationErrors">• {{ err }}</div>
+        <div *ngIf="userValidationErrors().length > 0" class="rounded-xl bg-rose-500/10 border border-rose-500/30 p-2.5 text-xs text-rose-400 space-y-0.5 font-cairo">
+          <div *ngFor="let err of userValidationErrors()">• {{ err }}</div>
         </div>
 
         <!-- Actions Bar -->
@@ -320,10 +320,10 @@
             إلغاء
           </button>
           <button type="submit" 
-                  [disabled]="userForm.invalid || isSavingUser" 
+                  [disabled]="userForm.invalid || isSavingUser()" 
                   class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
-            <span *ngIf="isSavingUser" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span>{{ isSavingUser ? 'جاري الإضافة...' : 'إضافة مستخدم' }}</span>
+            <span *ngIf="isSavingUser()" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>{{ isSavingUser() ? 'جاري الإضافة...' : 'إضافة مستخدم' }}</span>
           </button>
         </div>
       </form>

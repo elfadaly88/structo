@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, DestroyRef, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -1066,7 +1066,6 @@ export class FinancialsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly zone = inject(NgZone);
   readonly isEditTransactionModalOpen = signal(false);
   readonly isSavingTransaction = signal(false);
   selectedTransactionToEdit: FinancialTransactionMobileDto | null = null;
@@ -1343,14 +1342,10 @@ export class FinancialsComponent implements OnInit {
   loadData(): void {
     const projectId = this.selectedProjectId();
     if (!projectId) {
-      this.zone.run(() => {
-        this.pendingApprovals.set([]);
-        this.myPettyCash.set([]);
-        this.transactions.set([]);
-        this.financialSummary.set(null);
-        this.cdr.markForCheck();
-        this.cdr.detectChanges();
-      });
+      this.pendingApprovals.set([]);
+      this.myPettyCash.set([]);
+      this.transactions.set([]);
+      this.financialSummary.set(null);
       return;
     }
 
@@ -1360,11 +1355,7 @@ export class FinancialsComponent implements OnInit {
     this.financialService.getProjectFinancialSummary(projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.zone.run(() => {
-            this.financialSummary.set(res.data);
-            this.cdr.markForCheck();
-            this.cdr.detectChanges();
-          });
+          this.financialSummary.set(res.data);
         }
       }
     });
@@ -1382,12 +1373,8 @@ export class FinancialsComponent implements OnInit {
           const currentUserName = this.authService.currentUser()?.name;
           const myReqs = items.filter(i => i.issuedTo === currentUserName);
 
-          this.zone.run(() => {
-            this.pendingApprovals.set(pending);
-            this.myPettyCash.set(myReqs);
-            this.cdr.markForCheck();
-            this.cdr.detectChanges();
-          });
+          this.pendingApprovals.set(pending);
+          this.myPettyCash.set(myReqs);
         }
       }
     });

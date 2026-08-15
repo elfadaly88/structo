@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, NgZone, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -34,8 +34,6 @@ export interface SanitizedUser {
   `]
 })
 export class UsersComponent implements OnInit {
-  private readonly cdr = inject(ChangeDetectorRef);
-  private readonly ngZone = inject(NgZone);
   private readonly userService = inject(TenantUserService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
@@ -43,14 +41,14 @@ export class UsersComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  users: SanitizedUser[] = [];
-  isLoading = false;
-  togglingUserId: string | null = null;
+  readonly users = signal<SanitizedUser[]>([]);
+  readonly isLoading = signal(false);
+  readonly togglingUserId = signal<string | null>(null);
 
   // Add User Modal State
-  isUserModalOpen = false;
-  isSavingUser = false;
-  userValidationErrors: string[] = [];
+  readonly isUserModalOpen = signal(false);
+  readonly isSavingUser = signal(false);
+  readonly userValidationErrors = signal<string[]>([]);
 
   readonly userForm: FormGroup = this.fb.group({
     firstName: ['', Validators.required],
@@ -66,67 +64,60 @@ export class UsersComponent implements OnInit {
     return this.authService.currentUser()?.userId || '';
   }
 
-  get activeUsersCount(): number {
-    return this.users.filter(u => u.isActive).length;
-  }
+  readonly activeUsersCount = computed(() => this.users().filter(u => u.isActive).length);
 
-  get engineersCount(): number {
-    return this.users.filter(u => {
+  readonly engineersCount = computed(() =>
+    this.users().filter(u => {
       const r = (u.role || '').toUpperCase();
       return r.includes('ENGINEER') || r.includes('MANAGER');
-    }).length;
-  }
+    }).length
+  );
 
   ngOnInit(): void {
     this.loadUsers();
   }
 
   loadUsers(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response: any) => {
-        this.ngZone.run(() => {
-          const rawData = Array.isArray(response) ? response : (response?.data || []);
-          const currentId = this.currentUserId;
+        const rawData = Array.isArray(response) ? response : (response?.data || []);
+        const currentId = this.currentUserId;
 
-          // Guarantee array immutability and sanitize every user record
-          this.users = (rawData || []).map((u: any) => {
-            const userId = u.id || u.userId || '';
-            const fName = (u.firstName || '').trim();
-            const lName = (u.lastName || '').trim();
-            const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : '';
-            const displayName = fullName || u.userName || (u.email ? u.email.split('@')[0] : 'مستخدم');
-            const phone = u.phoneNumber || u.personalPhone || u.phone || '-';
-            const whatsapp = u.whatsappNumber || u.whatsAppPhone || u.whatsapp || phone;
-            const role = u.role || 'Member';
+        // Guarantee array immutability and sanitize every user record
+        const mappedUsers: SanitizedUser[] = (rawData || []).map((u: any) => {
+          const userId = u.id || u.userId || '';
+          const fName = (u.firstName || '').trim();
+          const lName = (u.lastName || '').trim();
+          const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : '';
+          const displayName = fullName || u.userName || (u.email ? u.email.split('@')[0] : 'مستخدم');
+          const phone = u.phoneNumber || u.personalPhone || u.phone || '-';
+          const whatsapp = u.whatsappNumber || u.whatsAppPhone || u.whatsapp || phone;
+          const role = u.role || 'Member';
 
-            return {
-              id: userId,
-              firstName: fName,
-              lastName: lName,
-              displayName: displayName,
-              email: u.email || '-',
-              phoneNumber: phone,
-              whatsappNumber: whatsapp,
-              role: role,
-              roleLabel: this.getSafeRoleLabel(role),
-              isActive: u.isActive ?? true,
-              isCurrentAccount: u.isCurrentAccount ?? (userId !== '' && userId === currentId),
-              createdAt: u.createdAt || null
-            };
-          });
-
-          this.isLoading = false;
-          this.cdr.detectChanges();
+          return {
+            id: userId,
+            firstName: fName,
+            lastName: lName,
+            displayName: displayName,
+            email: u.email || '-',
+            phoneNumber: phone,
+            whatsappNumber: whatsapp,
+            role: role,
+            roleLabel: this.getSafeRoleLabel(role),
+            isActive: u.isActive ?? true,
+            isCurrentAccount: u.isCurrentAccount ?? (userId !== '' && userId === currentId),
+            createdAt: u.createdAt || null
+          };
         });
+
+        this.users.set(mappedUsers);
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.ngZone.run(() => {
-          console.error('Error fetching users:', err);
-          this.isLoading = false;
-          this.toast.show('خطأ / Error', 'فشل تحميل بيانات المستخدمين.', 'error');
-          this.cdr.detectChanges();
-        });
+        console.error('Error fetching users:', err);
+        this.isLoading.set(false);
+        this.toast.show('خطأ / Error', 'فشل تحميل بيانات المستخدمين.', 'error');
       }
     });
   }
@@ -152,30 +143,27 @@ export class UsersComponent implements OnInit {
       return;
     }
 
-    this.togglingUserId = user.id;
+    this.togglingUserId.set(user.id);
     this.userService.toggleUserStatus(user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
-        this.ngZone.run(() => {
-          this.togglingUserId = null;
-          if (res.success) {
-            user.isActive = !user.isActive;
-            this.toast.show(
-              'نجاح / Success',
-              user.isActive ? 'تم تفعيل الحساب بنجاح.' : 'تم إيقاف الحساب بنجاح.',
-              'success'
-            );
-          } else {
-            this.toast.show('خطأ / Error', res.message || 'فشل تحديث حالة المستخدم.', 'error');
-          }
-          this.cdr.detectChanges();
-        });
+        this.togglingUserId.set(null);
+        if (res.success) {
+          this.users.update(list =>
+            list.map(u => u.id === user.id ? { ...u, isActive: !u.isActive } : u)
+          );
+          const nextState = !user.isActive;
+          this.toast.show(
+            'نجاح / Success',
+            nextState ? 'تم تفعيل الحساب بنجاح.' : 'تم إيقاف الحساب بنجاح.',
+            'success'
+          );
+        } else {
+          this.toast.show('خطأ / Error', res.message || 'فشل تحديث حالة المستخدم.', 'error');
+        }
       },
       error: (err) => {
-        this.ngZone.run(() => {
-          this.togglingUserId = null;
-          this.toast.show('خطأ / Error', err.error?.message || err.message || 'فشل تحديث حالة المستخدم.', 'error');
-          this.cdr.detectChanges();
-        });
+        this.togglingUserId.set(null);
+        this.toast.show('خطأ / Error', err.error?.message || err.message || 'فشل تحديث حالة المستخدم.', 'error');
       }
     });
   }
@@ -190,12 +178,12 @@ export class UsersComponent implements OnInit {
       password: '',
       role: 'SiteEngineer'
     });
-    this.userValidationErrors = [];
-    this.isUserModalOpen = true;
+    this.userValidationErrors.set([]);
+    this.isUserModalOpen.set(true);
   }
 
   closeUserModal(): void {
-    this.isUserModalOpen = false;
+    this.isUserModalOpen.set(false);
   }
 
   onUserSubmit(): void {
@@ -204,32 +192,26 @@ export class UsersComponent implements OnInit {
       return;
     }
 
-    this.isSavingUser = true;
-    this.userValidationErrors = [];
+    this.isSavingUser.set(true);
+    this.userValidationErrors.set([]);
 
     const dto: UserCreateDto = this.userForm.value;
 
     this.userService.createUser(dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.ngZone.run(() => {
-          this.isSavingUser = false;
-          if (response.success) {
-            this.toast.show('نجاح / Success', 'تمت إضافة المستخدم بنجاح.', 'success');
-            this.closeUserModal();
-            this.loadUsers();
-          } else {
-            this.userValidationErrors = response.errors || [response.message || 'فشلت إضافة المستخدم.'];
-          }
-          this.cdr.detectChanges();
-        });
+        this.isSavingUser.set(false);
+        if (response.success) {
+          this.toast.show('نجاح / Success', 'تمت إضافة المستخدم بنجاح.', 'success');
+          this.closeUserModal();
+          this.loadUsers();
+        } else {
+          this.userValidationErrors.set(response.errors || [response.message || 'فشلت إضافة المستخدم.']);
+        }
       },
       error: (err) => {
-        this.ngZone.run(() => {
-          this.isSavingUser = false;
-          const errors = err.error?.errors || [err.error?.message || err.message || 'حدث خطأ أثناء إضافة المستخدم.'];
-          this.userValidationErrors = Array.isArray(errors) ? errors : [errors];
-          this.cdr.detectChanges();
-        });
+        this.isSavingUser.set(false);
+        const errors = err.error?.errors || [err.error?.message || err.message || 'حدث خطأ أثناء إضافة المستخدم.'];
+        this.userValidationErrors.set(Array.isArray(errors) ? errors : [errors]);
       }
     });
   }

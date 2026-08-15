@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe, CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -2982,7 +2982,6 @@ export class ProjectDetailsComponent implements OnInit {
   protected readonly langService = inject(LanguageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly zone = inject(NgZone);
 
   readonly reconciliationReport = signal<ProjectReconciliationReportDto | null>(null);
   readonly isCloseoutLoading = signal(false);
@@ -3813,42 +3812,26 @@ export class ProjectDetailsComponent implements OnInit {
             } catch (e) { }
           }
 
-          this.zone.run(() => {
-            this.isLoadingProject.set(false);
-            this.project.set(proj);
-            this.projectSettingsForm.patchValue({ isPublicPortfolio });
-            this.cdr.markForCheck();
-            this.cdr.detectChanges();
-          });
+          this.isLoadingProject.set(false);
+          this.project.set(proj);
+          this.projectSettingsForm.patchValue({ isPublicPortfolio });
 
           // Silently load reconciliation report for Closed or Frozen projects
           if (proj.status === 'Closed' || proj.status === 'FinancialFreeze') {
             this.projectCloseoutService.getReconciliationReport(this.projectId).subscribe({
               next: (res) => {
                 if (res.success && res.data) {
-                  this.zone.run(() => {
-                    this.reconciliationReport.set(res.data);
-                    this.cdr.markForCheck();
-                    this.cdr.detectChanges();
-                  });
+                  this.reconciliationReport.set(res.data);
                 }
               }
             });
           }
         } else {
-          this.zone.run(() => {
-            this.isLoadingProject.set(false);
-            this.cdr.markForCheck();
-            this.cdr.detectChanges();
-          });
+          this.isLoadingProject.set(false);
         }
       },
       error: () => {
-        this.zone.run(() => {
-          this.isLoadingProject.set(false);
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        this.isLoadingProject.set(false);
       }
     });
   }
@@ -3857,21 +3840,13 @@ export class ProjectDetailsComponent implements OnInit {
     this.isLoadingPettyCash.set(true);
     this.pettyCashService.getProjectPettyCash(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
-        this.zone.run(() => {
-          this.isLoadingPettyCash.set(false);
-          if (response.success && response.data) {
-            this.pettyCashes.set(response.data.items);
-          }
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        this.isLoadingPettyCash.set(false);
+        if (response.success && response.data) {
+          this.pettyCashes.set(response.data.items);
+        }
       },
       error: () => {
-        this.zone.run(() => {
-          this.isLoadingPettyCash.set(false);
-          this.cdr.markForCheck();
-          this.cdr.detectChanges();
-        });
+        this.isLoadingPettyCash.set(false);
       }
     });
   }
@@ -3880,12 +3855,7 @@ export class ProjectDetailsComponent implements OnInit {
     this.financialService.getCashPools(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          const pools = response.data;
-          this.zone.run(() => {
-            this.cashPools.set(pools);
-            this.cdr.markForCheck();
-            this.cdr.detectChanges();
-          });
+          this.cashPools.set(response.data);
         }
       }
     });
