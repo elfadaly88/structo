@@ -67,66 +67,40 @@
   - `users.component.ts` (شاشة مستخدمي الشركة - Company Users list)
   - `financials.component.ts` (جدول الحركات والعهد)
 
-**السبب الجذري (Root Cause):**
-1. **الاعتماد على Zoneless Change Detection (`provideZonelessChangeDetection`):**
-   - التطبيق يستخدم **Angular 22** في وضع Zoneless، وحزمة `zone.js` غير مثبتة نهائياً.
-   - في بيئة Zoneless، لا يقوم Angular بمراقبة الـ Async Callbacks و Microtasks تلقائياً.
-   - محرك الـ Change Detection في Zoneless يستيقظ فقط عند:
-     1. تعديل قيمة **Angular Signal** (`signal.set()` أو `signal.update()`).
-     2. تشغيل Template Event Listener ناتج عن تفاعل يدوي من المستخدم (Click, Scroll, Keydown).
-     3. استدعاء صريح لـ `ChangeDetectorRef.markForCheck()`.
-2. **استخدام Plain Class Properties بدلاً من Signals:**
-   - في بعض الشاشات (مثل `users.component.ts`)، كانت الحالة مُعرفة كمتغيرات عادية:
-     ```typescript
-     users: SanitizedUser[] = [];
-     isLoading = false;
-     ```
-   - عند وصول بيانات الـ HTTP وتعيين `this.users = ...`، لم يتلقَ محرك Angular أي إشعار لحدوث تغيير لأن المتغير ليس Signal، فظل الـ UI متوقفاً حتى حدث Event يدوي.
-3. **الترقيعات القديمة غير الفعالة (`zone.run` / `detectChanges`):**
-   - محاولات سابقة استخدمت `this.zone.run(() => { ... })` و `this.cdr.detectChanges()`. في بيئة Zoneless، يعتبر `NgZone` عبارة عن `NoopNgZone` لا ينفذ شيئاً، وكان وجود هذه الترقيعات مجرد تشويش (Code Noise) يخفي السبب الحقيقي.
-4. **تهيئة `withFetch()` في `provideHttpClient`:**
-   - استخدام `provideHttpClient(withFetch())` مع غياب الـ Signals الكامل كان يزيد من تأخر التزامن مع دورة حياة RxJS بدون فائدة إضافية.
+**السبب الجذري الحقيقي (Root Cause):**
+1. **استخدام وضع `provideZonelessChangeDetection` بدون `zone.js`:**
+   - تم تفعيل وضع الـ Zoneless التجريبي وإزالة حزمة `zone.js`.
+   - في غياب `zone.js`، لا يقوم محرك Angular بمراقبة الـ Asynchronous Browser APIs (مثل `XMLHttpRequest`, `fetch`, `setTimeout`, `RxJS Observables`, `SignalR`) تلقائياً.
+   - الاعتماد على Zoneless في تطبيق كامل يعتمد على مكتبات خارجية (مثل `ngx-translate`, `Leaflet`, `SignalR`) ومسارات RxJS معقدة أدى إلى عدم قيام Angular بعمل Change Detection Cycle فور استلام البيانات عبر الـ HTTP، وظلت الـ DOM متوقفة حتى ينطلق أي DOM Event Listener تفاعلي (Click / Keydown / Scroll) من المستخدم ليوقظ الـ Scheduler.
+2. **محاولات الترقيع الجزئي السابقة (Signals only):**
+   - محاولة معالجة بعض المتغيرات كـ Signals لم تكن كافية نظراً لوجود مئات العمليات اللاتزامنية والـ Pipes و Directives (`*ngFor`, `TranslatePipe`, `DatePipe`) التي تحتاج لمراقبة شاملة ومستقرة للأحداث غير المتزامنة.
 
-**الحل (Fix):**
-1. **إزالة `withFetch()` من [app.config.ts](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/app.config.ts):**
-   ```typescript
-   // قبل:
-   provideHttpClient(withFetch(), withInterceptors([jwtInterceptor, rateLimitInterceptor]))
-
-   // بعد:
-   provideHttpClient(withInterceptors([jwtInterceptor, rateLimitInterceptor]))
+**الحل الجذري النهائي (Definitive Fix):**
+1. **تثبيت حزمة `zone.js` رسمياً:**
+   ```bash
+   npm install zone.js --save
    ```
-2. **التحويل الشامل لـ Angular Signals في كافة الـ Components:**
-   - تحويل جميع حالات المكونات إلى Signals و `computed`:
-   ```typescript
-   // قبل (Plain Properties):
-   users: SanitizedUser[] = [];
-   isLoading = false;
-   activeUsersCount: number;
-
-   // بعد (Signals & Computed):
-   readonly users = signal<SanitizedUser[]>([]);
-   readonly isLoading = signal(false);
-   readonly activeUsersCount = computed(() => this.users().filter(u => u.isActive).length);
+2. **إضافة `zone.js` إلى `polyfills` في [angular.json](file:///f:/PrivateWork/structo/project/Structo.Client/angular.json):**
+   ```json
+   "options": {
+     "browser": "src/main.ts",
+     "tsConfig": "tsconfig.app.json",
+     "polyfills": [
+       "zone.js"
+     ],
+     ...
+   }
    ```
-   - تحديث القوالب HTML لاستدعاء الدوال التفاعلية `users()`, `isLoading()`.
-3. **تطهير شامل لجميع ترقيعات `zone.run` و `detectChanges` (16 موضعاً):**
-   - حذف حقن `NgZone` واستدعاءات `this.zone.run` و `this.cdr.detectChanges` من:
-     - `users.component.ts`
-     - `project-details.component.ts`
-     - `financials.component.ts`
+3. **إزالة `provideZonelessChangeDetection()` من [app.config.ts](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/app.config.ts):**
+   - العودة للمحرك القياسي الموثوق لـ Change Detection في Angular الذي يراقب كافة الأحداث والطلبات اللاتزامنية تلقائياً وبشكل فوري بدون الحاجة لأي نقرات يدوية من المستخدم.
+4. **إعادة بناء حزمة الإنتاج (`npm run build`):**
+   - التأكد من تضمين `polyfills-*.js` داخل حزمة الإنتاج وتحديث ملفات `Structo.API/wwwroot`.
 
 **إزاي نعرف إن نفس المشكلة رجعت تاني (Detection Checklist):**
-- [ ] هل الداتا بتوصل من الـ Network tab لكن مش بتظهر على الشاشة غير لما تضغط بالماوس؟
-- [ ] ابحث في الـ Component: هل فيه متغيرات عادية (Non-Signals) بيتعملها assign جوه `.subscribe()` بدون استخدام Signals؟
-- [ ] ابحث في المشروع عن أي ظهور لـ `zone.run` أو `NgZone` (دليل فوري على محاولة ترقيع غير سليمة لـ Zoneless):
-  ```bash
-  grep -rn "zone.run" src/app/
-  grep -rn "NgZone" src/app/
-  ```
-- [ ] تأكد أن كل State يُعرض في الـ HTML مرتبط بـ `signal()` أو `computed()`.
-
-**ملاحظات إضافية:**
-- في Angular 18+ و 22+ (Zoneless Mode)، القاعدة الذهبية هي: **أي State يتغير داخل Async Context (HTTP, WebSocket, Timer) يجب أن يكون Angular Signal حصراً** ليتم تحديث الشاشة فوراً وبأعلى كفاءة.
+- [ ] تأكد من وجود `zone.js` داخل `dependencies` في `package.json`.
+- [ ] تأكد من وجود `"polyfills": ["zone.js"]` في `angular.json`.
+- [ ] تأكد من عدم وجود `provideZonelessChangeDetection` في `app.config.ts`.
+- [ ] أي استدعاء HTTP أو SignalR يجب أن يعكس التغييرات فوراً في الواجهة دون الحاجة للنقر.
 
 ---
+

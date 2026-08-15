@@ -342,6 +342,21 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""IsCleanupExempt"" boolean NOT NULL DEFAULT false;
             ALTER TABLE ""SettlementLines"" ADD COLUMN IF NOT EXISTS ""IsBillableToClient"" boolean NOT NULL DEFAULT true;
             ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" character varying(50) NOT NULL DEFAULT 'SiteProgress';
+
+            CREATE TABLE IF NOT EXISTS ""ProjectMembers"" (
+                ""ProjectId"" uuid NOT NULL,
+                ""UserId"" uuid NOT NULL,
+                ""AssignedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
+                ""AssignedByUserId"" uuid NULL,
+                ""TenantId"" uuid NOT NULL,
+                CONSTRAINT ""PK_ProjectMembers"" PRIMARY KEY (""ProjectId"", ""UserId""),
+                CONSTRAINT ""FK_ProjectMembers_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_ProjectMembers_Tenants_TenantId"" FOREIGN KEY (""TenantId"") REFERENCES ""Tenants"" (""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_ProjectMembers_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS ""IX_ProjectMembers_TenantId"" ON ""ProjectMembers"" (""TenantId"");
+            CREATE INDEX IF NOT EXISTS ""IX_ProjectMembers_UserId"" ON ""ProjectMembers"" (""UserId"");
         ");
         context.Database.Migrate();
 
