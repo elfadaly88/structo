@@ -43,12 +43,10 @@ export const routes: Routes = [
   },
   {
     path: 'subscription',
-    canActivate: [subscriptionGuard],
     redirectTo: 'dashboard/projects?upgrade=true'
   },
   {
     path: 'upgrade',
-    canActivate: [subscriptionGuard],
     redirectTo: 'dashboard/projects?upgrade=true'
   },
   {
@@ -92,17 +90,14 @@ export const routes: Routes = [
       },
       {
         path: 'subscription',
-        canActivate: [subscriptionGuard],
         redirectTo: 'projects?upgrade=true'
       },
       {
         path: 'upgrade',
-        canActivate: [subscriptionGuard],
         redirectTo: 'projects?upgrade=true'
       },
       {
         path: 'billing',
-        canActivate: [subscriptionGuard],
         redirectTo: 'profile'
       },
       {

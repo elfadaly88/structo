@@ -567,7 +567,7 @@ interface NominatimResult {
             </p>
 
             <!-- Interactive Leaflet Map -->
-            <div #mapContainer id="interactive-map" class="w-full h-[280px] rounded-lg border border-slate-900 shrink-0"></div>
+            <div #mapContainer id="interactive-map" class="w-full h-[220px] sm:h-[280px] rounded-lg border border-slate-900 shrink-0"></div>
           </div>
 
           <!-- Footer Actions -->

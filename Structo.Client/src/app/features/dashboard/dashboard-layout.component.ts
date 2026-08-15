@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -7,6 +7,7 @@ import { NotificationBellComponent } from '../../core/components/notification-be
 import { NotificationService } from '../../core/services/notification.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TenantProfileService } from '../../core/services/tenant-profile.service';
+
 interface NavItem {
   label: string;
   route: string;
@@ -21,60 +22,130 @@ interface NavItem {
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col">
 
       <!-- Top Navbar -->
-      <nav class="bg-slate-900 border-b border-slate-800 fixed top-0 left-0 w-full h-16 flex items-center justify-between px-4 z-40">
+      <nav class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 fixed top-0 left-0 w-full h-16 flex items-center justify-between px-3 sm:px-6 z-40">
         <!-- Brand & Mobile Toggle -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             (click)="toggleSidebar()"
-            class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none transition-colors duration-200 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            aria-label="Toggle Navigation Sidebar"
+            class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none transition-colors duration-200 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          <div class="flex items-center gap-3">
-            <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-9 w-auto object-contain">
-            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block">أُسُس / Osos</span>
-          </div>
+          <a routerLink="/dashboard" class="flex items-center gap-2 sm:gap-3 cursor-pointer">
+            <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-7 sm:h-9 w-auto object-contain">
+            <span class="text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block font-cairo">أُسُس / Osos</span>
+          </a>
         </div>
 
-        <!-- User info, Language & Logout -->
-        <div class="flex items-center gap-3 sm:gap-4">
+        <!-- User info, Language & Actions -->
+        <div class="flex items-center gap-1.5 sm:gap-3">
           
           <!-- Clickable Subscription Upgrade Badge for TenantOwner only -->
           @if (authService.isTenantOwner()) {
             <button 
               (click)="openUpgradeModal()"
               title="انقر لترقية الباقة وزيادة سعة المشاريع / Upgrade Capacity"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-purple-500/15 hover:from-amber-500/25 hover:via-indigo-500/25 hover:to-purple-500/25 border border-amber-500/35 text-amber-300 hover:text-amber-200 text-xs font-bold font-cairo transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer">
-              <span class="text-amber-400 animate-pulse text-sm">💎</span>
+              class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-purple-500/15 hover:from-amber-500/25 hover:via-indigo-500/25 hover:to-purple-500/25 border border-amber-500/35 text-amber-300 hover:text-amber-200 text-xs font-bold font-cairo transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer shrink-0">
+              <span class="text-amber-400 animate-pulse text-xs sm:text-sm">💎</span>
               <span class="hidden sm:inline">شراء / ترقية مشاريع</span>
-              <span class="sm:hidden">ترقية</span>
-              <span class="text-[10px] bg-amber-500/30 text-amber-200 px-1.5 py-0.5 rounded font-mono font-bold">+إضافة</span>
+              <span class="sm:hidden text-[11px]">ترقية</span>
+              <span class="hidden md:inline text-[10px] bg-amber-500/30 text-amber-200 px-1.5 py-0.5 rounded font-mono font-bold">+إضافة</span>
             </button>
           }
 
+          <!-- Language Switcher -->
           <button 
             (click)="langService.toggleLanguage()"
-            class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
-            {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
+            class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2 sm:px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95 shrink-0">
+            {{ langService.currentLang() === 'en' ? 'عربي' : 'EN' }}
           </button>
 
           <!-- Notification Bell -->
           <app-notification-bell></app-notification-bell>
 
-          <div class="hidden md:flex flex-col text-right rtl:text-left">
-            <span class="text-xs font-semibold text-slate-500">{{ 'DASHBOARD.LOGGED_IN_AS' | translate }}</span>
-            <span class="text-sm font-medium text-slate-200">{{ authService.currentUser()?.name }}</span>
+          <!-- User Menu Dropdown Trigger Button -->
+          <div class="relative shrink-0">
+            <button
+              (click)="toggleUserMenu()"
+              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition-all duration-200 cursor-pointer focus:outline-none"
+              [class.bg-slate-800]="isUserMenuOpen()"
+              [class.border-slate-700]="isUserMenuOpen()">
+              <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-xs text-indigo-400 uppercase font-mono shrink-0">
+                {{ (authService.currentUser()?.name || authService.currentUser()?.role || 'U').charAt(0) }}
+              </div>
+              
+              <div class="hidden md:flex flex-col text-right rtl:text-left text-xs leading-tight">
+                <span class="font-bold text-slate-200 max-w-[120px] truncate">{{ authService.currentUser()?.name }}</span>
+                <span class="text-[10px] text-slate-400 font-mono">{{ authService.currentUser()?.role }}</span>
+              </div>
+
+              <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 hidden sm:block" [class.rotate-180]="isUserMenuOpen()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Consolidated User Menu Popover -->
+            @if (isUserMenuOpen()) {
+              <div
+                (click)="$event.stopPropagation()"
+                class="absolute end-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in font-cairo space-y-3">
+                
+                <div class="border-b border-slate-800 pb-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-sm text-indigo-400 uppercase font-mono shrink-0">
+                      {{ (authService.currentUser()?.name || 'U').charAt(0) }}
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-bold text-white truncate">{{ authService.currentUser()?.name }}</p>
+                      <p class="text-[11px] text-slate-400 font-mono truncate">{{ authService.currentUser()?.email }}</p>
+                    </div>
+                  </div>
+                  <div class="mt-2.5 flex items-center justify-between">
+                    <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">الدور / Role:</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wide">
+                      {{ authService.currentUser()?.role }}
+                    </span>
+                  </div>
+                  @if (authService.currentUser()?.tenantId) {
+                    <div class="mt-1.5 flex items-center justify-between text-[10px] text-slate-400">
+                      <span class="text-slate-500">Tenant:</span>
+                      <span class="font-mono text-slate-400 truncate max-w-[130px]" [title]="authService.currentUser()?.tenantId ?? ''">
+                        {{ authService.currentUser()?.tenantId }}
+                      </span>
+                    </div>
+                  }
+                </div>
+
+                <div class="space-y-1 text-xs">
+                  @if (authService.isTenantOwner()) {
+                    <a
+                      routerLink="/dashboard/profile"
+                      (click)="closeUserMenu()"
+                      class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
+                      <span>⚙️</span>
+                      <span>إعدادات الحساب والشركة</span>
+                    </a>
+                  }
+                </div>
+
+                <div class="pt-2 border-t border-slate-800">
+                  <button
+                    (click)="logout()"
+                    class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold border border-slate-700 transition-all cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>{{ 'COMMON.LOGOUT' | translate }}</span>
+                  </button>
+                </div>
+
+              </div>
+            }
           </div>
-          <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wide">
-            {{ authService.currentUser()?.role }}
-          </span>
-          <button
-            (click)="logout()"
-            class="px-3 py-1.5 rounded-lg border border-slate-800 hover:border-red-500/40 bg-slate-950 hover:bg-red-950/20 text-xs font-semibold text-slate-400 hover:text-red-400 transition-all duration-200 cursor-pointer">
-            {{ 'COMMON.LOGOUT' | translate }}
-          </button>
+
         </div>
       </nav>
 
@@ -85,11 +156,19 @@ interface NavItem {
         @if (isSidebarOpen()) {
           <div
             (click)="closeSidebar()"
-            class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-30 md:hidden">
+            class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-30 md:hidden animate-fade-in">
           </div>
         }
 
-        <!-- Sidebar -->
+        <!-- User Menu Backdrop to close menu on click outside -->
+        @if (isUserMenuOpen()) {
+          <div
+            (click)="closeUserMenu()"
+            class="fixed inset-0 z-40 bg-transparent">
+          </div>
+        }
+
+        <!-- Sidebar Navigation Drawer -->
         <aside
           class="fixed md:relative inset-y-0 start-0 pt-16 md:pt-0 bg-slate-900 flex flex-col z-[35] md:z-20 transition-all duration-300 ease-in-out overflow-hidden"
           [class.w-64]="isSidebarOpen()"
@@ -99,8 +178,8 @@ interface NavItem {
           [class.sidebar-open]="isSidebarOpen()"
           [class.sidebar-closed]="!isSidebarOpen()">
 
-          <div class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <span class="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase px-3 block mb-4">
+          <div class="flex-1 px-4 py-6 space-y-1 overflow-y-auto min-h-0">
+            <span class="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase px-3 block mb-4 font-cairo">
               {{ 'DASHBOARD.SIDEBAR_NAV' | translate }}
             </span>
 
@@ -110,17 +189,17 @@ interface NavItem {
                 routerLinkActive="bg-slate-800 text-indigo-400 border-indigo-500/40"
                 [routerLinkActiveOptions]="{ exact: false }"
                 (click)="closeSidebar()"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all duration-200">
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all duration-200 font-cairo">
                 <span [innerHTML]="item.icon" class="h-5 w-5 shrink-0 flex items-center justify-center"></span>
                 <span>{{ item.label | translate }}</span>
               </a>
             }
 
-            <!-- Sidebar Sign Out Option (Visible inside mobile/desktop sidebar menu list) -->
+            <!-- Sidebar Sign Out Option (Neutral Standard SaaS Styling) -->
             <button
               (click)="logout()"
-              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-all duration-200 text-right rtl:text-left cursor-pointer focus:outline-none mt-4 border-t border-slate-800/60 pt-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all duration-200 text-right rtl:text-left cursor-pointer focus:outline-none mt-4 border-t border-slate-800/60 pt-4 font-cairo">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span>{{ 'COMMON.LOGOUT' | translate }}</span>
@@ -130,7 +209,7 @@ interface NavItem {
           <!-- Bottom Tenant Info -->
           @if (authService.currentUser()?.tenantId) {
             <div class="p-4 border-t border-slate-800 bg-slate-950/40">
-              <span class="text-[10px] font-extrabold text-slate-500 tracking-wider uppercase block">
+              <span class="text-[10px] font-extrabold text-slate-500 tracking-wider uppercase block font-cairo">
                 {{ 'DASHBOARD.TENANT_ENV' | translate }}
               </span>
               <span class="text-xs font-mono text-slate-400 truncate block mt-1 select-all" [title]="authService.currentUser()?.tenantId ?? ''">
@@ -141,7 +220,7 @@ interface NavItem {
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-slate-950 p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">
+        <main class="flex-1 overflow-y-auto bg-slate-950 p-3 sm:p-6 lg:p-8 pb-20 md:pb-8">
           <div class="max-w-7xl mx-auto w-full space-y-6">
             <!-- Profile incomplete warning banner -->
             @if (authService.isTenantOwner() && authService.currentUser()?.isApproved && authService.currentUser()?.isProfileComplete === false) {
@@ -196,6 +275,7 @@ export class DashboardLayoutComponent {
   private readonly profileService = inject(TenantProfileService);
 
   readonly isSidebarOpen = signal(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
+  readonly isUserMenuOpen = signal(false);
 
   constructor() {
     const user = this.authService.currentUser();
@@ -203,6 +283,7 @@ export class DashboardLayoutComponent {
       this.notificationService.initializeOneSignal(user.userId, user.email);
     }
   }
+
   ngOnInit(): void {
     const user = this.authService.currentUser();
     // Check profile completion for TenantOwner only
@@ -210,9 +291,7 @@ export class DashboardLayoutComponent {
       this.profileService.getProfile().subscribe({
         next: (res) => {
           if (res.success && res.data) {
-            // إذا وجدنا الإحداثيات والعنوان كاملين في قاعدة البيانات الحية
             if (res.data.latitude && res.data.region) {
-              // 🎯 ادهس الـ State القديمة في الـ Signal وخليها true فوراً
               const updatedUser = { ...user, isProfileComplete: true };
               this.authService.currentUser.set(updatedUser);
             }
@@ -221,6 +300,7 @@ export class DashboardLayoutComponent {
       });
     }
   }
+
   // SVG icons for sidebar items
   private readonly icons = {
     overview: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>`,
@@ -232,7 +312,7 @@ export class DashboardLayoutComponent {
     profile: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`
   };
 
-  // Role-based navigation computed from auth state (using translation keys instead of raw text)
+  // Role-based navigation computed from auth state
   readonly menuItems = computed<NavItem[]>(() => {
     const role = this.authService.currentUser()?.role;
     switch (role) {
@@ -275,7 +355,16 @@ export class DashboardLayoutComponent {
     }
   }
 
+  toggleUserMenu(): void {
+    this.isUserMenuOpen.update(v => !v);
+  }
+
+  closeUserMenu(): void {
+    this.isUserMenuOpen.set(false);
+  }
+
   logout(): void {
+    this.closeUserMenu();
     this.authService.logout();
     this.router.navigate(['/']);
   }
@@ -284,4 +373,5 @@ export class DashboardLayoutComponent {
     this.router.navigate(['/dashboard/projects'], { queryParams: { upgrade: 'true' } });
   }
 }
+
 

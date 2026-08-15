@@ -289,7 +289,8 @@ interface ModeratedProject {
             <span class="text-xs text-slate-400 font-cairo">جاري تحميل سجل الشركات والبيانات التخزينية...</span>
           </div>
         } @else {
-          <div class="overflow-x-auto">
+          <!-- Desktop Table (md+) -->
+          <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left rtl:text-right border-collapse">
               <thead>
                 <tr class="border-b border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider font-cairo bg-slate-950/40">
@@ -460,6 +461,116 @@ interface ModeratedProject {
                 }
               </tbody>
             </table>
+          </div>
+
+          <!-- Mobile Cards View (< md) -->
+          <div class="block md:hidden divide-y divide-slate-800/60 font-cairo">
+            @for (tenant of displayedTenants(); track tenant.id) {
+              <div class="p-4 space-y-3"
+                   [class.bg-rose-950/10]="tenant.status === 'PendingDeletion'"
+                   [class.bg-amber-950/10]="tenant.daysInactive >= 45 && tenant.status !== 'PendingDeletion'">
+                <!-- Top Row: Logo, Name, Plan -->
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2.5">
+                    @if (tenant.logoUrl) {
+                      <img [src]="tenant.logoUrl" class="w-10 h-10 rounded-xl object-cover border border-slate-800 shrink-0">
+                    } @else {
+                      <div class="w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                        {{ tenant.name.substring(0, 2) }}
+                      </div>
+                    }
+                    <div class="min-w-0">
+                      <div class="font-bold text-white text-sm flex items-center gap-1.5">
+                        <span class="truncate">{{ tenant.name }}</span>
+                        @if (tenant.isCleanupExempt) {
+                          <span title="مستثناة" class="text-xs">🛡️</span>
+                        }
+                      </div>
+                      <div class="text-[11px] text-slate-400 font-mono truncate">{{ tenant.adminEmail || 'بدون بريد' }}</div>
+                    </div>
+                  </div>
+
+                  @if (tenant.planType === 'Premium') {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/25 shrink-0">💎 Pro</span>
+                  } @else if (tenant.planType === 'Standard') {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 shrink-0">⭐ Std</span>
+                  } @else {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700/60 shrink-0">Free</span>
+                  }
+                </div>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80">
+                  <div>
+                    <span class="text-slate-500 text-[10px] block">الحالة / Status</span>
+                    <span class="font-bold text-xs"
+                          [class.text-emerald-400]="tenant.status === 'Active'"
+                          [class.text-amber-400]="tenant.status === 'Suspended'"
+                          [class.text-rose-400]="tenant.status === 'PendingDeletion'">
+                      {{ tenant.status }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 text-[10px] block">التخزين / Storage</span>
+                    <span class="font-mono font-bold text-cyan-300 text-xs">{{ tenant.storageFootprintMb | number:'1.1-2' }} MB</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 text-[10px] block">المشاريع / Users</span>
+                    <span class="text-slate-300 font-mono text-xs">{{ tenant.totalProjects }} P · {{ tenant.totalUsers }} U</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 text-[10px] block">النشاط / Inactivity</span>
+                    <span class="text-xs" [class.text-amber-400]="tenant.daysInactive >= 45" [class.text-slate-400]="tenant.daysInactive < 45">
+                      {{ tenant.daysInactive }} يوم
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Exemption & Action Buttons -->
+                <div class="flex items-center gap-2 pt-1 flex-wrap">
+                  <button
+                    (click)="toggleExemption(tenant)"
+                    [disabled]="isUpdatingExemptionId() === tenant.id"
+                    class="flex-1 min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-bold font-cairo transition-all border flex items-center justify-center gap-1"
+                    [class.bg-emerald-500/10]="tenant.isCleanupExempt"
+                    [class.text-emerald-300]="tenant.isCleanupExempt"
+                    [class.border-emerald-500/30]="tenant.isCleanupExempt"
+                    [class.bg-slate-900]="!tenant.isCleanupExempt"
+                    [class.text-slate-400]="!tenant.isCleanupExempt"
+                    [class.border-slate-800]="!tenant.isCleanupExempt">
+                    @if (isUpdatingExemptionId() === tenant.id) {
+                      <span class="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                    } @else if (tenant.isCleanupExempt) {
+                      <span>🛡️ مستثناة</span>
+                    } @else {
+                      <span>⚠️ غير مستثناة</span>
+                    }
+                  </button>
+
+                  <button
+                    (click)="inspectAdminTenant(tenant)"
+                    class="min-h-[40px] px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-indigo-400 border border-indigo-900/40 rounded-xl text-xs font-bold font-cairo transition-all cursor-pointer">
+                    فحص
+                  </button>
+
+                  <button
+                    (click)="openManualUpgradeModal(tenant)"
+                    class="min-h-[40px] px-3 py-1.5 bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold font-cairo transition-all cursor-pointer">
+                    ترقية
+                  </button>
+
+                  <button
+                    (click)="openForcePurgeModal(tenant)"
+                    class="min-h-[40px] px-3 py-1.5 bg-rose-950/50 hover:bg-rose-900/80 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold font-cairo transition-all cursor-pointer flex items-center gap-1">
+                    <span>🗑️</span>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="px-6 py-12 text-center text-slate-500 text-sm font-cairo">
+                لا توجد شركات مطابقة لمعايير البحث الحالية.
+              </div>
+            }
           </div>
 
           <!-- Pagination Footer -->

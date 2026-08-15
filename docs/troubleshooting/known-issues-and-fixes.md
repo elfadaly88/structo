@@ -5,6 +5,44 @@
 
 ---
 
+## [004] - Layout/Header Responsiveness & System-Wide Mobile UX Consistency Pass
+
+**Date / التاريخ:** 15 August 2026 / 15 أغسطس 2026
+
+**الأعراض (Symptoms):**
+- **Mobile Header Overcrowding:** On narrow viewports (375px–390px), the top navbar in [`DashboardLayoutComponent`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/dashboard/dashboard-layout.component.ts) rendered all action buttons inline (hamburger, logo, upgrade plan badge, language switcher, notification bell, user role badge, and logout button). This caused visual crowding and horizontal overflow.
+- **Red Destructive Logout Button:** Logout buttons in both the header and sidebar drawer were styled with red danger colors (`text-red-400`, `hover:bg-red-950/20`), violating UX design guidelines that reserve red for irreversible destructive actions.
+- **Currency Label Multi-Line Fragmentation:** KPI cards displayed `{{ 'COMMON.CURRENCY' | translate }}` which rendered as "الجنيه المصري", causing awkward line wraps on small mobile screens.
+- **SuperAdmin Hub Missing Mobile Cards:** The SuperAdmin [`TenantsComponent`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/dashboard/tenants/tenants.component.ts) had a desktop-only 7-column table requiring wide horizontal scrolling on mobile.
+- **Persistent Repeating Info Banners:** Section explanation banners (such as site petty cash guides) occupied persistent vertical space without dismissibility.
+
+**السبب الجذري (Root Cause):**
+- Lack of a consolidated mobile user menu/dropdown in the shared layout component.
+- The Arabic i18n translation key `"CURRENCY"` used the full name `"الجنيه المصري"` rather than the standard compact symbol `"ج.م"`.
+- Table views on newer SuperAdmin management screens lacked mobile card alternative layouts (`hidden md:block` / `block md:hidden`).
+
+**الحل (Fix):**
+1. **Restructured Shared Header & User Menu ([`DashboardLayoutComponent`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/dashboard/dashboard-layout.component.ts)):**
+   - Consolidated user identity, tenant info, and sign-out into a sleek dropdown popover controlled via zoneless signals (`isUserMenuOpen`).
+   - Compacted upgrade capacity button for narrow mobile viewports.
+   - Replaced red destructive styling on logout buttons with neutral standard SaaS styling (`bg-slate-800/80 hover:bg-slate-700 text-slate-200`).
+2. **Standardized Currency Symbol ([`ar.json`](file:///f:/PrivateWork/structo/project/Structo.Client/src/assets/i18n/ar.json)):**
+   - Changed `"CURRENCY"` to `"ج.م"` (and added `"CURRENCY_FULL": "الجنيه المصري"`), standardizing compact KPI cards across all screens.
+3. **Added Mobile Cards View to SuperAdmin Tenants Hub ([`TenantsComponent`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/dashboard/tenants/tenants.component.ts)):**
+   - Created mobile card layout (`block md:hidden`) with full touch target buttons ($\ge 44\text{px}$) for Exemption toggle, Audit inspection, Manual upgrade, and Force Purge.
+4. **Made Repetitive Tab Info Banners Dismissible ([`ProjectDetailsComponent`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/dashboard/projects/project-details.component.ts)):**
+   - Added dismiss button with `isTabInfoDismissed` signal to minimize visual clutter for returning users.
+5. **Enhanced Leaflet Map Mobile Container ([`TenantRegisterComponent`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/auth/tenant-register/tenant-register.component.ts)):**
+   - Adjusted map container to `h-[220px] sm:h-[280px]` with strict compliance to high-precision decimal preservation for latitude/longitude.
+
+**إزاي نعرف إن نفس المشكلة رجعت تاني (Detection Checklist):**
+- [ ] Verify header at 375px viewport: ensure elements do not exceed navbar boundaries or wrap into multiple rows.
+- [ ] Check KPI cards on mobile: verify currency labels display cleanly as "ج.م" / "EGP" without multi-line wrapping.
+- [ ] Verify that logout buttons use neutral slate styling, reserving red strictly for delete/purge actions.
+- [ ] Ensure all table-based management screens have an accompanying `block md:hidden` card view.
+
+---
+
 ## [003] - Recurring Anti-Pattern: Null-Passthrough Multi-Tenancy Query Filters (2nd Occurrence — ProjectMember, then Notification & System-Wide Audit)
 
 **Date / التاريخ:** 15 August 2026 / 15 أغسطس 2026

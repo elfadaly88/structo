@@ -362,29 +362,40 @@ import { LanguageService } from '../../../core/services/language.service';
         }
       </div>
 
-      <!-- Contextual Dynamic Tab Info Banner -->
-      <div class="bg-indigo-950/40 border-l-4 border-indigo-500 text-slate-300 text-xs p-3 rounded-lg mb-4 flex items-center gap-2 font-cairo shadow-sm">
-        @switch (activeTab()) {
-          @case ('petty-cash') {
-            <span>💡 <strong>عهد الموقع:</strong> صرف ومتابعة المبالغ المالية السائلة المسلمة لمهندس الموقع للمصاريف اليومية.</span>
-          }
-          @case ('transactions') {
-            <span>💡 <strong>الدفتر المالي:</strong> السجل الشامل والموثق لجميع الإيرادات والمصروفات الفعلية الخاصة بالمشروع.</span>
-          }
-          @case ('settlements') {
-            <span>💡 <strong>التسويات:</strong> مراجعة واعتماد الفواتير والمستندات المقدمة من مهندس الموقع لتسوية العهدة المالية.</span>
-          }
-          @case ('gallery') {
-            <span>💡 <strong>معرض الصور:</strong> رفع وتوثيق صور التقدم الميداني للمشروع (يمكن إظهارها في البروفايل العام).</span>
-          }
-          @case ('members') {
-            <span>💡 <strong>فريق العمل:</strong> إدارة وتعيين المهندسين والمحاسبين المسندين للعمل على هذا المشروع.</span>
-          }
-          @case ('closeout') {
-            <span>💡 <strong>إدارة المشروع:</strong> تعديل بيانات المشروع الأساسية، حالة الظهور، ورفع ملفات المقايسة المرجعية.</span>
-          }
-        }
-      </div>
+      <!-- Contextual Dynamic Tab Info Banner (Dismissible) -->
+      @if (!isTabInfoDismissed()) {
+        <div class="bg-indigo-950/40 border-l-4 border-indigo-500 text-slate-300 text-xs p-3 rounded-lg mb-4 flex items-center justify-between gap-2 font-cairo shadow-sm">
+          <div class="flex items-center gap-2">
+            @switch (activeTab()) {
+              @case ('petty-cash') {
+                <span>💡 <strong>عهد الموقع:</strong> صرف ومتابعة المبالغ المالية السائلة المسلمة لمهندس الموقع للمصاريف اليومية.</span>
+              }
+              @case ('transactions') {
+                <span>💡 <strong>الدفتر المالي:</strong> السجل الشامل والموثق لجميع الإيرادات والمصروفات الفعلية الخاصة بالمشروع.</span>
+              }
+              @case ('settlements') {
+                <span>💡 <strong>التسويات:</strong> مراجعة واعتماد الفواتير والمستندات المقدمة من مهندس الموقع لتسوية العهدة المالية.</span>
+              }
+              @case ('gallery') {
+                <span>💡 <strong>معرض الصور:</strong> رفع وتوثيق صور التقدم الميداني للمشروع (يمكن إظهارها في البروفايل العام).</span>
+              }
+              @case ('members') {
+                <span>💡 <strong>فريق العمل:</strong> إدارة وتعيين المهندسين والمحاسبين المسندين للعمل على هذا المشروع.</span>
+              }
+              @case ('closeout') {
+                <span>💡 <strong>إدارة المشروع:</strong> تعديل بيانات المشروع الأساسية، حالة الظهور، ورفع ملفات المقايسة المرجعية.</span>
+              }
+            }
+          </div>
+          <button
+            type="button"
+            (click)="isTabInfoDismissed.set(true)"
+            title="إخفاء التلميح / Dismiss"
+            class="text-slate-400 hover:text-white text-sm font-bold px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors cursor-pointer shrink-0">
+            ×
+          </button>
+        </div>
+      }
 
 
 
@@ -3070,6 +3081,7 @@ import { LanguageService } from '../../../core/services/language.service';
   `
 })
 export class ProjectDetailsComponent implements OnInit {
+  readonly isTabInfoDismissed = signal(false);
   readonly activePrintSettlement = signal<SettlementMobileDto | null>(null);
   readonly activeTextInspection = signal<{ title: string; content: string; subtitle?: string } | null>(null);
 

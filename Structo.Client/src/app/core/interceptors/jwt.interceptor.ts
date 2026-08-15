@@ -1,5 +1,5 @@
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
@@ -8,10 +8,15 @@ import { catchError, switchMap, filter, take, throwError, Observable } from 'rxj
 import { extractApiMessage, translateErrorMessage } from '../utils/error-translations';
 
 export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
-  const authService = inject(AuthService);
-  const toastService = inject(ToastService);
-  const router = inject(Router);
-  const token = authService.getToken();
+  const injector = inject(Injector);
+  let authService: AuthService | null = null;
+  let token: string | null = null;
+  try {
+    authService = injector.get(AuthService);
+    token = authService.getToken();
+  } catch {
+    // fallback if DI is initializing
+  }
 
   let authReq = req;
   // Attach the token only if it exists and request is to our backend API
@@ -29,12 +34,16 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
 
   return next(authReq).pipe(
     catchError((error) => {
+      const toast = injector.get(ToastService, null);
+      const router = injector.get(Router, null);
+      const auth = authService || injector.get(AuthService, null);
+
       const apiMessage = extractApiMessage(error);
       if (apiMessage === 'ACCOUNT_DEACTIVATED' || apiMessage === 'REFRESH_TOKEN_EXPIRED') {
-        authService.logout();
+        auth?.logout();
         const translatedMsg = translateErrorMessage(apiMessage);
-        toastService.show('تنبيه الحساب', translatedMsg, 'error');
-        router.navigate(['/login']);
+        toast?.show('تنبيه الحساب', translatedMsg, 'error');
+        router?.navigate(['/login']);
         return throwError(() => error);
       }
 
@@ -43,9 +52,10 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
         error.status === 401 &&
         !req.url.includes('/auth/refresh') &&
         !req.url.includes('/auth/refresh-token') &&
-        !req.url.includes('/auth/login')
+        !req.url.includes('/auth/login') &&
+        auth && toast && router
       ) {
-        return handle401Error(authReq, next, authService, toastService, router);
+        return handle401Error(authReq, next, auth, toast, router);
       }
       return throwError(() => error);
     })
