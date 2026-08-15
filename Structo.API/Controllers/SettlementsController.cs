@@ -14,7 +14,9 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
 [Authorize(Roles = "TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
-public class SettlementsController(ISettlementService settlementService) : ControllerBase
+public class SettlementsController(
+    ISettlementService settlementService,
+    IProjectAccessService projectAccessService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid CurrentUserId
@@ -31,6 +33,11 @@ public class SettlementsController(ISettlementService settlementService) : Contr
     [HttpPost]
     public async Task<ActionResult<ApiResponse<Guid>>> Create([FromRoute] Guid projectId, [FromBody] SettlementCreateDto dto)
     {
+        if (!await projectAccessService.CanRequestCustodyOrSettleAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
         if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
         {
@@ -59,9 +66,14 @@ public class SettlementsController(ISettlementService settlementService) : Contr
     }
 
     [HttpPost("{id}/approve")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Approve([FromRoute] Guid projectId, [FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await settlementService.ApproveSettlementAsync(projectId, id, CurrentUserRole, CurrentUserId);
 
         if (!success)
@@ -73,9 +85,14 @@ public class SettlementsController(ISettlementService settlementService) : Contr
     }
 
     [HttpPost("{id}/confirm-refund")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> ConfirmRefund([FromRoute] Guid projectId, [FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await settlementService.ConfirmRefundAsync(projectId, id, CurrentUserRole);
 
         if (!success)
@@ -87,9 +104,14 @@ public class SettlementsController(ISettlementService settlementService) : Contr
     }
 
     [HttpPost("{id}/reject")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Reject([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] SettlementRejectDto dto)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await settlementService.RejectSettlementAsync(projectId, id, dto, CurrentUserRole, CurrentUserId);
 
         if (!success)
@@ -103,6 +125,11 @@ public class SettlementsController(ISettlementService settlementService) : Contr
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<SettlementMobileDto>>>> GetSettlements([FromRoute] Guid projectId)
     {
+        if (!await projectAccessService.CanViewProjectAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var data = await settlementService.GetSettlementsAsync(projectId, CurrentUserId, CurrentUserRole);
         return Ok(new ApiResponse<IEnumerable<SettlementMobileDto>>
         {

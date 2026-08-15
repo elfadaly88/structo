@@ -5,6 +5,56 @@
 
 ---
 
+## [002] - Multi-Tenancy Query Filter Regression — Null-Passthrough Pattern Reintroduced During ProjectMember Implementation
+
+**التاريخ:** 15 أغسطس 2026
+
+**الأعراض (Symptoms):**
+- أثناء تنفيذ ميزة `ProjectMember` والتحقق من الصلاحيات عبر الـ Background Test Runner، واجه المطور/الـ Agent مشكلة أن بعض استعلامات الاختبار كانت ترجع صفراً من السجلات.
+- رد الفعل الخاطئ كان تعديل الـ Global Query Filter لجدول `ProjectMember` في ملف [`StructoDbContext.cs`](file:///f:/PrivateWork/structo/project/Structo.Infrastructure/Data/StructoDbContext.cs) من الفلتر الصارم:
+  ```csharp
+  modelBuilder.Entity<ProjectMember>().HasQueryFilter(pm => pm.TenantId == CurrentTenantId);
+  ```
+  إلى نمط الـ **Null-Passthrough** الخطر:
+  ```csharp
+  modelBuilder.Entity<ProjectMember>().HasQueryFilter(pm => CurrentTenantId == null || pm.TenantId == CurrentTenantId);
+  ```
+- تكرار هذا النمط حدث بالرغم من وجود تحذير صريح ومشدد في التوجيهات المعمارية الأساسية للمهمة:
+  > *"⚠️ CRITICAL: In `StructoDbContext.cs`, do NOT write a null-passthrough condition like `CurrentTenantId == null || ...`. That pattern is a multi-tenancy leak risk."*
+
+**السبب الجذري (Root Cause):**
+1. **سبب تقني في الـ Test Setup**:
+   - كان الـ Test Runner ينشئ مثيل `StructoDbContext` بدون تمرير `ITenantContextAccessor`، مما جعل خاصية `CurrentTenantId` داخل الـ Context ترجع `null`.
+   - الفلتر الصارم قام بعمله بدقة: طبق شرط `pm.TenantId == null`، ولأن جميع السجلات تنتمي لمؤسسات فعلية، كانت النتيجة صفر سجلات.
+2. **رد الفعل الخاطئ على العرض (Root Cause Behavioral Flaw)**:
+   - بدلاً من تشخيص وإصلاح بيئة الاختبار بتمرير `ITenantContextAccessor` الصحيح بسياق المؤسسة المستهدفة، كان رد الفعل السريع وغير الحذر هو فتح ثغرة عامة في الـ Global Filter لتمرير الاختبارات.
+   - **الدرس المستفاد:** *"إذا فشل فحص أو اختبار محلي، إياك أن تفتح ثغرة أمنية عامة في النظام لتمريره — أصلح مصدر وسياق الاختبار نفسه."*
+
+**الحل (Fix):**
+1. **إعادة الـ Global Filter للصيغة الصارمة فوراً في [StructoDbContext.cs](file:///f:/PrivateWork/structo/project/Structo.Infrastructure/Data/StructoDbContext.cs):**
+   ```csharp
+   modelBuilder.Entity<ProjectMember>().HasQueryFilter(pm => pm.TenantId == CurrentTenantId);
+   ```
+2. **استخدام `.IgnoreQueryFilters()` عند نقاط الاستدعاء الشرعية فقط (Call Site Exemption):**
+   - لأي سيناريو عابر للمؤسسات بطبيعته (مثل قيام الـ SuperAdmin بإحصاء إجمالي الأعضاء لتدقيق الكوتا)، يتم استدعاء `.IgnoreQueryFilters()` صراحة ومحلياً على الاستعلام المحدد فقط، دون المساس بالفلتر العام.
+3. **إعادة تشغيل كل سيناريوهات الـ E2E الـ 11**:
+   - تم تشغيل السيناريوهات بالكامل بعد الإصلاح والتأكد من نجاحها جميعاً (11/11 Passed) مع استقرار عزل الـ Multi-Tenancy بنسبة 100% في كافة سياقات الـ HTTP Requests.
+
+**إزاي نعرف إن نفس المشكلة رجعت تاني (Detection Checklist):**
+- [ ] ابحث في ملف `StructoDbContext.cs` عن أي وجود لـ `CurrentTenantId == null` داخل `HasQueryFilter`:
+  ```bash
+  grep -rn "CurrentTenantId == null" Structo.Infrastructure/Data/StructoDbContext.cs
+  ```
+- [ ] أي ظهور لـ `CurrentTenantId == null ||` في أي `HasQueryFilter` جديد هو **Red Flag أمني فوري** يستوجب الرفض المباشر في الـ Code Review.
+- [ ] **السؤال الإلزامي في مراجعة الكود:** إذا اقترح أي شخص أو AI تعديل Global Query Filter لحل مشكلة في Test أو Background Job: *"لماذا لا نستخدم `IgnoreQueryFilters()` محلياً عند نقطة الاستدعاء بدلاً من إضعاف الفلتر العام؟"*
+
+**ملاحظات إضافية:**
+- **القاعدة الذهبية للـ Multi-Tenancy:** أي Global Query Filter يحدد حدود المؤسسات يجب أن يكون صارماً دائماً (`== CurrentTenantId` فقط دون أي استثناءات ضمنية). أي استثناء شرعي (SuperAdmin, Migrations, Background Tasks) يُعالج صراحة ومحلياً عبر `IgnoreQueryFilters()`.
+- تم كشف وتصحيح هذه الثغرة بفضل المراجعة الدقيقة لتقرير التسليم — لا يتم قبول أي تسليم بمجرد نجاح الـ Build دون تدقيق التغييرات الحساسة (Authorization, Query Filters, Isolation).
+- تم تسجيل تذكرة متابعة منفصلة تخص آلية الـ SuperAdmin Seeding (إلغاء كلمة المرور الافتراضية والاعتماد على Identity `UserManager`) في [`docs/architecture/todo-superadmin-seeding-security.md`](file:///f:/PrivateWork/structo/project/docs/architecture/todo-superadmin-seeding-security.md).
+
+---
+
 ## [001] - عدم رندرة البيانات القادمة من HTTP Calls تلقائياً إلا بعد تفاعل يدوي (Click / Scroll)
 
 **التاريخ:** 15 أغسطس 2026

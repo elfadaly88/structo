@@ -33,4 +33,7 @@ public class UserCreateDto
 
     [Required]
     public UserRole Role { get; set; }
+
+    public System.Collections.Generic.List<Guid>? AssignedProjectIds { get; set; }
 }
+

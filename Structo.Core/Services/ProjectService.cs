@@ -67,7 +67,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         IsReviewHidden = p.IsReviewHidden
     };
 
-    public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole)
+    public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole, Guid? currentUserId = null)
     {
         var query = context.Set<Project>().AsNoTracking().AsQueryable();
 
@@ -79,6 +79,19 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
                 throw new UnauthorizedAccessException("Tenant ID claim missing or invalid.");
             }
             query = query.Where(p => p.TenantId == currentTenantId.Value);
+
+            // Scoped visibility: Non-TenantOwner roles (Manager, Accountant, SiteEngineer, DesignEngineer)
+            // only see projects they are assigned to
+            if (userRole != "TenantOwner" && currentUserId.HasValue && currentUserId.Value != Guid.Empty)
+            {
+                var assignedProjectIds = await context.Set<ProjectMember>()
+                    .AsNoTracking()
+                    .Where(pm => pm.UserId == currentUserId.Value)
+                    .Select(pm => pm.ProjectId)
+                    .ToListAsync();
+
+                query = query.Where(p => assignedProjectIds.Contains(p.Id));
+            }
         }
         else if (tenantIdFilter.HasValue)
         {
@@ -92,7 +105,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         return projects.Select(p => MapToDto(p, userRole)).ToList();
     }
 
-    public async Task<(bool Success, ProjectDto? Data, string Message)> CreateProjectAsync(ProjectCreateDto dto, string userRole)
+    public async Task<(bool Success, ProjectDto? Data, string Message)> CreateProjectAsync(ProjectCreateDto dto, string userRole, Guid? assignedByUserId = null)
     {
         Guid tenantId;
 
@@ -138,8 +151,6 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         var allowedProjects = tenant?.MaxActiveProjects ?? 1;
 
         // ─── Total Lifetime Slot Logic ─────────────────────────────────────────────
-        // A closed/completed project permanently consumes a slot.
-        // We count ALL projects ever created regardless of status.
         var usedProjects = await context.Set<Project>()
             .CountAsync(p => p.TenantId == tenantId);
 
@@ -152,6 +163,24 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             finalStatus = ProjectStatus.PendingActivation;
             isActive = false;
             creationMessage = "QUOTA_EXCEEDED: Project created under PendingActivation status.";
+        }
+
+        // Validate assigned users if provided
+        if (dto.AssignedUserIds != null && dto.AssignedUserIds.Any())
+        {
+            var assignedUsers = await context.Set<User>()
+                .Where(u => dto.AssignedUserIds.Contains(u.Id) && u.TenantId == tenantId)
+                .ToListAsync();
+
+            if (assignedUsers.Count != dto.AssignedUserIds.Distinct().Count())
+            {
+                return (false, null, "One or more assigned users do not exist in this company.");
+            }
+
+            if (assignedUsers.Any(u => u.Role == UserRole.TenantOwner || u.Role == UserRole.SuperAdmin))
+            {
+                return (false, null, "TenantOwner or SuperAdmin users cannot be explicitly assigned to projects.");
+            }
         }
 
         var project = new Project
@@ -174,12 +203,28 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         };
 
         context.Set<Project>().Add(project);
+
+        if (dto.AssignedUserIds != null && dto.AssignedUserIds.Any())
+        {
+            foreach (var userId in dto.AssignedUserIds.Distinct())
+            {
+                context.Set<ProjectMember>().Add(new ProjectMember
+                {
+                    ProjectId = project.Id,
+                    UserId = userId,
+                    TenantId = tenantId,
+                    AssignedAt = DateTime.UtcNow,
+                    AssignedByUserId = assignedByUserId
+                });
+            }
+        }
+
         await context.SaveChangesAsync();
 
         return (true, MapToDto(project), creationMessage);
     }
 
-    public async Task<(bool Success, ProjectDto? Data, string Message)> UpdateProjectAsync(Guid id, ProjectCreateDto dto, string userRole)
+    public async Task<(bool Success, ProjectDto? Data, string Message)> UpdateProjectAsync(Guid id, ProjectCreateDto dto, string userRole, Guid? assignedByUserId = null)
     {
         var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return (false, null, "Project not found.");
@@ -189,6 +234,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             return (false, null, "ACCESS_DENIED: Pending activation projects cannot be modified.");
         }
 
+        Guid tenantId;
         if (userRole != "SuperAdmin")
         {
             var currentTenantId = tenantContextAccessor.GetCurrentTenantId();
@@ -196,6 +242,11 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             {
                 return (false, null, "Unauthorized access to this project.");
             }
+            tenantId = currentTenantId.Value;
+        }
+        else
+        {
+            tenantId = project.TenantId;
         }
 
         project.Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty;
@@ -239,10 +290,184 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         project.ClientWhatsApp = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.ClientWhatsApp);
         project.PropertyType = Enum.TryParse<PropertyType>(dto.PropertyType, true, out var pType) ? pType : PropertyType.Residential;
 
+        // Synchronize assigned members if explicitly provided
+        if (dto.AssignedUserIds != null)
+        {
+            // Block member modifications if project is not active
+            if (project.Status != ProjectStatus.Active)
+            {
+                return (false, null, "لا يمكن تعديل فريق العمل — المشروع مجمّد أو مغلق / Cannot modify team members — project is frozen or closed.");
+            }
+
+            var validUsers = await context.Set<User>()
+                .Where(u => dto.AssignedUserIds.Contains(u.Id) && u.TenantId == tenantId && u.Role != UserRole.TenantOwner && u.Role != UserRole.SuperAdmin)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            var currentMembers = await context.Set<ProjectMember>()
+                .Where(pm => pm.ProjectId == id)
+                .ToListAsync();
+
+            var currentMemberIds = currentMembers.Select(m => m.UserId).ToHashSet();
+            var targetMemberIds = validUsers.ToHashSet();
+
+            var toRemove = currentMembers.Where(m => !targetMemberIds.Contains(m.UserId)).ToList();
+            var toAddIds = targetMemberIds.Where(uid => !currentMemberIds.Contains(uid)).ToList();
+
+            if (toRemove.Any())
+            {
+                context.Set<ProjectMember>().RemoveRange(toRemove);
+            }
+
+            foreach (var newUid in toAddIds)
+            {
+                context.Set<ProjectMember>().Add(new ProjectMember
+                {
+                    ProjectId = id,
+                    UserId = newUid,
+                    TenantId = tenantId,
+                    AssignedAt = DateTime.UtcNow,
+                    AssignedByUserId = assignedByUserId
+                });
+            }
+        }
+
         await context.SaveChangesAsync();
 
         return (true, MapToDto(project), "Project updated successfully");
     }
+
+    public async Task<List<ProjectMemberDto>> GetProjectMembersAsync(Guid projectId)
+    {
+        var members = await context.Set<ProjectMember>()
+            .AsNoTracking()
+            .Include(pm => pm.User)
+            .Where(pm => pm.ProjectId == projectId)
+            .OrderBy(pm => pm.AssignedAt)
+            .ToListAsync();
+
+        return members.Select(pm => new ProjectMemberDto
+        {
+            ProjectId = pm.ProjectId,
+            UserId = pm.UserId,
+            FullName = pm.User != null ? $"{pm.User.FirstName} {pm.User.LastName}".Trim() : string.Empty,
+            Email = pm.User?.Email ?? string.Empty,
+            Role = pm.User?.Role.ToString() ?? string.Empty,
+            PhoneNumber = pm.User?.PersonalPhone ?? pm.User?.WhatsAppPhone,
+            AssignedAt = pm.AssignedAt != default ? pm.AssignedAt : DateTime.UtcNow,
+            AssignedByUserId = pm.AssignedByUserId
+        }).ToList();
+    }
+
+    public async Task<(bool Success, string Message, List<ProjectMemberDto>? AddedMembers)> AddProjectMembersAsync(Guid projectId, List<Guid> userIds, Guid assignedByUserId, Guid tenantId)
+    {
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        if (project == null)
+            return (false, "Project not found.", null);
+
+        // Guard: Block if project is not Active (FinancialFreeze or Closed)
+        if (project.Status != ProjectStatus.Active)
+        {
+            return (false, "لا يمكن تعديل فريق العمل — المشروع مجمّد أو مغلق / Cannot modify team members — project is frozen or closed.", null);
+        }
+
+        if (userIds == null || !userIds.Any())
+        {
+            return (false, "No users selected for assignment.", null);
+        }
+
+        var distinctUserIds = userIds.Distinct().ToList();
+        var users = await context.Set<User>()
+            .Where(u => distinctUserIds.Contains(u.Id) && u.TenantId == tenantId)
+            .ToListAsync();
+
+        if (users.Count != distinctUserIds.Count)
+        {
+            return (false, "One or more selected users were not found in this company.", null);
+        }
+
+        if (users.Any(u => u.Role == UserRole.TenantOwner || u.Role == UserRole.SuperAdmin))
+        {
+            return (false, "TenantOwner or SuperAdmin users cannot be explicitly assigned to projects.", null);
+        }
+
+        var existingMemberUserIds = await context.Set<ProjectMember>()
+            .Where(pm => pm.ProjectId == projectId)
+            .Select(pm => pm.UserId)
+            .ToListAsync();
+
+        var duplicateUserIds = distinctUserIds.Where(uid => existingMemberUserIds.Contains(uid)).ToList();
+        if (distinctUserIds.Count == 1 && duplicateUserIds.Any())
+        {
+            return (false, "DUPLICATE_MEMBER: This user is already assigned to this project.", null);
+        }
+
+        var usersToInsert = distinctUserIds.Where(uid => !existingMemberUserIds.Contains(uid)).ToList();
+        if (!usersToInsert.Any())
+        {
+            return (false, "All selected users are already assigned to this project.", null);
+        }
+
+        var addedEntities = new List<ProjectMember>();
+        foreach (var uid in usersToInsert)
+        {
+            var pm = new ProjectMember
+            {
+                ProjectId = projectId,
+                UserId = uid,
+                TenantId = tenantId,
+                AssignedAt = DateTime.UtcNow,
+                AssignedByUserId = assignedByUserId
+            };
+            context.Set<ProjectMember>().Add(pm);
+            addedEntities.Add(pm);
+        }
+
+        await context.SaveChangesAsync();
+
+        var addedDtos = users
+            .Where(u => usersToInsert.Contains(u.Id))
+            .Select(u => new ProjectMemberDto
+            {
+                ProjectId = projectId,
+                UserId = u.Id,
+                FullName = $"{u.FirstName} {u.LastName}".Trim(),
+                Email = u.Email,
+                Role = u.Role.ToString(),
+                PhoneNumber = u.PersonalPhone ?? u.WhatsAppPhone,
+                AssignedAt = DateTime.UtcNow,
+                AssignedByUserId = assignedByUserId
+            }).ToList();
+
+        return (true, "Members assigned successfully.", addedDtos);
+    }
+
+    public async Task<(bool Success, string Message)> RemoveProjectMemberAsync(Guid projectId, Guid userId, Guid tenantId)
+    {
+        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        if (project == null)
+            return (false, "Project not found.");
+
+        // Guard: Block if project is not Active
+        if (project.Status != ProjectStatus.Active)
+        {
+            return (false, "لا يمكن تعديل فريق العمل — المشروع مجمّد أو مغلق / Cannot modify team members — project is frozen or closed.");
+        }
+
+        var member = await context.Set<ProjectMember>()
+            .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == userId && pm.TenantId == tenantId);
+
+        if (member == null)
+        {
+            return (false, "User is not a member of this project.");
+        }
+
+        context.Set<ProjectMember>().Remove(member);
+        await context.SaveChangesAsync();
+
+        return (true, "Member removed from project successfully.");
+    }
+
 
     public async Task<ProjectDto?> GetProjectByIdAsync(Guid id)
     {

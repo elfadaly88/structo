@@ -37,7 +37,8 @@ public class UsersController(IUserService userService, StructoDbContext context,
     [Authorize(Roles = "TenantOwner,SuperAdmin")]
     public async Task<ActionResult<ApiResponse<UserDto>>> Create([FromBody] UserCreateDto dto)
     {
-        var (success, data, message) = await userService.CreateUserAsync(dto, CurrentUserRole);
+        var (success, data, message) = await userService.CreateUserAsync(dto, CurrentUserRole, CurrentUserId);
+
 
         if (!success)
         {

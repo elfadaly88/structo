@@ -35,6 +35,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<SettlementLine> SettlementLines => Set<SettlementLine>();
     public DbSet<SubscriptionTransaction> SubscriptionTransactions => Set<SubscriptionTransaction>();
+    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +43,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<DataProtectionKey>().ToTable("DataProtectionKeys");        
         modelBuilder.Entity<User>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<Project>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<ProjectMember>().HasQueryFilter(pm => pm.TenantId == CurrentTenantId);
         modelBuilder.Entity<FinancialTransaction>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<PettyCash>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
@@ -53,6 +55,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             CurrentTenantId == null ||
             e.TenantId == null ||
             e.TenantId == CurrentTenantId);
+
 
         modelBuilder.Entity<Tenant>(entity =>
         {
@@ -113,10 +116,32 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => e.TenantId);
         });
 
+        modelBuilder.Entity<ProjectMember>(entity =>
+        {
+            entity.HasKey(pm => new { pm.ProjectId, pm.UserId });
+            entity.HasIndex(pm => pm.UserId);
+            entity.HasIndex(pm => pm.TenantId);
+
+            entity.HasOne(pm => pm.Project)
+                  .WithMany(p => p.Members)
+                  .HasForeignKey(pm => pm.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(pm => pm.User)
+                  .WithMany(u => u.ProjectMemberships)
+                  .HasForeignKey(pm => pm.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(pm => pm.Tenant)
+                  .WithMany()
+                  .HasForeignKey(pm => pm.TenantId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<FinancialTransaction>(entity =>
         {
             entity.HasKey(e => e.Id);
+
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Amount).HasColumnType("numeric(18,2)"); 
             

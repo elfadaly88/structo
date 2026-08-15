@@ -16,17 +16,26 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ProjectsController(IProjectService projectService, ITenantContextAccessor tenantContextAccessor, StructoDbContext context) : ControllerBase
+public class ProjectsController(
+    IProjectService projectService, 
+    IProjectAccessService projectAccessService,
+    ITenantContextAccessor tenantContextAccessor, 
+    StructoDbContext context) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid? CurrentTenantId => tenantContextAccessor.GetCurrentTenantId();
+    private Guid CurrentUserId => Guid.Parse(
+        User.FindFirstValue("sub") ??
+        User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+        User.FindFirstValue("uid") ??
+        Guid.Empty.ToString());
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<List<ProjectDto>>>> GetAll([FromQuery] Guid? tenantId = null)
     {
         try
         {
-            var projects = await projectService.GetAllProjectsAsync(tenantId, CurrentUserRole);
+            var projects = await projectService.GetAllProjectsAsync(tenantId, CurrentUserRole, CurrentUserId);
             return Ok(new ApiResponse<List<ProjectDto>> { Data = projects, CurrentUserRole = CurrentUserRole });
         }
         catch (UnauthorizedAccessException ex)
@@ -36,10 +45,10 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     }
 
     [HttpPost]
-    [Authorize(Roles = "TenantOwner,Manager")]
+    [Authorize(Roles = "TenantOwner")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> Create([FromBody] ProjectCreateDto dto)
     {
-        var (success, data, message) = await projectService.CreateProjectAsync(dto, CurrentUserRole);
+        var (success, data, message) = await projectService.CreateProjectAsync(dto, CurrentUserRole, CurrentUserId);
 
         if (!success)
         {
@@ -54,6 +63,11 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> GetById([FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanViewProjectAsync(User, id))
+        {
+            return Forbid();
+        }
+
         var project = await projectService.GetProjectByIdAsync(id);
 
         if (project == null)
@@ -82,9 +96,13 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     }
 
     [HttpPost("{id}/budget-revision")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> ReviseBudget([FromRoute] Guid id, [FromBody] ProjectBudgetRevisionDto dto)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, id))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await projectService.ReviseBudgetAsync(id, dto);
 
         if (!success)
@@ -96,15 +114,24 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     [HttpGet("{id}/budget-history")]
     public async Task<ActionResult<ApiResponse<List<ProjectBudgetLog>>>> GetBudgetHistory([FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanViewProjectAsync(User, id))
+        {
+            return Forbid();
+        }
+
         var logs = await projectService.GetBudgetHistoryAsync(id);
         return Ok(new ApiResponse<List<ProjectBudgetLog>> { Data = logs, CurrentUserRole = CurrentUserRole });
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "TenantOwner,Manager")]
     public async Task<ActionResult<ApiResponse<ProjectDto>>> Update([FromRoute] Guid id, [FromBody] ProjectCreateDto dto)
     {
-        var (success, data, message) = await projectService.UpdateProjectAsync(id, dto, CurrentUserRole);
+        if (!await projectAccessService.CanManageProjectMembersAsync(User, id))
+        {
+            return Forbid();
+        }
+
+        var (success, data, message) = await projectService.UpdateProjectAsync(id, dto, CurrentUserRole, CurrentUserId);
 
         if (!success)
             return BadRequest(new ApiResponse<ProjectDto> { Success = false, Message = message });
@@ -113,13 +140,85 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     }
 
     // =====================================================================
+    // TEAM MEMBER MANAGEMENT ENDPOINTS
+    // =====================================================================
+
+    [HttpGet("{id}/members")]
+    public async Task<ActionResult<ApiResponse<List<ProjectMemberDto>>>> GetMembers([FromRoute] Guid id)
+    {
+        if (!await projectAccessService.CanViewProjectMembersAsync(User, id))
+        {
+            return Forbid();
+        }
+
+        var members = await projectService.GetProjectMembersAsync(id);
+        return Ok(new ApiResponse<List<ProjectMemberDto>> { Data = members, CurrentUserRole = CurrentUserRole });
+    }
+
+    [HttpPost("{id}/members")]
+    public async Task<ActionResult<ApiResponse<List<ProjectMemberDto>>>> AddMembers([FromRoute] Guid id, [FromBody] ProjectMemberAssignDto dto)
+    {
+        if (!await projectAccessService.CanManageProjectMembersAsync(User, id))
+        {
+            return Forbid();
+        }
+
+        var tenantId = CurrentTenantId;
+        if (!tenantId.HasValue)
+        {
+            return Unauthorized(new ApiResponse<List<ProjectMemberDto>> { Success = false, Message = "Tenant context missing." });
+        }
+
+        var (success, message, addedMembers) = await projectService.AddProjectMembersAsync(id, dto.UserIds, CurrentUserId, tenantId.Value);
+
+        if (!success)
+        {
+            if (message.Contains("DUPLICATE_MEMBER"))
+            {
+                return Conflict(new ApiResponse<List<ProjectMemberDto>> { Success = false, Message = message });
+            }
+            return BadRequest(new ApiResponse<List<ProjectMemberDto>> { Success = false, Message = message });
+        }
+
+        return Ok(new ApiResponse<List<ProjectMemberDto>> { Data = addedMembers ?? [], Message = message, CurrentUserRole = CurrentUserRole });
+    }
+
+    [HttpDelete("{id}/members/{userId}")]
+    public async Task<ActionResult<ApiResponse<bool>>> RemoveMember([FromRoute] Guid id, [FromRoute] Guid userId)
+    {
+        if (!await projectAccessService.CanManageProjectMembersAsync(User, id))
+        {
+            return Forbid();
+        }
+
+        var tenantId = CurrentTenantId;
+        if (!tenantId.HasValue)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant context missing." });
+        }
+
+        var (success, message) = await projectService.RemoveProjectMemberAsync(id, userId, tenantId.Value);
+
+        if (!success)
+        {
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
+        }
+
+        return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
+    }
+
+    // =====================================================================
     // CLOSEOUT ENDPOINTS
     // =====================================================================
 
     [HttpGet("{id}/reconciliation-report")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<ProjectReconciliationReportDto>>> GetReconciliationReport([FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, id))
+        {
+            return Forbid();
+        }
+
         var tenantId = CurrentTenantId;
         if (tenantId == null)
             return Unauthorized(new ApiResponse<ProjectReconciliationReportDto> { Success = false, Message = "Tenant context missing." });
@@ -132,9 +231,13 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     }
 
     [HttpPost("{id}/freeze")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> FreezeProject([FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, id))
+        {
+            return Forbid();
+        }
+
         var tenantId = CurrentTenantId;
         if (tenantId == null)
             return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant context missing." });
@@ -152,9 +255,13 @@ public class ProjectsController(IProjectService projectService, ITenantContextAc
     }
 
     [HttpPost("{id}/final-closeout")]
-    [Authorize(Roles = "TenantOwner")]
     public async Task<ActionResult<ApiResponse<bool>>> FinalCloseout([FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanCloseoutProjectAsync(User, id))
+        {
+            return Forbid();
+        }
+
         var tenantId = CurrentTenantId;
         if (tenantId == null)
             return Unauthorized(new ApiResponse<bool> { Success = false, Message = "Tenant context missing." });

@@ -43,4 +43,6 @@ public class Project : ITenantEntity
     public ICollection<PettyCash> PettyCashes { get; set; } = [];
     public ICollection<SitePhoto> SitePhotos { get; set; } = [];
     public ICollection<Settlement> Settlements { get; set; } = [];
+    public ICollection<ProjectMember> Members { get; set; } = [];
 }
+

@@ -423,6 +423,32 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.ToTable("ProjectCashPools");
                 });
 
+            modelBuilder.Entity("Structo.Core.Entities.ProjectMember", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("AssignedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ProjectId", "UserId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ProjectMembers");
+                });
+
             modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -913,6 +939,33 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Structo.Core.Entities.ProjectMember", b =>
+                {
+                    b.HasOne("Structo.Core.Entities.Project", "Project")
+                        .WithMany("Members")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Structo.Core.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Structo.Core.Entities.User", "User")
+                        .WithMany("ProjectMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Structo.Core.Entities.Settlement", b =>
                 {
                     b.HasOne("Structo.Core.Entities.PettyCash", "PettyCash")
@@ -1018,6 +1071,8 @@ namespace Structo.Infrastructure.Data.Migrations
                 {
                     b.Navigation("FinancialTransactions");
 
+                    b.Navigation("Members");
+
                     b.Navigation("PettyCashes");
 
                     b.Navigation("Settlements");
@@ -1042,6 +1097,8 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Navigation("ManagedProjects");
 
                     b.Navigation("PettyCashes");
+
+                    b.Navigation("ProjectMemberships");
                 });
 #pragma warning restore 612, 618
         }

@@ -91,8 +91,38 @@ namespace Structo.API.Controllers
                 IsApproved = true // 🔒 Crucial: manually pre-approved
             };
 
+            var currentUserId = Guid.Parse(
+                User.FindFirstValue("sub") ??
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue("uid") ??
+                Guid.Empty.ToString());
+
             _context.Users.Add(employee);
+
+            if (dto.AssignedProjectIds != null && dto.AssignedProjectIds.Any() && dto.Role != UserRole.TenantOwner && dto.Role != UserRole.SuperAdmin)
+            {
+                var targetTenant = tenantId ?? Guid.Empty;
+                var distinctProjectIds = dto.AssignedProjectIds.Distinct().ToList();
+
+                var validProjects = await _context.Projects
+                    .Where(p => distinctProjectIds.Contains(p.Id) && p.TenantId == targetTenant && p.Status == ProjectStatus.Active)
+                    .ToListAsync();
+
+                foreach (var proj in validProjects)
+                {
+                    _context.ProjectMembers.Add(new ProjectMember
+                    {
+                        ProjectId = proj.Id,
+                        UserId = employee.Id,
+                        TenantId = targetTenant,
+                        AssignedAt = DateTime.UtcNow,
+                        AssignedByUserId = currentUserId
+                    });
+                }
+            }
+
             await _context.SaveChangesAsync();
+
 
             // Send Invitation Email via OneSignal in the background
             var targetEmail = employee.Email;

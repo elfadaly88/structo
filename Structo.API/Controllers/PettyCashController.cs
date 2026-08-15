@@ -15,17 +15,25 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/projects/{projectId}/[controller]")]
 [Authorize(Roles = "TenantOwner,Manager,Accountant,SiteEngineer,DesignEngineer")]
-public class PettyCashController(IPettyCashService pettyCashService) : ControllerBase
+public class PettyCashController(
+    IPettyCashService pettyCashService,
+    IProjectAccessService projectAccessService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
     private Guid CurrentUserId => Guid.Parse(
         User.FindFirstValue("sub") ??
         User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+        User.FindFirstValue("uid") ??
         Guid.Empty.ToString());
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> Create([FromRoute] Guid projectId, [FromBody] PettyCashCreateDto dto)
     {
+        if (!await projectAccessService.CanRequestCustodyOrSettleAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
         Guid? tenantId = tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var parsedId) ? parsedId : null;
 
@@ -49,9 +57,14 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     }
 
     [HttpPost("{id}/approve")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Approve([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashApproveDto dto)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await pettyCashService.ApprovePettyCashAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
@@ -65,9 +78,14 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     }
 
     [HttpPost("{id}/reject")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Reject([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashRejectDto dto)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await pettyCashService.RejectPettyCashAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
@@ -81,9 +99,14 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     }
 
     [HttpPost("{id}/settle")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Settle([FromRoute] Guid projectId, [FromRoute] Guid id, [FromBody] PettyCashSettleDto dto)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         try
         {
             var result = await pettyCashService.SettlePettyCashAsync(projectId, id, dto, CurrentUserRole, CurrentUserId);
@@ -106,6 +129,11 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
         [FromQuery] int pageNumber = 1, 
         [FromQuery] int pageSize = 10)
     {
+        if (!await projectAccessService.CanRequestCustodyOrSettleAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var data = await pettyCashService.GetMobilePettyCashAsync(projectId, pageNumber, pageSize, CurrentUserId, CurrentUserRole);
         return Ok(new ApiResponse<PaginatedList<PettyCashMobileDto>>
         {
@@ -115,12 +143,17 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Update(
         [FromRoute] Guid projectId,
         [FromRoute] Guid id,
         [FromBody] PettyCashUpdateDto dto)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await pettyCashService.UpdatePettyCashAsync(projectId, id, dto, CurrentUserRole);
 
         if (!success)
@@ -134,11 +167,16 @@ public class PettyCashController(IPettyCashService pettyCashService) : Controlle
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "TenantOwner,Accountant")]
+    [Authorize(Roles = "TenantOwner,Manager,Accountant")]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(
         [FromRoute] Guid projectId,
         [FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanManageProjectFinancialsAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var (success, message) = await pettyCashService.DeletePettyCashAsync(projectId, id, CurrentUserRole);
 
         if (!success)

@@ -29,7 +29,9 @@ export interface UserCreateDto {
   personalPhone?: string | null;
   whatsAppPhone?: string | null;
   role: 'Manager' | 'Accountant' | 'SiteEngineer' | 'DesignEngineer';
+  assignedProjectIds?: string[];
 }
+
 
 @Injectable({
   providedIn: 'root'

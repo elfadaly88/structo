@@ -17,4 +17,6 @@ public class ProjectCreateDto
     public string ClientName { get; set; } = string.Empty;
     public string ClientWhatsApp { get; set; } = string.Empty;
     public string PropertyType { get; set; } = "Residential";
+    public System.Collections.Generic.List<Guid>? AssignedUserIds { get; set; }
 }
+

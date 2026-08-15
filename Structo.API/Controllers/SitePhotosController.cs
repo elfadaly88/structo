@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.Photos;
 using Structo.Core.Entities;
+using Structo.Core.Interfaces;
 using Structo.Infrastructure.Data;
 using System;
 using System.IO;
@@ -24,7 +25,7 @@ namespace Structo.API.Controllers;
 [Route("api/projects/{projectId}/[controller]")]
 [Route("api/projects/{projectId}/photos")]
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer,DesignEngineer")]
-public class SitePhotosController(StructoDbContext context) : ControllerBase
+public class SitePhotosController(StructoDbContext context, IProjectAccessService projectAccessService) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
@@ -35,6 +36,11 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<bool>>> UploadPhoto([FromRoute] Guid projectId, [FromForm] Models.SitePhotoUploadDto dto)
     {
+        if (!await projectAccessService.CanRequestCustodyOrSettleAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         if (dto.File == null || dto.File.Length == 0)
             return BadRequest(new ApiResponse<bool> { Success = false, Message = "No file uploaded" });
 
@@ -54,7 +60,7 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
             await dto.File.CopyToAsync(stream);
         }
 
-        var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("uid");
         Guid.TryParse(userIdString, out var userId);
 
         // Sanitize caption — max 200 chars
@@ -91,9 +97,11 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // Explicitly query only SitePhotos for this project.
-        // FinancialTransaction.ReceiptPhotoUrl is a separate field on a separate table — never mixed here.
-        // Exclude any records where URL contains '/receipts/' or 'receipt', and ensure Category is SiteProgress
+        if (!await projectAccessService.CanViewProjectAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var query = context.SitePhotos
             .Include(p => p.UploadedByUser)
             .Where(p => p.ProjectId == projectId 
@@ -136,6 +144,11 @@ public class SitePhotosController(StructoDbContext context) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeletePhoto([FromRoute] Guid projectId, [FromRoute] Guid id)
     {
+        if (!await projectAccessService.CanManageProjectMembersAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
         var currentTenantId = context.CurrentTenantId;
         var photo = await context.SitePhotos.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId && (currentTenantId == null || p.TenantId == currentTenantId));
         if (photo == null)

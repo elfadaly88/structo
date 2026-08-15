@@ -3,6 +3,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TenantUserService, UserDto, UserCreateDto } from '../../../core/services/tenant-user.service';
+import { ProjectService } from '../../../core/services/project.service';
+import { ProjectDto } from '../../../core/models/project.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -35,6 +37,7 @@ export interface SanitizedUser {
 })
 export class UsersComponent implements OnInit {
   private readonly userService = inject(TenantUserService);
+  private readonly projectService = inject(ProjectService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
@@ -49,6 +52,9 @@ export class UsersComponent implements OnInit {
   readonly isUserModalOpen = signal(false);
   readonly isSavingUser = signal(false);
   readonly userValidationErrors = signal<string[]>([]);
+  readonly availableProjects = signal<ProjectDto[]>([]);
+  readonly selectedProjectIds = signal<string[]>([]);
+  readonly isLoadingProjects = signal(false);
 
   readonly userForm: FormGroup = this.fb.group({
     firstName: ['', Validators.required],
@@ -59,6 +65,7 @@ export class UsersComponent implements OnInit {
     password: ['', [Validators.required, Validators.minLength(6)]],
     role: ['SiteEngineer', Validators.required]
   });
+
 
   get currentUserId(): string {
     return this.authService.currentUser()?.userId || '';
@@ -179,11 +186,47 @@ export class UsersComponent implements OnInit {
       role: 'SiteEngineer'
     });
     this.userValidationErrors.set([]);
+    this.selectedProjectIds.set([]);
     this.isUserModalOpen.set(true);
+
+    this.isLoadingProjects.set(true);
+    this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        this.isLoadingProjects.set(false);
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        // Only active projects can be assigned
+        this.availableProjects.set(list.filter((p: ProjectDto) => p.status === 'Active' || p.isActive));
+      },
+      error: () => {
+        this.isLoadingProjects.set(false);
+        this.availableProjects.set([]);
+      }
+    });
   }
 
   closeUserModal(): void {
     this.isUserModalOpen.set(false);
+  }
+
+  toggleProjectSelection(projectId: string): void {
+    this.selectedProjectIds.update(current =>
+      current.includes(projectId)
+        ? current.filter(id => id !== projectId)
+        : [...current, projectId]
+    );
+  }
+
+  isProjectSelected(projectId: string): boolean {
+    return this.selectedProjectIds().includes(projectId);
+  }
+
+  selectAllProjects(): void {
+    const allIds = this.availableProjects().map(p => p.id);
+    this.selectedProjectIds.set(allIds);
+  }
+
+  deselectAllProjects(): void {
+    this.selectedProjectIds.set([]);
   }
 
   onUserSubmit(): void {
@@ -195,13 +238,17 @@ export class UsersComponent implements OnInit {
     this.isSavingUser.set(true);
     this.userValidationErrors.set([]);
 
-    const dto: UserCreateDto = this.userForm.value;
+    const formVal = this.userForm.value;
+    const dto: UserCreateDto = {
+      ...formVal,
+      assignedProjectIds: this.selectedProjectIds()
+    };
 
     this.userService.createUser(dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isSavingUser.set(false);
         if (response.success) {
-          this.toast.show('نجاح / Success', 'تمت إضافة المستخدم بنجاح.', 'success');
+          this.toast.show('نجاح / Success', 'تمت إضافة المستخدم وتعيين مشاريعه بنجاح.', 'success');
           this.closeUserModal();
           this.loadUsers();
         } else {
@@ -216,3 +263,4 @@ export class UsersComponent implements OnInit {
     });
   }
 }
+

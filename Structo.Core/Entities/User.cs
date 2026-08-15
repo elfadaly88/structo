@@ -36,4 +36,6 @@ public class User
     public Tenant? Tenant { get; set; }
     public ICollection<Project> ManagedProjects { get; set; } = [];
     public ICollection<PettyCash> PettyCashes { get; set; } = [];
+    public ICollection<ProjectMember> ProjectMemberships { get; set; } = [];
 }
+

@@ -489,9 +489,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
     public async Task<bool> UserHasAccessToProjectAsync(ClaimsPrincipal user, Guid projectId)
     {
-        // 1. استخراج الـ TenantId والـ UserId من الـ Token Claims بأمان
         var tenantIdClaim = user.FindFirst("tenantId")?.Value;
-        var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = user.FindFirst("sub")?.Value 
+            ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? user.FindFirst("uid")?.Value;
         var roleClaim = user.FindFirst("role")?.Value ?? user.FindFirst(ClaimTypes.Role)?.Value;
 
         if (string.IsNullOrEmpty(tenantIdClaim) || string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(roleClaim))
@@ -500,27 +501,38 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         if (!Guid.TryParse(tenantIdClaim, out var tenantId) || !Guid.TryParse(userIdClaim, out var userId))
             return false;
 
-        // 2. 🧠 السحر البرمجي: تحويل النص القادم من الـ JWT إلى الـ UserRole Enum بالملي
         if (!Enum.TryParse<UserRole>(roleClaim, true, out var userRole))
         {
-            return false; // لو الـ Role غريبة ومش متعرّفة في الـ enum، اقفل الباب فوراً
-        }        
-        // مسموح لهم بالاطلاع الكامل على أي مشروع مالي طالما ينتمي لنفس الشركة (Tenant)
-        if (userRole == UserRole.TenantOwner || userRole == UserRole.Accountant)
+            return false;
+        }
+
+        // SuperAdmin is blocked by privacy wall from viewing internal financial data
+        if (userRole == UserRole.SuperAdmin)
+        {
+            return false;
+        }
+
+        // TenantOwner has implicit access to all projects in tenant
+        if (userRole == UserRole.TenantOwner)
         {
             return await context.Set<Project>()
                 .AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
-        }        
-        // ممنوعين من تصفح أي مشروع مالي إلا لو كانوا هما اللي ماسكين المشروع ده ومسجلين كـ ManagerId
-        if (userRole == UserRole.Manager || userRole == UserRole.SiteEngineer || userRole == UserRole.DesignEngineer)
-        {
-            return await context.Set<Project>()
-                .AnyAsync(p => p.Id == projectId && p.TenantId == tenantId && p.ManagerId == userId);
         }
 
-        // 5. الـ SuperAdmin أو أي رول تانية مش متوضحة فوق بتتحظر أوتوماتيكياً
+        // Manager, Accountant, SiteEngineer, DesignEngineer must be assigned via ProjectMember
+        if (userRole == UserRole.Manager || userRole == UserRole.Accountant || userRole == UserRole.SiteEngineer || userRole == UserRole.DesignEngineer)
+        {
+            var projectExists = await context.Set<Project>()
+                .AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            if (!projectExists) return false;
+
+            return await context.Set<ProjectMember>()
+                .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        }
+
         return false;
     }
+
 
     public async Task EnsureSettlementExpensesMaterializedAsync(Guid projectId)
     {

@@ -19,6 +19,17 @@ export interface ProjectDto {
   isReviewHidden?: boolean;
 }
 
+export interface ProjectMemberDto {
+  projectId: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: string;
+  phoneNumber?: string;
+  assignedAt: string;
+  assignedByUserId?: string;
+}
+
 export interface ProjectCreateDto {
   name: string;
   description: string;
@@ -32,7 +43,9 @@ export interface ProjectCreateDto {
   clientName: string;
   clientWhatsApp: string;
   propertyType: string;
+  assignedUserIds?: string[];
 }
+
 
 export interface ProjectClientViewDto {
   projectId: string;

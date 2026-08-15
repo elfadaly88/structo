@@ -7,20 +7,22 @@ import { firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../core/services/project.service';
 import { PettyCashService } from '../../../core/services/petty-cash.service';
 import { FinancialService } from '../../../core/services/financial.service';
-import { ProjectDto, ProjectCashPoolDto, ProjectReconciliationReportDto } from '../../../core/models/project.models';
+import { ProjectDto, ProjectCashPoolDto, ProjectReconciliationReportDto, ProjectMemberDto } from '../../../core/models/project.models';
 import { PettyCashMobileDto, PettyCashSettleDto } from '../../../core/models/petty-cash.models';
 import { FinancialTransactionMobileDto, SettlementMobileDto } from '../../../core/models/financial.models';
 import { ImageUploadService, SitePhotoDto } from '../../../core/services/image-upload.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ConfirmModalService } from '../../../core/services/confirm-modal.service';
 import { TenantProfileService } from '../../../core/services/tenant-profile.service';
-import { TenantUserService } from '../../../core/services/tenant-user.service';
+import { TenantUserService, UserDto } from '../../../core/services/tenant-user.service';
 import { SettlementService } from '../../../core/services/settlement.service';
 import { OfflineSyncService } from '../../../core/services/offline-sync.service';
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { ProjectCloseoutService } from '../../../core/services/project-closeout.service';
 import { LanguageService } from '../../../core/services/language.service';
+
 
 
 
@@ -253,6 +255,7 @@ import { LanguageService } from '../../../core/services/language.service';
             @if (!isAccountant()) {
               <option value="gallery" class="bg-slate-900 text-slate-100 py-2">📸 معرض الصور</option>
             }
+            <option value="members" class="bg-slate-900 text-slate-100 py-2">👥 فريق العمل ({{ projectMembers().length }})</option>
             @if (isOwnerOrAccountant()) {
               <option value="closeout" class="bg-slate-900 text-slate-100 py-2">⚙️ إدارة المشروع</option>
             }
@@ -327,7 +330,23 @@ import { LanguageService } from '../../../core/services/language.service';
           </button>
         }
 
-        <!-- Tab 5: Project Control & Admin -->
+        <!-- Tab 5: Team Members -->
+        <button
+          id="tab-members"
+          (click)="activeTab.set('members')"
+          class="flex-1 min-w-0 px-3 py-2.5 text-xs lg:text-sm font-bold border-b-2 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 rounded-t-lg whitespace-nowrap"
+          [class.bg-indigo-600\/10]="activeTab() === 'members'"
+          [class.text-indigo-400]="activeTab() === 'members'"
+          [class.border-indigo-500]="activeTab() === 'members'"
+          [class.border-transparent]="activeTab() !== 'members'"
+          [class.text-slate-400]="activeTab() !== 'members'">
+          <span>👥 فريق العمل</span>
+          @if (projectMembers().length > 0) {
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-400 font-mono shrink-0">{{ projectMembers().length }}</span>
+          }
+        </button>
+
+        <!-- Tab 6: Project Control & Admin -->
         @if (isOwnerOrAccountant()) {
           <button
             id="tab-closeout"
@@ -358,6 +377,9 @@ import { LanguageService } from '../../../core/services/language.service';
           @case ('gallery') {
             <span>💡 <strong>معرض الصور:</strong> رفع وتوثيق صور التقدم الميداني للمشروع (يمكن إظهارها في البروفايل العام).</span>
           }
+          @case ('members') {
+            <span>💡 <strong>فريق العمل:</strong> إدارة وتعيين المهندسين والمحاسبين المسندين للعمل على هذا المشروع.</span>
+          }
           @case ('closeout') {
             <span>💡 <strong>إدارة المشروع:</strong> تعديل بيانات المشروع الأساسية، حالة الظهور، ورفع ملفات المقايسة المرجعية.</span>
           }
@@ -365,8 +387,110 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
 
 
+
+      <!-- ======================== TEAM MEMBERS TAB ======================== -->
+      @if (activeTab() === 'members') {
+        <div class="space-y-6 animate-fade-in font-cairo">
+          <!-- Team Header Card -->
+          <div class="bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-indigo-950/20 border border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-lg">
+                  👥
+                </div>
+                <div>
+                  <h3 class="text-base sm:text-lg font-black text-white leading-tight">فريق العمل المسند / Project Team</h3>
+                  <p class="text-xs text-slate-400 mt-0.5">المهندسون والمحاسبون المصرح لهم بالاطلاع وإدارة العمليات الميدانية والمالية لهذا المشروع</p>
+                </div>
+              </div>
+            </div>
+
+            @if (canManageMembers() && project()?.status === 'Active') {
+              <button
+                type="button"
+                id="btn-add-member"
+                (click)="openAddMemberModal()"
+                class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold text-xs sm:text-sm transition-all duration-150 shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>إسناد عضو جديد</span>
+              </button>
+            }
+          </div>
+
+          <!-- Team Members Grid -->
+          @if (isLoadingMembers()) {
+            <div class="p-8 text-center bg-slate-900/40 rounded-2xl border border-slate-800 text-slate-400 text-sm">
+              <span class="inline-block w-4 h-4 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin ml-2 align-middle"></span>
+              جاري تحميل أعضاء الفريق...
+            </div>
+          } @else if (projectMembers().length === 0) {
+            <div class="p-10 text-center bg-slate-900/30 rounded-2xl border border-slate-800/80 space-y-2">
+              <div class="text-3xl">👥</div>
+              <p class="text-sm font-bold text-slate-300">لا يوجد أعضاء مسندون لهذا المشروع حالياً</p>
+              <p class="text-xs text-slate-500">مالك المنشأة لديه صلاحية تلقائية. يمكنك تعيين مهندسين ومحاسبين للمشروع.</p>
+              @if (canManageMembers() && project()?.status === 'Active') {
+                <button
+                  type="button"
+                  (click)="openAddMemberModal()"
+                  class="mt-3 px-4 py-2 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 text-xs font-bold transition-all cursor-pointer">
+                  + تعيين أول عضو في الفريق
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (member of projectMembers(); track member.userId) {
+                <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 space-y-3 shadow-lg hover:border-slate-700 transition-all">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-200 uppercase shrink-0">
+                        {{ member.fullName ? member.fullName.charAt(0) : 'U' }}
+                      </div>
+                      <div class="min-w-0">
+                        <h4 class="text-sm font-bold text-white leading-tight truncate">{{ member.fullName || 'عضو فريق' }}</h4>
+                        <span class="text-[11px] text-slate-400 font-mono truncate block" dir="ltr">{{ member.email }}</span>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold shrink-0" [ngClass]="getRoleBadge(member.role).class">
+                      {{ getRoleBadge(member.role).label }}
+                    </span>
+                  </div>
+
+                  <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                    <div class="text-slate-400 text-[11px]">
+                      @if (member.phoneNumber) {
+                        <span class="font-mono text-slate-300" dir="ltr">📞 {{ member.phoneNumber }}</span>
+                      } @else {
+                        <span class="text-slate-500 font-mono text-[10px]">تاريخ الإسناد: {{ member.assignedAt | date:'dd/MM/yyyy' }}</span>
+                      }
+                    </div>
+
+                    @if (canManageMembers() && project()?.status === 'Active') {
+                      <button
+                        type="button"
+                        (click)="removeMember(member)"
+                        [disabled]="removingMemberUserId() === member.userId"
+                        class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1">
+                        @if (removingMemberUserId() === member.userId) {
+                          <span class="inline-block w-3 h-3 border-2 border-rose-400 border-t-transparent rounded-full animate-spin"></span>
+                        } @else {
+                          <span>إزالة</span>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
       <!-- ======================== CLOSEOUT DASHBOARD TAB ======================== -->
       @if (activeTab() === 'closeout' && isOwnerOrAccountant()) {
+
         <div class="space-y-6">
           <!-- Header -->
           <div class="bg-gradient-to-br from-slate-900/80 to-rose-950/20 border border-rose-900/40 rounded-2xl p-6 shadow-xl">
@@ -2808,8 +2932,99 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
     }
 
+    <!-- ADD TEAM MEMBER MODAL (Strict Responsive 92vh Independent Scroll Design) -->
+    @if (isAddMemberModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm" dir="rtl">
+        <div (click)="closeAddMemberModal()" class="absolute inset-0"></div>
+
+        <div class="relative z-10 bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden font-cairo flex flex-col max-h-[92vh]">
+          
+          <!-- Modal Header -->
+          <div class="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm">
+                👥
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white leading-tight">إسناد أعضاء للمشروع</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">اختر الموظفين من فريق شركتك لإسنادهم لهذا المشروع</p>
+              </div>
+            </div>
+            <button type="button" (click)="closeAddMemberModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+              ✕
+            </button>
+          </div>
+
+          <!-- Modal Body (Independent Scroll Box) -->
+          <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+            @if (isLoadingCompanyUsers()) {
+              <div class="p-8 text-center text-xs text-slate-500 bg-slate-900/60 rounded-xl border border-slate-800">
+                <span class="inline-block w-4 h-4 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin ml-2 align-middle"></span>
+                جاري تحميل قائمة الموظفين...
+              </div>
+            } @else if (unassignedCompanyUsers().length === 0) {
+              <div class="p-6 text-center text-xs text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800">
+                جميع موظفي الشركة مسندون بالفعل لهذا المشروع، أو لا يوجد موظفون متاحون للإسناد.
+              </div>
+            } @else {
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+                  <span>الموظفون المتاحون للإسناد:</span>
+                  <span class="font-mono text-indigo-400">({{ selectedMemberUserIds().length }} محدد)</span>
+                </div>
+
+                <div class="space-y-1.5 max-h-64 overflow-y-auto p-2 bg-slate-900/70 border border-slate-800 rounded-xl">
+                  @for (user of unassignedCompanyUsers(); track user.id) {
+                    <label 
+                      class="flex items-center gap-3 p-2.5 rounded-xl transition-colors cursor-pointer hover:bg-slate-800/80 select-none"
+                      [ngClass]="selectedMemberUserIds().includes(user.id) ? 'bg-indigo-950/40 border border-indigo-500/30' : 'border border-transparent'">
+                      <input 
+                        type="checkbox" 
+                        [checked]="selectedMemberUserIds().includes(user.id)" 
+                        (change)="toggleSelectMemberUser(user.id)"
+                        class="w-4 h-4 rounded text-indigo-600 bg-slate-900 border-slate-700 focus:ring-indigo-500 cursor-pointer">
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs sm:text-sm font-bold text-white truncate">
+                          {{ user.firstName }} {{ user.lastName }}
+                        </div>
+                        <div class="text-[11px] text-slate-400 font-mono truncate">{{ user.email }}</div>
+                      </div>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold shrink-0" [ngClass]="getRoleBadge(user.role).class">
+                        {{ getRoleBadge(user.role).label }}
+                      </span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+            <button 
+              type="button" 
+              (click)="closeAddMemberModal()" 
+              class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer">
+              إلغاء
+            </button>
+            <button 
+              type="button" 
+              (click)="onAddMembersSubmit()" 
+              [disabled]="selectedMemberUserIds().length === 0 || isSavingMembers()" 
+              class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+              @if (isSavingMembers()) {
+                <span class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>{{ isSavingMembers() ? 'جاري الإسناد...' : 'تأكيد الإسناد' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- 🖼️ FULLSCREEN LIGHTBOX VIEWER -->
     @if (isLightboxOpen() && lightboxPhotos().length > 0) {
+
       <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/92 backdrop-blur-md animate-fade-in">
         <div (click)="closeLightbox()" class="absolute inset-0 z-0"></div>
 
@@ -2979,6 +3194,7 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly userService = inject(TenantUserService);
   private readonly projectCloseoutService = inject(ProjectCloseoutService);
+  private readonly toastService = inject(ToastService);
   protected readonly langService = inject(LanguageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -3127,9 +3343,13 @@ export class ProjectDetailsComponent implements OnInit {
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
   readonly isTenantOwner = computed(() => ['tenantowner', 'admin'].includes(this.currentUserRole().toLowerCase()));
+  readonly isProjectManager = computed(() => this.currentUserRole().toLowerCase() === 'manager');
   readonly isAccountant = computed(() => this.currentUserRole().toLowerCase() === 'accountant');
-  readonly isOwnerOrAccountant = computed(() => ['tenantowner', 'accountant', 'admin'].includes(this.currentUserRole().toLowerCase()));
-  readonly isEngineer = computed(() => ['manager', 'siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
+  readonly isOwnerOrAccountant = computed(() => ['tenantowner', 'accountant', 'manager', 'admin'].includes(this.currentUserRole().toLowerCase()));
+  readonly isEngineer = computed(() => ['siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
+  readonly canManageMembers = computed(() => this.isTenantOwner() || this.isProjectManager());
+  readonly canManageFinancials = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isAccountant());
+
 
   readonly projectId = this.route.snapshot.paramMap.get('id') || '';
   readonly project = signal<ProjectDto | null>(null);
@@ -3381,9 +3601,141 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isLoadingPettyCash = signal(false);
   readonly isLoadingTransactions = signal(false);
 
-  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings' | 'settlements' | 'closeout'>('petty-cash');
+  readonly activeTab = signal<'petty-cash' | 'transactions' | 'gallery' | 'admin-settings' | 'settlements' | 'closeout' | 'members'>('petty-cash');
+
+  // Project Members Signals & Methods
+  readonly projectMembers = signal<ProjectMemberDto[]>([]);
+  readonly isLoadingMembers = signal(false);
+  readonly isAddMemberModalOpen = signal(false);
+  readonly isSavingMembers = signal(false);
+  readonly removingMemberUserId = signal<string | null>(null);
+  readonly selectedMemberUserIds = signal<string[]>([]);
+  readonly availableCompanyUsers = signal<UserDto[]>([]);
+  readonly isLoadingCompanyUsers = signal(false);
+
+  readonly unassignedCompanyUsers = computed(() => {
+    const memberUserIds = new Set(this.projectMembers().map(m => m.userId));
+    return this.availableCompanyUsers().filter(u => 
+      !memberUserIds.has(u.id) && 
+      u.role !== 'TenantOwner' && 
+      u.role !== 'SuperAdmin' &&
+      u.isActive !== false
+    );
+  });
+
+  getRoleBadge(role: string): { label: string; class: string } {
+    const normalized = (role || '').toUpperCase();
+    if (normalized.includes('TENANTOWNER') || normalized.includes('OWNER')) {
+      return { label: 'مالك المنشأة', class: 'bg-purple-500/10 text-purple-400 border border-purple-500/20' };
+    }
+    if (normalized.includes('ACCOUNTANT')) {
+      return { label: 'محاسب', class: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' };
+    }
+    if (normalized.includes('SITEENGINEER') || normalized.includes('SITE_ENGINEER')) {
+      return { label: 'مهندس موقع', class: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' };
+    }
+    if (normalized.includes('DESIGNENGINEER') || normalized.includes('DESIGN_ENGINEER')) {
+      return { label: 'مهندس تصميم', class: 'bg-teal-500/10 text-teal-400 border border-teal-500/20' };
+    }
+    if (normalized.includes('MANAGER')) {
+      return { label: 'مدير مشاريع', class: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' };
+    }
+    if (normalized.includes('ENGINEER')) {
+      return { label: 'مهندس موقع', class: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' };
+    }
+    return { label: role || 'عضو فريق', class: 'bg-slate-800 text-slate-300 border border-slate-700' };
+  }
+
+  fetchProjectMembers(): void {
+    if (!this.projectId) return;
+    this.isLoadingMembers.set(true);
+    this.projectService.getProjectMembers(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        this.isLoadingMembers.set(false);
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        this.projectMembers.set(list);
+      },
+      error: () => {
+        this.isLoadingMembers.set(false);
+        this.projectMembers.set([]);
+      }
+    });
+  }
+
+  openAddMemberModal(): void {
+    this.selectedMemberUserIds.set([]);
+    this.isAddMemberModalOpen.set(true);
+    this.isLoadingCompanyUsers.set(true);
+
+    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        this.isLoadingCompanyUsers.set(false);
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        this.availableCompanyUsers.set(list);
+      },
+      error: () => {
+        this.isLoadingCompanyUsers.set(false);
+        this.availableCompanyUsers.set([]);
+      }
+    });
+  }
+
+  closeAddMemberModal(): void {
+    this.isAddMemberModalOpen.set(false);
+  }
+
+  toggleSelectMemberUser(userId: string): void {
+    this.selectedMemberUserIds.update(ids =>
+      ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]
+    );
+  }
+
+  onAddMembersSubmit(): void {
+    const userIds = this.selectedMemberUserIds();
+    if (userIds.length === 0) return;
+
+    this.isSavingMembers.set(true);
+    this.projectService.addProjectMembers(this.projectId, userIds).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        this.isSavingMembers.set(false);
+        if (res.success) {
+          this.toastService.show('نجاح / Success', 'تم إسناد الأعضاء للمشروع بنجاح.', 'success');
+          this.closeAddMemberModal();
+          this.fetchProjectMembers();
+        } else {
+          this.toastService.show('تنبيه / Notice', res.message || 'فشل إسناد الأعضاء.', 'warning');
+        }
+      },
+      error: (err) => {
+        this.isSavingMembers.set(false);
+        this.toastService.show('خطأ / Error', err.error?.message || err.message || 'حدث خطأ أثناء إسناد الأعضاء.', 'error');
+      }
+    });
+  }
+
+  removeMember(member: ProjectMemberDto): void {
+    if (!member.userId) return;
+    this.removingMemberUserId.set(member.userId);
+
+    this.projectService.removeProjectMember(this.projectId, member.userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        this.removingMemberUserId.set(null);
+        if (res.success) {
+          this.projectMembers.update(list => list.filter(m => m.userId !== member.userId));
+          this.toastService.show('نجاح / Success', `تمت إزالة ${member.fullName || 'العضو'} من المشروع.`, 'success');
+        } else {
+          this.toastService.show('خطأ / Error', res.message || 'فشلت إزالة العضو.', 'error');
+        }
+      },
+      error: (err) => {
+        this.removingMemberUserId.set(null);
+        this.toastService.show('خطأ / Error', err.error?.message || err.message || 'حدث خطأ أثناء إزالة العضو.', 'error');
+      }
+    });
+  }
 
   // Admin settings forms & signals
+
   readonly isUploadingLogo = signal(false);
   readonly isUploadingBanner = signal(false);
   readonly isSavingProfile = signal(false);
@@ -3536,9 +3888,11 @@ export class ProjectDetailsComponent implements OnInit {
       }
 
       this.fetchProjectDetails();
+      this.fetchProjectMembers();
       this.fetchBudgetHistory();
       this.fetchPettyCash();
       this.fetchSettlements();
+
       if (!this.isEngineer()) {
         this.fetchTransactions();
         this.fetchCashPools();

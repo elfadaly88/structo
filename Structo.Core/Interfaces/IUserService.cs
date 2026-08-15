@@ -7,5 +7,6 @@ namespace Structo.Core.Interfaces;
 public interface IUserService
 {
     Task<List<UserDto>> GetAllUsersAsync();
-    Task<(bool Success, UserDto? Data, string Message)> CreateUserAsync(UserCreateDto dto, string currentUserRole);
+    Task<(bool Success, UserDto? Data, string Message)> CreateUserAsync(UserCreateDto dto, string currentUserRole, Guid? assignedByUserId = null);
 }
+

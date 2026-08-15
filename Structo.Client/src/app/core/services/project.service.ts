@@ -34,5 +34,27 @@ export class ProjectService {
   getProjectBudgetHistory(projectId: string): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/${projectId}/budget-history`);
   }
+
+  // --- Team Member Management ---
+  getProjectMembers(projectId: string): Observable<ApiResponse<import('../models/project.models').ProjectMemberDto[]>> {
+    return this.http.get<ApiResponse<import('../models/project.models').ProjectMemberDto[]>>(`${this.apiUrl}/${projectId}/members`);
+  }
+
+  addProjectMembers(projectId: string, userIds: string[]): Observable<ApiResponse<import('../models/project.models').ProjectMemberDto[]>> {
+    return this.http.post<ApiResponse<import('../models/project.models').ProjectMemberDto[]>>(`${this.apiUrl}/${projectId}/members`, { userIds });
+  }
+
+  removeProjectMember(projectId: string, userId: string): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/members/${userId}`);
+  }
+
+  freezeProject(projectId: string): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/freeze`, {});
+  }
+
+  finalCloseout(projectId: string): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/final-closeout`, {});
+  }
 }
+
 
