@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Structo.Core.DTOs.Common;
@@ -9,6 +10,7 @@ using Structo.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Structo.API.Controllers;
@@ -16,8 +18,10 @@ namespace Structo.API.Controllers;
 [ApiController]
 [Route("api/subscription")]
 [Authorize(Roles = "TenantOwner")]
-public class SubscriptionController(StructoDbContext context) : ControllerBase
+public class SubscriptionController(StructoDbContext context, Structo.Core.Interfaces.INotificationEngine notificationEngine) : ControllerBase
 {
+    private const string NonOwnerForbiddenMessage = "ترقية الباقة والفوترة مقتصرة حصرياً على مالك المنشأة.";
+
     // ─────────────────────────────────────────────────────────
     // Pricing Table (EGP, 0% VAT)
     // Base Free plan = 2 projects lifetime (automatic upon signup)
@@ -38,6 +42,15 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
     public async Task<ActionResult<ApiResponse<SubscriptionUpgradeResponseDto>>> UpgradeMock(
         [FromBody] SubscriptionUpgradeRequestDto dto)
     {
+        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == "role" || c.Type == ClaimTypes.Role)?.Value;
+        if (!string.Equals(roleClaim, nameof(UserRole.TenantOwner), StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<SubscriptionUpgradeResponseDto>
+            {
+                Success = false,
+                Message = NonOwnerForbiddenMessage
+            });
+        }
         // Resolve TenantId from JWT
         var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
         if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
@@ -96,6 +109,16 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
         context.SubscriptionTransactions.Add(txn);
         await context.SaveChangesAsync();
 
+        // Trigger Notification to TenantOwner only — best-effort
+        try
+        {
+            await notificationEngine.RaiseSubscriptionUpgradedNotificationAsync(
+                tenantId,
+                planName,
+                newMaxProjects);
+        }
+        catch (Exception) { /* Best-effort delivery */ }
+
         var response = new SubscriptionUpgradeResponseDto
         {
             TransactionType      = transactionType,
@@ -123,6 +146,16 @@ public class SubscriptionController(StructoDbContext context) : ControllerBase
     [HttpGet("plans")]
     public ActionResult<ApiResponse<object>> GetPlans()
     {
+        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == "role" || c.Type == ClaimTypes.Role)?.Value;
+        if (!string.Equals(roleClaim, nameof(UserRole.TenantOwner), StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<object>
+            {
+                Success = false,
+                Message = NonOwnerForbiddenMessage
+            });
+        }
+
         var topups = new[]
         {
             new { extra = 1, priceEgp = 250m, priceWithVat = 250m, label = "📦 إضافة مشروع واحد (+1 Project)", description = "إضافة مشروع واحد إضافي لرصيدك الحالي (Adds +1 project to your active quota)", isBestValue = false },

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { subscriptionGuard } from './core/guards/subscription.guard';
 import { AuthService } from './core/services/auth.service';
 
 @Component({
@@ -41,6 +42,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/tenant-register/tenant-register.component').then(m => m.TenantRegisterComponent)
   },
   {
+    path: 'subscription',
+    canActivate: [subscriptionGuard],
+    redirectTo: 'dashboard/projects?upgrade=true'
+  },
+  {
+    path: 'upgrade',
+    canActivate: [subscriptionGuard],
+    redirectTo: 'dashboard/projects?upgrade=true'
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
     canActivate: [authGuard],
@@ -78,6 +89,21 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () => import('./features/dashboard/tenant-profile/tenant-profile.component').then(m => m.TenantProfileComponent),
         data: { roles: ['TenantOwner'] }
+      },
+      {
+        path: 'subscription',
+        canActivate: [subscriptionGuard],
+        redirectTo: 'projects?upgrade=true'
+      },
+      {
+        path: 'upgrade',
+        canActivate: [subscriptionGuard],
+        redirectTo: 'projects?upgrade=true'
+      },
+      {
+        path: 'billing',
+        canActivate: [subscriptionGuard],
+        redirectTo: 'profile'
       },
       {
         path: 'tenants',

@@ -40,21 +40,17 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<DataProtectionKey>().ToTable("DataProtectionKeys");        
-        modelBuilder.Entity<User>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        modelBuilder.Entity<Project>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<ProjectMember>().HasQueryFilter(pm => pm.TenantId == CurrentTenantId);
-        modelBuilder.Entity<FinancialTransaction>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        modelBuilder.Entity<PettyCash>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        modelBuilder.Entity<Settlement>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        modelBuilder.Entity<SettlementLine>().HasQueryFilter(e => CurrentTenantId == null || e.TenantId == CurrentTenantId);
-        // Notifications: SuperAdmin sees all (null TenantId = global), tenant users see only their own
-        modelBuilder.Entity<Notification>().HasQueryFilter(e =>
-            CurrentTenantId == null ||
-            e.TenantId == null ||
-            e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<FinancialTransaction>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<PettyCash>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<Settlement>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SettlementLine>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SubscriptionTransaction>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
 
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -242,7 +238,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .HasDatabaseName("IX_ProjectCashPool_Project_SourceType");
         });
         modelBuilder.Entity<ProjectBudgetLog>()
-            .HasQueryFilter(p => CurrentTenantId == null || p.Project!.TenantId == CurrentTenantId);
+            .HasQueryFilter(p => p.Project!.TenantId == CurrentTenantId);
 
         modelBuilder.Entity<ProjectBudgetLog>(entity =>
         {
@@ -266,6 +262,14 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.DeepLink).HasMaxLength(500);
             entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.TargetRole).HasConversion<string>().HasMaxLength(30);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany()
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ReceiverId);
+            entity.HasIndex(e => e.ProjectId);
         });
 
         modelBuilder.Entity<Settlement>(entity =>

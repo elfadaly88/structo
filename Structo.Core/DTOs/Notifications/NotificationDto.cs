@@ -9,6 +9,7 @@ public class NotificationDto
     public Guid? TenantId { get; set; }
     public Guid? SenderId { get; set; }
     public Guid? ReceiverId { get; set; }
+    public Guid? ProjectId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
     public NotificationType Type { get; set; }
@@ -23,6 +24,7 @@ public class SendNotificationDto
 {
     public Guid? TenantId { get; set; }
     public Guid? ReceiverId { get; set; }
+    public Guid? ProjectId { get; set; }
     public UserRole? TargetRole { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

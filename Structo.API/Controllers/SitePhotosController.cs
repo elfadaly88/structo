@@ -150,7 +150,7 @@ public class SitePhotosController(StructoDbContext context, IProjectAccessServic
         }
 
         var currentTenantId = context.CurrentTenantId;
-        var photo = await context.SitePhotos.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId && (currentTenantId == null || p.TenantId == currentTenantId));
+        var photo = await context.SitePhotos.FirstOrDefaultAsync(p => p.Id == id && p.ProjectId == projectId && p.TenantId == currentTenantId);
         if (photo == null)
             return NotFound(new ApiResponse<bool> { Success = false, Message = "Photo not found" });
 

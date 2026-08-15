@@ -23,8 +23,8 @@ public interface IProjectService
 
     // --- Closeout workflow ---
     Task<ProjectReconciliationReportDto?> GetReconciliationReportAsync(Guid id, Guid tenantId);
-    Task<(bool Success, string Message)> FreezeProjectAsync(Guid id, Guid tenantId, string userRole);
-    Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole);
+    Task<(bool Success, string Message)> FreezeProjectAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null);
+    Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null);
     Task<(bool Success, string Message)> SubmitClientReviewAsync(string token, ClientReviewSubmitDto dto);
 }
 

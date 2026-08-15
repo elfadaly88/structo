@@ -41,8 +41,8 @@ interface NavItem {
         <!-- User info, Language & Logout -->
         <div class="flex items-center gap-3 sm:gap-4">
           
-          <!-- Clickable Subscription Upgrade Badge for Tenant Users -->
-          @if (authService.currentUser()?.role !== 'SuperAdmin') {
+          <!-- Clickable Subscription Upgrade Badge for TenantOwner only -->
+          @if (authService.isTenantOwner()) {
             <button 
               (click)="openUpgradeModal()"
               title="انقر لترقية الباقة وزيادة سعة المشاريع / Upgrade Capacity"

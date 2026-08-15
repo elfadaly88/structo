@@ -19,6 +19,7 @@ export interface NotificationItem {
   tenantId: string | null;
   senderId: string | null;
   receiverId: string | null;
+  projectId: string | null;
   title: string;
   message: string;
   type: string;
@@ -217,14 +218,7 @@ export class NotificationService implements OnDestroy {
     this.hubConnection.on('ReceiveNotification', (notification: NotificationItem) => {
       console.log('[SignalR] ReceiveNotification triggered:', notification);
 
-      // Ensure that client-side role isolation is maintained
-      const currentUser = this.authService.currentUser();
-      if (notification.targetRole && (!currentUser || currentUser.role !== notification.targetRole)) {
-        console.log('[SignalR] Ignoring notification targeting role:', notification.targetRole);
-        return;
-      }
-
-      // Prepend new notification and cap at 50
+      // Prepend new notification and cap at 50 (Server-side scoping guarantees relevance)
       this.notifications.update(ns => [notification, ...ns].slice(0, 50));
 
       // Determine toast type based on notification category

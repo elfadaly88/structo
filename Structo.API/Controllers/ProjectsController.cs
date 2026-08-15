@@ -244,7 +244,7 @@ public class ProjectsController(
 
         try
         {
-            var (success, message) = await projectService.FreezeProjectAsync(id, tenantId.Value, CurrentUserRole);
+            var (success, message) = await projectService.FreezeProjectAsync(id, tenantId.Value, CurrentUserRole, CurrentUserId);
             if (!success) return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
             return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
         }
@@ -268,7 +268,7 @@ public class ProjectsController(
 
         try
         {
-            var (success, message) = await projectService.FinalCloseoutAsync(id, tenantId.Value, CurrentUserRole);
+            var (success, message) = await projectService.FinalCloseoutAsync(id, tenantId.Value, CurrentUserRole, CurrentUserId);
             if (!success) return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
             return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
         }

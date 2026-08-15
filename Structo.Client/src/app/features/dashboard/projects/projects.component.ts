@@ -90,7 +90,7 @@ const GOVERNORATES: GovernorateOption[] = [
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          @if (activeTab() === 'projects' && currentUserRole() === 'TenantOwner') {
+          @if (activeTab() === 'projects' && isTenantOwner()) {
             <button
               id="btn-new-project"
               (click)="openProjectModal()"
@@ -115,7 +115,7 @@ const GOVERNORATES: GovernorateOption[] = [
       </div>
 
       <!-- Navigation Tabs -->
-      @if (currentUserRole() === 'TenantOwner') {
+      @if (isTenantOwner()) {
         <div class="border-b border-slate-800">
           <nav class="flex gap-8">
             <button 
@@ -191,15 +191,17 @@ const GOVERNORATES: GovernorateOption[] = [
                 </div>
               </div>
 
-              <!-- Upgrade Button (Secondary / Subtle Action) -->
-              <button 
-                (click)="isUpgradeModalOpen.set(true)"
-                class="bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-indigo-500/40 text-xs font-semibold py-2 px-3.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer font-cairo shadow-sm hover:border-indigo-500/60 active:scale-95 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>+ شراء مشاريع إضافية</span>
-              </button>
+              <!-- Upgrade Button (Secondary / Subtle Action - TenantOwner only) -->
+              @if (isTenantOwner()) {
+                <button 
+                  (click)="isUpgradeModalOpen.set(true)"
+                  class="bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-indigo-500/40 text-xs font-semibold py-2 px-3.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer font-cairo shadow-sm hover:border-indigo-500/60 active:scale-95 shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>+ شراء مشاريع إضافية</span>
+                </button>
+              }
             </div>
           </div>
         }
@@ -385,18 +387,18 @@ const GOVERNORATES: GovernorateOption[] = [
     }
 
       <!-- SECTION 2: COMPANY USERS MANAGEMENT -->
-      @if (activeTab() === 'users' && currentUserRole() === 'TenantOwner') {
+      @if (activeTab() === 'users' && isTenantOwner()) {
         <app-users></app-users>
       }
 
       <!-- SECTION 3: CORPORATE PROFILE EDITOR -->
-      @if (activeTab() === 'profile' && currentUserRole() === 'TenantOwner') {
+      @if (activeTab() === 'profile' && isTenantOwner()) {
         <app-tenant-profile></app-tenant-profile>
       }
     </div>
 
     <!-- Sticky Mobile Action Bar for TenantOwner -->
-    @if (currentUserRole() === 'TenantOwner') {
+    @if (isTenantOwner()) {
       <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 z-30 flex items-center justify-around gap-2 shadow-2xl">
         @if (activeTab() === 'projects') {
           <button
@@ -769,7 +771,7 @@ const GOVERNORATES: GovernorateOption[] = [
     }
 
     <!-- UPGRADE PACKAGE MODAL -->
-    @if (isUpgradeModalOpen()) {
+    @if (isUpgradeModalOpen() && isTenantOwner()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
         <!-- Backdrop -->
         <div (click)="isUpgradeModalOpen.set(false)" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity duration-300"></div>
@@ -1352,6 +1354,7 @@ export class ProjectsComponent implements OnInit {
   readonly currentUserId = computed(() => this.authService.currentUser()?.userId || '');
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
+  readonly isTenantOwner = this.authService.isTenantOwner;
   readonly isEngineer = computed(() => ['manager', 'siteengineer', 'designengineer'].includes(this.currentUserRole().toLowerCase()));
 
   getRoleBadge(role: string): { label: string; class: string } {
@@ -1492,7 +1495,7 @@ export class ProjectsComponent implements OnInit {
   ngOnInit(): void {
     const url = this.router.url;
     const isRestrictedTab = url.includes('/dashboard/users') || url.includes('/dashboard/profile');
-    if (isRestrictedTab && this.currentUserRole() !== 'TenantOwner') {
+    if (isRestrictedTab && !this.isTenantOwner()) {
       this.activeTab.set('projects');
       this.router.navigate(['/dashboard/projects'], { replaceUrl: true });
       return;
@@ -1500,7 +1503,9 @@ export class ProjectsComponent implements OnInit {
 
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params['upgrade'] === 'true') {
-        this.isUpgradeModalOpen.set(true);
+        if (this.isTenantOwner()) {
+          this.isUpgradeModalOpen.set(true);
+        }
       }
     });
 
@@ -1514,7 +1519,7 @@ export class ProjectsComponent implements OnInit {
 
     this.fetchProjects();
     this.fetchProfile();
-    if (this.currentUserRole() === 'TenantOwner') {
+    if (this.isTenantOwner()) {
       this.fetchUsers();
     }
 
@@ -1808,7 +1813,7 @@ export class ProjectsComponent implements OnInit {
   }
 
   toggleUserStatus(user: UserDto): void {
-    if (this.currentUserRole() !== 'TenantOwner') {
+    if (!this.isTenantOwner()) {
       return;
     }
 
@@ -2017,12 +2022,20 @@ export class ProjectsComponent implements OnInit {
 
   openProjectModal(): void {
     if (this.usedProjectsCount() >= this.allowedProjectsCount()) {
-      this.toastService.show(
-        'استهلكت سعة باقتك / Quota Limit Reached',
-        'لقد استهلكت جميع المشاريع المتاحة في باقتك، يمكنك إضافة مشاريع جديدة فوراً لمتابعة العمل.',
-        'warning'
-      );
-      this.isUpgradeModalOpen.set(true);
+      if (this.isTenantOwner()) {
+        this.toastService.show(
+          'استهلكت سعة باقتك / Quota Limit Reached',
+          'لقد استهلكت جميع المشاريع المتاحة في باقتك، يمكنك إضافة مشاريع جديدة فوراً لمتابعة العمل.',
+          'warning'
+        );
+        this.isUpgradeModalOpen.set(true);
+      } else {
+        this.toastService.show(
+          'تم الوصول للحد الأقصى / Plan Limit Reached',
+          'تم الوصول للحد الأقصى المسموح به في باقة الاشتراك الحالية. يرجى التواصل مع مالك الشركة لترقية الباقة.',
+          'warning'
+        );
+      }
       return;
     }
     this.projectForm.reset({
@@ -2069,7 +2082,7 @@ export class ProjectsComponent implements OnInit {
   }
 
   onProjectSubmit(): void {
-    if (this.currentUserRole() !== 'TenantOwner') {
+    if (!this.isTenantOwner()) {
       return;
     }
     if (this.projectForm.invalid) {
@@ -2165,7 +2178,7 @@ export class ProjectsComponent implements OnInit {
   }
 
   onUserSubmit(): void {
-    if (this.currentUserRole() !== 'TenantOwner') {
+    if (!this.isTenantOwner()) {
       return;
     }
     if (this.userForm.invalid) {
@@ -2313,12 +2326,20 @@ export class ProjectsComponent implements OnInit {
   viewDetails(id: string): void {
     const proj = this.projects().find(p => p.id === id);
     if (proj && proj.status === 'PendingActivation') {
-      this.toastService.show(
-        'تنبيه / Attention',
-        'هذا المشروع بانتظار التفعيل من قبل الإدارة. يرجى ترقية الباقة لتفعيله.',
-        'warning'
-      );
-      this.isUpgradeModalOpen.set(true);
+      if (this.isTenantOwner()) {
+        this.toastService.show(
+          'تنبيه / Attention',
+          'هذا المشروع بانتظار التفعيل من قبل الإدارة. يرجى ترقية الباقة لتفعيله.',
+          'warning'
+        );
+        this.isUpgradeModalOpen.set(true);
+      } else {
+        this.toastService.show(
+          'تنبيه / Attention',
+          'تم الوصول للحد الأقصى المسموح به في باقة الاشتراك الحالية. يرجى التواصل مع مالك الشركة لترقية الباقة.',
+          'warning'
+        );
+      }
       return;
     }
     this.router.navigate(['/dashboard/projects', id]);

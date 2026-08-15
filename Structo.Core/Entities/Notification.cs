@@ -12,6 +12,8 @@ public class Notification
 
     public Guid? SenderId { get; set; }
     public Guid? ReceiverId { get; set; }
+    public Guid? ProjectId { get; set; }
+    public Project? Project { get; set; }
 
     /// <summary>Broadcast to all users with a specific role within the tenant.</summary>
     public UserRole? TargetRole { get; set; }

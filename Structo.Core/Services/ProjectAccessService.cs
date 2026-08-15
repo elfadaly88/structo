@@ -45,12 +45,14 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
     public async Task<bool> IsUserAssignedToProjectAsync(Guid userId, Guid projectId)
     {
         return await context.Set<ProjectMember>()
+            .IgnoreQueryFilters()
             .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
     }
 
     public async Task<List<Guid>> GetAssignedProjectIdsForUserAsync(Guid userId)
     {
         return await context.Set<ProjectMember>()
+            .IgnoreQueryFilters()
             .Where(pm => pm.UserId == userId)
             .Select(pm => pm.ProjectId)
             .ToListAsync();
@@ -68,11 +70,11 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
 
         if (role == UserRole.TenantOwner)
         {
-            return await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            return await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         }
 
         // ProjectManager (Manager), Accountant, SiteEngineer, DesignEngineer: must be assigned
-        var projectExists = await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        var projectExists = await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         if (!projectExists) return false;
 
         return await IsUserAssignedToProjectAsync(userId, projectId);
@@ -89,11 +91,11 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
 
         if (role == UserRole.TenantOwner)
         {
-            return await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            return await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         }
 
         // Assigned members can view their own project team
-        var projectExists = await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        var projectExists = await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         if (!projectExists) return false;
 
         return await IsUserAssignedToProjectAsync(userId, projectId);
@@ -107,12 +109,12 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
         // Only TenantOwner or assigned ProjectManager
         if (role == UserRole.TenantOwner)
         {
-            return await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            return await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         }
 
         if (role == UserRole.Manager)
         {
-            var projectExists = await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            var projectExists = await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
             if (!projectExists) return false;
 
             return await IsUserAssignedToProjectAsync(userId, projectId);
@@ -132,12 +134,12 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
 
         if (role == UserRole.TenantOwner)
         {
-            return await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            return await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         }
 
         if (role == UserRole.Manager || role == UserRole.Accountant)
         {
-            var projectExists = await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            var projectExists = await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
             if (!projectExists) return false;
 
             return await IsUserAssignedToProjectAsync(userId, projectId);
@@ -151,18 +153,19 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
         var (isValid, userId, tenantId, role) = ExtractUserContext(user);
         if (!isValid) return false;
 
+        // SuperAdmin blocked by privacy wall
         if (role == UserRole.SuperAdmin)
             return false;
 
         if (role == UserRole.TenantOwner)
         {
-            return await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            return await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
         }
 
-        // All assigned tenant roles can request/spend/settle custody & upload site photos
-        if (role == UserRole.Manager || role == UserRole.Accountant || role == UserRole.SiteEngineer || role == UserRole.DesignEngineer)
+        // Assigned SiteEngineer, DesignEngineer, Manager
+        if (role == UserRole.SiteEngineer || role == UserRole.DesignEngineer || role == UserRole.Manager)
         {
-            var projectExists = await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            var projectExists = await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
             if (!projectExists) return false;
 
             return await IsUserAssignedToProjectAsync(userId, projectId);
@@ -173,18 +176,32 @@ public class ProjectAccessService(DbContext context) : IProjectAccessService
 
     public async Task<bool> CanCloseoutProjectAsync(ClaimsPrincipal user, Guid projectId)
     {
-        var (isValid, _, tenantId, role) = ExtractUserContext(user);
+        var (isValid, userId, tenantId, role) = ExtractUserContext(user);
         if (!isValid) return false;
 
-        // Final closeout is strictly TenantOwner only
-        if (role != UserRole.TenantOwner)
+        // SuperAdmin blocked by privacy wall
+        if (role == UserRole.SuperAdmin)
             return false;
 
-        return await context.Set<Project>().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        // Only TenantOwner or assigned ProjectManager
+        if (role == UserRole.TenantOwner)
+        {
+            return await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        }
+
+        if (role == UserRole.Manager)
+        {
+            var projectExists = await context.Set<Project>().IgnoreQueryFilters().AnyAsync(p => p.Id == projectId && p.TenantId == tenantId);
+            if (!projectExists) return false;
+
+            return await IsUserAssignedToProjectAsync(userId, projectId);
+        }
+
+        return false;
     }
 
-    public Task<bool> UserHasAccessToProjectAsync(ClaimsPrincipal user, Guid projectId)
+    public async Task<bool> UserHasAccessToProjectAsync(ClaimsPrincipal user, Guid projectId)
     {
-        return CanViewProjectAsync(user, projectId);
+        return await CanViewProjectAsync(user, projectId);
     }
 }

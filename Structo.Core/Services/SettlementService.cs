@@ -11,7 +11,7 @@ using Structo.Core.Interfaces;
 
 namespace Structo.Core.Services;
 
-public class SettlementService(DbContext context) : ISettlementService
+public class SettlementService(DbContext context, INotificationEngine notificationEngine) : ISettlementService
 {
     public async Task<(bool Success, string Message, Guid SettlementId)> CreateSettlementAsync(Guid projectId, SettlementCreateDto dto, Guid tenantId, string userRole, Guid userId)
     {
@@ -76,6 +76,21 @@ public class SettlementService(DbContext context) : ISettlementService
 
         context.Set<Settlement>().Add(newSettlement);
         await context.SaveChangesAsync();
+
+        if (!dto.IsDraft)
+        {
+            try
+            {
+                await notificationEngine.RaiseSettlementSubmittedNotificationAsync(
+                    userId,
+                    totalAmount,
+                    newSettlement.Id,
+                    tenantId,
+                    projectId,
+                    isAutoApproved: false);
+            }
+            catch (Exception) { /* Notification delivery is best effort */ }
+        }
 
         var statusMessage = dto.IsDraft ? "Settlement draft saved successfully." : "Settlement request submitted for review.";
         return (true, statusMessage, newSettlement.Id);
@@ -220,6 +235,19 @@ public class SettlementService(DbContext context) : ISettlementService
             return (false, "CONCURRENCY_ERROR: تمت معالجة أو تعديل هذه التسوية بواسطة مستخدم آخر في نفس الوقت.");
         }
 
+        // Trigger Result Notification to the Submitter — best-effort
+        try
+        {
+            await notificationEngine.RaiseSettlementResultNotificationAsync(
+                pettyCash.IssuedToUserId,
+                settlement.TotalAmount,
+                settlement.Id,
+                settlement.TenantId,
+                projectId,
+                settlement.Status);
+        }
+        catch (Exception) { /* Notification delivery is best effort */ }
+
         return (true, settlement.Status == SettlementStatus.ApprovedPendingRefund 
             ? "Settlement approved. Status set to ApprovedPendingRefund. Awaiting accountant refund confirmation."
             : "Settlement approved successfully.");
@@ -297,6 +325,20 @@ public class SettlementService(DbContext context) : ISettlementService
         context.Set<FinancialTransaction>().Add(refundTx);
 
         await context.SaveChangesAsync();
+
+        // Trigger Result Notification to the Submitter — best-effort
+        try
+        {
+            await notificationEngine.RaiseSettlementResultNotificationAsync(
+                pettyCash.IssuedToUserId,
+                returnedCash,
+                settlement.Id,
+                settlement.TenantId,
+                projectId,
+                SettlementStatus.Refunded);
+        }
+        catch (Exception) { /* Notification delivery is best effort */ }
+
         return (true, "Refund confirmed. Cash pool balance and project budget restored, settlement fully closed.");
     }
 
@@ -331,6 +373,24 @@ public class SettlementService(DbContext context) : ISettlementService
         }
 
         await context.SaveChangesAsync();
+
+        // Trigger Rejection Result Notification to the Submitter — best-effort
+        try
+        {
+            if (settlement.PettyCash != null)
+            {
+                await notificationEngine.RaiseSettlementResultNotificationAsync(
+                    settlement.PettyCash.IssuedToUserId,
+                    settlement.TotalAmount,
+                    settlement.Id,
+                    settlement.TenantId,
+                    projectId,
+                    SettlementStatus.Rejected,
+                    comments: dto.Comments);
+            }
+        }
+        catch (Exception) { /* Notification delivery is best effort */ }
+
         return (true, "Settlement request rejected.");
     }
 

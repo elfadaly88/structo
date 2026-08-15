@@ -5,6 +5,61 @@
 
 ---
 
+## [003] - Recurring Anti-Pattern: Null-Passthrough Multi-Tenancy Query Filters (2nd Occurrence — ProjectMember, then Notification & System-Wide Audit)
+
+**Date / التاريخ:** 15 August 2026 / 15 أغسطس 2026
+
+**الأعراض (Symptoms):**
+- This exact anti-pattern was independently introduced / discovered TWICE in the same project, driven by the same "quick fix" reasoning each time:
+  1. **First occurrence:** During the `ProjectMember` / Two-Way Assignment feature, the filter was changed to `CurrentTenantId == null || pm.TenantId == CurrentTenantId` to "fix" a failing test context where `CurrentTenantId` was null.
+  2. **Second occurrence:** Discovered independently already pre-existing on the `Notification` entity (`CurrentTenantId == null || e.TenantId == null || e.TenantId == CurrentTenantId`). It surfaced **only** because the raw emitted SQL was inspected directly during a verification step — it was **NOT** caught by build success, E2E test passes, or even the developer's own "confirmed strict" claim the first time it was reported as fixed.
+  3. **Full Audit Finding:** The subsequent system-wide audit revealed that the exact same anti-pattern was lurking across **all** tenant entities (`User`, `Project`, `FinancialTransaction`, `PettyCash`, `SitePhoto`, `ProjectCashPool`, `Settlement`, `SettlementLine`, `ProjectBudgetLog`).
+
+**السبب الجذري (Root Cause):**
+- Both cases stem from the same underlying temptation: when a background job, test runner, or unauthenticated edge-case context doesn't have a `CurrentTenantId` populated correctly, a strict query filter returns zero rows.
+- The fastest-looking (and most dangerous) fix is to loosen the **GLOBAL** filter with an `OR CurrentTenantId == null` or `OR e.TenantId == null` clause, instead of fixing the actual context/call site that's missing proper tenant resolution or explicitly opting out via `.IgnoreQueryFilters()`.
+- When `CurrentTenantId` is null (e.g. unauthenticated request, leaked token, or misconfigured middleware), a null-passthrough filter silently exposes **ALL tenants' data** across the entire database.
+
+**الحل (Fix):**
+1. **Revert ALL Global Query Filters to Strict Equality (`e.TenantId == CurrentTenantId`):**
+   In [`StructoDbContext.cs`](file:///f:/PrivateWork/structo/project/Structo.Infrastructure/Data/StructoDbContext.cs), every tenant-scoped entity was converted to a strictly scoped filter with **zero** OR / null-passthrough clauses:
+   ```csharp
+   modelBuilder.Entity<User>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<Project>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<ProjectMember>().HasQueryFilter(pm => pm.TenantId == CurrentTenantId);
+   modelBuilder.Entity<FinancialTransaction>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<PettyCash>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<SitePhoto>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<ProjectCashPool>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<Settlement>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<SettlementLine>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<SubscriptionTransaction>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+   modelBuilder.Entity<ProjectBudgetLog>().HasQueryFilter(p => p.Project!.TenantId == CurrentTenantId);
+   ```
+2. **Eliminated Local Controller & Service Predicate Bypasses:**
+   - Fixed [`SitePhotosController.cs:L153`](file:///f:/PrivateWork/structo/project/Structo.API/Controllers/SitePhotosController.cs#L153) where `(currentTenantId == null || p.TenantId == currentTenantId)` was removed and replaced with strict `p.TenantId == currentTenantId`.
+   - Updated [`ProjectAccessService.cs`](file:///f:/PrivateWork/structo/project/Structo.Core/Services/ProjectAccessService.cs) and [`NotificationEngine.cs`](file:///f:/PrivateWork/structo/project/Structo.Core/Services/NotificationEngine.cs) to explicitly validate `p.TenantId == tenantId` parameters with `.IgnoreQueryFilters()`, removing reliance on ambient context.
+3. **Audited Background Jobs, Startup Seed Scripts, and Identity Lookups:**
+   - Startup seed queries in [`Program.cs:L429-475`](file:///f:/PrivateWork/structo/project/Structo.API/Program.cs#L429-L475) explicitly use `.IgnoreQueryFilters()`.
+   - All background scans in [`TenantCleanupService.cs`](file:///f:/PrivateWork/structo/project/Structo.Core/Services/TenantCleanupService.cs) and `TenantCleanupWorker` explicitly use `.IgnoreQueryFilters()`.
+4. **Inspect Raw Emitted SQL:**
+   - Verified that the SQL emitted by EF Core for tenant queries contains strictly `WHERE n."TenantId" = @__CurrentTenantId_0` with zero trailing `OR TenantId IS NULL`.
+
+**إزاي نعرف إن نفس المشكلة رجعت تاني (Detection Checklist):**
+- [ ] Run a system-wide regex search across all folders:
+  ```bash
+  grep -rnE "(CurrentTenantId|TenantId|currentTenantId|tenantId)\s*==\s*null\s*\|\|" Structo.API/ Structo.Core/ Structo.Infrastructure/
+  ```
+  ANY hit that loosens a query predicate is an **IMMEDIATE red flag** and must be rejected in code review.
+- [ ] **Critical Rule:** Do **NOT** trust "I confirmed it's strict" claims at face value. The **only** reliable verification is inspecting the **ACTUAL SQL emitted by EF Core** (via logging/profiling) for the specific query in question, not just reading the C# `.Where()` clause, since a broader `HasQueryFilter()` on the entity can silently add conditions invisible in the local query code.
+- [ ] Any time an AI agent or developer proposes "loosening a filter to fix a test/background job," the mandatory question is always: *"Why not `IgnoreQueryFilters()` at the specific call site instead?"*
+
+**نتائج التحقق الفعلي الشامل (19/19 Live E2E Scenarios Passed):**
+- All 19 integration test scenarios (11 from ProjectMember Access Control + 8 from Role-Based Notification Routing) were executed against the live database with real generated IDs and passed with 100% success (19/19 Passed, `success: true`).
+
+---
+
 ## [002] - Multi-Tenancy Query Filter Regression — Null-Passthrough Pattern Reintroduced During ProjectMember Implementation
 
 **التاريخ:** 15 أغسطس 2026

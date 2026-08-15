@@ -66,6 +66,7 @@ public class NotificationService : INotificationService
         {
             TenantId   = dto.TenantId,
             ReceiverId = dto.ReceiverId,
+            ProjectId  = dto.ProjectId,
             TargetRole = dto.TargetRole,
             Title      = dto.Title,
             Message    = dto.Message,
@@ -97,60 +98,40 @@ public class NotificationService : INotificationService
 
     public async Task<List<NotificationDto>> GetMyNotificationsAsync(Guid userId, Guid? tenantId)
     {
-        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _db.Users.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return [];
 
-        var query = _db.Notifications.AsNoTracking();
+        // Return notifications addressed personally to this user (strict server-side scoping)
+        var query = _db.Notifications.IgnoreQueryFilters().AsNoTracking();
+        if (user.Role == UserRole.SuperAdmin)
+        {
+            query = query.Where(n => n.TenantId == null);
+        }
+        else if (user.TenantId.HasValue)
+        {
+            query = query.Where(n => n.TenantId == user.TenantId.Value);
+        }
+        else if (tenantId.HasValue)
+        {
+            query = query.Where(n => n.TenantId == tenantId.Value);
+        }
 
-        // Return notifications addressed personally to this user
-        // OR broadcast to the whole tenant (ReceiverId == null, TenantId matches)
-        // OR broadcast by role — role filtering is done in memory for simplicity
         var notifications = await query
-            .Where(n =>
-                n.ReceiverId == userId ||                          // direct
-                (n.ReceiverId == null && n.TenantId == tenantId) ||// tenant broadcast
-                (n.ReceiverId == null && n.TenantId == null))      // global (SuperAdmin)
+            .Where(n => n.ReceiverId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .Take(50)
+            .Select(n => MapToDto(n))
             .ToListAsync();
 
-        // Apply role filter in memory: n.TargetRole must match user.Role if it is set.
-        var filtered = notifications
-            .Where(n => !n.TargetRole.HasValue || n.TargetRole.Value == user.Role)
-            .Select(MapToDto)
-            .ToList();
-
-        return filtered;
+        return notifications;
     }
 
     public async Task MarkAsReadAsync(Guid notificationId, Guid userId)
     {
-        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-        if (user == null) return;
-
-        var notification = await _db.Notifications
-            .FirstOrDefaultAsync(n => n.Id == notificationId);
+        var notification = await _db.Notifications.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(n => n.Id == notificationId && n.ReceiverId == userId);
 
         if (notification is null) return;
-
-        bool isAuthorized = false;
-
-        if (notification.ReceiverId == userId)
-        {
-            isAuthorized = true;
-        }
-        else if (notification.ReceiverId == null)
-        {
-            bool tenantMatches = (notification.TenantId == null) || (notification.TenantId == user.TenantId);
-            bool roleMatches = (!notification.TargetRole.HasValue) || (notification.TargetRole.Value == user.Role);
-
-            if (tenantMatches && roleMatches)
-            {
-                isAuthorized = true;
-            }
-        }
-
-        if (!isAuthorized) return;
 
         notification.IsRead = true;
         notification.ReadAt = DateTime.UtcNow;
@@ -165,39 +146,16 @@ public class NotificationService : INotificationService
     {
         const string method = "ReceiveNotification";
 
-        if (dto.TargetRole == UserRole.SuperAdmin)
-        {
-            // TargetRole is SuperAdmin -> ONLY broadcast to the "SuperAdmin" global group
-            await _hubContext.Clients
-                .Group("SuperAdmin")
-                .SendAsync(method, payload);
-            return;
-        }
-
         if (dto.ReceiverId.HasValue)
         {
-            // Target a specific user's personal group
+            // Target a specific user's personal group (strict user isolation)
             await _hubContext.Clients
                 .Group(dto.ReceiverId.Value.ToString())
                 .SendAsync(method, payload);
         }
-        else if (dto.TenantId.HasValue && dto.TargetRole.HasValue)
+        else if (dto.TargetRole == UserRole.SuperAdmin || (!dto.TenantId.HasValue && !dto.ReceiverId.HasValue))
         {
-            // Target a specific role group within a tenant
-            await _hubContext.Clients
-                .Group($"{dto.TenantId.Value}_{dto.TargetRole.Value}")
-                .SendAsync(method, payload);
-        }
-        else if (dto.TenantId.HasValue)
-        {
-            // Target all users of a tenant
-            await _hubContext.Clients
-                .Group(dto.TenantId.Value.ToString())
-                .SendAsync(method, payload);
-        }
-        else
-        {
-            // Global — SuperAdmin only
+            // Global platform alerts — SuperAdmin group only
             await _hubContext.Clients
                 .Group("SuperAdmin")
                 .SendAsync(method, payload);
@@ -357,6 +315,7 @@ public class NotificationService : INotificationService
         TenantId   = n.TenantId,
         SenderId   = n.SenderId,
         ReceiverId = n.ReceiverId,
+        ProjectId  = n.ProjectId,
         Title      = n.Title,
         Message    = n.Message,
         Type       = n.Type,
@@ -369,24 +328,13 @@ public class NotificationService : INotificationService
 
     public async Task ClearAllNotificationsAsync(Guid userId, Guid? tenantId)
     {
-        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-        if (user == null) return;
-
-        var query = _db.Notifications.AsQueryable();
-
-        var toDelete = await query
-            .Where(n =>
-                n.ReceiverId == userId ||
-                (n.ReceiverId == null && tenantId.HasValue && n.TenantId == tenantId.Value))
+        var toDelete = await _db.Notifications.IgnoreQueryFilters()
+            .Where(n => n.ReceiverId == userId)
             .ToListAsync();
 
-        var filteredToDelete = toDelete
-            .Where(n => !n.TargetRole.HasValue || n.TargetRole.Value == user.Role)
-            .ToList();
-
-        if (filteredToDelete.Count > 0)
+        if (toDelete.Count > 0)
         {
-            _db.Notifications.RemoveRange(filteredToDelete);
+            _db.Notifications.RemoveRange(toDelete);
             await _db.SaveChangesAsync();
         }
     }

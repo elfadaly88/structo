@@ -60,14 +60,17 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         context.Set<PettyCash>().Add(pettyCash);
         await context.SaveChangesAsync();
 
-        // Trigger Notification Engine (WORKFLOW A) — best-effort, never rollback on failure
+        // Trigger Notification Engine — best-effort, never rollback on failure
         try
         {
-            await notificationEngine.RaiseFinancialRequestNotificationAsync(
+            bool isAutoApproved = (userRole == "TenantOwner" && dto.SourcePoolId.HasValue);
+            await notificationEngine.RaisePettyCashRequestedNotificationAsync(
                 pettyCash.IssuedToUserId,
                 pettyCash.Amount,
                 pettyCash.Id,
-                pettyCash.TenantId);
+                pettyCash.TenantId,
+                pettyCash.ProjectId,
+                isAutoApproved);
         }
         catch (Exception) { /* Notification failure must not fail the custody request */ }
 
@@ -109,15 +112,16 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         pool.AvailableBalance -= pettyCash.Amount;
         await context.SaveChangesAsync();
 
-        // Trigger Notification to the Engineer — best-effort, never rollback on failure
+        // Trigger Notification to the Requester — best-effort, never rollback on failure
         try
         {
-            await notificationEngine.RaiseFinancialApprovalNotificationAsync(
+            await notificationEngine.RaisePettyCashResultNotificationAsync(
                 pettyCash.IssuedToUserId,
                 pettyCash.Amount,
                 pettyCash.Id,
                 pettyCash.TenantId,
-                pettyCash.ProjectId);
+                pettyCash.ProjectId,
+                isApproved: true);
         }
         catch (Exception) { /* Notification failure must not fail the custody approval */ }
 
@@ -139,6 +143,20 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         pettyCash.Status = "Rejected";
         pettyCash.Comments = dto.Comments ?? string.Empty;
         await context.SaveChangesAsync();
+
+        // Trigger Rejection Notification to the Requester — best-effort, never rollback on failure
+        try
+        {
+            await notificationEngine.RaisePettyCashResultNotificationAsync(
+                pettyCash.IssuedToUserId,
+                pettyCash.Amount,
+                pettyCash.Id,
+                pettyCash.TenantId,
+                pettyCash.ProjectId,
+                isApproved: false,
+                comments: dto.Comments);
+        }
+        catch (Exception) { /* Notification failure must not fail the custody rejection */ }
 
         return (true, "Petty cash request rejected.");
     }

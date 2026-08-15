@@ -223,6 +223,7 @@ builder.Services.AddHostedService<Structo.Infrastructure.Storage.TenantCleanupWo
 
 // Notification Services
 builder.Services.AddHttpClient("OneSignal");
+builder.Services.AddScoped<Structo.Core.Interfaces.INotificationRecipientResolver, Structo.Core.Services.NotificationRecipientResolver>();
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo.API.Services.NotificationService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IOneSignalEmailService, Structo.API.Services.OneSignalEmailService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.Core.Services.NotificationEngine>();
@@ -315,6 +316,24 @@ builder.Services.AddAuthentication(options =>
                 context.Token = accessToken;
             }
             return Task.CompletedTask;
+        },
+        OnForbidden = async context =>
+        {
+            if (context.HttpContext.Request.Path.StartsWithSegments("/api/subscription"))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+                var response = new Structo.Core.DTOs.Common.ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "ترقية الباقة والفوترة مقتصرة حصرياً على مالك المنشأة."
+                };
+                var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
+                await context.Response.WriteAsync(json);
+            }
         }
     };
 });
@@ -357,6 +376,13 @@ using (var scope = app.Services.CreateScope())
 
             CREATE INDEX IF NOT EXISTS ""IX_ProjectMembers_TenantId"" ON ""ProjectMembers"" (""TenantId"");
             CREATE INDEX IF NOT EXISTS ""IX_ProjectMembers_UserId"" ON ""ProjectMembers"" (""UserId"");
+
+            -- Backup snapshot of Notifications before schema alteration / migration
+            CREATE TABLE IF NOT EXISTS ""Notifications_Backup_20260815"" AS SELECT * FROM ""Notifications"";
+
+            ALTER TABLE ""Notifications"" ADD COLUMN IF NOT EXISTS ""ProjectId"" uuid NULL;
+            CREATE INDEX IF NOT EXISTS ""IX_Notifications_ProjectId"" ON ""Notifications"" (""ProjectId"");
+            CREATE INDEX IF NOT EXISTS ""IX_Notifications_ReceiverId"" ON ""Notifications"" (""ReceiverId"");
         ");
         context.Database.Migrate();
 
@@ -400,7 +426,7 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        if (!context.Users.Any(u => u.Role == UserRole.SuperAdmin))
+        if (!context.Users.IgnoreQueryFilters().Any(u => u.Role == UserRole.SuperAdmin))
         {
             var superAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL") 
                 ?? builder.Configuration["SuperAdminSeed:Email"] 
@@ -422,7 +448,7 @@ using (var scope = app.Services.CreateScope())
             context.SaveChanges();
         }
 
-        if (!context.Tenants.Any(t => t.Name == "Tenant 1"))
+        if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 1"))
         {
             var t1 = new Tenant { Name = "Tenant 1", SubscriptionPlan = SubscriptionPlan.Premium, MaxActiveProjects = 50 };
             context.Tenants.Add(t1);
@@ -443,7 +469,7 @@ using (var scope = app.Services.CreateScope())
             context.SaveChanges();
         }
 
-        if (!context.Tenants.Any(t => t.Name == "Tenant 2"))
+        if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 2"))
         {
             var t2 = new Tenant { Name = "Tenant 2", SubscriptionPlan = SubscriptionPlan.Free, MaxActiveProjects = 2 };
             context.Tenants.Add(t2);

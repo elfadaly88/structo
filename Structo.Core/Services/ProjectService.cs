@@ -12,7 +12,10 @@ using System.Text.Json.Nodes;
 
 namespace Structo.Core.Services;
 
-public class ProjectService(DbContext context, ITenantContextAccessor tenantContextAccessor) : IProjectService
+public class ProjectService(
+    DbContext context,
+    ITenantContextAccessor tenantContextAccessor,
+    INotificationEngine notificationEngine) : IProjectService
 {
     private string BuildLegacyDescription(Project p)
     {
@@ -361,7 +364,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
     public async Task<(bool Success, string Message, List<ProjectMemberDto>? AddedMembers)> AddProjectMembersAsync(Guid projectId, List<Guid> userIds, Guid assignedByUserId, Guid tenantId)
     {
-        var project = await context.Set<Project>().FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
+        var project = await context.Set<Project>().IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId && p.TenantId == tenantId);
         if (project == null)
             return (false, "Project not found.", null);
 
@@ -378,6 +381,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
 
         var distinctUserIds = userIds.Distinct().ToList();
         var users = await context.Set<User>()
+            .IgnoreQueryFilters()
             .Where(u => distinctUserIds.Contains(u.Id) && u.TenantId == tenantId)
             .ToListAsync();
 
@@ -662,7 +666,7 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         };
     }
 
-    public async Task<(bool Success, string Message)> FreezeProjectAsync(Guid id, Guid tenantId, string userRole)
+    public async Task<(bool Success, string Message)> FreezeProjectAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null)
     {
         if (userRole != "TenantOwner" && userRole != "Accountant")
             throw new UnauthorizedAccessException("Only TenantOwner or Accountant can freeze a project.");
@@ -678,10 +682,22 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
             project.PublicReviewToken = Guid.NewGuid().ToString("N");
 
         await context.SaveChangesAsync();
+
+        // Trigger Informational Notification to all assigned project members + TenantOwner — best-effort
+        try
+        {
+            await notificationEngine.RaiseProjectStatusChangedNotificationAsync(
+                id,
+                tenantId,
+                ProjectStatus.FinancialFreeze,
+                changedByUserId ?? Guid.Empty);
+        }
+        catch (Exception) { /* Notification failure must not block project freeze */ }
+
         return (true, $"Project frozen successfully. Public review token: {project.PublicReviewToken}");
     }
 
-    public async Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole)
+    public async Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null)
     {
         if (userRole != "TenantOwner")
             throw new UnauthorizedAccessException("Only TenantOwner can perform a final project closeout.");
@@ -715,6 +731,18 @@ public class ProjectService(DbContext context, ITenantContextAccessor tenantCont
         project.IsActive = false;
 
         await context.SaveChangesAsync();
+
+        // Trigger Informational Notification to all assigned project members + TenantOwner — best-effort
+        try
+        {
+            await notificationEngine.RaiseProjectStatusChangedNotificationAsync(
+                id,
+                tenantId,
+                ProjectStatus.Closed,
+                changedByUserId ?? Guid.Empty);
+        }
+        catch (Exception) { /* Notification failure must not block project closeout */ }
+
         return (true, "تم إغلاق المشروع نهائياً وتجميد جميع العمليات المالية. سجل التدقيق محفوظ بشكل دائم.");
     }
 

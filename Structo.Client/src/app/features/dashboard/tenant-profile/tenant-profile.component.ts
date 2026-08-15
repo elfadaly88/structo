@@ -315,7 +315,7 @@ interface MapSearchResult {
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <!-- Upgrade Plan Button -->
-                  @if ((tenantData()?.subscriptionPlan || 'Free') !== 'Enterprise') {
+                  @if (auth.isTenantOwner() && (tenantData()?.subscriptionPlan || 'Free') !== 'Enterprise') {
                     <button type="button" id="btn-upgrade-plan" (click)="openPlanModal()"
                       class="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 cursor-pointer">
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -325,7 +325,7 @@ interface MapSearchResult {
                     </button>
                   }
                   <!-- Add Extra Projects Button -->
-                  @if ((tenantData()?.maxActiveProjects || 2) !== -1) {
+                  @if (auth.isTenantOwner() && (tenantData()?.maxActiveProjects || 2) !== -1) {
                     <button type="button" id="btn-add-extra" (click)="openTopUpModal()"
                       class="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer">
                       <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -545,7 +545,7 @@ interface MapSearchResult {
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- MODAL 1 — PLAN SELECTION MODAL                                  -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    @if (showPlanModal()) {
+    @if (showPlanModal() && auth.isTenantOwner()) {
       <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" (click)="closePlanModal()">
         <div class="relative w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()">
           <!-- Header -->
@@ -629,7 +629,7 @@ interface MapSearchResult {
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- MODAL 2 — ADD-ON TOP-UP MODAL                                   -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    @if (showTopUpModal()) {
+    @if (showTopUpModal() && auth.isTenantOwner()) {
       <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" (click)="closeTopUpModal()">
         <div class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()">
           <!-- Header -->
@@ -730,7 +730,7 @@ interface MapSearchResult {
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- MODAL 3 — MOCK CHECKOUT SCREEN                                  -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    @if (showCheckoutModal()) {
+    @if (showCheckoutModal() && auth.isTenantOwner()) {
       <div class="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-lg">
         <div class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col">
           <!-- Header -->
