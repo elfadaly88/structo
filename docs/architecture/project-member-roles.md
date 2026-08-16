@@ -93,11 +93,12 @@ Located in [`Structo.Core/Services/ProjectAccessService.cs`](file:///f:/PrivateW
 
 ---
 
-## 6. Frontend Integration & Zoneless Architecture
+## 6. Frontend Integration & Change Detection Architecture
 
-### Strict Zoneless Compliance
-- All state in components uses Angular Signals (`signal<T>()`, `computed()`).
-- No direct usage of `NgZone`, `zone.run()`, or `markForCheck()`.
+### Standard Zone.js Change Detection
+- The client officially uses standard Zone.js-based Change Detection (`provideZoneChangeDetection({ eventCoalescing: true })`).
+- Modern Angular Signals (`signal<T>()`, `computed()`) are used for clean reactive local component state.
+- Standard async operations (HTTP requests, SignalR events, DOM events) automatically trigger Angular change detection cycles across the component tree.
 
 ### Components
 1. **`UsersComponent`** ([`users.component.ts`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/features/dashboard/users/users.component.ts)):
