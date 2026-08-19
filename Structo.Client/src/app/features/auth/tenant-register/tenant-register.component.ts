@@ -212,7 +212,9 @@ interface NominatimResult {
                     <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
                       البريد الإلكتروني الرسمي <span class="text-rose-400">*</span>
                     </label>
-                    <input id="email" type="email" formControlName="email" placeholder="admin@company.com" autocomplete="off" aria-autocomplete="none"
+                    <input id="email" type="email" formControlName="email" 
+                    placeholder="admin@company.com"  
+                    aria-autocomplete="none" autocomplete="off"
                       class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                       [class.border-rose-500]="isFieldInvalid('email') || !!emailError()"
                       [class.border-slate-800]="!isFieldInvalid('email') && !emailError()">
@@ -616,17 +618,17 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
   private readonly authService = inject(AuthService);
   readonly rateLimitService = inject(RateLimitService);
   readonly toastService = inject(ToastService);
-  
+
   @ViewChild('mapContainer') mapContainer!: ElementRef<HTMLDivElement>;
-  
+
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
   private currentLatLng: L.LatLng = L.latLng(30.0444, 31.2357); // Cairo/Giza
-  
+
   searchQuery = '';
   searchResults: NominatimResult[] = [];
   private searchTimeout: any = null;
-  
+
   readonly currentStep = signal<number>(1);
   readonly showSummaryBanner = signal<boolean>(false);
   readonly isLoading = signal(false);
@@ -850,7 +852,7 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
 
   private initMap(): void {
     if (this.map || !this.mapContainer) return;
-    
+
     const iconDefault = L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -862,21 +864,21 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
       shadowSize: [41, 41]
     });
     L.Marker.prototype.options.icon = iconDefault;
-    
+
     this.map = L.map(this.mapContainer.nativeElement).setView(this.currentLatLng, 12);
-    
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(this.map);
-    
+
     this.marker = L.marker(this.currentLatLng, { draggable: true }).addTo(this.map);
-    
+
     this.marker.on('dragend', (e: any) => {
       this.currentLatLng = this.marker!.getLatLng();
     });
-    
+
     this.map.invalidateSize();
   }
 
@@ -934,15 +936,15 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
     const lat = parseFloat(result.lat);
     const lng = parseFloat(result.lon);
     this.currentLatLng = L.latLng(lat, lng);
-    
+
     if (this.map) {
       this.map.flyTo(this.currentLatLng, 14);
     }
-    
+
     if (this.marker) {
       this.marker.setLatLng(this.currentLatLng);
     }
-    
+
     this.searchResults = [];
     this.searchQuery = result.display_name;
   }

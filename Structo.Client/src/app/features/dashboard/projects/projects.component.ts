@@ -1215,7 +1215,7 @@ const GOVERNORATES: GovernorateOption[] = [
               <label class="block text-xs font-semibold text-slate-300 mb-1">
                 البريد الإلكتروني <span class="text-rose-400">*</span>
               </label>
-              <input type="email" 
+              <input type="email"  autocomplete="off"
                      formControlName="email" 
                      placeholder="name@company.com" 
                      class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono">
@@ -1889,10 +1889,10 @@ export class ProjectsComponent implements OnInit {
           });
           this.profileMapSearchQuery = res.data.manualAddress || '';
           this.queueProfileMapSync();
-          
+
           // Evaluate completion to clear warning banner without reload
-          const hasMap = res.data.latitude !== null && res.data.latitude !== undefined && 
-                         res.data.longitude !== null && res.data.longitude !== undefined;
+          const hasMap = res.data.latitude !== null && res.data.latitude !== undefined &&
+            res.data.longitude !== null && res.data.longitude !== undefined;
           const hasAddress = !!res.data.manualAddress && res.data.manualAddress.trim() !== '';
           this.authService.updateProfileCompletionStatus(hasMap && hasAddress);
           this.cdr.markForCheck();
@@ -1932,7 +1932,7 @@ export class ProjectsComponent implements OnInit {
           const msg = res.message && res.message !== 'PROFILE.SUCCESS'
             ? res.message
             : 'تم حفظ بيانات الشركة بنجاح / Profile updated successfully';
-          
+
           this.toastService.show('نجاح / Success', msg, 'success');
           this.profileSuccessMessage.set(msg);
 

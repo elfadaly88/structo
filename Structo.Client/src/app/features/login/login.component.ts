@@ -37,7 +37,7 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
 
       <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4">
         <div class="bg-slate-900/50 backdrop-blur-md py-8 px-4 border border-slate-800/80 shadow-2xl sm:rounded-2xl sm:px-10">
-          
+
           <!-- Registration Pending Card -->
           @if (registrationPending()) {
             <div class="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-6 text-slate-200 text-center font-cairo shadow-lg shadow-indigo-500/5 space-y-4">
@@ -184,15 +184,27 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
               </div>
             </div>
 
-            <!-- Google Sign In Button Container -->
+            <!-- Google Sign In Button (Custom, fully styled - no GSI rendered button) -->
             <div class="w-full mt-2 flex justify-center items-center min-h-[44px]">
-              <div id="googleBtn" class="w-full flex justify-center"></div>
+              <button
+                type="button"
+                (click)="loginWithGoogle()"
+                class="w-full flex items-center justify-center gap-3 py-3 px-4 bg-slate-950 border border-slate-800 hover:bg-slate-900 hover:border-slate-700 text-slate-200 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer"
+              >
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                تسجيل الدخول باستخدام جوجل
+              </button>
             </div>
 
             <!-- Public Registration Link -->
             <div class="mt-6 text-center">
               <p class="text-sm text-slate-400">
-                Don't have an account? 
+                Don't have an account?
                 <a routerLink="/register" class="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200">
                   Register your tenant/company here
                 </a>
@@ -224,98 +236,56 @@ export class LoginComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly registrationPending = signal(false);
   selectedPlan = 'Free';
-  private isGisInitialized = false;
+
   ngOnInit(): void {
     if (typeof window !== 'undefined') {
-      // فحص سريع ومباشر، لو الـ SDK محمل أصلاً ينادي فوراً
-      if ((window as any).google?.accounts?.id) {
-        this.initGoogleGis();
-      } else {
-        // استخدام تايمر ذكي يقف فوراً بمجرد تفعيل الـ SDK لمنع الـ Multiple call bug
-        const checkGis = setInterval(() => {
-          if ((window as any).google?.accounts?.id) {
-            clearInterval(checkGis);
-            this.initGoogleGis();
-          }
-        }, 100);
-
-        setTimeout(() => clearInterval(checkGis), 5000);
-      }
+      this.checkGoogleRedirectResult();
     }
   }
 
-  private initGoogleGis(): void {
-    if (this.isGisInitialized) return; // 🔒 حارس أمني: يمنع الدخول لو الـ Initialize تم مسبقاً
+  private checkGoogleRedirectResult(): void {
+    if (typeof window === 'undefined') return;
 
-    const google = (window as any).google;
-    if (google && google.accounts && google.accounts.id) {
-      google.accounts.id.initialize({
-        client_id: environment.googleClientId,
-        callback: (response: any) => this.handleGoogleCredential(response.credential),
-        auto_select: false,
-        itp_support: true
-      });
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('id_token=')) return;
 
-      this.isGisInitialized = true; // تفعيل الحارس
-      this.renderGoogleButton();
+    const params = new URLSearchParams(hash.substring(1));
+    const idToken = params.get('id_token');
 
-      // 🚀 Trigger Google One Tap floating prompt in top-right corner automatically
-      google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed()) {
-          console.warn('Google One Tap not displayed:', notification.getNotDisplayedReason());
-        } else if (notification.isSkippedMoment()) {
-          console.warn('Google One Tap skipped:', notification.getSkippedReason());
-        } else if (notification.isDismissedMoment()) {
-          console.warn('Google One Tap dismissed:', notification.getDismissedReason());
-        }
-      });
-    }
-  }
+    if (idToken) {
+      // Clean up hash from URL
+      const cleanUrl = window.location.pathname + window.location.search;
+      history.replaceState(null, '', cleanUrl);
 
-  private renderGoogleButton(): void {
-    const google = (window as any).google;
-    if (!google || !google.accounts || !google.accounts.id) return;
+      const storedNonce = sessionStorage.getItem('google_auth_nonce');
+      sessionStorage.removeItem('google_auth_nonce');
 
-    const renderOptions = {
-      theme: 'filled_black',
-      size: 'large',
-      type: 'standard',
-      shape: 'rectangular',
-      text: 'signin_with',
-      logo_alignment: 'left',
-      width: 380
-    };
-
-    const btn = document.getElementById('googleBtn');
-    if (btn) {
-      google.accounts.id.renderButton(btn, renderOptions);
-    } else {
-      const interval = setInterval(() => {
-        const dynamicBtn = document.getElementById('googleBtn');
-        if (dynamicBtn) {
-          clearInterval(interval);
-          google.accounts.id.renderButton(dynamicBtn, renderOptions);
-        }
-      }, 50);
-      setTimeout(() => clearInterval(interval), 5000);
+      this.handleGoogleCredential(idToken);
     }
   }
 
   loginWithGoogle(): void {
-    const google = (window as any).google;
-    if (google && google.accounts && google.accounts.id) {
-      if (!this.isGisInitialized) {
-        this.initGoogleGis();
-      }
-      google.accounts.id.prompt();
-    } else {
-      this.initGoogleGis();
-    }
+    if (typeof window === 'undefined') return;
+
+    const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    sessionStorage.setItem('google_auth_nonce', nonce);
+
+    const redirectUri = `${window.location.origin}/login`;
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', environment.googleClientId);
+    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('response_type', 'id_token');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('nonce', nonce);
+    authUrl.searchParams.set('prompt', 'select_account');
+
+    window.location.href = authUrl.toString();
   }
 
   onGoogleLogin(): void {
     this.loginWithGoogle();
   }
+
   private handleGoogleCredential(credential: string): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -466,5 +436,3 @@ export class LoginComponent implements OnInit {
     });
   }
 }
-
-

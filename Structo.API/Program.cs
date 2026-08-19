@@ -211,6 +211,7 @@ else
 // Core Business Services
 builder.Services.AddScoped<Structo.Core.Interfaces.ITokenProvider, Structo.Infrastructure.Auth.JwtTokenProvider>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IAuthService, Structo.Core.Services.AuthService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IGoogleAuthService, Structo.API.Services.GoogleAuthService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IUserService, Structo.Core.Services.UserService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IProjectService, Structo.Core.Services.ProjectService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IProjectAccessService, Structo.Core.Services.ProjectAccessService>();
