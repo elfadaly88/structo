@@ -113,35 +113,39 @@ import { LanguageService } from '../../../core/services/language.service';
           </div>
 
           <!-- Primary Action & Header Controls -->
-          @if (isOwnerOrAccountant() && project()) {
+          @if (project()) {
             <div class="flex items-center gap-3 shrink-0 flex-wrap">
-              <!-- Direct Public Visibility Toggle Switch -->
-              <div class="flex items-center gap-2.5 bg-slate-950/80 border border-slate-800 px-3.5 py-2 rounded-xl font-cairo shadow-sm">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
-                  <span>إظهار في البروفايل العام</span>
-                </span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    [checked]="isPublicPortfolio()"
-                    (change)="togglePublicVisibility($any($event.target).checked)"
-                    [disabled]="isSavingProjectSettings()"
-                    class="sr-only peer">
-                  <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
-              </div>
+              <!-- Direct Public Visibility Toggle Switch (Restricted to Tenant Owner / Admin only) -->
+              @if (isTenantOwner() || isSuperAdmin()) {
+                <div class="flex items-center gap-2.5 bg-slate-950/80 border border-slate-800 px-3.5 py-2 rounded-xl font-cairo shadow-sm">
+                  <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
+                    <span>إظهار في البروفايل العام</span>
+                  </span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox"
+                      [checked]="isPublicPortfolio()"
+                      (change)="togglePublicVisibility($any($event.target).checked)"
+                      [disabled]="isSavingProjectSettings()"
+                      class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              }
 
               <!-- Primary Action Button: + إيداع دفعة مالية -->
-              <button 
-                (click)="openInjectModal()"
-                [disabled]="project()?.status === 'Closed'"
-                class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
-              </button>
+              @if (isOwnerOrAccountant()) {
+                <button 
+                  (click)="openInjectModal()"
+                  [disabled]="project()?.status === 'Closed'"
+                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
+                </button>
+              }
             </div>
           }
         </div>
@@ -3355,12 +3359,13 @@ export class ProjectDetailsComponent implements OnInit {
 
   readonly currentUserRole = computed(() => this.authService.currentUser()?.role || '');
   readonly isTenantOwner = this.authService.isTenantOwner;
+  readonly isSuperAdmin = this.authService.isSuperAdmin;
   readonly isProjectManager = this.authService.isManager;
   readonly isAccountant = this.authService.isAccountant;
   readonly isOwnerOrAccountant = computed(() => ['tenantowner', 'accountant', 'manager', 'admin'].includes(this.currentUserRole().toLowerCase()));
   readonly isEngineer = this.authService.isEngineer;
-  readonly canManageMembers = computed(() => this.isTenantOwner() || this.isProjectManager());
-  readonly canManageFinancials = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isAccountant());
+  readonly canManageMembers = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isSuperAdmin());
+  readonly canManageFinancials = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isAccountant() || this.isSuperAdmin());
 
 
   readonly projectId = this.route.snapshot.paramMap.get('id') || '';
@@ -3412,6 +3417,7 @@ export class ProjectDetailsComponent implements OnInit {
   });
 
   togglePublicVisibility(newValue: boolean): void {
+    if (!this.isTenantOwner() && !this.isSuperAdmin()) return;
     const currentProj = this.project();
     if (!currentProj) return;
 
