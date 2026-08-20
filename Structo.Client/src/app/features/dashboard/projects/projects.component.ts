@@ -490,7 +490,7 @@ const GOVERNORATES: GovernorateOption[] = [
           </div>
 
           <!-- Modal Body & Form -->
-          <form [formGroup]="projectForm" (ngSubmit)="onProjectSubmit()" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <form [formGroup]="projectForm" (ngSubmit)="onProjectSubmit()" autocomplete="off" class="flex-1 flex flex-col min-h-0 overflow-hidden">
             <div class="flex-1 overflow-y-auto min-h-0 p-5 sm:p-6 space-y-4">
               @if (projectValidationErrors().length > 0) {
                 <div class="mb-4 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 space-y-1">
@@ -1186,7 +1186,11 @@ const GOVERNORATES: GovernorateOption[] = [
           </div>
 
           <!-- Modal Form Body (Compact & No Inner Scrollbar) -->
-          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" class="p-5 space-y-3.5">
+          <form [formGroup]="userForm" (ngSubmit)="onUserSubmit()" autocomplete="off" class="p-5 space-y-3.5">
+
+            <!-- Anti-Autofill Dummies for Chrome/Edge Password Manager & Profile Autofill -->
+            <input type="text" name="dummy_username_antifill" style="display:none" aria-hidden="true" autocomplete="off" />
+            <input type="password" name="dummy_password_antifill" style="display:none" aria-hidden="true" autocomplete="new-password" />
             
             <!-- Name Grid (2 Columns on Tablet/Desktop, 1 on Mobile) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1196,6 +1200,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 </label>
                 <input type="text" 
                        formControlName="firstName" 
+                       name="user_new_first_name"
+                       autocomplete="off"
                        placeholder="أحمد" 
                        class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-cairo">
               </div>
@@ -1205,6 +1211,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 </label>
                 <input type="text" 
                        formControlName="lastName" 
+                       name="user_new_last_name"
+                       autocomplete="off"
                        placeholder="علي" 
                        class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-cairo">
               </div>
@@ -1215,8 +1223,10 @@ const GOVERNORATES: GovernorateOption[] = [
               <label class="block text-xs font-semibold text-slate-300 mb-1">
                 البريد الإلكتروني <span class="text-rose-400">*</span>
               </label>
-              <input type="email"  autocomplete="off"
+              <input type="email"
                      formControlName="email" 
+                     name="user_new_work_email"
+                     autocomplete="new-password"
                      placeholder="name@company.com" 
                      class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono">
               <p class="text-[10px] text-indigo-300/80 mt-1 flex items-center gap-1">
@@ -1231,6 +1241,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 <label class="block text-xs font-semibold text-slate-300 mb-1">الهاتف الشخصي</label>
                 <input type="tel" 
                        formControlName="personalPhone" 
+                       name="user_new_personal_phone"
+                       autocomplete="off"
                        placeholder="01000000000" 
                        class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono text-left" 
                        dir="ltr">
@@ -1239,6 +1251,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 <label class="block text-xs font-semibold text-slate-300 mb-1">رقم الواتساب</label>
                 <input type="tel" 
                        formControlName="whatsAppPhone" 
+                       name="user_new_whatsapp_phone"
+                       autocomplete="off"
                        placeholder="01000000000" 
                        class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono text-left" 
                        dir="ltr">
@@ -1253,6 +1267,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 </label>
                 <input type="password" 
                        formControlName="password" 
+                       name="user_new_temp_password"
+                       autocomplete="new-password"
                        placeholder="••••••••" 
                        class="w-full px-3.5 py-2 bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-colors font-mono">
               </div>
