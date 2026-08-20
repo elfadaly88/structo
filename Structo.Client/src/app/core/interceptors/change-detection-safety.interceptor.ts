@@ -21,14 +21,19 @@ export const changeDetectionSafetyInterceptor: HttpInterceptorFn = (
   return next(req).pipe(
     finalize(() => {
       ngZone.run(() => {
-        // queueMicrotask ensures that downstream subscriber callbacks have completed state mutations
+        // 1. Immediate microtask pass (for fast local updates)
         queueMicrotask(() => {
           try {
             appRef.tick();
-          } catch {
-            // Guard against edge cases where a tick is already in-flight
-          }
+          } catch {}
         });
+
+        // 2. Macrotask pass (guarantees execution after new @if / @for DOM branches attach)
+        setTimeout(() => {
+          try {
+            appRef.tick();
+          } catch {}
+        }, 0);
       });
     })
   );

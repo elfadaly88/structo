@@ -1,6 +1,6 @@
 import {
   Component, inject, OnInit, signal, computed,
-  DestroyRef, ChangeDetectorRef
+  DestroyRef, ChangeDetectorRef, NgZone
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
@@ -943,7 +943,9 @@ export class TenantsComponent implements OnInit {
   private readonly tenantsService = inject(TenantsService);
   private readonly whatsAppLink = inject(WhatsAppLinkService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly cdr = inject(ChangeDetectorRef); // 👈 إضافة هذا السطر
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
+
   // Core Data Signals
   readonly adminTenants = signal<AdminTenantItem[]>([]);
   readonly lifecycleSummary = signal<TenantLifecycleSummary | null>(null);
@@ -1026,10 +1028,13 @@ export class TenantsComponent implements OnInit {
   fetchLifecycleSummary(): void {
     this.tenantsService.getLifecycleSummary().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
-        if (res.success && res.data) {
-          this.lifecycleSummary.set(res.data);
-          this.cdr.detectChanges(); // 👈 لتحديث كروت الـ KPI فوراً في أعلى الشاشة
-        }
+        this.ngZone.run(() => {
+          if (res.success && res.data) {
+            this.lifecycleSummary.set(res.data);
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+          }
+        });
       },
       error: () => {
         // Non-blocking fallback
@@ -1040,6 +1045,7 @@ export class TenantsComponent implements OnInit {
   fetchAdminTenants(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
+    this.cdr.markForCheck();
 
     const queryParams = {
       pageNumber: this.currentPage(),
@@ -1052,19 +1058,26 @@ export class TenantsComponent implements OnInit {
 
     this.tenantsService.getAdminTenants(queryParams).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
-        this.isLoading.set(false);
-        if (res.success && res.data) {
-          this.adminTenants.set(res.data.items);
-          this.totalItems.set(res.data.totalCount);
-          this.totalPages.set(res.data.totalPages);
-        } else {
-          this.errorMessage.set(res.message || 'فشل في تحميل بيانات الشركات.');
-        }
-        this.cdr.detectChanges();
+        this.ngZone.run(() => {
+          this.isLoading.set(false);
+          if (res.success && res.data) {
+            this.adminTenants.set([...res.data.items]);
+            this.totalItems.set(res.data.totalCount);
+            this.totalPages.set(res.data.totalPages);
+          } else {
+            this.errorMessage.set(res.message || 'فشل في تحميل بيانات الشركات.');
+          }
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(err.error?.message || 'تعذر الاتصال بالخادم لجلب بيانات الشركات.');
+        this.ngZone.run(() => {
+          this.isLoading.set(false);
+          this.errorMessage.set(err.error?.message || 'تعذر الاتصال بالخادم لجلب بيانات الشركات.');
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -1119,19 +1132,27 @@ export class TenantsComponent implements OnInit {
 
     this.tenantsService.toggleCleanupExemption(tenant.id, targetState).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
-        this.isUpdatingExemptionId.set(null);
-        if (res.success && res.data) {
-          this.adminTenants.update(list =>
-            list.map(t => t.id === tenant.id ? { ...t, isCleanupExempt: res.data.isCleanupExempt } : t)
-          );
-          this.successMessage.set(res.data.message || 'تم تحديث حالة الاستثناء بنجاح.');
-        } else {
-          this.errorMessage.set(res.message || 'فشل في تحديث الاستثناء.');
-        }
+        this.ngZone.run(() => {
+          this.isUpdatingExemptionId.set(null);
+          if (res.success && res.data) {
+            this.adminTenants.update(list =>
+              list.map(t => t.id === tenant.id ? { ...t, isCleanupExempt: res.data.isCleanupExempt } : t)
+            );
+            this.successMessage.set(res.data.message || 'تم تحديث حالة الاستثناء بنجاح.');
+          } else {
+            this.errorMessage.set(res.message || 'فشل في تحديث الاستثناء.');
+          }
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
-        this.isUpdatingExemptionId.set(null);
-        this.errorMessage.set(err.error?.message || 'خطأ أثناء تحديث حالة الاستثناء.');
+        this.ngZone.run(() => {
+          this.isUpdatingExemptionId.set(null);
+          this.errorMessage.set(err.error?.message || 'خطأ أثناء تحديث حالة الاستثناء.');
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       }
     });
   }
