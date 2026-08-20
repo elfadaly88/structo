@@ -672,6 +672,25 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
+// 🔍 Deployment Verification & Version Health Endpoints
+var versionInfo = new
+{
+    appName = "Structo (أُسُس)",
+    version = "1.0.0",
+    serverTimeUtc = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+    buildPipeline = "Multi-stage Docker (Angular Client Build -> .NET 9 Publish)",
+    safetyGuards = new
+    {
+        changeDetectionSafetyInterceptor = "Enabled (queueMicrotask ApplicationRef.tick on all HTTP responses)",
+        multiTenancyFilters = "Strict (e.TenantId == CurrentTenantId across all scoped entities)",
+        zoneChangeDetection = "provideZoneChangeDetection(eventCoalescing: true)",
+        staticAssetsPipeline = "Automated Docker Stage 1 npm ci & ng build"
+    }
+};
+
+app.MapGet("/api/version", () => Results.Ok(versionInfo)).AllowAnonymous();
+app.MapGet("/version", () => Results.Ok(versionInfo)).AllowAnonymous();
+
 // MAP SPA FALLBACK: Serve index.html from correct location
 Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> fallbackPrepareResponse = ctx =>
 {

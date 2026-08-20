@@ -5,6 +5,32 @@
 
 ---
 
+## [006] - فجوة خط أنابيب النشر (Deployment Pipeline Gap) وحلها بـ Multi-Stage Docker Build ونقطة التحقق `/api/version`
+
+**Date / التاريخ:** 20 August 2026 / 20 أغسطس 2026
+
+**الأعراض (Symptoms):**
+- استمرار ظهور مشاكل في بيئة الإنتاج على Railway رغم كتابة الإصلاحات بدقة في سورس كود الفرونت إند (`Structo.Client/`) وتوثيقها في السجل.
+- تبين أن سيرفر النشر على Railway كان يبني فقط حاوية دوت نت عبر `dotnet publish Structo.API.csproj` معتمداً على الملفات الثابتة المخزنة مسبقاً في `Structo.API/wwwroot`، مما يعني أن أي تعديل في TypeScript لم يكن يُترجم إلى JavaScript في الإنتاج إلا إذا تم تذكر بناء `npm run build` يدوياً قبل كل Commit.
+
+**السبب الجذري (Root Cause):**
+- غياب خط أنابيب بناء متعدد المراحل (Multi-stage Docker Build) يربط دورة بناء الفرونت إند بالباك إند بصورة هيكلية حتمية غير قابلة للإغفال البشري.
+
+**الحل الهيكلي الدائم (Definitive Structural Solution):**
+1. **تحويل ملف [`Dockerfile`](file:///f:/PrivateWork/structo/project/Dockerfile) إلى Multi-Stage Docker Build:**
+   - **المرحلة 1 (Client Build Stage):** استخدام صورة `node:22-alpine` لتنفيذ `npm ci` و `npm run build -- --configuration=production` طازجاً من السورس كود.
+   - **المرحلة 2 (Backend Build Stage):** استخدام صورة `mcr.microsoft.com/dotnet/sdk:9.0` ونسخ نواتج بناء الفرونت إند مباشرة من المرحلة 1 إلى `Structo.API/wwwroot/` قبل تنفيذ `dotnet publish`.
+   - **المرحلة 3 (Runtime Stage):** تشغيل الـ API الخفيف على `mcr.microsoft.com/dotnet/aspnet:9.0`.
+2. **إضافة نقطة التحقق الفوري للنسخة [`/api/version`](file:///f:/PrivateWork/structo/project/Structo.API/Program.cs#L675) و `/version`:**
+   - نقطة نهاية عامة ترجع بصمة الـ Build وحالة خط الأنابيب والـ Safety Interceptors مباشرة للتأكد بنقرة واحدة من مطابقة السيرفر المباشر لأحدث كود.
+
+**إزاي نعرف إن نفس المشكلة رجعت تاني (Detection Checklist):**
+- [ ] تحقق من وجود مراحل `FROM node:22-alpine AS client-build` داخل `Dockerfile`.
+- [ ] افتح الرابط الحي `https://structo-production.up.railway.app/api/version` وتأكد من أن الاستجابة ترجع بيانات النسخة وخط الأنابيب.
+- [ ] أي تعديل في الفرونت إند يتم نشره مباشرة إلى Railway ويُبنى تلقائياً دون الحاجة لأي بناء يدوي مسبق.
+
+---
+
 ## [005] - عدم ظهور البيانات/الواجهة إلا بعد النقر (Exhaustive System-Wide Sweep & Structural Change Detection Safety Net)
 
 **Date / التاريخ:** 20 August 2026 / 20 أغسطس 2026
