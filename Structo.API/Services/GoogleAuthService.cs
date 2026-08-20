@@ -192,7 +192,7 @@ public class GoogleAuthService : IGoogleAuthService
             var token = _tokenProvider.GenerateToken(user);
             var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
 
             await _context.SaveChangesAsync();
 

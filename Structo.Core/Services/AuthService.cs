@@ -75,7 +75,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         var token = tokenProvider.GenerateToken(user);
         var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
         await context.SaveChangesAsync();
 
         var responseDto = new LoginResponseDto
@@ -170,7 +170,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
             RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7)
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30)
         };
 
         usersDbSet.Add(user);
@@ -277,7 +277,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         var newRefreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
 
         user.RefreshToken = newRefreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
         await context.SaveChangesAsync();
 
         var responseDto = new LoginResponseDto
