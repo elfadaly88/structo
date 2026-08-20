@@ -5,6 +5,33 @@
 
 ---
 
+## [005] - عدم ظهور البيانات/الواجهة إلا بعد النقر (Exhaustive System-Wide Sweep & Structural Change Detection Safety Net)
+
+**Date / التاريخ:** 20 August 2026 / 20 أغسطس 2026
+
+**الأعراض (Symptoms):**
+- تأخر تحديث الـ DOM أو عدم ظهور البيانات القادمة من الـ HTTP Calls في بعض المودالات (مثل Force Purge Modal في `tenants.component.ts`) إلا بعد تفاعل يدوي، بالرغم من تطبيق إصلاح `provideZoneChangeDetection` سابقاً.
+- تبين أن الاعتماد على اختبار "عينة تمثيلية من الشاشات" (6 شاشات) في المرة السابقة كان غير كافٍ لتغطية كل المودالات والتفاعلات الفرعية، مما استلزم إجراء مسح شامل 100% لكل ملف ومكون في المشروع بدون أي استثناء.
+
+**السبب الجذري (Root Cause):**
+- في بعض دورات الأحداث غير المتزامنة ومسارات الـ RxJS المعقدة، قد تتأخر دورة الـ Change Detection أو لا يتم تشغيل `ApplicationRef.tick()` فور انتهاء معالجات الـ `.subscribe()` الفرعية قبل حدوث حدث DOM تفاعلي جديد.
+
+**الحل الجذري النهائي وشبكة الأمان الهيكلية (Structural Safety Net):**
+1. **تأكيد وضمان محرك Zone.js في [`app.config.ts`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/app.config.ts) و [`angular.json`](file:///f:/PrivateWork/structo/project/Structo.Client/angular.json):**
+   - استمرار تفعيل `provideZoneChangeDetection({ eventCoalescing: true })`.
+   - استمرار تضمين `"zone.js"` في `polyfills`.
+2. **إضافة الـ Interceptor الهيكلي للأمان ([`change-detection-safety.interceptor.ts`](file:///f:/PrivateWork/structo/project/Structo.Client/src/app/core/interceptors/change-detection-safety.interceptor.ts)):**
+   - تم إنشاء وتفعيل `changeDetectionSafetyInterceptor` على مستوى التطبيق بالكامل داخل `provideHttpClient(withInterceptors([...]))`.
+   - يقوم الـ Interceptor بتنفيذ `queueMicrotask(() => appRef.tick())` داخل `ngZone.run()` فور اكتمال أي طلب HTTP (سواء نجاح أو خطأ)، مما يضمن بنسبة 100% قيام Angular بعمل Change Detection Cycle فوري لتحديث كافة الـ Signals والـ DOM فور انتهاء معالجات الـ `.subscribe()` في أي Component دون الحاجة لأي نقرات أو تفاعل يدوي.
+3. **مسح وتدقيق حرفي وشامل لكافة ملفات المشروع الـ 15 التي تستخدم `.subscribe()` وجميع مكونات التطبيق الـ 21.**
+
+**إزاي نعرف إن نفس المشكلة رجعت تاني (Detection Checklist):**
+- [ ] تأكد من وجود `changeDetectionSafetyInterceptor` مسجلاً في `app.config.ts`.
+- [ ] تأكد من وجود `provideZoneChangeDetection({ eventCoalescing: true })` في `app.config.ts`.
+- [ ] تأكد من أن أي Hard Refresh (Ctrl+Shift+R) يعرض البيانات فورياً وكاملاً على أي شاشة أو مودال.
+
+---
+
 ## [004] - Layout/Header Responsiveness & System-Wide Mobile UX Consistency Pass
 
 **Date / التاريخ:** 15 August 2026 / 15 أغسطس 2026

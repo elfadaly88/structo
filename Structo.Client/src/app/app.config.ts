@@ -5,6 +5,7 @@ import { DATE_PIPE_DEFAULT_OPTIONS } from '@angular/common';
 import { routes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { rateLimitInterceptor } from './core/interceptors/rate-limit.interceptor';
+import { changeDetectionSafetyInterceptor } from './core/interceptors/change-detection-safety.interceptor';
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { GlobalErrorHandlerService } from './core/services/global-error-handler.service';
@@ -18,7 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([jwtInterceptor, rateLimitInterceptor])),
+    provideHttpClient(withInterceptors([jwtInterceptor, rateLimitInterceptor, changeDetectionSafetyInterceptor])),
     provideTranslateService({
       defaultLanguage: 'ar',
       loader: {
