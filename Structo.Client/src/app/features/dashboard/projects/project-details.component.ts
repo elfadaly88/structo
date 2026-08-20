@@ -3456,7 +3456,7 @@ export class ProjectDetailsComponent implements OnInit {
     this.boqUploadError.set(null);
     this.isUploadingBOQ.set(true);
 
-    this.uploadService.uploadProjectGallery(this.projectId, file).subscribe({
+    this.uploadService.uploadProjectDocument(this.projectId, file).subscribe({
       next: (res: any) => {
         this.isUploadingBOQ.set(false);
         const uploadedUrl = res.data?.url || (typeof res.data === 'string' ? res.data : null);

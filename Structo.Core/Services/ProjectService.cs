@@ -22,9 +22,34 @@ public class ProjectService(
         var obj = new JsonObject();
         obj["client"] = p.ClientName ?? string.Empty;
         obj["budget"] = p.Budget;
-        obj["description"] = p.Description ?? string.Empty;
+        
+        string descText = p.Description ?? string.Empty;
+        string boqUrl = string.Empty;
+        string boqName = string.Empty;
+
+        if (!string.IsNullOrEmpty(descText) && descText.StartsWith('{'))
+        {
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<JsonObject>(descText);
+                if (parsed != null)
+                {
+                    if (parsed.TryGetPropertyValue("description", out var dNode) && dNode != null) descText = dNode.ToString();
+                    if (parsed.TryGetPropertyValue("boqFileUrl", out var uNode) && uNode != null) boqUrl = uNode.ToString();
+                    if (parsed.TryGetPropertyValue("boqFileName", out var nNode) && nNode != null) boqName = nNode.ToString();
+                }
+            }
+            catch { }
+        }
+
+        obj["description"] = descText;
         obj["category"] = p.Category ?? string.Empty;
         obj["isPublic"] = p.IsPublicPortfolio;
+        if (!string.IsNullOrEmpty(boqUrl))
+        {
+            obj["boqFileUrl"] = boqUrl;
+            obj["boqFileName"] = boqName;
+        }
         return obj.ToJsonString();
     }
 
@@ -134,6 +159,8 @@ public class ProjectService(
         string innerDesc = dto.Description;
         decimal budget = 0;
         string client = string.Empty;
+        string boqFileUrl = string.Empty;
+        string boqFileName = string.Empty;
 
         if (!string.IsNullOrEmpty(dto.Description) && dto.Description.StartsWith('{'))
         {
@@ -145,6 +172,8 @@ public class ProjectService(
                     if (json.TryGetPropertyValue("client", out var cNode) && cNode != null) client = cNode.ToString();
                     if (json.TryGetPropertyValue("description", out var dNode) && dNode != null) innerDesc = dNode.ToString();
                     if (json.TryGetPropertyValue("budget", out var bNode) && bNode != null) decimal.TryParse(bNode.ToString(), out budget);
+                    if (json.TryGetPropertyValue("boqFileUrl", out var boqUrlNode) && boqUrlNode != null) boqFileUrl = boqUrlNode.ToString();
+                    if (json.TryGetPropertyValue("boqFileName", out var boqNameNode) && boqNameNode != null) boqFileName = boqNameNode.ToString();
                 }
             }
             catch { }
@@ -186,11 +215,24 @@ public class ProjectService(
             }
         }
 
+        string cleanDesc = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc) ?? string.Empty;
+        string storedDesc = cleanDesc;
+        if (!string.IsNullOrEmpty(boqFileUrl))
+        {
+            var metaObj = new JsonObject
+            {
+                ["description"] = cleanDesc,
+                ["boqFileUrl"] = boqFileUrl,
+                ["boqFileName"] = boqFileName
+            };
+            storedDesc = metaObj.ToJsonString();
+        }
+
         var project = new Project
         {
             TenantId = tenantId,
             Name = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Name) ?? string.Empty,
-            Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc),
+            Description = storedDesc,
             Budget = budget,
             ClientName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(!string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client),
             StartDate = dto.StartDate.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc) : dto.StartDate.ToUniversalTime(),
@@ -263,6 +305,8 @@ public class ProjectService(
         string client = project.ClientName ?? string.Empty;
         bool isPublic = project.IsPublicPortfolio;
         string category = project.Category ?? string.Empty;
+        string boqFileUrl = string.Empty;
+        string boqFileName = string.Empty;
 
         if (!string.IsNullOrEmpty(dto.Description) && dto.Description.StartsWith('{'))
         {
@@ -277,12 +321,46 @@ public class ProjectService(
                     if (json.TryGetPropertyValue("category", out var catNode) && catNode != null) category = catNode.ToString();
                     if (json.TryGetPropertyValue("isPublicPortfolio", out var pubNode) && pubNode != null) bool.TryParse(pubNode.ToString(), out isPublic);
                     else if (json.TryGetPropertyValue("isPublic", out var pubNode2) && pubNode2 != null) bool.TryParse(pubNode2.ToString(), out isPublic);
+                    if (json.TryGetPropertyValue("boqFileUrl", out var boqUrlNode) && boqUrlNode != null) boqFileUrl = boqUrlNode.ToString();
+                    if (json.TryGetPropertyValue("boqFileName", out var boqNameNode) && boqNameNode != null) boqFileName = boqNameNode.ToString();
                 }
             }
             catch { }
         }
 
-        project.Description = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc);
+        string cleanDesc = Structo.Core.Helpers.HtmlSanitizer.Sanitize(innerDesc) ?? string.Empty;
+        string finalDesc = cleanDesc;
+
+        if (!string.IsNullOrEmpty(boqFileUrl))
+        {
+            var metaObj = new JsonObject
+            {
+                ["description"] = cleanDesc,
+                ["boqFileUrl"] = boqFileUrl,
+                ["boqFileName"] = boqFileName
+            };
+            finalDesc = metaObj.ToJsonString();
+        }
+        else if (!string.IsNullOrEmpty(project.Description) && project.Description.StartsWith('{'))
+        {
+            try
+            {
+                var existingJson = JsonSerializer.Deserialize<JsonObject>(project.Description);
+                if (existingJson != null && existingJson.TryGetPropertyValue("boqFileUrl", out var exBoq) && exBoq != null && !string.IsNullOrEmpty(exBoq.ToString()))
+                {
+                    var metaObj = new JsonObject
+                    {
+                        ["description"] = cleanDesc,
+                        ["boqFileUrl"] = exBoq.ToString(),
+                        ["boqFileName"] = existingJson.TryGetPropertyValue("boqFileName", out var exName) && exName != null ? exName.ToString() : string.Empty
+                    };
+                    finalDesc = metaObj.ToJsonString();
+                }
+            }
+            catch { }
+        }
+
+        project.Description = finalDesc;
         project.Budget = budget;
         project.ClientName = Structo.Core.Helpers.HtmlSanitizer.Sanitize(!string.IsNullOrWhiteSpace(dto.ClientName) ? dto.ClientName : client);
         project.IsPublicPortfolio = isPublic;
