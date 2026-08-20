@@ -307,10 +307,10 @@ interface ModeratedProject {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-850 text-slate-300 text-xs">
-                @for (tenant of displayedTenants(); track tenant.id) {
+                @for (tenant of displayedTenants(); track tenant.id || $index) {
                   <tr class="hover:bg-slate-900/40 transition-colors duration-150"
                       [class.bg-rose-950/10]="tenant.status === 'PendingDeletion'"
-                      [class.bg-amber-950/10]="tenant.daysInactive >= 45 && tenant.status !== 'PendingDeletion'">
+                      [class.bg-amber-950/10]="(tenant.daysInactive ?? 0) >= 45 && tenant.status !== 'PendingDeletion'">
                     
                     <!-- Tenant & Owner Info -->
                     <td class="px-4 py-3.5">
@@ -319,12 +319,12 @@ interface ModeratedProject {
                           <img [src]="tenant.logoUrl" class="w-9 h-9 rounded-xl object-cover border border-slate-800 shrink-0">
                         } @else {
                           <div class="w-9 h-9 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                            {{ tenant.name.substring(0, 2) }}
+                            {{ (tenant.name || 'TN').substring(0, 2) }}
                           </div>
                         }
                         <div class="min-w-0">
                           <div class="flex items-center gap-2">
-                            <span class="font-bold text-white text-sm truncate">{{ tenant.name }}</span>
+                            <span class="font-bold text-white text-sm truncate">{{ tenant.name || 'بدون اسم' }}</span>
                             @if (tenant.isCleanupExempt) {
                               <span title="مستثناة من المسح التلقائي" class="text-xs">🛡️</span>
                             }
@@ -347,10 +347,10 @@ interface ModeratedProject {
                       } @else if (tenant.planType === 'Standard') {
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/25">⭐ Standard</span>
                       } @else {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700/60">Free ({{ tenant.maxActiveProjects }}P)</span>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700/60">Free ({{ tenant.maxActiveProjects ?? 0 }}P)</span>
                       }
                       <div class="text-[10px] text-slate-500 mt-1 font-mono">
-                        {{ tenant.totalProjects }} مشاريع · {{ tenant.totalUsers }} مستخدمين
+                        {{ tenant.totalProjects ?? 0 }} مشاريع · {{ tenant.totalUsers ?? 0 }} مستخدمين
                       </div>
                     </td>
 
@@ -378,14 +378,14 @@ interface ModeratedProject {
 
                     <!-- Activity / Inactivity Days -->
                     <td class="px-4 py-3.5">
-                      @if (tenant.daysInactive >= 45) {
+                      @if ((tenant.daysInactive ?? 0) >= 45) {
                         <div class="text-amber-400 font-bold text-xs flex items-center gap-1">
                           <span>⚠️</span>
                           <span>خامل منذ {{ tenant.daysInactive }} يوم</span>
                         </div>
                       } @else {
                         <div class="text-slate-300 font-semibold text-xs">
-                          منذ {{ tenant.daysInactive }} يوم
+                          منذ {{ tenant.daysInactive ?? 0 }} يوم
                         </div>
                       }
                       <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
@@ -396,7 +396,7 @@ interface ModeratedProject {
                     <!-- Storage Footprint -->
                     <td class="px-4 py-3.5">
                       <div class="font-mono font-bold text-xs text-cyan-300">
-                        {{ tenant.storageFootprintMb | number:'1.1-2' }} MB
+                        {{ (tenant.storageFootprintMb ?? 0) | number:'1.1-2' }} MB
                       </div>
                       <span class="text-[10px] text-slate-500 font-cairo">R2 Blobs</span>
                     </td>
@@ -468,10 +468,10 @@ interface ModeratedProject {
 
           <!-- Mobile Cards View (< md) -->
           <div class="block md:hidden divide-y divide-slate-800/60 font-cairo">
-            @for (tenant of displayedTenants(); track tenant.id) {
+            @for (tenant of displayedTenants(); track tenant.id || $index) {
               <div class="p-4 space-y-3"
                    [class.bg-rose-950/10]="tenant.status === 'PendingDeletion'"
-                   [class.bg-amber-950/10]="tenant.daysInactive >= 45 && tenant.status !== 'PendingDeletion'">
+                   [class.bg-amber-950/10]="(tenant.daysInactive ?? 0) >= 45 && tenant.status !== 'PendingDeletion'">
                 <!-- Top Row: Logo, Name, Plan -->
                 <div class="flex items-start justify-between gap-2">
                   <div class="flex items-center gap-2.5">
@@ -479,12 +479,12 @@ interface ModeratedProject {
                       <img [src]="tenant.logoUrl" class="w-10 h-10 rounded-xl object-cover border border-slate-800 shrink-0">
                     } @else {
                       <div class="w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                        {{ tenant.name.substring(0, 2) }}
+                        {{ (tenant.name || 'TN').substring(0, 2) }}
                       </div>
                     }
                     <div class="min-w-0">
                       <div class="font-bold text-white text-sm flex items-center gap-1.5">
-                        <span class="truncate">{{ tenant.name }}</span>
+                        <span class="truncate">{{ tenant.name || 'بدون اسم' }}</span>
                         @if (tenant.isCleanupExempt) {
                           <span title="مستثناة" class="text-xs">🛡️</span>
                         }
@@ -515,16 +515,16 @@ interface ModeratedProject {
                   </div>
                   <div>
                     <span class="text-slate-500 text-[10px] block">التخزين / Storage</span>
-                    <span class="font-mono font-bold text-cyan-300 text-xs">{{ tenant.storageFootprintMb | number:'1.1-2' }} MB</span>
+                    <span class="font-mono font-bold text-cyan-300 text-xs">{{ (tenant.storageFootprintMb ?? 0) | number:'1.1-2' }} MB</span>
                   </div>
                   <div>
                     <span class="text-slate-500 text-[10px] block">المشاريع / Users</span>
-                    <span class="text-slate-300 font-mono text-xs">{{ tenant.totalProjects }} P · {{ tenant.totalUsers }} U</span>
+                    <span class="text-slate-300 font-mono text-xs">{{ tenant.totalProjects ?? 0 }} P · {{ tenant.totalUsers ?? 0 }} U</span>
                   </div>
                   <div>
                     <span class="text-slate-500 text-[10px] block">النشاط / Inactivity</span>
-                    <span class="text-xs" [class.text-amber-400]="tenant.daysInactive >= 45" [class.text-slate-400]="tenant.daysInactive < 45">
-                      {{ tenant.daysInactive }} يوم
+                    <span class="text-xs" [class.text-amber-400]="(tenant.daysInactive ?? 0) >= 45" [class.text-slate-400]="(tenant.daysInactive ?? 0) < 45">
+                      {{ tenant.daysInactive ?? 0 }} يوم
                     </span>
                   </div>
                 </div>
@@ -990,27 +990,27 @@ export class TenantsComponent implements OnInit {
 
   // Computed displayed tenants (supports fast client-side filtering over the paged set)
   readonly displayedTenants = computed(() => {
-    let list = this.adminTenants();
-    const query = this.searchQuery.toLowerCase().trim();
+    let list = this.adminTenants() || [];
+    const query = (this.searchQuery || '').toLowerCase().trim();
     if (query) {
       list = list.filter(t =>
-        t.name.toLowerCase().includes(query) ||
-        (t.adminEmail && t.adminEmail.toLowerCase().includes(query)) ||
-        (t.region && t.region.toLowerCase().includes(query)) ||
-        t.id.toLowerCase().includes(query)
+        (t?.name && t.name.toLowerCase().includes(query)) ||
+        (t?.adminEmail && t.adminEmail.toLowerCase().includes(query)) ||
+        (t?.region && t.region.toLowerCase().includes(query)) ||
+        (t?.id && t.id.toLowerCase().includes(query))
       );
     }
     const filter = this.statusFilter();
     if (filter === 'Active') {
-      list = list.filter(t => t.status === 'Active');
+      list = list.filter(t => t?.status === 'Active');
     } else if (filter === 'Suspended') {
-      list = list.filter(t => t.status === 'Suspended');
+      list = list.filter(t => t?.status === 'Suspended');
     } else if (filter === 'PendingDeletion') {
-      list = list.filter(t => t.status === 'PendingDeletion' || t.status === 'Deleted');
+      list = list.filter(t => t?.status === 'PendingDeletion' || t?.status === 'Deleted');
     } else if (filter === 'Inactive45') {
-      list = list.filter(t => t.daysInactive >= 45);
+      list = list.filter(t => (t?.daysInactive ?? 0) >= 45);
     } else if (filter === 'Exempt') {
-      list = list.filter(t => t.isCleanupExempt);
+      list = list.filter(t => !!t?.isCleanupExempt);
     }
     return list;
   });
@@ -1059,7 +1059,6 @@ export class TenantsComponent implements OnInit {
     this.tenantsService.getAdminTenants(queryParams).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.ngZone.run(() => {
-          this.isLoading.set(false);
           if (res.success && res.data) {
             this.adminTenants.set([...res.data.items]);
             this.totalItems.set(res.data.totalCount);
@@ -1067,6 +1066,7 @@ export class TenantsComponent implements OnInit {
           } else {
             this.errorMessage.set(res.message || 'فشل في تحميل بيانات الشركات.');
           }
+          this.isLoading.set(false);
           this.cdr.markForCheck();
           this.cdr.detectChanges();
         });
