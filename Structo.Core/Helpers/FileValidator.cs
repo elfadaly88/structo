@@ -7,14 +7,18 @@ namespace Structo.Core.Helpers;
 
 public static class FileValidator
 {
-    // 🛡️ القائمة البيضاء المعتمدة للامتدادات الآمنة في السيستم (Images, PDFs & Excel)
-    private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".pdf", ".xlsx", ".xls"];
+    // 🛡️ القائمة البيضاء المعتمدة للامتدادات الآمنة في السيستم (Images, PDFs, Excel & Word)
+    private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".pdf", ".xlsx", ".xls", ".docx", ".doc"];
 
     // 🛡️ القائمة البيضاء المقابلة للـ MIME Types لضمان عدم تزييف الامتداد
     private static readonly string[] AllowedMimeTypes = [
         "image/jpeg", "image/png", "image/webp", "application/pdf",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword",
+        "application/doc",
+        "application/docx",
         "application/octet-stream"
     ];
 
@@ -38,7 +42,7 @@ public static class FileValidator
         var extension = Path.GetExtension(file.FileName)?.ToLower();
         if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension))
         {
-            return (false, $"INVALID_EXTENSION: الامتداد {extension} غير مسموح به. الامتدادات المدعومة هي فقط: JPG, PNG, WEBP, PDF, XLSX, XLS.");
+            return (false, $"INVALID_EXTENSION: الامتداد {extension} غير مسموح به. الامتدادات المدعومة هي فقط: JPG, PNG, WEBP, PDF, XLSX, XLS, DOCX, DOC.");
         }
 
         // 3. فحص الـ Content-Type/Mime-Type القادم من الـ Request
@@ -64,8 +68,8 @@ public static class FileValidator
                 ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47,
                 ".webp" => header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46,
                 ".pdf" => header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46,
-                ".xlsx" => header[0] == 0x50 && header[1] == 0x4B && (header[2] == 0x03 || header[2] == 0x05 || header[2] == 0x07),
-                ".xls" => header[0] == 0xD0 && header[1] == 0xCF && header[2] == 0x11 && header[3] == 0xE0,
+                ".xlsx" or ".docx" => header[0] == 0x50 && header[1] == 0x4B && (header[2] == 0x03 || header[2] == 0x05 || header[2] == 0x07),
+                ".xls" or ".doc" => header[0] == 0xD0 && header[1] == 0xCF && header[2] == 0x11 && header[3] == 0xE0,
                 _ => false
             };
 
