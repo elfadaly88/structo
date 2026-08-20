@@ -133,6 +133,7 @@ interface NavItem {
 
                 <div class="pt-2 border-t border-slate-800">
                   <button
+                    type="button"
                     (click)="logout()"
                     class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold border border-slate-700 transition-all cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -366,7 +367,7 @@ export class DashboardLayoutComponent {
   logout(): void {
     this.closeUserMenu();
     this.authService.logout();
-    this.router.navigate(['/']);
+    this.router.navigate(['/login']);
   }
 
   openUpgradeModal(): void {
