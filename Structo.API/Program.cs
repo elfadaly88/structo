@@ -427,26 +427,51 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        if (!context.Users.IgnoreQueryFilters().Any(u => u.Role == UserRole.SuperAdmin))
-        {
-            var superAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL") 
-                ?? builder.Configuration["SuperAdminSeed:Email"] 
-                ?? "superadmin";
-            var superAdminPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD") 
-                ?? builder.Configuration["SuperAdminSeed:Password"] 
-                ?? "SuperAdmin@123";
+        var defaultSuperAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL") 
+            ?? builder.Configuration["SuperAdminSeed:Email"] 
+            ?? "superadmin@admin.com";
+        var defaultSuperAdminPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD") 
+            ?? builder.Configuration["SuperAdminSeed:Password"] 
+            ?? "SuperAdmin@123";
 
+        var existingSuperAdmin = context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.Role == UserRole.SuperAdmin);
+        if (existingSuperAdmin == null)
+        {
             var superAdmin = new User
             {
                 FirstName = "Super",
                 LastName = "Admin",
-                Email = superAdminEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(superAdminPassword),
+                Email = defaultSuperAdminEmail,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultSuperAdminPassword),
                 Role = UserRole.SuperAdmin,
+                IsActive = true,
+                IsApproved = true,
                 TenantId = null
             };
             context.Users.Add(superAdmin);
             context.SaveChanges();
+            Console.WriteLine($"[SEED] SuperAdmin account seeded successfully: {defaultSuperAdminEmail}");
+        }
+        else
+        {
+            // Sync credentials and activate if needed
+            bool wasModified = false;
+            if (existingSuperAdmin.Email.Equals("superadmin", StringComparison.OrdinalIgnoreCase))
+            {
+                existingSuperAdmin.Email = "superadmin@admin.com";
+                wasModified = true;
+            }
+            if (!existingSuperAdmin.IsActive || !existingSuperAdmin.IsApproved)
+            {
+                existingSuperAdmin.IsActive = true;
+                existingSuperAdmin.IsApproved = true;
+                wasModified = true;
+            }
+            if (wasModified)
+            {
+                context.SaveChanges();
+                Console.WriteLine("[SEED] SuperAdmin account synchronized successfully.");
+            }
         }
 
         if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 1"))

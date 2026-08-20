@@ -1,4 +1,7 @@
-import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
+import {
+  Component, inject, OnInit, signal, computed,
+  DestroyRef, ChangeDetectorRef
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -940,7 +943,7 @@ export class TenantsComponent implements OnInit {
   private readonly tenantsService = inject(TenantsService);
   private readonly whatsAppLink = inject(WhatsAppLinkService);
   private readonly destroyRef = inject(DestroyRef);
-
+  private readonly cdr = inject(ChangeDetectorRef); // 👈 إضافة هذا السطر
   // Core Data Signals
   readonly adminTenants = signal<AdminTenantItem[]>([]);
   readonly lifecycleSummary = signal<TenantLifecycleSummary | null>(null);
@@ -1025,6 +1028,7 @@ export class TenantsComponent implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.lifecycleSummary.set(res.data);
+          this.cdr.detectChanges(); // 👈 لتحديث كروت الـ KPI فوراً في أعلى الشاشة
         }
       },
       error: () => {
@@ -1056,6 +1060,7 @@ export class TenantsComponent implements OnInit {
         } else {
           this.errorMessage.set(res.message || 'فشل في تحميل بيانات الشركات.');
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoading.set(false);
