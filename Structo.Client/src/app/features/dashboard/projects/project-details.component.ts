@@ -3060,79 +3060,81 @@ import { LanguageService } from '../../../core/services/language.service';
               </div>
             </div>
 
-            <!-- 2️⃣ Compact Dynamic Inline Table (Desktop Viewport - md+) -->
-            <div formArrayName="lines" class="hidden md:block overflow-x-auto border border-slate-800/80 rounded-xl bg-slate-950/40 shrink-0">
-              <table class="w-full text-right rtl:text-right font-sans text-xs">
-                <thead>
-                  <tr class="bg-slate-900/90 text-slate-400 text-[11px] font-bold border-b border-slate-800 font-cairo">
-                    <th class="py-2.5 px-3 text-center w-10">#</th>
-                    <th class="py-2.5 px-3 w-40">التصنيف</th>
-                    <th class="py-2.5 px-3">البيان / رقم الفاتورة</th>
-                    <th class="py-2.5 px-3 w-32">المبلغ</th>
-                    <th class="py-2.5 px-3 w-44">الإيصال</th>
-                    <th class="py-2.5 px-3 w-48">تحمّل البند</th>
-                    <th class="py-2.5 px-3 text-center w-16">إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60 text-slate-200">
-                  @for (line of settlementLines.controls; track line; let idx = $index) {
-                    <tr [formGroupName]="idx" class="hover:bg-slate-900/40 transition-colors">
-                      <td class="py-2 px-3 text-center font-bold text-indigo-400 font-mono">{{ idx + 1 }}</td>
-                      <td class="py-2 px-3">
-                        <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
-                          <option value="Cement">أسمنت</option>
-                          <option value="Logistics">خدمات لوجستية</option>
-                          <option value="Materials">مواد بناء</option>
-                          <option value="Labor">حوافز وأجور عمال</option>
-                          <option value="Other">أخرى</option>
-                        </select>
-                      </td>
-                      <td class="py-2 px-3">
-                        <input type="text" formControlName="description" placeholder="الوصف أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
-                      </td>
-                      <td class="py-2 px-3">
-                        <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500">
-                      </td>
-                      <td class="py-2 px-3">
-                        <div class="flex items-center gap-2">
-                          <label class="cursor-pointer px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-indigo-400 border border-slate-700 inline-flex items-center gap-1 font-cairo">
-                            <span>📎</span>
-                            <span>اختر ملف</span>
-                            <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
-                          </label>
-                          @if (line.get('localPreviewUrl')?.value) {
-                            <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-7 h-7 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 cursor-pointer hover:scale-110 transition-transform shrink-0" title="معاينة الإيصال">
-                              <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
-                            </div>
-                          }
-                          @if (line.get('uploading')?.value) {
-                            <span class="text-[10px] text-indigo-400 animate-pulse font-cairo">جاري الرفع...</span>
-                          }
+            <!-- 2️⃣ Spacious 2-Row Dynamic Line Cards (Desktop Viewport - md+) -->
+            <div formArrayName="lines" class="hidden md:block space-y-3 shrink-0">
+              @for (line of settlementLines.controls; track line; let idx = $index) {
+                <div [formGroupName]="idx" class="p-3.5 bg-slate-950/70 hover:bg-slate-950 border border-slate-800/90 hover:border-slate-700/80 rounded-xl transition-all shadow-sm space-y-3 font-cairo">
+                  <!-- Row 1: Item #, Category, Amount, Billable Toggle, Delete -->
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                      #{{ idx + 1 }}
+                    </div>
+
+                    <!-- Category -->
+                    <div class="w-48 shrink-0">
+                      <select formControlName="category" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-cairo cursor-pointer">
+                        <option value="Cement">أسمنت</option>
+                        <option value="Logistics">خدمات لوجستية</option>
+                        <option value="Materials">مواد بناء</option>
+                        <option value="Labor">حوافز وأجور عمال</option>
+                        <option value="Other">أخرى</option>
+                      </select>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="w-48 shrink-0 relative">
+                      <input type="number" formControlName="amount" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg pl-12 pr-3 py-2 text-xs text-amber-400 font-mono font-bold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-bold pointer-events-none">ج.م</span>
+                    </div>
+
+                    <!-- Billable to Client Toggle -->
+                    <div class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 p-1 rounded-lg border border-slate-800">
+                      <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'px-3 py-1 rounded-md text-xs font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm' : 'px-3 py-1 rounded-md text-xs font-medium border border-transparent text-slate-400 hover:text-emerald-400 cursor-pointer'">
+                        🟢 عميل
+                      </button>
+                      <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'px-3 py-1 rounded-md text-xs font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-sm' : 'px-3 py-1 rounded-md text-xs font-medium border border-transparent text-slate-400 hover:text-rose-400 cursor-pointer'">
+                        🔴 شركة
+                      </button>
+                    </div>
+
+                    <!-- Delete Button -->
+                    <div class="ms-auto shrink-0">
+                      @if (!isSettlementLocked()) {
+                        <button type="button" (click)="removeSettlementLine(idx)" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-rose-500/20 disabled:opacity-30 disabled:cursor-not-allowed" [disabled]="settlementLines.length === 1" title="حذف هذا البند">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Row 2: Description (Wide full space) & File / Receipt Attachment -->
+                  <div class="flex items-center gap-3 pt-2.5 border-t border-slate-800/70">
+                    <!-- Description / Invoice Details -->
+                    <div class="flex-1 min-w-0">
+                      <input type="text" formControlName="description" placeholder="البيان، تفاصيل الشراء، أو رقم الفاتورة..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-cairo">
+                    </div>
+
+                    <!-- Receipt File Picker -->
+                    <div class="shrink-0 flex items-center gap-2 bg-slate-900/60 p-1 rounded-lg border border-slate-800">
+                      <label class="cursor-pointer px-3 py-1.5 rounded-md bg-indigo-600/10 hover:bg-indigo-600/20 text-xs font-bold text-indigo-400 border border-indigo-500/30 inline-flex items-center gap-1.5 transition-all font-cairo">
+                        <span>📎</span>
+                        <span>إرفاق إيصال / ملف</span>
+                        <input type="file" accept="image/*,application/pdf,.xlsx,.xls" [disabled]="isSettlementLocked()" (change)="onSettlementLineFileSelected($event, idx)" class="hidden">
+                      </label>
+                      @if (line.get('localPreviewUrl')?.value) {
+                        <div (click)="activePreviewPhotoUrl.set(line.get('localPreviewUrl')?.value)" class="w-8 h-8 rounded-md overflow-hidden border border-indigo-500/40 bg-slate-900 cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-sm" title="معاينة الإيصال">
+                          <img [src]="line.get('localPreviewUrl')?.value" class="w-full h-full object-cover">
                         </div>
-                      </td>
-                      <td class="py-2 px-3">
-                        <div class="flex gap-1">
-                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(true)" [class]="line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-[0_0_6px_rgba(16,185,129,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-emerald-400 hover:border-emerald-500/30 cursor-pointer'">
-                            🟢 عميل
-                          </button>
-                          <button type="button" (click)="line.get('isBillableToClient')?.setValue(false)" [class]="!line.get('isBillableToClient')?.value ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-[0_0_6px_rgba(244,63,94,0.15)]' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition-all font-cairo bg-slate-900 text-slate-500 border-slate-700/50 hover:text-rose-400 hover:border-rose-500/30 cursor-pointer'">
-                            🔴 شركة
-                          </button>
-                        </div>
-                      </td>
-                      <td class="py-2 px-3 text-center">
-                        @if (!isSettlementLocked()) {
-                          <button type="button" (click)="removeSettlementLine(idx)" class="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer" [disabled]="settlementLines.length === 1" title="حذف البند">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        }
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+                      }
+                      @if (line.get('uploading')?.value) {
+                        <span class="text-[11px] text-indigo-400 animate-pulse font-cairo px-1">جاري الرفع...</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
             </div>
 
             <!-- 3️⃣ Responsive Mobile Card Layout (block md:hidden) -->
