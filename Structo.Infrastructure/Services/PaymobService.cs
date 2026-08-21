@@ -115,21 +115,11 @@ public class PaymobService : IPaymobService
                 using var request = new HttpRequestMessage(HttpMethod.Post, intentionUrl);
                 request.Headers.Add("Authorization", $"Token {_settings.SecretKey}");
 
-                var paymentMethods = new List<object>();
-                if (int.TryParse(_settings.CardIntegrationId, out var integrationInt))
-                {
-                    paymentMethods.Add(integrationInt);
-                }
-                else if (!string.IsNullOrWhiteSpace(_settings.CardIntegrationId))
-                {
-                    paymentMethods.Add(_settings.CardIntegrationId);
-                }
-
                 var intentionPayload = new Dictionary<string, object>
                 {
                     ["amount"] = amountCents,
                     ["currency"] = "EGP",
-                    ["payment_methods"] = paymentMethods,
+                    ["payment_methods"] = new[] { "card" },
                     ["items"] = new[]
                     {
                         new Dictionary<string, object>
