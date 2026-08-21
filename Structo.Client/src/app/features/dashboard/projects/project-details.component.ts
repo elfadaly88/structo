@@ -1298,25 +1298,15 @@ import { LanguageService } from '../../../core/services/language.service';
                   <!-- Mobile Actions Section -->
                   <div class="pt-1">
                     @if (item.status === 'Pending' && isOwnerOrAccountant()) {
-                      <!-- Approval Box on Mobile -->
-                      <div class="space-y-2 bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
-                        <select [(ngModel)]="selectedPettyCashPool[item.id]" 
-                          class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-cairo">
-                          <option [value]="undefined" disabled selected>-- محفظة الصرف --</option>
-                          @for (pool of cashPools(); track pool.id) {
-                            <option [value]="pool.id" [disabled]="pool.availableBalance < item.amount">
-                              {{ getPoolSourceLabel(pool.sourceType) }} ({{ pool.availableBalance | number:'1.0-0' }} ج.م)
-                            </option>
-                          }
-                        </select>
-
+                      <!-- Approval Action on Mobile -->
+                      <div class="space-y-2.5 bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
                         <div class="grid grid-cols-2 gap-2">
                           <button
                             type="button"
-                            (click)="onApprovePettyCashRequest(item, selectedPettyCashPool[item.id])"
-                            [disabled]="project()?.status === 'Closed' || !selectedPettyCashPool[item.id]"
-                            class="w-full py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-cairo shadow-sm flex items-center justify-center gap-1">
-                            <span>✅ اعتماد</span>
+                            (click)="openApprovePettyCashModal(item)"
+                            [disabled]="project()?.status === 'Closed'"
+                            class="w-full py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-cairo shadow-sm flex items-center justify-center gap-1.5">
+                            <span>⚡ اعتماد وصرف</span>
                           </button>
                           <button
                             type="button"
@@ -1440,17 +1430,17 @@ import { LanguageService } from '../../../core/services/language.service';
               }
             </div>
 
-            <!-- 🖥️ Desktop / Tablet View (>= md): Full Responsive Table -->
+            <!-- 🖥️ Desktop / Tablet View (>= md): Full Natural Responsive Table without horizontal scroll -->
             <div class="hidden md:block w-full overflow-x-auto font-sans custom-scrollbar">
-              <table class="w-full text-right rtl:text-right min-w-[1050px] font-cairo">
+              <table class="w-full text-right rtl:text-right font-cairo">
                 <thead>
                   <tr class="border-b border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-950/30">
-                    <th class="px-4 py-3.5 min-w-[140px] whitespace-nowrap">{{ 'DETAILS.TH_ISSUED_TO' | translate }}</th>
-                    <th class="px-4 py-3.5 min-w-[200px]">{{ 'DETAILS.TH_REASON' | translate }}</th>
-                    <th class="px-4 py-3.5 min-w-[140px] whitespace-nowrap">{{ 'DETAILS.TH_DATE' | translate }}</th>
-                    <th class="px-4 py-3.5 min-w-[130px] whitespace-nowrap">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
-                    <th class="px-4 py-3.5 text-center min-w-[100px] whitespace-nowrap">{{ 'DETAILS.TH_STATUS' | translate }}</th>
-                    <th class="px-4 py-3.5 text-center min-w-[360px] whitespace-nowrap">{{ 'DETAILS.TH_ACTION' | translate }}</th>
+                    <th class="px-4 py-3.5 whitespace-nowrap">{{ 'DETAILS.TH_ISSUED_TO' | translate }}</th>
+                    <th class="px-4 py-3.5">{{ 'DETAILS.TH_REASON' | translate }}</th>
+                    <th class="px-4 py-3.5 whitespace-nowrap">{{ 'DETAILS.TH_DATE' | translate }}</th>
+                    <th class="px-4 py-3.5 whitespace-nowrap">{{ 'DETAILS.TH_AMOUNT' | translate }}</th>
+                    <th class="px-4 py-3.5 text-center whitespace-nowrap">{{ 'DETAILS.TH_STATUS' | translate }}</th>
+                    <th class="px-4 py-3.5 text-center whitespace-nowrap">{{ 'DETAILS.TH_ACTION' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60 text-sm">
@@ -1467,7 +1457,7 @@ import { LanguageService } from '../../../core/services/language.service';
                       </td>
 
                       <!-- Reason -->
-                      <td class="px-4 py-3.5 text-slate-300 max-w-[200px] lg:max-w-[280px]">
+                      <td class="px-4 py-3.5 text-slate-300 max-w-[200px] xl:max-w-[320px]">
                         <span class="truncate block cursor-pointer hover:text-indigo-400 transition-colors text-xs sm:text-sm font-medium"
                               [title]="item.reason"
                               (click)="openPettyCashReasonModal(item)">
@@ -1515,142 +1505,124 @@ import { LanguageService } from '../../../core/services/language.service';
                       </td>
 
                       <!-- Action Column -->
-                      <td class="px-4 py-3.5 min-w-[360px]">
-                        <div class="flex items-center justify-center">
+                      <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
                           @if (item.status === 'Pending' && isOwnerOrAccountant()) {
-                            <!-- Pending Approval & Control Panel -->
-                            <div class="flex flex-col gap-1.5 w-full max-w-[340px]">
-                              <!-- Select Pool + Approve / Reject Buttons -->
-                              <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 p-1.5 rounded-xl shadow-inner">
-                                <select [(ngModel)]="selectedPettyCashPool[item.id]" 
-                                  class="flex-1 min-w-[130px] bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-cairo truncate">
-                                  <option [value]="undefined" disabled selected>-- محفظة الصرف --</option>
-                                  @for (pool of cashPools(); track pool.id) {
-                                    <option [value]="pool.id" [disabled]="pool.availableBalance < item.amount">
-                                      {{ getPoolSourceLabel(pool.sourceType) }} ({{ pool.availableBalance | number:'1.0-0' }} ج.م)
-                                    </option>
-                                  }
-                                </select>
-                                <button
-                                  type="button"
-                                  (click)="onApprovePettyCashRequest(item, selectedPettyCashPool[item.id])"
-                                  [disabled]="project()?.status === 'Closed' || !selectedPettyCashPool[item.id]"
-                                  title="اعتماد وصرف العهدة"
-                                  class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 font-cairo shadow-sm">
-                                  اعتماد
-                                </button>
-                                <button
-                                  type="button"
-                                  (click)="onRejectPettyCashRequest(item)"
-                                  [disabled]="project()?.status === 'Closed'"
-                                  title="رفض الطلب"
-                                  class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 font-cairo">
-                                  رفض
-                                </button>
-                              </div>
-
-                              <!-- Secondary Action Buttons: WhatsApp, Edit, Delete -->
-                              <div class="flex items-center justify-between px-1.5 text-xs">
-                                <button
-                                  type="button"
-                                  (click)="onWhatsAppAlert(item)"
-                                  class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer">
-                                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
-                                  </svg>
-                                  <span>واتساب</span>
-                                </button>
-                                
-                                <div class="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    (click)="openEditPettyCashModal(item)"
-                                    [disabled]="project()?.status === 'Closed'"
-                                    class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer">
-                                    تعديل
-                                  </button>
-                                  <span class="text-slate-700">|</span>
-                                  <button
-                                    type="button"
-                                    (click)="onDeletePettyCash(item.id, item.isSettled)"
-                                    [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
-                                    class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
-                                    title="حذف الطلب">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    <span>حذف</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                            <!-- Approve & Disburse Modal Trigger -->
+                            <button
+                              type="button"
+                              (click)="openApprovePettyCashModal(item)"
+                              [disabled]="project()?.status === 'Closed'"
+                              title="اعتماد وصرف العهدة"
+                              class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/15 transition-all duration-150 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-cairo flex items-center gap-1">
+                              <span>⚡</span>
+                              <span>صرف / اعتماد</span>
+                            </button>
+                            <button
+                              type="button"
+                              (click)="onRejectPettyCashRequest(item)"
+                              [disabled]="project()?.status === 'Closed'"
+                              title="رفض الطلب"
+                              class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-cairo">
+                              رفض
+                            </button>
+                            <button
+                              type="button"
+                              (click)="onWhatsAppAlert(item)"
+                              title="إرسال تنبيه واتساب"
+                              class="p-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs transition-all duration-150 cursor-pointer">
+                              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              (click)="openEditPettyCashModal(item)"
+                              [disabled]="project()?.status === 'Closed'"
+                              title="تعديل"
+                              class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-xs transition-all cursor-pointer font-cairo">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              (click)="onDeletePettyCash(item.id, item.isSettled)"
+                              [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
+                              title="حذف"
+                              class="p-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-xs transition-all cursor-pointer">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           } @else {
                             <!-- Standard Issued / Settled Action Row -->
-                            <div class="flex items-center justify-center gap-2 flex-wrap">
-                              @if (!item.isSettled && item.status === 'Issued') {
-                                <button
-                                  type="button"
-                                  (click)="openSettlementModal(item)"
-                                  [disabled]="project()?.status === 'Closed'"
-                                  class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white shadow-md shadow-indigo-600/10 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed">
-                                  {{ 'DETAILS.BTN_SETTLE' | translate }}
-                                </button>
-                              }
+                            @if (!item.isSettled && item.status === 'Issued') {
+                              <button
+                                type="button"
+                                (click)="openSettlementModal(item)"
+                                [disabled]="project()?.status === 'Closed'"
+                                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold rounded-xl text-white shadow-md shadow-indigo-600/10 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer font-cairo disabled:opacity-50 disabled:cursor-not-allowed">
+                                {{ 'DETAILS.BTN_SETTLE' | translate }}
+                              </button>
+                            }
 
-                              @if (item.isSettled || item.status === 'Settled') {
-                                <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2.5 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none">
-                                  <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                  </svg>
-                                  🔒 مقفلة
-                                </span>
+                            @if (item.isSettled || item.status === 'Settled') {
+                              <span class="inline-flex items-center gap-1 text-slate-500 text-xs font-semibold px-2.5 py-1 bg-slate-950/40 border border-slate-800 rounded-lg select-none">
+                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                🔒 مقفلة
+                              </span>
 
-                                @if (item.receiptPhotoUrl) {
-                                  <a [href]="item.receiptPhotoUrl" target="_blank" 
-                                     class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm" 
-                                     title="View Receipt">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <span>الإيصال</span>
-                                  </a>
-                                }
-                              }
-
-                              <!-- WhatsApp Button (Only for unsettled / active items) -->
-                              @if (!item.isSettled && item.status !== 'Settled') {
-                                <button
-                                  type="button"
-                                  (click)="onWhatsAppAlert(item)"
-                                  class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-semibold rounded-xl transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-cairo">
-                                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
-                                  </svg>
-                                  <span>واتساب</span>
-                                </button>
-                              }
-
-                              @if (isOwnerOrAccountant() && !item.isSettled && item.status !== 'Settled') {
-                                <button
-                                  type="button"
-                                  (click)="openEditPettyCashModal(item)"
-                                  [disabled]="project()?.status === 'Closed'"
-                                  title="تعديل"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer font-cairo">
-                                  تعديل
-                                </button>
-                                <button
-                                  type="button"
-                                  (click)="onDeletePettyCash(item.id, item.isSettled)"
-                                  [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
-                                  title="حذف"
-                                  class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all cursor-pointer">
+                              @if (item.receiptPhotoUrl) {
+                                <a [href]="item.receiptPhotoUrl" target="_blank" 
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 transition-all cursor-pointer font-cairo shadow-sm" 
+                                   title="View Receipt">
                                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
-                                </button>
+                                  <span>الإيصال</span>
+                                </a>
                               }
-                            </div>
+                            }
+
+                            <!-- WhatsApp Button (Only for unsettled / active items) -->
+                            @if (!item.isSettled && item.status !== 'Settled') {
+                              <button
+                                type="button"
+                                (click)="onWhatsAppAlert(item)"
+                                title="إرسال تنبيه واتساب"
+                                class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-semibold rounded-xl transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-cairo">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
+                                </svg>
+                                <span>واتساب</span>
+                              </button>
+                            }
+
+                            @if (isOwnerOrAccountant() && !item.isSettled && item.status !== 'Settled') {
+                              <button
+                                type="button"
+                                (click)="openEditPettyCashModal(item)"
+                                [disabled]="project()?.status === 'Closed'"
+                                title="تعديل"
+                                class="p-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer font-cairo">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                (click)="onDeletePettyCash(item.id, item.isSettled)"
+                                [disabled]="isDeletingPettyCash() || project()?.status === 'Closed'"
+                                title="حذف"
+                                class="p-1.5 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            }
                           }
                         </div>
                       </td>
@@ -2672,6 +2644,90 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
     }
 
+    <!-- Approve & Disburse Petty Cash Modal -->
+    @if (isApproveModalOpen() && selectedApprovePettyCash()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in font-cairo">
+        <div (click)="closeApprovePettyCashModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden z-10">
+          
+          <!-- Header -->
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-base">
+                ⚡
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white leading-tight">اعتماد وصرف العهدة</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">تأكيد الموافقة وصرف المبلغ من محفظة التمويل</p>
+              </div>
+            </div>
+            <button type="button" (click)="closeApprovePettyCashModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-5 space-y-4 overflow-y-auto min-h-0 custom-scrollbar">
+            <!-- Item Details Summary -->
+            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">المصروف إليه:</span>
+                <span class="font-bold text-white">{{ selectedApprovePettyCash()!.issuedTo || 'Staff' }}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">المبلغ المطلوب:</span>
+                <span class="font-bold text-amber-400 font-mono text-sm tabular-nums">{{ selectedApprovePettyCash()!.amount | number:'1.2-2' }} ج.م</span>
+              </div>
+              <div class="flex items-start justify-between text-xs pt-1.5 border-t border-slate-800/60">
+                <span class="text-slate-400 shrink-0">بيان العهدة:</span>
+                <span class="text-slate-200 text-left font-medium max-w-[240px]">{{ selectedApprovePettyCash()!.reason }}</span>
+              </div>
+            </div>
+
+            <!-- Select Pool -->
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-300">
+                محفظة الصرف / Cash Pool <span class="text-rose-400">*</span>
+              </label>
+              <select [(ngModel)]="selectedApprovePoolId" 
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-cairo">
+                <option value="" disabled selected>-- اختر محفظة الصرف --</option>
+                @for (pool of cashPools(); track pool.id) {
+                  <option [value]="pool.id" [disabled]="pool.availableBalance < selectedApprovePettyCash()!.amount">
+                    {{ getPoolSourceLabel(pool.sourceType) }} (الرصيد المتاح: {{ pool.availableBalance | number:'1.0-0' }} ج.م)
+                  </option>
+                }
+              </select>
+              @if (selectedApprovePoolId() && getSelectedPoolAvailableBalance() < selectedApprovePettyCash()!.amount) {
+                <p class="text-[11px] text-rose-400 font-medium">⚠️ رصيد هذه المحفظة غير كافٍ لتغطية مبلغ العهدة.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              (click)="closeApprovePettyCashModal()"
+              class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+              إلغاء
+            </button>
+            <button
+              type="button"
+              (click)="submitApprovePettyCash()"
+              [disabled]="!selectedApprovePoolId() || isLoadingPettyCash() || (getSelectedPoolAvailableBalance() < selectedApprovePettyCash()!.amount)"
+              class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+              @if (isLoadingPettyCash()) {
+                <span class="animate-spin text-xs">⏳</span>
+              }
+              <span>تأكيد الصرف والاعتماد</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
+
     <!-- Edit Transaction Modal -->
     @if (isEditTransactionModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
@@ -3431,6 +3487,37 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isTabInfoDismissed = signal(false);
   readonly activePrintSettlement = signal<SettlementMobileDto | null>(null);
   readonly activeTextInspection = signal<{ title: string; content: string; subtitle?: string } | null>(null);
+
+  readonly isApproveModalOpen = signal(false);
+  readonly selectedApprovePettyCash = signal<PettyCashMobileDto | null>(null);
+  readonly selectedApprovePoolId = signal<string>('');
+
+  openApprovePettyCashModal(item: PettyCashMobileDto): void {
+    this.selectedApprovePettyCash.set(item);
+    const pools = this.cashPools();
+    const validPool = pools.find(p => p.availableBalance >= item.amount) || pools[0];
+    this.selectedApprovePoolId.set(validPool ? validPool.id : '');
+    this.isApproveModalOpen.set(true);
+  }
+
+  closeApprovePettyCashModal(): void {
+    this.isApproveModalOpen.set(false);
+    this.selectedApprovePettyCash.set(null);
+    this.selectedApprovePoolId.set('');
+  }
+
+  getSelectedPoolAvailableBalance(): number {
+    const pool = this.cashPools().find(p => p.id === this.selectedApprovePoolId());
+    return pool ? pool.availableBalance : 0;
+  }
+
+  submitApprovePettyCash(): void {
+    const item = this.selectedApprovePettyCash();
+    const poolId = this.selectedApprovePoolId();
+    if (!item || !poolId) return;
+    this.closeApprovePettyCashModal();
+    this.onApprovePettyCashRequest(item, poolId);
+  }
 
   openTextInspectionModal(title: string, content: string, subtitle?: string): void {
     if (!content) return;

@@ -171,7 +171,7 @@ interface NavItem {
 
         <!-- Sidebar Navigation Drawer -->
         <aside
-          class="fixed md:relative inset-y-0 start-0 pt-16 md:pt-0 bg-slate-900 flex flex-col z-[35] md:z-20 transition-all duration-300 ease-in-out overflow-hidden"
+          class="fixed md:relative inset-y-0 start-0 pt-16 md:pt-0 bg-slate-900 flex flex-col z-[35] md:z-20 transition-all duration-300 ease-in-out overflow-hidden shrink-0"
           [class.w-64]="isSidebarOpen()"
           [class.w-0]="!isSidebarOpen()"
           [class.border-e]="isSidebarOpen()"
@@ -179,7 +179,7 @@ interface NavItem {
           [class.sidebar-open]="isSidebarOpen()"
           [class.sidebar-closed]="!isSidebarOpen()">
 
-          <div class="flex-1 px-4 py-6 space-y-1 overflow-y-auto min-h-0">
+          <div class="w-64 flex-1 px-4 py-6 space-y-1 overflow-y-auto min-h-0 custom-scrollbar">
             <span class="text-[10px] font-extrabold tracking-wider text-slate-500 uppercase px-3 block mb-4 font-cairo">
               {{ 'DASHBOARD.SIDEBAR_NAV' | translate }}
             </span>
@@ -209,7 +209,7 @@ interface NavItem {
 
           <!-- Bottom Tenant Info -->
           @if (authService.currentUser()?.tenantId) {
-            <div class="p-4 border-t border-slate-800 bg-slate-950/40">
+            <div class="w-64 p-4 border-t border-slate-800 bg-slate-950/40 shrink-0">
               <span class="text-[10px] font-extrabold text-slate-500 tracking-wider uppercase block font-cairo">
                 {{ 'DASHBOARD.TENANT_ENV' | translate }}
               </span>
@@ -218,10 +218,11 @@ interface NavItem {
               </span>
             </div>
           }
+
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-slate-950 p-3 sm:p-6 lg:p-8 pb-20 md:pb-8">
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto min-h-0 custom-scrollbar p-3 sm:p-6 lg:p-8 font-sans">
           <div class="max-w-7xl mx-auto w-full space-y-6">
             <!-- Profile incomplete warning banner -->
             @if (authService.isTenantOwner() && authService.currentUser()?.isApproved && authService.currentUser()?.isProfileComplete === false) {
@@ -248,21 +249,17 @@ interface NavItem {
       height: 100vh;
     }
     aside {
-      transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    :host ::ng-deep html[dir="ltr"] .sidebar-closed {
-      transform: translateX(-100%);
-    }
-    :host ::ng-deep html[dir="rtl"] .sidebar-closed {
-      transform: translateX(100%);
-    }
-    .sidebar-open {
-      transform: translateX(0) !important;
-    }
-    @media (min-width: 768px) {
-      .sidebar-closed {
+    @media (max-width: 767px) {
+      :host ::ng-deep html[dir="ltr"] .sidebar-closed {
+        transform: translateX(-100%);
+      }
+      :host ::ng-deep html[dir="rtl"] .sidebar-closed {
+        transform: translateX(100%);
+      }
+      .sidebar-open {
         transform: translateX(0) !important;
-        width: 16rem !important;
       }
     }
   `]
@@ -275,7 +272,13 @@ export class DashboardLayoutComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly profileService = inject(TenantProfileService);
 
-  readonly isSidebarOpen = signal(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
+  readonly isSidebarOpen = signal<boolean>(
+    typeof window !== 'undefined'
+      ? localStorage.getItem('structo_sidebar_open') !== null
+        ? localStorage.getItem('structo_sidebar_open') === 'true'
+        : window.innerWidth >= 1024
+      : false
+  );
   readonly isUserMenuOpen = signal(false);
 
   constructor() {
@@ -347,12 +350,19 @@ export class DashboardLayoutComponent {
   });
 
   toggleSidebar(): void {
-    this.isSidebarOpen.update(v => !v);
+    const next = !this.isSidebarOpen();
+    this.isSidebarOpen.set(next);
+    try {
+      localStorage.setItem('structo_sidebar_open', String(next));
+    } catch (e) {}
   }
 
   closeSidebar(): void {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       this.isSidebarOpen.set(false);
+      try {
+        localStorage.setItem('structo_sidebar_open', 'false');
+      } catch (e) {}
     }
   }
 
