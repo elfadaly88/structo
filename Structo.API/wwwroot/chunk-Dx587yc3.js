@@ -1,1 +1,0 @@
-import {E,at as nt,aL as hh,aC as N}from'./main-R722UJZX.js';function w(t){t||(t=E(nt));let i=new N(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(hh(i))}export{w};
