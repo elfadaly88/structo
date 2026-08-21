@@ -1266,10 +1266,17 @@ import { LanguageService } from '../../../core/services/language.service';
                           تم الصرف
                         </span>
                       } @else if (item.status === 'Rejected') {
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        <button
+                          type="button"
+                          (click)="openRejectionReasonModal(item)"
+                          title="انقر لعرض سبب الرفض"
+                          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 transition-all cursor-pointer">
                           <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                          مرفوض
-                        </span>
+                          <span>مرفوض</span>
+                          <svg class="w-3 h-3 text-rose-400/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
                       } @else {
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">
                           {{ item.status }}
@@ -1310,7 +1317,7 @@ import { LanguageService } from '../../../core/services/language.service';
                           </button>
                           <button
                             type="button"
-                            (click)="onRejectPettyCashRequest(item)"
+                            (click)="openRejectPettyCashModal(item)"
                             [disabled]="project()?.status === 'Closed'"
                             class="w-full py-2 rounded-lg text-xs font-bold bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-cairo flex items-center justify-center gap-1">
                             <span>❌ رفض</span>
@@ -1493,10 +1500,17 @@ import { LanguageService } from '../../../core/services/language.service';
                             تم الصرف
                           </span>
                         } @else if (item.status === 'Rejected') {
-                          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          <button
+                            type="button"
+                            (click)="openRejectionReasonModal(item)"
+                            title="انقر لعرض سبب الرفض"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm">
                             <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                            مرفوض
-                          </span>
+                            <span>مرفوض</span>
+                            <svg class="w-3 h-3 text-rose-400/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
                         } @else {
                           <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400">
                             {{ item.status }}
@@ -1520,7 +1534,7 @@ import { LanguageService } from '../../../core/services/language.service';
                             </button>
                             <button
                               type="button"
-                              (click)="onRejectPettyCashRequest(item)"
+                              (click)="openRejectPettyCashModal(item)"
                               [disabled]="project()?.status === 'Closed'"
                               title="رفض الطلب"
                               class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-cairo">
@@ -2728,6 +2742,84 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
     }
 
+    <!-- Reject Petty Cash Modal -->
+    @if (isRejectModalOpen() && selectedRejectPettyCash()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in font-cairo">
+        <div (click)="closeRejectPettyCashModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden z-10">
+          
+          <!-- Header -->
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-base">
+                ❌
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white leading-tight">رفض طلب العهدة</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">يرجى توضيح سبب الرفض ليظهر للموظف</p>
+              </div>
+            </div>
+            <button type="button" (click)="closeRejectPettyCashModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-5 space-y-4 overflow-y-auto min-h-0 custom-scrollbar">
+            <!-- Item Details Summary -->
+            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">المصروف إليه:</span>
+                <span class="font-bold text-white">{{ selectedRejectPettyCash()!.issuedTo || 'Staff' }}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">المبلغ المطلوب:</span>
+                <span class="font-bold text-amber-400 font-mono text-sm tabular-nums">{{ selectedRejectPettyCash()!.amount | number:'1.2-2' }} ج.م</span>
+              </div>
+              <div class="flex items-start justify-between text-xs pt-1.5 border-t border-slate-800/60">
+                <span class="text-slate-400 shrink-0">بيان العهدة:</span>
+                <span class="text-slate-200 text-left font-medium max-w-[240px]">{{ selectedRejectPettyCash()!.reason }}</span>
+              </div>
+            </div>
+
+            <!-- Rejection Reason Input -->
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-300">
+                سبب الرفض / Rejection Comments <span class="text-rose-400">*</span>
+              </label>
+              <textarea 
+                [ngModel]="rejectionReasonText()" 
+                (ngModelChange)="rejectionReasonText.set($event)"
+                rows="3" 
+                placeholder="اكتب سبب رفض طلب العهدة لتوضيحه للموظف..."
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500 font-cairo resize-none"></textarea>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              (click)="closeRejectPettyCashModal()"
+              class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+              إلغاء
+            </button>
+            <button
+              type="button"
+              (click)="submitRejectPettyCash()"
+              [disabled]="!rejectionReasonText().trim() || isLoadingPettyCash()"
+              class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-rose-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+              @if (isLoadingPettyCash()) {
+                <span class="animate-spin text-xs">⏳</span>
+              }
+              <span>تأكيد الرفض</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
+
     <!-- Edit Transaction Modal -->
     @if (isEditTransactionModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm font-cairo">
@@ -3492,6 +3584,10 @@ export class ProjectDetailsComponent implements OnInit {
   readonly selectedApprovePettyCash = signal<PettyCashMobileDto | null>(null);
   readonly selectedApprovePoolId = signal<string>('');
 
+  readonly isRejectModalOpen = signal(false);
+  readonly selectedRejectPettyCash = signal<PettyCashMobileDto | null>(null);
+  readonly rejectionReasonText = signal<string>('');
+
   openApprovePettyCashModal(item: PettyCashMobileDto): void {
     this.selectedApprovePettyCash.set(item);
     const pools = this.cashPools();
@@ -3517,6 +3613,74 @@ export class ProjectDetailsComponent implements OnInit {
     if (!item || !poolId) return;
     this.closeApprovePettyCashModal();
     this.onApprovePettyCashRequest(item, poolId);
+  }
+
+  openRejectPettyCashModal(item: PettyCashMobileDto): void {
+    this.selectedRejectPettyCash.set(item);
+    this.rejectionReasonText.set('');
+    this.isRejectModalOpen.set(true);
+  }
+
+  closeRejectPettyCashModal(): void {
+    this.isRejectModalOpen.set(false);
+    this.selectedRejectPettyCash.set(null);
+    this.rejectionReasonText.set('');
+  }
+
+  submitRejectPettyCash(): void {
+    const item = this.selectedRejectPettyCash();
+    const reason = this.rejectionReasonText().trim();
+    if (!item) return;
+    if (!reason) {
+      this.confirmService.alert({
+        title: 'سبب الرفض مطلوب',
+        message: 'يرجى كتابة سبب رفض طلب العهدة لتوضيحه للموظف.',
+        type: 'info'
+      });
+      return;
+    }
+
+    this.closeRejectPettyCashModal();
+    this.executeRejectPettyCash(item, reason);
+  }
+
+  executeRejectPettyCash(item: PettyCashMobileDto, comments: string): void {
+    this.isLoadingPettyCash.set(true);
+    this.pettyCashService.rejectPettyCash(this.projectId, item.id, comments).subscribe({
+      next: (res) => {
+        this.isLoadingPettyCash.set(false);
+        if (res.success) {
+          this.confirmService.alert({
+            title: 'تم الرفض بنجاح',
+            message: 'تم رفض طلب العهدة وتسجيل السبب وإرسال التنبيه للموظف.',
+            type: 'success'
+          });
+          this.fetchPettyCash();
+          this.onRunReconciliation();
+        } else {
+          this.confirmService.alert({
+            title: 'فشل رفض العهدة',
+            message: res.message || 'حدث خطأ أثناء رفض العهدة.',
+            type: 'error'
+          });
+        }
+      },
+      error: (err) => {
+        this.isLoadingPettyCash.set(false);
+        this.confirmService.alert({
+          title: 'خطأ في العملية',
+          message: err.error?.message || err.message || 'فشلت عملية رفض العهدة.',
+          type: 'error'
+        });
+      }
+    });
+  }
+
+  openRejectionReasonModal(item: PettyCashMobileDto): void {
+    const reasonText = item.comments && item.comments.trim() ? item.comments : 'لم يتم تسجيل سبب محدد للرفض.';
+    const dateStr = item.issuedAt ? new Date(item.issuedAt).toLocaleString('en-GB') : '';
+    const subtitle = `طلب عهدة: ${item.issuedTo || 'الموظف'} • ${item.amount.toLocaleString()} ج.م` + (dateStr ? ` • ${dateStr}` : '');
+    this.openTextInspectionModal('سبب رفض طلب العهدة', reasonText, subtitle);
   }
 
   openTextInspectionModal(title: string, content: string, subtitle?: string): void {
