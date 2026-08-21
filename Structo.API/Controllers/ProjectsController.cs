@@ -255,7 +255,7 @@ public class ProjectsController(
     }
 
     [HttpPost("{id}/final-closeout")]
-    public async Task<ActionResult<ApiResponse<bool>>> FinalCloseout([FromRoute] Guid id)
+    public async Task<ActionResult<ApiResponse<bool>>> FinalCloseout([FromRoute] Guid id, [FromBody] FinalCloseoutRequestDto? dto = null)
     {
         if (!await projectAccessService.CanCloseoutProjectAsync(User, id))
         {
@@ -268,7 +268,7 @@ public class ProjectsController(
 
         try
         {
-            var (success, message) = await projectService.FinalCloseoutAsync(id, tenantId.Value, CurrentUserRole, CurrentUserId);
+            var (success, message) = await projectService.FinalCloseoutAsync(id, tenantId.Value, CurrentUserRole, CurrentUserId, dto);
             if (!success) return BadRequest(new ApiResponse<bool> { Success = false, Message = message });
             return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = CurrentUserRole });
         }

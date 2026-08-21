@@ -52,8 +52,8 @@ export class ProjectService {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/freeze`, {});
   }
 
-  finalCloseout(projectId: string): Observable<ApiResponse<boolean>> {
-    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/final-closeout`, {});
+  finalCloseout(projectId: string, dto?: import('../models/project.models').FinalCloseoutRequestDto): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/${projectId}/final-closeout`, dto || {});
   }
 }
 

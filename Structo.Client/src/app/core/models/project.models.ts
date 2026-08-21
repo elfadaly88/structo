@@ -62,6 +62,12 @@ export interface ProjectCashPoolDto {
   availableBalance: number;
 }
 
+export type CloseoutDisposition = 'RefundToClient' | 'TransferToCompanyProfits';
+
+export interface FinalCloseoutRequestDto {
+  disposition?: CloseoutDisposition;
+}
+
 // --- Closeout / Reconciliation ---
 
 export interface EmployeeBalanceDto {
@@ -88,6 +94,7 @@ export interface ProjectReconciliationReportDto {
   totalCustodyPending: number;
   totalCustodyReturned: number;
   unsettledCustodyCount: number;
+  remainingPoolBalance?: number;
   employeeBalances: EmployeeBalanceDto[];
   isFullyReconciled: boolean;
   generatedAt: string;

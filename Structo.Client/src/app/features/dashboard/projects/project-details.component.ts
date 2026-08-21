@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../core/services/project.service';
 import { PettyCashService } from '../../../core/services/petty-cash.service';
 import { FinancialService } from '../../../core/services/financial.service';
-import { ProjectDto, ProjectCashPoolDto, ProjectReconciliationReportDto, ProjectMemberDto } from '../../../core/models/project.models';
+import { ProjectDto, ProjectCashPoolDto, ProjectReconciliationReportDto, ProjectMemberDto, CloseoutDisposition, FinalCloseoutRequestDto } from '../../../core/models/project.models';
 import { PettyCashMobileDto, PettyCashSettleDto } from '../../../core/models/petty-cash.models';
 import { FinancialTransactionMobileDto, SettlementMobileDto } from '../../../core/models/financial.models';
 import { ImageUploadService, SitePhotoDto } from '../../../core/services/image-upload.service';
@@ -696,10 +696,10 @@ import { LanguageService } from '../../../core/services/language.service';
               <div class="flex items-center gap-2">
                 <input type="text" readonly [value]="getPublicReviewUrl()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-300 font-mono focus:outline-none" />
                 <button (click)="copyReviewLink()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo shrink-0">نسخ الرابط</button>
-                <a [href]="getWhatsAppShareUrl()" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo flex items-center gap-1.5 shrink-0 justify-center">
+                <button type="button" (click)="openWhatsAppModal()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer font-cairo flex items-center gap-1.5 shrink-0 justify-center">
                   <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.022-.014-.029-.022-.054-.054l-.405-.405a1.107 1.107 0 0 0-1.565 0l-.364.364c-.162.162-.338.25-.562.15-.365-.163-.739-.372-1.127-.624-.388-.252-.76-.554-1.116-.906-.356-.352-.656-.724-.908-1.112a14.7 14.7 0 0 1-.624-1.127c-.1-.225-.013-.4.15-.563l.363-.363a1.108 1.108 0 0 0 0-1.566l-.405-.405c-.032-.025-.04-.032-.054-.054A1.123 1.123 0 0 0 9.07 8.35c-.412.413-.679.932-.782 1.488-.13.7.072 1.487.608 2.355.536.868 1.258 1.777 2.15 2.668.892.892 1.8 1.614 2.668 2.15.868.536 1.656.738 2.355.608a2.91 2.91 0 0 0 1.488-.782 1.122 1.122 0 0 0 .15-.717 1.096 1.096 0 0 0-.236-.837zM12.004 2c-5.518 0-10 4.482-10 10 0 1.758.46 3.41 1.266 4.858L2.03 21.684a1.002 1.002 0 0 0 1.286 1.286l4.826-1.24A9.957 9.957 0 0 0 12.004 22c5.518 0 10-4.482 10-10s-4.482-10-10-10zm0 18c-1.56 0-3.03-.393-4.323-1.085a1 1 0 0 0-.743-.075l-3.328.855.855-3.328a1 1 0 0 0-.075-.743A7.95 7.95 0 0 1 4.004 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>
                   ارسال واتساب
-                </a>
+                </button>
               </div>
             </div>
           }
@@ -3539,6 +3539,194 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
     }
 
+    <!-- WHATSAPP REVIEW LINK MODAL (Strict Responsive 92vh Independent Scroll Design) -->
+    @if (isWhatsAppModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm" dir="rtl">
+        <div (click)="closeWhatsAppModal()" class="absolute inset-0"></div>
+
+        <div class="relative z-10 bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden font-cairo flex flex-col max-h-[92vh]">
+          <!-- Modal Header -->
+          <div class="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm">
+                💬
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white leading-tight">إرسال رابط التقييم عبر واتساب</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">{{ project()?.name }}</p>
+              </div>
+            </div>
+            <button type="button" (click)="closeWhatsAppModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+              ✕
+            </button>
+          </div>
+
+          <!-- Modal Body (Independent Scroll Box) -->
+          <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">اسم العميل:</label>
+              <div class="text-xs font-bold text-indigo-400 bg-slate-900/60 border border-slate-800 px-3 py-2 rounded-xl">
+                {{ project()?.clientName || 'عميل غير محدد' }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">كود الدولة ورقم الهاتف المحمول (واتساب):</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <select 
+                  [value]="whatsAppCountryCode()" 
+                  (change)="whatsAppCountryCode.set($any($event.target).value)" 
+                  class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                  @for (c of countryCodes; track c.code) {
+                    <option [value]="c.code">{{ c.flag }} {{ c.label }}</option>
+                  }
+                </select>
+
+                <input 
+                  type="tel" 
+                  [value]="whatsAppPhone()" 
+                  (input)="whatsAppPhone.set($any($event.target).value)" 
+                  placeholder="010XXXXXXXX" 
+                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-emerald-500" />
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                <span>الرقم المنسق النهائي:</span>
+                <span class="font-mono text-emerald-400 font-bold" dir="ltr">+{{ getSanitizedWhatsAppNumber() || '---' }}</span>
+              </p>
+            </div>
+
+            <div class="bg-slate-900/40 border border-slate-800 rounded-xl p-3">
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">نص الرسالة التي سيتم إرسالها:</label>
+              <div class="text-[11px] text-slate-300 whitespace-pre-line leading-relaxed bg-slate-950/60 p-2.5 rounded-lg border border-slate-850">
+                {{ getWhatsAppMessageText() }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+            <button 
+              type="button" 
+              (click)="closeWhatsAppModal()" 
+              class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer">
+              إلغاء
+            </button>
+            <button 
+              type="button" 
+              (click)="sendWhatsAppNow()" 
+              class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12.004 2c-5.518 0-10 4.482-10 10 0 1.758.46 3.41 1.266 4.858L2.03 21.684a1.002 1.002 0 0 0 1.286 1.286l4.826-1.24A9.957 9.957 0 0 0 12.004 22c5.518 0 10-4.482 10-10s-4.482-10-10-10zm0 18c-1.56 0-3.03-.393-4.323-1.085a1 1 0 0 0-.743-.075l-3.328.855.855-3.328a1 1 0 0 0-.075-.743A7.95 7.95 0 0 1 4.004 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>
+              <span>إرسال الآن عبر واتساب</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- CLOSEOUT DISPOSITION MODAL (Strict Responsive 92vh Independent Scroll Design) -->
+    @if (isCloseoutModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm" dir="rtl">
+        <div (click)="closeCloseoutModal()" class="absolute inset-0"></div>
+
+        <div class="relative z-10 bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden font-cairo flex flex-col max-h-[92vh]">
+          <!-- Modal Header -->
+          <div class="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-sm">
+                ⚖️
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white leading-tight">تصفية رصيد صندوق سيولة المشروع</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">يوجد رصيد متبقي غير منفق في صندوق سيولة المشروع</p>
+              </div>
+            </div>
+            <button type="button" (click)="closeCloseoutModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+              ✕
+            </button>
+          </div>
+
+          <!-- Modal Body (Independent Scroll Box) -->
+          <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+            <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-amber-300 font-semibold block">إجمالي الرصيد المتبقي في الصناديق:</span>
+                <span class="text-[11px] text-slate-400">سيتم تصفية هذا الرصيد ليصبح رصيد الصندوق 0.00 ج.م</span>
+              </div>
+              <div class="text-lg sm:text-xl font-bold font-mono text-amber-400">
+                {{ (reconciliationReport()?.remainingPoolBalance || 0) | number:'1.2-2' }} <span class="text-xs">ج.م</span>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-slate-300">اختر وجهة تسوية وتصفية الرصيد المتبقي:</label>
+
+              <!-- Option A: RefundToClient -->
+              <label 
+                class="flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none"
+                [ngClass]="selectedDisposition() === 'RefundToClient' ? 'bg-indigo-950/40 border-indigo-500/50 shadow-lg' : 'bg-slate-900/50 border-slate-800 hover:bg-slate-900'">
+                <input 
+                  type="radio" 
+                  name="closeoutDisposition" 
+                  value="RefundToClient" 
+                  [checked]="selectedDisposition() === 'RefundToClient'"
+                  (change)="selectedDisposition.set('RefundToClient')"
+                  class="mt-1 w-4 h-4 text-indigo-600 bg-slate-900 border-slate-700 focus:ring-indigo-500 cursor-pointer">
+                <div>
+                  <div class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                    <span>💵 خيار (أ): رد باقي الدفعة للعميل (Refund to Client)</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    يتم إنشاء قيد مالي مصروفي متوازن (<span class="text-indigo-300">مصروف - رد باقي الدفعة للعميل</span>) بمبلغ الرصيد المتبقي وتصفية صندوق السيولة إلى الصفر.
+                  </p>
+                </div>
+              </label>
+
+              <!-- Option B: TransferToCompanyProfits -->
+              <label 
+                class="flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none"
+                [ngClass]="selectedDisposition() === 'TransferToCompanyProfits' ? 'bg-emerald-950/40 border-emerald-500/50 shadow-lg' : 'bg-slate-900/50 border-slate-800 hover:bg-slate-900'">
+                <input 
+                  type="radio" 
+                  name="closeoutDisposition" 
+                  value="TransferToCompanyProfits" 
+                  [checked]="selectedDisposition() === 'TransferToCompanyProfits'"
+                  (change)="selectedDisposition.set('TransferToCompanyProfits')"
+                  class="mt-1 w-4 h-4 text-emerald-600 bg-slate-900 border-slate-700 focus:ring-emerald-500 cursor-pointer">
+                <div>
+                  <div class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                    <span>🏢 خيار (ب): تحويل المتبقي كأرباح مرحلة للشركة (Transfer to Company Profits)</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    يتم ترحيل الفائض من سيولة المشروع إلى خزينة الشركة الرئيسية كهامش ربح محقق وتصفية صندوق المشروع إلى الصفر.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+            <button 
+              type="button" 
+              (click)="closeCloseoutModal()" 
+              class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer">
+              إلغاء
+            </button>
+            <button 
+              type="button" 
+              (click)="confirmDispositionAndCloseout()" 
+              [disabled]="isCloseoutLoading()"
+              class="px-5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+              @if (isCloseoutLoading()) {
+                <span class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              <span>تأكيد الإغلاق والتصفية</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- 🖼️ FULLSCREEN LIGHTBOX VIEWER -->
     @if (isLightboxOpen() && lightboxPhotos().length > 0) {
 
@@ -3837,6 +4025,23 @@ export class ProjectDetailsComponent implements OnInit {
   readonly selectedDrilldown = signal<'unsettled' | 'refunds' | 'reimbursements' | null>(null);
   selectedReimbursementPool: { [key: string]: string } = {};
   selectedPettyCashPool: { [key: string]: string } = {};
+
+  readonly isWhatsAppModalOpen = signal(false);
+  readonly whatsAppPhone = signal('');
+  readonly whatsAppCountryCode = signal('+20');
+  readonly isCloseoutModalOpen = signal(false);
+  readonly selectedDisposition = signal<CloseoutDisposition>('RefundToClient');
+
+  readonly countryCodes = [
+    { code: '+20', label: 'مصر (+20)', flag: '🇪🇬' },
+    { code: '+966', label: 'السعودية (+966)', flag: '🇸🇦' },
+    { code: '+971', label: 'الإمارات (+971)', flag: '🇦🇪' },
+    { code: '+965', label: 'الكويت (+965)', flag: '🇰🇼' },
+    { code: '+974', label: 'قطر (+974)', flag: '🇶🇦' },
+    { code: '+968', label: 'عُمان (+968)', flag: '🇴🇲' },
+    { code: '+973', label: 'البحرين (+973)', flag: '🇧🇭' },
+    { code: '+962', label: 'الأردن (+962)', flag: '🇯🇴' },
+  ];
 
   readonly unsettledCustodyList = computed(() =>
     this.pettyCashes().filter(pc => 
@@ -6100,40 +6305,73 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   onFinalCloseout(): void {
-    this.confirmService.confirm({
-      title: 'الإغلاق النهائي والمطابقة / Final Project Closeout',
-      message: 'تحذير: سيتم إغلاق هذا المشروع نهائياً وتجميد جميع حساباته ولا يمكن تعديل أو تصفية أي عهد بعد ذلك. هل ترغب في المتابعة؟',
-      confirmText: 'نعم، إغلاق نهائي / Yes, Close Out',
-      cancelText: 'إلغاء / Cancel'
-    }).then(confirmed => {
-      if (confirmed) {
-        this.isCloseoutLoading.set(true);
-        this.projectCloseoutService.finalCloseout(this.projectId).subscribe({
-          next: (res) => {
-            this.isCloseoutLoading.set(false);
-            if (res.success) {
-              this.confirmService.alert({
-                title: 'تم الإغلاق بنجاح',
-                message: 'تم إغلاق المشروع نهائياً وحفظ الأرشيف والبيانات المالية بنجاح.',
-                type: 'success'
-              });
-              this.fetchProjectDetails();
-            } else {
-              this.confirmService.alert({
-                title: 'فشل الإغلاق النهائي',
-                message: res.message || 'يرجى مراجعة كافة المعاملات والأرصدة المعلقة أولاً.',
-                type: 'error'
-              });
-            }
-          },
-          error: (err) => {
-            this.isCloseoutLoading.set(false);
-            this.confirmService.alert({
-              title: 'خطأ في الإغلاق',
-              message: err.error?.message || err.message || 'فشلت عملية الإغلاق النهائي.',
-              type: 'error'
-            });
-          }
+    const report = this.reconciliationReport();
+    if (!report?.isFullyReconciled) {
+      this.confirmService.alert({
+        title: 'لا يمكن الإغلاق النهائي',
+        message: 'يجب تصفية جميع العهد والأرصدة المعلقة أولاً قبل إغلاق المشروع.',
+        type: 'error'
+      });
+      return;
+    }
+
+    const remainingBalance = report.remainingPoolBalance ?? 0;
+
+    if (remainingBalance > 0) {
+      // Open modal to choose disposition
+      this.selectedDisposition.set('RefundToClient');
+      this.isCloseoutModalOpen.set(true);
+    } else {
+      // Direct confirmation
+      this.confirmService.confirm({
+        title: 'الإغلاق النهائي والمطابقة / Final Project Closeout',
+        message: 'تحذير: سيتم إغلاق هذا المشروع نهائياً وتجميد جميع حساباته ولا يمكن تعديل أو تصفية أي عهد بعد ذلك. هل ترغب في المتابعة؟',
+        confirmText: 'نعم، إغلاق نهائي / Yes, Close Out',
+        cancelText: 'إلغاء / Cancel'
+      }).then(confirmed => {
+        if (confirmed) {
+          this.executeFinalCloseout();
+        }
+      });
+    }
+  }
+
+  closeCloseoutModal(): void {
+    this.isCloseoutModalOpen.set(false);
+  }
+
+  confirmDispositionAndCloseout(): void {
+    this.closeCloseoutModal();
+    this.executeFinalCloseout(this.selectedDisposition());
+  }
+
+  executeFinalCloseout(disposition?: CloseoutDisposition): void {
+    this.isCloseoutLoading.set(true);
+    const dto: FinalCloseoutRequestDto = disposition ? { disposition } : {};
+    this.projectCloseoutService.finalCloseout(this.projectId, dto).subscribe({
+      next: (res) => {
+        this.isCloseoutLoading.set(false);
+        if (res.success) {
+          this.confirmService.alert({
+            title: 'تم الإغلاق بنجاح',
+            message: 'تم إغلاق المشروع نهائياً وحفظ الأرشيف والبيانات المالية وتصفية الصناديق بنجاح.',
+            type: 'success'
+          });
+          this.fetchProjectDetails();
+        } else {
+          this.confirmService.alert({
+            title: 'فشل الإغلاق النهائي',
+            message: res.message || 'يرجى مراجعة كافة المعاملات والأرصدة المعلقة أولاً.',
+            type: 'error'
+          });
+        }
+      },
+      error: (err) => {
+        this.isCloseoutLoading.set(false);
+        this.confirmService.alert({
+          title: 'خطأ في الإغلاق',
+          message: err.error?.message || err.message || 'فشلت عملية الإغلاق النهائي.',
+          type: 'error'
         });
       }
     });
@@ -6157,33 +6395,91 @@ export class ProjectDetailsComponent implements OnInit {
     });
   }
 
-  getWhatsAppShareUrl(): string {
+  openWhatsAppModal(): void {
     const proj = this.project();
-    if (!proj) return '#';
-    const url = this.getPublicReviewUrl();
-    if (!url) return '#';
+    let initialPhone = proj?.clientWhatsApp || '';
+    if (initialPhone.startsWith('+20')) {
+      this.whatsAppCountryCode.set('+20');
+      initialPhone = initialPhone.substring(3);
+    } else if (initialPhone.startsWith('20') && initialPhone.length > 10) {
+      this.whatsAppCountryCode.set('+20');
+      initialPhone = initialPhone.substring(2);
+    }
+    this.whatsAppPhone.set(initialPhone.trim());
+    this.isWhatsAppModalOpen.set(true);
+  }
 
-    // Clean and normalize phone number
-    let phone = proj.clientWhatsApp || '';
-    phone = phone.replace(/\D/g, ''); // Strip non-digits
+  closeWhatsAppModal(): void {
+    this.isWhatsAppModalOpen.set(false);
+  }
 
-    if (phone.startsWith('01') && phone.length === 11) {
-      phone = '2' + phone; // Prefix '2' to Egyptian numbers (010... -> 2010...)
-    } else if (phone.startsWith('1') && phone.length === 10) {
-      phone = '20' + phone; // Prefix '20' (10... -> 2010...)
-    } else if (phone.startsWith('0') && phone.length > 9) {
-      phone = '2' + phone.substring(1); // Standard prefixing fallback for other formats
+  getSanitizedWhatsAppNumber(): string {
+    let raw = this.whatsAppPhone() || '';
+    let digits = raw.replace(/\D/g, '');
+    const code = this.whatsAppCountryCode().replace('+', '');
+
+    if (code === '20') {
+      if (digits.startsWith('20') && digits.length === 12) {
+        return digits;
+      }
+      if (digits.startsWith('0') && digits.length === 11) {
+        return '20' + digits.substring(1);
+      }
+      if (digits.startsWith('1') && digits.length === 10) {
+        return '20' + digits;
+      }
+      if (digits.length > 0) {
+        return '20' + digits.replace(/^0+/, '');
+      }
+      return '';
     }
 
-    const message = `مرحباً ${proj.clientName || 'العميل الكريم'}، يرجى التكرم بتقييم مستوى رضاكم وجودة تنفيذ مشروعكم "${proj.name}" من خلال الرابط التالي:\n${url}`;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    if (digits.startsWith(code)) {
+      return digits;
+    }
+    return code + digits.replace(/^0+/, '');
+  }
+
+  getWhatsAppMessageText(): string {
+    const proj = this.project();
+    const url = this.getPublicReviewUrl();
+    return `مرحباً ${proj?.clientName || 'العميل الكريم'}،\nيسعدنا تقييمكم لجودة تنفيذ وتسليم مشروع "${proj?.name || ''}" عبر الرابط المباشر التالي:\n${url}\n\nشكراً لثقتكم بنا!`;
+  }
+
+  sendWhatsAppNow(): void {
+    const phone = this.getSanitizedWhatsAppNumber();
+    if (!phone || phone.length < 8) {
+      this.confirmService.alert({
+        title: 'رقم الهاتف غير صالح',
+        message: 'يرجى إدخال رقم هاتف صحيح لإرسال رابط التقييم.',
+        type: 'error'
+      });
+      return;
+    }
+
+    const message = this.getWhatsAppMessageText();
+    const encodedMessage = encodeURIComponent(message);
+    const finalUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+
+    if (typeof window !== 'undefined') {
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      this.closeWhatsAppModal();
+      this.confirmService.alert({
+        title: 'تم تجهيز الرسالة',
+        message: `تم فتح محادثة واتساب مع الرقم (+${phone}) بنجاح.`,
+        type: 'success'
+      });
+    }
+  }
+
+  getWhatsAppShareUrl(): string {
+    const phone = this.getSanitizedWhatsAppNumber();
+    const message = this.getWhatsAppMessageText();
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
   }
 
   shareReviewOnWhatsApp(): void {
-    const waUrl = this.getWhatsAppShareUrl();
-    if (waUrl && waUrl !== '#' && typeof window !== 'undefined') {
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-    }
+    this.openWhatsAppModal();
   }
 
   onImgError(event: Event): void {

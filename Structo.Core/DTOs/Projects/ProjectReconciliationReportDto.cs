@@ -33,6 +33,7 @@ public class ProjectReconciliationReportDto
     public decimal TotalCustodyPending { get; set; }
     public decimal TotalCustodyReturned { get; set; }
     public int UnsettledCustodyCount { get; set; }
+    public decimal RemainingPoolBalance { get; set; }
     public List<EmployeeBalanceDto> EmployeeBalances { get; set; } = [];
     /// <summary>
     /// True only when ALL employee balances == 0 AND no unsettled custody records exist.

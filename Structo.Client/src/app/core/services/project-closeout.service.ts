@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
 import {
   ProjectReconciliationReportDto,
-  ClientReviewSubmitDto
+  ClientReviewSubmitDto,
+  FinalCloseoutRequestDto
 } from '../models/project.models';
 import { environment } from '../../../environments/environment';
 
@@ -32,10 +33,10 @@ export class ProjectCloseoutService {
   }
 
   /** POST final closeout (TenantOwner only, requires full reconciliation) */
-  finalCloseout(projectId: string): Observable<ApiResponse<boolean>> {
+  finalCloseout(projectId: string, dto?: FinalCloseoutRequestDto): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(
       `${this.apiUrl}/${projectId}/final-closeout`,
-      {}
+      dto || {}
     );
   }
 

@@ -722,6 +722,13 @@ public class ProjectService(
             })
             .ToList();
 
+        // Load cash pools to calculate remaining available cash pool balance
+        var cashPools = await context.Set<ProjectCashPool>()
+            .AsNoTracking()
+            .Where(p => p.ProjectId == id)
+            .ToListAsync();
+        var remainingPoolBalance = cashPools.Sum(p => p.AvailableBalance);
+
         var isFullyReconciled = employeeGroups.All(e => e.Balance == 0) && unsettledCustody.Count == 0;
 
         return new ProjectReconciliationReportDto
@@ -738,6 +745,7 @@ public class ProjectService(
             TotalCustodyPending = totalCustodyPending,
             TotalCustodyReturned = totalCustodyReturned,
             UnsettledCustodyCount = unsettledCustody.Count,
+            RemainingPoolBalance = remainingPoolBalance,
             EmployeeBalances = employeeGroups,
             IsFullyReconciled = isFullyReconciled,
             GeneratedAt = DateTime.UtcNow
@@ -775,7 +783,7 @@ public class ProjectService(
         return (true, $"Project frozen successfully. Public review token: {project.PublicReviewToken}");
     }
 
-    public async Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null)
+    public async Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null, FinalCloseoutRequestDto? dto = null)
     {
         if (userRole != "TenantOwner")
             throw new UnauthorizedAccessException("Only TenantOwner can perform a final project closeout.");
@@ -802,7 +810,65 @@ public class ProjectService(
             detail += pendingNames.Count > 0
                 ? "الأرصدة غير المصفّاة: " + string.Join(", ", pendingNames)
                 : string.Empty;
-            return (false, $"RECONCILIATION_REQUIRED: لا يمكن إغلاق المشروع بشكل نهائي. {detail}".Trim());
+            return (false, $"RECONCILIATION_REQUIRED: لا يمكن إغلاق المشروع بشكل نهائي مع وجود عهد أو أرصدة معلقة. {detail}".Trim());
+        }
+
+        // Check the remaining balance in ProjectCashPool
+        var cashPools = await context.Set<ProjectCashPool>()
+            .Where(p => p.ProjectId == id && p.TenantId == tenantId)
+            .ToListAsync();
+
+        var remainingBalance = cashPools.Sum(p => p.AvailableBalance);
+
+        if (remainingBalance > 0)
+        {
+            if (!dto?.Disposition.HasValue ?? true)
+            {
+                return (false, $"POOL_BALANCE_REMAINING: يوجد رصيد متبقي في سيولة المشروع بمبلغ {remainingBalance:N2} ج.م. يرجى تحديد وجهة تصفية الرصيد المتبقي (رد باقي الدفعة للعميل أو تحويل لأرباح الشركة).");
+            }
+
+            if (dto!.Disposition == CloseoutDisposition.RefundToClient)
+            {
+                foreach (var pool in cashPools.Where(p => p.AvailableBalance > 0))
+                {
+                    var refundTx = new FinancialTransaction
+                    {
+                        ProjectId = id,
+                        TenantId = tenantId,
+                        Type = TransactionType.Expense,
+                        Amount = pool.AvailableBalance,
+                        Description = "مصروف - رد باقي الدفعة للعميل",
+                        PaymentMethod = PaymentMethod.BankTransfer,
+                        SourceType = pool.SourceType,
+                        TransactionDate = DateTime.UtcNow,
+                        PaymentDate = DateTime.UtcNow,
+                        IsSystemGenerated = true
+                    };
+                    context.Set<FinancialTransaction>().Add(refundTx);
+                    pool.AvailableBalance = 0;
+                }
+            }
+            else if (dto.Disposition == CloseoutDisposition.TransferToCompanyProfits)
+            {
+                foreach (var pool in cashPools.Where(p => p.AvailableBalance > 0))
+                {
+                    var profitTx = new FinancialTransaction
+                    {
+                        ProjectId = id,
+                        TenantId = tenantId,
+                        Type = TransactionType.RefundToTreasury,
+                        Amount = pool.AvailableBalance,
+                        Description = "تحويل المتبقي من سيولة المشروع إلى خزينة الشركة كأرباح مرحلة",
+                        PaymentMethod = PaymentMethod.BankTransfer,
+                        SourceType = pool.SourceType,
+                        TransactionDate = DateTime.UtcNow,
+                        PaymentDate = DateTime.UtcNow,
+                        IsSystemGenerated = true
+                    };
+                    context.Set<FinancialTransaction>().Add(profitTx);
+                    pool.AvailableBalance = 0;
+                }
+            }
         }
 
         project.Status = ProjectStatus.Closed;
@@ -821,7 +887,12 @@ public class ProjectService(
         }
         catch (Exception) { /* Notification failure must not block project closeout */ }
 
-        return (true, "تم إغلاق المشروع نهائياً وتجميد جميع العمليات المالية. سجل التدقيق محفوظ بشكل دائم.");
+        return (true, "تم إغلاق المشروع نهائياً وتجميد جميع العمليات المالية وتصفية الصناديق بنجاح. سجل التدقيق محفوظ بشكل دائم.");
+    }
+
+    public async Task<(bool Success, string Message)> CloseProjectAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null, FinalCloseoutRequestDto? dto = null)
+    {
+        return await FinalCloseoutAsync(id, tenantId, userRole, changedByUserId, dto);
     }
 
     public async Task<(bool Success, string Message)> SubmitClientReviewAsync(string token, ClientReviewSubmitDto dto)
