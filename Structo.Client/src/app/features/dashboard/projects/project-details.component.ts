@@ -1226,7 +1226,7 @@ import { LanguageService } from '../../../core/services/language.service';
 
                       <!-- Date -->
                       <td class="px-4 py-3.5 text-slate-400 text-xs font-mono whitespace-nowrap" dir="ltr">
-                        {{ item.issuedAt ? (item.issuedAt | date:'dd/MM/yyyy - hh:mm a') : '-' }}
+                        {{ item.issuedAt | date:'dd/MM/yyyy - hh:mm a' }}
                       </td>
 
                       <!-- Amount -->
