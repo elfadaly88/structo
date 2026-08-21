@@ -31,51 +31,28 @@ import { LanguageService } from '../../../core/services/language.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, DatePipe, DecimalPipe, TranslatePipe, FormsModule],
   template: `
-    <div class="space-y-5 w-full px-3 sm:px-6 lg:px-8">
+    <div class="space-y-4 w-full px-3 sm:px-6 lg:px-8">
 
-      <!-- 1️⃣ Compact Top KPI Stats Bar -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 font-sans">
-        @if (!isEngineer()) {
-          <!-- Card 1: Total Income -->
-          <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
-            <h3 class="text-base lg:text-lg font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ (totalIncome() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-          </div>
-          <!-- Card 2: Total Expenses -->
-          <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
-            <h3 class="text-base lg:text-lg font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ (totalExpenses() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-          </div>
-          <!-- Card 3: Net Balance -->
-          <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
-            <h3 class="text-base lg:text-lg font-extrabold mt-1 font-mono tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
-              {{ (netBalance() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
-            </h3>
-          </div>
-        }
-        <!-- Card 4: Unsettled Petty Cash -->
-        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between shadow-sm" [class.col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
-          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
-          <h3 class="text-base lg:text-lg font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ (totalUnsettledPettyCash() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
-        </div>
-      </div>
-
-      <!-- 2️⃣ Unified Project Info & Actions Header -->
-      <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-        <!-- Top Row: Back Button, Title, Badges & Primary Action (+ إيداع دفعة مالية) -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5">
-          <div class="flex items-center gap-3 min-w-0">
+      <!-- Unified Project Header & KPI Container with Expand/Collapse -->
+      <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl shadow-xl overflow-hidden transition-all duration-200">
+        
+        <!-- Top Persistent Row (Always Visible) -->
+        <div class="p-3.5 sm:p-4.5 flex flex-wrap items-center justify-between gap-3" [class.border-b]="!isHeaderCollapsed()" [class.border-slate-800\/80]="!isHeaderCollapsed()">
+          
+          <!-- Left: Back Button, Title, Status & Quick Tags -->
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <a
               routerLink="/dashboard/projects"
+              title="العودة إلى المشاريع"
               class="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all duration-200 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 sm:h-5 sm:w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </a>
+
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white font-cairo truncate">
+                <h1 class="text-lg sm:text-2xl font-black tracking-tight text-white font-cairo truncate">
                   @if (project()) {
                     {{ project()!.name }}
                   } @else if (isLoadingProject()) {
@@ -96,8 +73,9 @@ import { LanguageService } from '../../../core/services/language.service';
                   }
                 }
               </div>
+
               @if (project()) {
-                <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-400">
+                <div class="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-400">
                   @if (project()!.governorate) {
                     <span class="text-indigo-400 font-cairo font-medium">📍 {{ project()!.governorate }} @if (project()!.cityOrZone) { - {{ project()!.cityOrZone }} }</span>
                   }
@@ -112,76 +90,140 @@ import { LanguageService } from '../../../core/services/language.service';
             </div>
           </div>
 
-          <!-- Primary Action & Header Controls -->
-          @if (project()) {
-            <div class="flex items-center gap-3 shrink-0 flex-wrap">
-              <!-- Direct Public Visibility Toggle Switch (Restricted to Tenant Owner / Admin only) -->
-              @if (isTenantOwner() || isSuperAdmin()) {
-                <div class="flex items-center gap-2.5 bg-slate-950/80 border border-slate-800 px-3.5 py-2 rounded-xl font-cairo shadow-sm">
-                  <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
-                    <span>إظهار في البروفايل العام</span>
+          <!-- Right: Quick Condensed KPI Badge (when collapsed) + Controls + Toggle Button -->
+          <div class="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap justify-end">
+            
+            <!-- Quick Key Metric Pill when Collapsed -->
+            @if (isHeaderCollapsed() && project()) {
+              @if (!isEngineer()) {
+                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
+                  <span class="text-slate-400 text-[11px] font-cairo">الرصيد:</span>
+                  <span class="font-bold tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
+                    {{ (netBalance() || 0) | number:'1.0-0' }} ج.م
                   </span>
-                  <label class="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox"
-                      [checked]="isPublicPortfolio()"
-                      (change)="togglePublicVisibility($any($event.target).checked)"
-                      [disabled]="isSavingProjectSettings()"
-                      class="sr-only peer">
-                    <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                  </label>
+                </div>
+              } @else {
+                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
+                  <span class="text-slate-400 text-[11px] font-cairo">العهدة المعلقة:</span>
+                  <span class="font-bold text-amber-400 tabular-nums">
+                    {{ (totalUnsettledPettyCash() || 0) | number:'1.0-0' }} ج.م
+                  </span>
                 </div>
               }
+            }
 
-              <!-- Primary Action Button: + إيداع دفعة مالية -->
-              @if (isOwnerOrAccountant()) {
-                <button 
-                  (click)="openInjectModal()"
-                  [disabled]="project()?.status === 'Closed'"
-                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-2 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- Info Grid Side-by-Side: Client, Budget, Scope -->
-        @if (project()) {
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
-            <!-- Client Name -->
-            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
-              <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo block mb-0.5">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</span>
-              <p class="text-sm font-bold text-slate-200 truncate font-cairo">{{ parsedClient() || 'N/A' }}</p>
-            </div>
-
-            <!-- Budget -->
-            @if (!isEngineer()) {
-              <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3">
-                <div class="flex items-center justify-between mb-0.5">
-                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</span>
-                  @if (isOwnerOrAccountant()) {
-                    <button
-                      (click)="openReviseBudgetModal()"
-                      [disabled]="project()?.status === 'Closed'"
-                      class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer font-cairo disabled:opacity-40">
-                      تعديل ✏️
-                    </button>
-                  }
-                </div>
-                <p class="text-sm font-bold text-emerald-400 font-mono">{{ parsedBudget() | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</p>
+            <!-- Direct Public Visibility Toggle Switch (Restricted to Tenant Owner / Admin only) -->
+            @if (project() && (isTenantOwner() || isSuperAdmin())) {
+              <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl font-cairo shadow-sm">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
+                  <span class="hidden sm:inline">إظهار في البروفايل</span>
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    [checked]="isPublicPortfolio()"
+                    (change)="togglePublicVisibility($any($event.target).checked)"
+                    [disabled]="isSavingProjectSettings()"
+                    class="sr-only peer">
+                  <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
               </div>
             }
 
-            <!-- Scope Description -->
-            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 sm:col-span-1" [class.sm:col-span-2]="isEngineer()">
-              <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo block mb-0.5">{{ 'DETAILS.SCOPE_DESC' | translate }}</span>
-              <p class="text-xs text-slate-300 leading-relaxed font-cairo line-clamp-2" [title]="parsedDescription()">{{ parsedDescription() || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>
+            <!-- Primary Action Button: + إيداع دفعة مالية -->
+            @if (project() && isOwnerOrAccountant()) {
+              <button 
+                (click)="openInjectModal()"
+                [disabled]="project()?.status === 'Closed'"
+                class="px-3 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
+              </button>
+            }
+
+            <!-- 🔼/🔽 Collapse / Expand Toggle Button -->
+            <button
+              type="button"
+              (click)="toggleHeaderCollapse()"
+              [title]="isHeaderCollapsed() ? 'إظهار الملخص المالي والبيانات' : 'طي الملخص لتوفير مساحة للشاشة'"
+              class="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-xs font-bold font-cairo flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0">
+              <span class="hidden xs:inline">{{ isHeaderCollapsed() ? 'عرض الملخص' : 'طي' }}</span>
+              <svg class="w-4 h-4 transition-transform duration-200" [class.rotate-180]="!isHeaderCollapsed()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Collapsible Content Section: KPI Cards + Info Details Grid -->
+        @if (!isHeaderCollapsed()) {
+          <div class="p-3.5 sm:p-5 space-y-3.5 bg-slate-950/30 border-t border-slate-800/40 animate-fade-in">
+            
+            <!-- 1️⃣ KPI Stats Bar -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 font-sans">
+              @if (!isEngineer()) {
+                <!-- Card 1: Total Income -->
+                <div class="bg-slate-900/80 border border-slate-800/90 p-3 rounded-xl flex flex-col justify-between shadow-sm">
+                  <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_INCOME' | translate }}</span>
+                  <h3 class="text-base sm:text-lg font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ (totalIncome() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+                </div>
+                <!-- Card 2: Total Expenses -->
+                <div class="bg-slate-900/80 border border-slate-800/90 p-3 rounded-xl flex flex-col justify-between shadow-sm">
+                  <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.TOTAL_EXPENSES' | translate }}</span>
+                  <h3 class="text-base sm:text-lg font-extrabold text-rose-400 mt-1 font-mono tabular-nums">{{ (totalExpenses() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+                </div>
+                <!-- Card 3: Net Balance -->
+                <div class="bg-slate-900/80 border border-slate-800/90 p-3 rounded-xl flex flex-col justify-between shadow-sm">
+                  <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.NET_BALANCE' | translate }}</span>
+                  <h3 class="text-base sm:text-lg font-extrabold mt-1 font-mono tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
+                    {{ (netBalance() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                  </h3>
+                </div>
+              }
+              <!-- Card 4: Unsettled Petty Cash -->
+              <div class="bg-slate-900/80 border border-slate-800/90 p-3 rounded-xl flex flex-col justify-between shadow-sm" [class.col-span-2]="isEngineer()" [class.lg:col-span-4]="isEngineer()">
+                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider font-cairo block truncate">{{ 'DETAILS.UNSETTLED_PETTY_CASH' | translate }}</span>
+                <h3 class="text-base sm:text-lg font-extrabold text-amber-400 mt-1 font-mono tabular-nums">{{ (totalUnsettledPettyCash() || 0) | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+              </div>
             </div>
+
+            <!-- 2️⃣ Info Grid Side-by-Side: Client, Budget, Scope -->
+            @if (project()) {
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-0.5">
+                <!-- Client Name -->
+                <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo block mb-0.5">{{ 'PROJECTS.TABLE_CLIENT' | translate }}</span>
+                  <p class="text-sm font-bold text-slate-200 truncate font-cairo">{{ parsedClient() || 'N/A' }}</p>
+                </div>
+
+                <!-- Budget -->
+                @if (!isEngineer()) {
+                  <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+                    <div class="flex items-center justify-between mb-0.5">
+                      <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.TABLE_BUDGET' | translate }}</span>
+                      @if (isOwnerOrAccountant()) {
+                        <button
+                          (click)="openReviseBudgetModal()"
+                          [disabled]="project()?.status === 'Closed'"
+                          class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer font-cairo disabled:opacity-40">
+                          تعديل ✏️
+                        </button>
+                      }
+                    </div>
+                    <p class="text-sm font-bold text-emerald-400 font-mono">{{ parsedBudget() | number:'1.0-0' }} {{ 'COMMON.CURRENCY' | translate }}</p>
+                  </div>
+                }
+
+                <!-- Scope Description -->
+                <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 sm:col-span-1" [class.sm:col-span-2]="isEngineer()">
+                  <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-cairo block mb-0.5">{{ 'DETAILS.SCOPE_DESC' | translate }}</span>
+                  <p class="text-xs text-slate-300 leading-relaxed font-cairo line-clamp-2" [title]="parsedDescription()">{{ parsedDescription() || ('PROJECTS.NO_DESCRIPTION' | translate) }}</p>
+                </div>
+              </div>
+            }
           </div>
         }
       </div>
@@ -1366,16 +1408,18 @@ import { LanguageService } from '../../../core/services/language.service';
                                 }
                               }
 
-                              <!-- WhatsApp Button -->
-                              <button
-                                type="button"
-                                (click)="onWhatsAppAlert(item)"
-                                class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-semibold rounded-xl transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-cairo">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
-                                </svg>
-                                <span>واتساب</span>
-                              </button>
+                              <!-- WhatsApp Button (Only for unsettled / active items) -->
+                              @if (!item.isSettled && item.status !== 'Settled') {
+                                <button
+                                  type="button"
+                                  (click)="onWhatsAppAlert(item)"
+                                  class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-semibold rounded-xl transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-cairo">
+                                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.37 5.028L2 22l5.135-1.348a9.91 9.91 0 004.877 1.28h.005c5.505 0 9.989-4.478 9.99-9.984A10.02 10.02 0 0012.012 2zm5.772 14.184c-.237.669-1.38 1.282-1.9 1.373-.464.082-.9.18-2.95-.624-2.617-1.026-4.304-3.69-4.437-3.868-.131-.177-1.07-1.428-1.07-2.723 0-1.294.673-1.927.915-2.186.242-.259.525-.324.7-.324h.5c.137 0 .323-.05.503.39.186.455.637 1.558.694 1.672.057.114.095.247.02.4-.075.153-.114.248-.228.381l-.224.238c-.114.133-.243.278-.104.516.14.238.622 1.025 1.332 1.657.914.814 1.684 1.066 1.922 1.185.238.12.377.101.517-.06.14-.16.602-.703.763-.94.161-.238.322-.2.54-.12.217.08 1.38.653 1.618.772.238.12.398.18.458.283.06.103.06.598-.178 1.267z"/>
+                                  </svg>
+                                  <span>واتساب</span>
+                                </button>
+                              }
 
                               @if (isOwnerOrAccountant() && !item.isSettled && item.status !== 'Settled') {
                                 <button
@@ -3163,6 +3207,18 @@ import { LanguageService } from '../../../core/services/language.service';
   `
 })
 export class ProjectDetailsComponent implements OnInit {
+  readonly isHeaderCollapsed = signal<boolean>(
+    typeof window !== 'undefined' ? localStorage.getItem('structo_project_header_collapsed') === 'true' : false
+  );
+
+  toggleHeaderCollapse(): void {
+    const next = !this.isHeaderCollapsed();
+    this.isHeaderCollapsed.set(next);
+    try {
+      localStorage.setItem('structo_project_header_collapsed', String(next));
+    } catch (e) { }
+  }
+
   readonly isTabInfoDismissed = signal(false);
   readonly activePrintSettlement = signal<SettlementMobileDto | null>(null);
   readonly activeTextInspection = signal<{ title: string; content: string; subtitle?: string } | null>(null);
@@ -5380,22 +5436,48 @@ export class ProjectDetailsComponent implements OnInit {
   onWhatsAppAlert(pettyCash: PettyCashMobileDto, customMessage?: string): void {
     const defaultMsg = `مرحباً ${pettyCash.issuedTo}، تم اعتماد وتحديث طلب العهدة الخاص بك بقيمة ${pettyCash.amount} EGP لـ ${pettyCash.projectName} - ${pettyCash.reason}.`;
     const message = customMessage || defaultMsg;
-    this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          const userObj = res.data.find(u => `${u.firstName} ${u.lastName}`.trim() === pettyCash.issuedTo.trim());
-          const phone = userObj?.whatsAppPhone || userObj?.personalPhone;
-          if (phone) {
-            this.whatsappLink.openChat(phone, message);
-          } else {
-            this.confirmService.alert({
-              title: 'تنبيه واتساب',
-              message: 'لم يتم العثور على رقم واتساب مسجل لهذا المستخدم لإرسال التنبيه.',
-              type: 'info'
-            });
+    const targetName = (pettyCash.issuedTo || '').trim().toLowerCase();
+
+    // 1. First search in already loaded project members (accessible to all roles including Engineer/Accountant)
+    const members = this.projectMembers();
+    const matchedMember = members.find(m =>
+      (m.fullName && m.fullName.trim().toLowerCase() === targetName) ||
+      (m.email && m.email.trim().toLowerCase() === targetName)
+    );
+
+    if (matchedMember?.phoneNumber) {
+      this.whatsappLink.openChat(matchedMember.phoneNumber, message);
+      return;
+    }
+
+    // 2. Fallback: if current user is Tenant Owner / Super Admin, try user service safely
+    if (this.isTenantOwner() || this.isSuperAdmin()) {
+      this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const userObj = res.data.find(u => `${u.firstName} ${u.lastName}`.trim().toLowerCase() === targetName);
+            const phone = userObj?.whatsAppPhone || userObj?.personalPhone;
+            if (phone) {
+              this.whatsappLink.openChat(phone, message);
+              return;
+            }
           }
+          this.showWhatsAppMissingPhoneAlert();
+        },
+        error: () => {
+          this.showWhatsAppMissingPhoneAlert();
         }
-      }
+      });
+    } else {
+      this.showWhatsAppMissingPhoneAlert();
+    }
+  }
+
+  private showWhatsAppMissingPhoneAlert(): void {
+    this.confirmService.alert({
+      title: 'تنبيه واتساب',
+      message: 'لم يتم العثور على رقم هاتف/واتساب مسجل لهذا المستخدم لإرسال التنبيه.',
+      type: 'info'
     });
   }
 
