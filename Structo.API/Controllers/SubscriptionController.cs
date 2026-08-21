@@ -17,8 +17,12 @@ namespace Structo.API.Controllers;
 
 [ApiController]
 [Route("api/subscription")]
+[Route("api/subscriptions")]
 [Authorize(Roles = "TenantOwner")]
-public class SubscriptionController(StructoDbContext context, Structo.Core.Interfaces.INotificationEngine notificationEngine) : ControllerBase
+public class SubscriptionController(
+    StructoDbContext context, 
+    Structo.Core.Interfaces.INotificationEngine notificationEngine,
+    Structo.Core.Interfaces.IPaymobService paymobService) : ControllerBase
 {
     private const string NonOwnerForbiddenMessage = "ترقية الباقة والفوترة مقتصرة حصرياً على مالك المنشأة.";
 
@@ -34,6 +38,75 @@ public class SubscriptionController(StructoDbContext context, Structo.Core.Inter
         { 1, 250m },
         { 5, 950m },
     };
+
+    // ─────────────────────────────────────────────────────────
+    // POST /api/subscription/checkout
+    // ─────────────────────────────────────────────────────────
+    [HttpPost("checkout")]
+    public async Task<ActionResult<ApiResponse<PaymobCheckoutResponseDto>>> Checkout(
+        [FromBody] PaymobCheckoutRequestDto dto)
+    {
+        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == "role" || c.Type == ClaimTypes.Role)?.Value;
+        if (!string.Equals(roleClaim, nameof(UserRole.TenantOwner), StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<PaymobCheckoutResponseDto>
+            {
+                Success = false,
+                Message = NonOwnerForbiddenMessage
+            });
+        }
+
+        var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+            return Unauthorized(new ApiResponse<PaymobCheckoutResponseDto>
+                { Success = false, Message = "Tenant ID missing from claims" });
+
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "id" || c.Type == "userId");
+        Guid.TryParse(userIdClaim?.Value, out var userId);
+
+        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        if (tenant == null)
+            return NotFound(new ApiResponse<PaymobCheckoutResponseDto>
+                { Success = false, Message = "Tenant not found" });
+
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.TenantId == tenantId)
+                   ?? await context.Users.FirstOrDefaultAsync(u => u.TenantId == tenantId);
+
+        if (user == null)
+        {
+            user = new User
+            {
+                Email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value ?? "owner@structo.app",
+                FirstName = tenant.Name,
+                LastName = "Owner",
+                TenantId = tenantId
+            };
+        }
+
+        try
+        {
+            var checkoutResult = await paymobService.CreatePaymentIntentAsync(
+                tenant,
+                user,
+                dto.TargetPlanId,
+                dto.ExtraProjectsCount);
+
+            return Ok(new ApiResponse<PaymobCheckoutResponseDto>
+            {
+                Success = true,
+                Message = "تم إنشاء جلسة الدفع بنجاح",
+                Data = checkoutResult
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse<PaymobCheckoutResponseDto>
+            {
+                Success = false,
+                Message = $"فشل في تهيئة بوابة الدفع باي موب: {ex.Message}"
+            });
+        }
+    }
 
     // ─────────────────────────────────────────────────────────
     // POST /api/subscription/upgrade-mock (Additive Quota Addition)

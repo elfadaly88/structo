@@ -222,6 +222,10 @@ builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.C
 builder.Services.AddScoped<Structo.Core.Interfaces.ITenantCleanupService, Structo.Core.Services.TenantCleanupService>();
 builder.Services.AddHostedService<Structo.Infrastructure.Storage.TenantCleanupWorker>();
 
+// Paymob Payment Gateway Settings & Service
+builder.Services.Configure<Structo.Core.Settings.PaymobSettings>(builder.Configuration.GetSection("Paymob"));
+builder.Services.AddHttpClient<Structo.Core.Interfaces.IPaymobService, Structo.Infrastructure.Services.PaymobService>();
+
 // Notification Services
 builder.Services.AddHttpClient("OneSignal");
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationRecipientResolver, Structo.Core.Services.NotificationRecipientResolver>();

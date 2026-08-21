@@ -10,6 +10,8 @@ public class Tenant
     public string Name { get; set; } = string.Empty;
     public SubscriptionPlan SubscriptionPlan { get; set; } = SubscriptionPlan.Free;
     public int MaxActiveProjects { get; set; } = 2;
+    public string? SubscriptionStatus { get; set; } = "Active";
+    public DateTime? SubscriptionExpiresAt { get; set; }
     public string LogoUrl { get; set; } = string.Empty;
     public string BannerUrl { get; set; } = string.Empty;
     public string Region { get; set; } = string.Empty;

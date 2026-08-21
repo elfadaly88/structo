@@ -122,6 +122,13 @@ interface NavItem {
                 <div class="space-y-1 text-xs">
                   @if (authService.isTenantOwner()) {
                     <a
+                      routerLink="/dashboard/subscription"
+                      (click)="closeUserMenu()"
+                      class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
+                      <span>💳</span>
+                      <span>الاشتراكات وتوسعة الباقة</span>
+                    </a>
+                    <a
                       routerLink="/dashboard/profile"
                       (click)="closeUserMenu()"
                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
@@ -330,6 +337,7 @@ export class DashboardLayoutComponent {
         return [
           { label: 'DASHBOARD.FINANCIALS', route: '/dashboard/financials', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.financials) },
           { label: 'PROJECTS.PAGE_TITLE', route: '/dashboard/projects', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.projects) },
+          { label: 'الاشتراكات وتوسعة الباقة', route: '/dashboard/subscription', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.pettyCash) },
           { label: 'USERS.TAB_USERS', route: '/dashboard/users', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.users) },
           { label: 'PROFILE.TAB_PROFILE', route: '/dashboard/profile', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.profile) }
         ];
@@ -381,7 +389,7 @@ export class DashboardLayoutComponent {
   }
 
   openUpgradeModal(): void {
-    this.router.navigate(['/dashboard/projects'], { queryParams: { upgrade: 'true' } });
+    this.router.navigate(['/dashboard/subscription']);
   }
 }
 

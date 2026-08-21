@@ -43,11 +43,11 @@ export const routes: Routes = [
   },
   {
     path: 'subscription',
-    redirectTo: 'dashboard/projects?upgrade=true'
+    redirectTo: 'dashboard/subscription'
   },
   {
     path: 'upgrade',
-    redirectTo: 'dashboard/projects?upgrade=true'
+    redirectTo: 'dashboard/subscription'
   },
   {
     path: 'dashboard',
@@ -90,15 +90,21 @@ export const routes: Routes = [
       },
       {
         path: 'subscription',
-        redirectTo: 'projects?upgrade=true'
+        loadComponent: () => import('./features/dashboard/subscription/subscription.component').then(m => m.SubscriptionComponent),
+        data: { roles: ['TenantOwner'] }
+      },
+      {
+        path: 'subscription/success',
+        loadComponent: () => import('./features/dashboard/subscription/subscription-success.component').then(m => m.SubscriptionSuccessComponent),
+        data: { roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'upgrade',
-        redirectTo: 'projects?upgrade=true'
+        redirectTo: 'subscription'
       },
       {
         path: 'billing',
-        redirectTo: 'profile'
+        redirectTo: 'subscription'
       },
       {
         path: 'tenants',
