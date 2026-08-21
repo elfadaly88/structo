@@ -212,8 +212,6 @@ public class PaymentsController : ControllerBase
             tenant.SubscriptionPlan = SubscriptionPlan.Pro;
         }
 
-        tenant.SubscriptionStatus = "Active";
-        tenant.SubscriptionExpiresAt = DateTime.UtcNow.AddMonths(1);
         tenant.Status = TenantStatus.Active;
 
         // 9. Record SubscriptionTransaction / Invoice in DbContext
