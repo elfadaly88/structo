@@ -1241,11 +1241,11 @@ import { LanguageService } from '../../../core/services/language.service';
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                       <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
-                        {{ (item.issuedTo || 'U').charAt(0).toUpperCase() }}
+                        {{ ((item.issuedTo || 'U').charAt(0)).toUpperCase() }}
                       </div>
                       <div class="min-w-0">
                         <h4 class="text-xs sm:text-sm font-bold text-white truncate">{{ item.issuedTo || 'Staff' }}</h4>
-                        <span class="text-[10px] text-slate-400 font-mono block" dir="ltr">{{ item.issuedAt | date:'dd/MM/yyyy - hh:mm a' }}</span>
+                        <span class="text-[10px] text-slate-400 font-mono block" dir="ltr">{{ formatPettyCashDate(item) }}</span>
                       </div>
                     </div>
 
@@ -1291,7 +1291,7 @@ import { LanguageService } from '../../../core/services/language.service';
                       <span class="text-[10px] text-slate-400 font-bold block mb-0.5">البيان / السبب:</span>
                       <p class="text-xs text-slate-200 line-clamp-2 leading-relaxed cursor-pointer hover:text-indigo-400 transition-colors font-medium"
                          (click)="openPettyCashReasonModal(item)">
-                        {{ item.reason }}
+                        {{ item.reason || '-' }}
                       </p>
                     </div>
                     <div class="text-left shrink-0">
@@ -1391,7 +1391,7 @@ import { LanguageService } from '../../../core/services/language.service';
                             }
                           }
 
-                          @if (!item.isSettled && item.status !== 'Settled') {
+                          @if (!(item.isSettled || item.status === 'Settled')) {
                             <button
                               type="button"
                               (click)="onWhatsAppAlert(item)"
@@ -1404,7 +1404,7 @@ import { LanguageService } from '../../../core/services/language.service';
                           }
                         </div>
 
-                        @if (isOwnerOrAccountant() && !item.isSettled && item.status !== 'Settled') {
+                        @if (isOwnerOrAccountant() && !(item.isSettled || item.status === 'Settled')) {
                           <div class="flex items-center gap-2">
                             <button
                               type="button"
@@ -1457,7 +1457,7 @@ import { LanguageService } from '../../../core/services/language.service';
                       <td class="px-4 py-3.5 font-bold text-white whitespace-nowrap">
                         <div class="flex items-center gap-2">
                           <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono font-bold text-xs shrink-0">
-                            {{ (item.issuedTo || 'U').charAt(0).toUpperCase() }}
+                            {{ ((item.issuedTo || 'U').charAt(0)).toUpperCase() }}
                           </div>
                           <span class="text-xs sm:text-sm font-semibold">{{ item.issuedTo || 'Staff' }}</span>
                         </div>
@@ -1466,15 +1466,15 @@ import { LanguageService } from '../../../core/services/language.service';
                       <!-- Reason -->
                       <td class="px-4 py-3.5 text-slate-300 max-w-[200px] xl:max-w-[320px]">
                         <span class="truncate block cursor-pointer hover:text-indigo-400 transition-colors text-xs sm:text-sm font-medium"
-                              [title]="item.reason"
+                              [title]="item.reason || ''"
                               (click)="openPettyCashReasonModal(item)">
-                          {{ item.reason }}
+                          {{ item.reason || '-' }}
                         </span>
                       </td>
 
                       <!-- Date -->
                       <td class="px-4 py-3.5 text-slate-400 text-xs font-mono whitespace-nowrap" dir="ltr">
-                        {{ item.issuedAt | date:'dd/MM/yyyy - hh:mm a' }}
+                        {{ formatPettyCashDate(item) }}
                       </td>
 
                       <!-- Amount -->
@@ -3816,11 +3816,17 @@ export class ProjectDetailsComponent implements OnInit {
   selectedPettyCashPool: { [key: string]: string } = {};
 
   readonly unsettledCustodyList = computed(() =>
-    this.pettyCashes().filter(pc => !pc.isSettled && !pc.isReimbursement)
+    this.pettyCashes().filter(pc => 
+      !pc.isSettled && 
+      pc.status !== 'Settled' && 
+      pc.status !== 'Rejected' && 
+      pc.status !== 'Pending' && 
+      !pc.isReimbursement
+    )
   );
 
   readonly unsettledCustodySum = computed(() =>
-    this.unsettledCustodyList().reduce((sum, item) => sum + item.amount, 0)
+    this.unsettledCustodyList().reduce((sum, item) => sum + (item.amount || 0), 0)
   );
 
   readonly pendingRefundsList = computed(() =>
@@ -4477,16 +4483,28 @@ export class ProjectDetailsComponent implements OnInit {
 
   readonly totalUnsettledPettyCash = computed(() => {
     return this.pettyCashes()
-      .filter(p => !p.isSettled)
+      .filter(p => 
+        !p.isSettled && 
+        p.status !== 'Settled' && 
+        p.status !== 'Rejected' && 
+        p.status !== 'Pending' && 
+        !p.isReimbursement
+      )
       .reduce((sum, p) => {
         const sett = this.settlements().find(s => s.pettyCashId === p.id);
-        const spent = sett ? sett.lines.reduce((sSum, l) => sSum + l.amount, 0) : 0;
-        return sum + (p.amount - spent);
+        const spent = sett ? sett.lines.reduce((sSum, l) => sSum + (l.amount || 0), 0) : 0;
+        return sum + ((p.amount || 0) - spent);
       }, 0);
   });
 
   readonly unsettledCount = computed(() =>
-    this.pettyCashes().filter(p => !p.isSettled).length
+    this.pettyCashes().filter(p => 
+      !p.isSettled && 
+      p.status !== 'Settled' && 
+      p.status !== 'Rejected' && 
+      p.status !== 'Pending' && 
+      !p.isReimbursement
+    ).length
   );
 
   ngOnInit(): void {
@@ -4807,14 +4825,62 @@ export class ProjectDetailsComponent implements OnInit {
     this.pettyCashService.getProjectPettyCash(this.projectId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.isLoadingPettyCash.set(false);
-        if (response.success && response.data) {
-          this.pettyCashes.set(response.data.items);
+        if (response) {
+          const resData = response.data !== undefined ? response.data : response;
+          const rawItems: any[] = (resData as any)?.items || (resData as any)?.Items || (Array.isArray(resData) ? resData : []);
+          const normalized: PettyCashMobileDto[] = rawItems.filter(x => x != null).map(x => ({
+            id: String(x.id || x.Id || ''),
+            projectId: String(x.projectId || x.ProjectId || this.projectId),
+            projectName: String(x.projectName || x.ProjectName || ''),
+            amount: Number(x.amount ?? x.Amount ?? 0),
+            reason: String(x.reason || x.Reason || ''),
+            issuedAt: String(x.issuedAt || x.IssuedAt || x.createdAt || x.CreatedAt || ''),
+            isSettled: Boolean(x.isSettled ?? x.IsSettled ?? (x.status === 'Settled' || x.Status === 'Settled')),
+            issuedTo: String(x.issuedTo || x.IssuedTo || 'Staff'),
+            status: String(x.status || x.Status || (x.isSettled ? 'Settled' : 'Pending')),
+            category: String(x.category || x.Category || ''),
+            comments: String(x.comments || x.Comments || ''),
+            receiptPhotoUrl: String(x.receiptPhotoUrl || x.ReceiptPhotoUrl || ''),
+            settlementPaymentMethod: String(x.settlementPaymentMethod || x.SettlementPaymentMethod || ''),
+            expenseDate: x.expenseDate || x.ExpenseDate,
+            isReimbursement: Boolean(x.isReimbursement ?? x.IsReimbursement ?? false)
+          }));
+          this.pettyCashes.set(normalized);
         }
+        this.cdr.markForCheck();
       },
       error: () => {
         this.isLoadingPettyCash.set(false);
+        this.cdr.markForCheck();
       }
     });
+  }
+
+  formatPettyCashDate(item: any): string {
+    try {
+      const raw = item?.issuedAt || item?.IssuedAt || item?.createdAt || item?.CreatedAt || item?.date || item?.Date;
+      if (!raw) return '-';
+      const d = this.parseTxDate(raw);
+      if (!d || d.getFullYear() < 1970) {
+        if (typeof raw === 'string' && /^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+          return raw.substring(0, 16);
+        }
+        return typeof raw === 'string' ? raw : '-';
+      }
+
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'م' : 'ص';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
+      return `${dd}/${mm}/${yyyy} - ${strTime}`;
+    } catch {
+      return '-';
+    }
   }
 
   fetchCashPools(): void {
