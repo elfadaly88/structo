@@ -1,6 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SubscriptionService, SubscriptionPlanItem } from '../../../core/services/subscription.service';
 import { TenantProfileService } from '../../../core/services/tenant-profile.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -210,13 +211,86 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Paymob Checkout Modal (Embedded Iframe)                    -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    @if (showCheckoutModal()) {
+      <div 
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+        (click)="closeCheckoutModal()">
+        
+        <!-- Overlay Backdrop -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+
+        <!-- Modal Container -->
+        <div 
+          class="relative w-full max-w-2xl flex flex-col bg-slate-900/95 border border-indigo-500/30 rounded-3xl shadow-2xl shadow-indigo-500/10 backdrop-blur-xl overflow-hidden"
+          style="max-height: 92vh"
+          (click)="$event.stopPropagation()">
+          
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-800/80 shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="h-8 w-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">بوابة الدفع الآمنة — Paymob</h3>
+                <p class="text-[11px] text-slate-400">أكمل الدفع بأمان عبر بوابة Paymob المشفرة</p>
+              </div>
+            </div>
+            <button 
+              (click)="closeCheckoutModal()"
+              class="h-8 w-8 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/40 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-all duration-200 cursor-pointer"
+              title="إغلاق">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Iframe Container (independent scroll) -->
+          <div class="flex-1 overflow-y-auto min-h-0">
+            @if (checkoutSafeUrl()) {
+              <iframe 
+                [src]="checkoutSafeUrl()!"
+                class="w-full border-0"
+                style="min-height: 580px; height: 75vh"
+                allow="payment"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-top-navigation-by-user-activation"
+                title="Paymob Secure Checkout">
+              </iframe>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-5 py-3 border-t border-slate-800/80 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2 text-[11px] text-slate-500">
+              <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>محمي بتشفير SSL/TLS — PCI-DSS Level 1</span>
+            </div>
+            <button 
+              (click)="closeCheckoutModal()"
+              class="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer">
+              إلغاء الدفع
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
-export class SubscriptionComponent implements OnInit {
+export class SubscriptionComponent implements OnInit, OnDestroy {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly profileService = inject(TenantProfileService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly plans = signal<SubscriptionPlanItem[]>([]);
   readonly usedQuota = signal<number>(0);
@@ -225,9 +299,22 @@ export class SubscriptionComponent implements OnInit {
   readonly isCheckingOut = this.subscriptionService.isCheckingOut;
   readonly errorMessage = signal<string | null>(null);
 
+  // Checkout modal state
+  readonly showCheckoutModal = signal<boolean>(false);
+  readonly checkoutSafeUrl = signal<SafeResourceUrl | null>(null);
+
+  private messageHandler = (event: MessageEvent) => this.onWindowMessage(event);
+
   ngOnInit(): void {
     this.plans.set(this.subscriptionService.getAvailablePlans());
     this.loadQuota();
+
+    // Listen for postMessage events from the checkout iframe / success bridge
+    window.addEventListener('message', this.messageHandler);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('message', this.messageHandler);
   }
 
   private loadQuota(): void {
@@ -253,8 +340,8 @@ export class SubscriptionComponent implements OnInit {
     this.subscriptionService.initiateCheckout(plan.id, plan.extraProjects).subscribe({
       next: (res) => {
         if (res.success && res.data?.checkoutUrl) {
-          // Direct browser navigation to Paymob secure payment gateway
-          window.location.href = res.data.checkoutUrl;
+          // Open embedded checkout modal instead of navigating away
+          this.openCheckoutModal(res.data.checkoutUrl);
         } else {
           this.errorMessage.set(res.message || 'تعذر استلام رابط الدفع من بوابة Paymob');
         }
@@ -263,5 +350,38 @@ export class SubscriptionComponent implements OnInit {
         this.errorMessage.set(err?.error?.message || 'حدث خطأ أثناء بدء جلسة الدفع');
       }
     });
+  }
+
+  openCheckoutModal(checkoutUrl: string): void {
+    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(checkoutUrl);
+    this.checkoutSafeUrl.set(safeUrl);
+    this.showCheckoutModal.set(true);
+    // Prevent body scroll while modal is open
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeCheckoutModal(): void {
+    this.showCheckoutModal.set(false);
+    this.checkoutSafeUrl.set(null);
+    this.selectedPlanId.set(null);
+    document.body.style.overflow = '';
+  }
+
+  /**
+   * Handles postMessage events from the Paymob checkout iframe.
+   * The subscription-success bridge page sends { type: 'paymob-payment-success', txnId } 
+   * when the payment completes and the callback redirects inside the iframe.
+   */
+  private onWindowMessage(event: MessageEvent): void {
+    if (!this.showCheckoutModal()) return;
+
+    const data = event.data;
+    if (data && typeof data === 'object' && data.type === 'paymob-payment-success') {
+      this.closeCheckoutModal();
+      const txnId = data.txnId || '';
+      this.router.navigate(['/dashboard/subscription/success'], {
+        queryParams: txnId ? { txnId } : {}
+      });
+    }
   }
 }
