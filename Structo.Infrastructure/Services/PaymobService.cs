@@ -119,7 +119,7 @@ public class PaymobService : IPaymobService
                 {
                     ["amount"] = amountCents,
                     ["currency"] = "EGP",
-                    ["payment_methods"] = new[] { "card" },
+                    ["payment_methods"] = new string[] { "card" },
                     ["items"] = new[]
                     {
                         new Dictionary<string, object>
