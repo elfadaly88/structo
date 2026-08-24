@@ -46,8 +46,26 @@ public class SubscriptionController(
     public async Task<ActionResult<ApiResponse<PaymobCheckoutResponseDto>>> Checkout(
         [FromBody] PaymobCheckoutRequestDto dto)
     {
-        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == "role" || c.Type == ClaimTypes.Role)?.Value;
-        if (!string.Equals(roleClaim, nameof(UserRole.TenantOwner), StringComparison.OrdinalIgnoreCase))
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "id" || c.Type == "userId" || c.Type == "sub");
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized(new ApiResponse<PaymobCheckoutResponseDto>
+                { Success = false, Message = "User identity missing or invalid in claims" });
+        }
+
+        // Always query database as single source of truth for the user and their active tenant
+        var user = await context.Users
+            .IgnoreQueryFilters()
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || !user.IsActive)
+        {
+            return Unauthorized(new ApiResponse<PaymobCheckoutResponseDto>
+                { Success = false, Message = "User account not found or deactivated" });
+        }
+
+        if (user.Role != UserRole.TenantOwner)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<PaymobCheckoutResponseDto>
             {
@@ -56,32 +74,13 @@ public class SubscriptionController(
             });
         }
 
-        var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
-        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
-            return Unauthorized(new ApiResponse<PaymobCheckoutResponseDto>
-                { Success = false, Message = "Tenant ID missing from claims" });
-
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "id" || c.Type == "userId");
-        Guid.TryParse(userIdClaim?.Value, out var userId);
-
-        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
-        if (tenant == null)
-            return NotFound(new ApiResponse<PaymobCheckoutResponseDto>
-                { Success = false, Message = "Tenant not found" });
-
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.TenantId == tenantId)
-                   ?? await context.Users.FirstOrDefaultAsync(u => u.TenantId == tenantId);
-
-        if (user == null)
+        if (user.Tenant == null || user.TenantId == null)
         {
-            user = new User
-            {
-                Email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value ?? "owner@structo.app",
-                FirstName = tenant.Name,
-                LastName = "Owner",
-                TenantId = tenantId
-            };
+            return NotFound(new ApiResponse<PaymobCheckoutResponseDto>
+                { Success = false, Message = "Active tenant not associated with this user" });
         }
+
+        var tenant = user.Tenant;
 
         try
         {
@@ -115,8 +114,21 @@ public class SubscriptionController(
     public async Task<ActionResult<ApiResponse<SubscriptionUpgradeResponseDto>>> UpgradeMock(
         [FromBody] SubscriptionUpgradeRequestDto dto)
     {
-        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == "role" || c.Type == ClaimTypes.Role)?.Value;
-        if (!string.Equals(roleClaim, nameof(UserRole.TenantOwner), StringComparison.OrdinalIgnoreCase))
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id" || c.Type == "userId" || c.Type == ClaimTypes.NameIdentifier || c.Type == "sub");
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            return Unauthorized(new ApiResponse<SubscriptionUpgradeResponseDto>
+                { Success = false, Message = "User identity missing or invalid in claims" });
+
+        var user = await context.Users
+            .IgnoreQueryFilters()
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || !user.IsActive)
+            return Unauthorized(new ApiResponse<SubscriptionUpgradeResponseDto>
+                { Success = false, Message = "User account not found or deactivated" });
+
+        if (user.Role != UserRole.TenantOwner)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<SubscriptionUpgradeResponseDto>
             {
@@ -124,16 +136,13 @@ public class SubscriptionController(
                 Message = NonOwnerForbiddenMessage
             });
         }
-        // Resolve TenantId from JWT
-        var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenantId");
-        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
-            return Unauthorized(new ApiResponse<SubscriptionUpgradeResponseDto>
-                { Success = false, Message = "Tenant ID missing from claims" });
 
-        var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
-        if (tenant == null)
+        if (user.Tenant == null || user.TenantId == null)
             return NotFound(new ApiResponse<SubscriptionUpgradeResponseDto>
-                { Success = false, Message = "Tenant not found" });
+                { Success = false, Message = "Active tenant not associated with this user" });
+
+        var tenant = user.Tenant;
+        var tenantId = user.TenantId.Value;
 
         // Ensure base quota is at least 2
         if (tenant.MaxActiveProjects <= 0)

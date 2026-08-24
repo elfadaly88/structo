@@ -94,7 +94,8 @@ public class PaymentsController : ControllerBase
         }
         else
         {
-            _logger.LogInformation("Processing Paymob webhook without query HMAC (verification via payload fields).");
+            _logger.LogWarning("Paymob webhook received WITHOUT HMAC signature. Rejecting.");
+            return Unauthorized(new { success = false, message = "HMAC signature required" });
         }
 
         // 4. Check Transaction Success
