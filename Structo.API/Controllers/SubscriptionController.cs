@@ -275,12 +275,13 @@ public class SubscriptionController(
             {
                 t.Id,
                 t.Name,
-                t.Slug,
                 Plan = t.SubscriptionPlan.ToString(),
                 t.MaxActiveProjects,
                 Status = t.Status.ToString(),
+                t.Region,
+                t.Location,
                 t.CreatedAt,
-                t.UpdatedAt
+                t.LastActiveAt
             })
             .ToListAsync();
 
@@ -329,10 +330,12 @@ public class SubscriptionController(
             {
                 n.Id,
                 n.TenantId,
-                n.UserId,
+                n.SenderId,
+                n.ReceiverId,
                 n.Title,
                 n.Message,
-                n.Type,
+                Type = n.Type.ToString(),
+                n.IsRead,
                 n.CreatedAt
             })
             .ToListAsync();
