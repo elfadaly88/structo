@@ -128,11 +128,12 @@ public class PaymentsController : ControllerBase
                 return Unauthorized(new { success = false, message = "HMAC verification failed" });
             }
         }
-        // else
-        // {
-        //     _logger.LogWarning("Paymob webhook received WITHOUT HMAC signature. Rejecting.");
-        //     return Unauthorized(new { success = false, message = "HMAC signature required" });
-        // }
+        else
+        {
+            _logger.LogWarning("Paymob webhook received WITHOUT HMAC signature. Rejecting.");
+            Console.WriteLine($"🔥 [PAYMOB Error: HMAC signature required] {DateTime.UtcNow}");
+            return Unauthorized(new { success = false, message = "HMAC signature required" });
+        }
 
         // 4. Check Transaction Success
         var success = objNode["success"]?.GetValue<bool>() ?? false;
