@@ -104,6 +104,11 @@ export const routes: Routes = [
         data: { roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
+        path: 'subscription/failed',
+        loadComponent: () => import('./features/dashboard/subscription/subscription-failed.component').then(m => m.SubscriptionFailedComponent),
+        data: { roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+      },
+      {
         path: 'upgrade',
         redirectTo: 'subscription'
       },

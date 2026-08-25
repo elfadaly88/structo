@@ -338,17 +338,24 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet("paymob-callback")]
     [HttpGet("callback")]
-    public IActionResult PaymobRedirectCallback([FromQuery] string? success, [FromQuery] string? id)
+    [HttpGet("response")]
+    public IActionResult PaymobRedirectCallback(
+        [FromQuery] string? success, 
+        [FromQuery] string? id,
+        [FromQuery] string? pending,
+        [FromQuery(Name = "txn_response_code")] string? txnResponseCode)
     {
-        _logger.LogInformation("Paymob Redirect Callback: success={Success}, id={Id}", success, id);
+        _logger.LogInformation("Paymob Redirect Callback (GET): success={Success}, id={Id}, pending={Pending}, txnResponseCode={TxnCode}", 
+            success, id, pending, txnResponseCode);
         
-        // Redirect to Frontend Success Page
         var isSuccess = string.Equals(success, "true", StringComparison.OrdinalIgnoreCase);
-        if (isSuccess)
+        var isPending = string.Equals(pending, "true", StringComparison.OrdinalIgnoreCase);
+
+        if (isSuccess && !isPending)
         {
             return Redirect($"/dashboard/subscription/success?txnId={id}");
         }
 
-        return Redirect($"/dashboard/projects?paymentStatus=failed&txnId={id}");
+        return Redirect($"/dashboard/subscription/failed?txnId={id}&success={success}");
     }
 }

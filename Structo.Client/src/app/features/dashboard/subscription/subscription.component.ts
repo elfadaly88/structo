@@ -1,11 +1,9 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
 import { SubscriptionService, SubscriptionPlanItem } from '../../../core/services/subscription.service';
 import { TenantProfileService } from '../../../core/services/tenant-profile.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { PaymentAuditService, PaymentAttemptItem, MyPaymentsResponse } from '../../../core/services/payment-audit.service';
+import { PaymentAuditService, MyPaymentsResponse } from '../../../core/services/payment-audit.service';
 
 @Component({
   selector: 'app-subscription',
@@ -21,7 +19,7 @@ import { PaymentAuditService, PaymentAttemptItem, MyPaymentsResponse } from '../
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span>بوابات الدفع الإلكتروني المعتمدة - Paymob Gateway</span>
+              <span>بوابات الدفع الإلكتروني المعتمدة - Paymob Unified Checkout</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               الاشتراكات وتدقيق عمليات الدفع
@@ -197,9 +195,9 @@ import { PaymentAuditService, PaymentAttemptItem, MyPaymentsResponse } from '../
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      <span>جاري المعالجة...</span>
+                      <span>جاري التحويل لبوابة الدفع...</span>
                     } @else {
-                      <span>ترقية الباقة الآن</span>
+                      <span>ترقية الباقة والدفع الآن</span>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
@@ -426,80 +424,12 @@ import { PaymentAuditService, PaymentAttemptItem, MyPaymentsResponse } from '../
         </div>
       </div>
     </div>
-
-    <!-- Embedded Paymob Checkout Modal -->
-    @if (showCheckoutModal()) {
-      <div 
-        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in"
-        (click)="closeCheckoutModal()">
-        
-        <div 
-          class="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
-          (click)="$event.stopPropagation()">
-          
-          <!-- Modal Header -->
-          <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/60">
-            <div class="flex items-center gap-3">
-              <div class="h-8 w-8 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-white">نافذة الدفع الآمن — Paymob Checkout</h3>
-                <p class="text-[11px] text-slate-400">أدخل بيانات بطاقتك لإتمام توسعة سعة المشاريع</p>
-              </div>
-            </div>
-
-            <button 
-              (click)="closeCheckoutModal()"
-              class="h-8 w-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              title="إغلاق">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Iframe Container (independent scroll) -->
-          <div class="flex-1 overflow-y-auto min-h-0">
-            @if (checkoutSafeUrl()) {
-              <iframe 
-                [src]="checkoutSafeUrl()!"
-                class="w-full h-full min-h-[500px] border-0"
-                allow="payment"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-                title="Paymob Secure Checkout">
-              </iframe>
-            }
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="px-5 py-3 border-t border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-950/60">
-            <div class="flex items-center gap-2 text-[11px] text-slate-500">
-              <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>محمي بتشفير SSL/TLS — PCI-DSS Level 1</span>
-            </div>
-            <button 
-              (click)="closeCheckoutModal()"
-              class="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer">
-              إلغاء الدفع
-            </button>
-          </div>
-        </div>
-      </div>
-    }
   `
 })
-export class SubscriptionComponent implements OnInit, OnDestroy {
+export class SubscriptionComponent implements OnInit {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly profileService = inject(TenantProfileService);
   private readonly paymentAuditService = inject(PaymentAuditService);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly sanitizer = inject(DomSanitizer);
 
   readonly plans = signal<SubscriptionPlanItem[]>([]);
   readonly usedQuota = signal<number>(0);
@@ -513,23 +443,10 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
   readonly myPayments = signal<MyPaymentsResponse | null>(null);
   readonly isLoadingHistory = signal<boolean>(false);
 
-  // Checkout modal state
-  readonly showCheckoutModal = signal<boolean>(false);
-  readonly checkoutSafeUrl = signal<SafeResourceUrl | null>(null);
-
-  private messageHandler = (event: MessageEvent) => this.onWindowMessage(event);
-
   ngOnInit(): void {
     this.plans.set(this.subscriptionService.getAvailablePlans());
     this.loadQuota();
     this.loadPaymentHistory();
-
-    // Listen for postMessage events from the checkout iframe / success bridge
-    window.addEventListener('message', this.messageHandler);
-  }
-
-  ngOnDestroy(): void {
-    window.removeEventListener('message', this.messageHandler);
   }
 
   private loadQuota(): void {
@@ -558,7 +475,7 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
           }
         }
       },
-      error: (err) => {
+      error: () => {
         this.isLoadingHistory.set(false);
       }
     });
@@ -578,43 +495,17 @@ export class SubscriptionComponent implements OnInit, OnDestroy {
     this.subscriptionService.initiateCheckout(plan.id, plan.extraProjects).subscribe({
       next: (res) => {
         if (res.success && res.data?.checkoutUrl) {
-          // Open embedded checkout modal instead of navigating away
-          this.openCheckoutModal(res.data.checkoutUrl);
+          // Direct full-page browser redirect to Paymob Unified Checkout
+          window.location.href = res.data.checkoutUrl;
         } else {
+          this.selectedPlanId.set(null);
           this.errorMessage.set(res.message || 'تعذر استلام رابط الدفع من بوابة Paymob');
         }
       },
       error: (err) => {
+        this.selectedPlanId.set(null);
         this.errorMessage.set(err?.error?.message || 'حدث خطأ أثناء بدء جلسة الدفع');
       }
     });
-  }
-
-  openCheckoutModal(checkoutUrl: string): void {
-    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(checkoutUrl);
-    this.checkoutSafeUrl.set(safeUrl);
-    this.showCheckoutModal.set(true);
-    // Prevent body scroll while modal is open
-    document.body.style.overflow = 'hidden';
-  }
-
-  closeCheckoutModal(): void {
-    this.showCheckoutModal.set(false);
-    this.checkoutSafeUrl.set(null);
-    this.selectedPlanId.set(null);
-    document.body.style.overflow = '';
-  }
-
-  private onWindowMessage(event: MessageEvent): void {
-    if (!this.showCheckoutModal()) return;
-
-    const data = event.data;
-    if (data && typeof data === 'object' && data.type === 'paymob-payment-success') {
-      this.closeCheckoutModal();
-      const txnId = data.txnId || '';
-      this.router.navigate(['/dashboard/subscription/success'], {
-        queryParams: txnId ? { txnId } : {}
-      });
-    }
   }
 }
