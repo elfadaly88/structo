@@ -58,12 +58,7 @@ public class PaymentsController : ControllerBase
             return BadRequest(new { success = false, message = "Empty body" });
         }
 
-        // 1. Resolve HMAC signature from Query or Header
-        var incomingHmac = hmac
-            ?? Request.Headers["hmac"].FirstOrDefault()
-            ?? Request.Headers["X-Paymob-Hmac"].FirstOrDefault();
-
-        // 2. Parse payload
+        // 1. Parse payload
         JsonNode? rootNode;
         try
         {
@@ -81,6 +76,13 @@ public class PaymentsController : ControllerBase
         }
 
         var objNode = rootNode["obj"] ?? rootNode;
+
+        // 2. Resolve HMAC signature from Query, Headers, or JSON payload (root/obj)
+        var incomingHmac = hmac
+            ?? Request.Headers["hmac"].FirstOrDefault()
+            ?? Request.Headers["X-Paymob-Hmac"].FirstOrDefault()
+            ?? rootNode["hmac"]?.ToString()
+            ?? objNode["hmac"]?.ToString();
 
         // 3. Validate HMAC signature
         var specialRef = objNode["order"]?["merchant_order_id"]?.ToString()
