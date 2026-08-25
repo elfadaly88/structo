@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Structo.Core.DTOs.Common;
+using Structo.Core.DTOs.Subscription;
 using Structo.Core.DTOs.Tenants;
 using Structo.Core.DTOs.Users;
 using Structo.Core.Entities;
@@ -402,6 +403,144 @@ public class SuperAdminController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while updating cleanup exemption."
+            });
+        }
+    }
+
+    /// <summary>
+    /// Global Payments and Paymob Webhook Audit Endpoint for SuperAdmin.
+    /// Provides platform-wide KPIs, stale/never-arrived alerts, tenant summaries, and attempt logs.
+    /// </summary>
+    [HttpGet("payments")]
+    [HttpGet("payment-audit")]
+    public async Task<ActionResult<ApiResponse<AdminPaymentsResponseDto>>> GetPaymentsAudit()
+    {
+        try
+        {
+            var staleThreshold = DateTime.UtcNow.AddMinutes(-15);
+
+            var attempts = await _context.PaymentAttempts
+                .IgnoreQueryFilters()
+                .Include(pa => pa.Tenant)
+                .Include(pa => pa.User)
+                .Include(pa => pa.LinkedTransaction)
+                .OrderByDescending(pa => pa.CreatedAt)
+                .ToListAsync();
+
+            bool hasStaleUpdates = false;
+            var dtoList = new List<PaymentAttemptDto>();
+
+            foreach (var pa in attempts)
+            {
+                var isStalePending = pa.WebhookStatus == "Pending" && pa.CreatedAt < staleThreshold;
+                if (isStalePending)
+                {
+                    pa.WebhookStatus = "NeverArrived";
+                    pa.ErrorMessage ??= "لم يصل إشعار الدفع من باي موب (تجاوزت المهلة 15 دقيقة)";
+                    hasStaleUpdates = true;
+                }
+
+                dtoList.Add(new PaymentAttemptDto
+                {
+                    Id = pa.Id,
+                    TenantId = pa.TenantId,
+                    TenantName = pa.Tenant?.Name ?? "منشأة غير معروفة",
+                    UserId = pa.UserId,
+                    UserEmail = pa.User?.Email,
+                    UserName = pa.User != null ? $"{pa.User.FirstName} {pa.User.LastName}".Trim() : null,
+                    Amount = pa.Amount,
+                    PlanRequested = pa.PlanRequested,
+                    ExtraProjectsCount = pa.ExtraProjectsCount,
+                    PaymobOrderId = pa.PaymobOrderId,
+                    SpecialReference = pa.SpecialReference,
+                    CreatedAt = pa.CreatedAt,
+                    WebhookReceivedAt = pa.WebhookReceivedAt,
+                    WebhookStatus = pa.WebhookStatus,
+                    LinkedTransactionId = pa.LinkedTransactionId,
+                    ReferenceNumber = pa.LinkedTransaction?.ReferenceNumber,
+                    PaymentMethod = pa.LinkedTransaction?.PaymentMethod ?? "Paymob Card",
+                    ErrorMessage = pa.ErrorMessage,
+                    IsStaleUnconfirmed = pa.WebhookStatus == "NeverArrived" || pa.WebhookStatus == "HmacFailed"
+                });
+            }
+
+            if (hasStaleUpdates)
+            {
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch { /* Best-effort status persistence */ }
+            }
+
+            var summary = new AdminPaymentsSummaryDto
+            {
+                TotalAttemptsCount = dtoList.Count,
+                ConfirmedCount = dtoList.Count(a => a.WebhookStatus == "Confirmed"),
+                NeverArrivedCount = dtoList.Count(a => a.WebhookStatus == "NeverArrived"),
+                HmacFailedCount = dtoList.Count(a => a.WebhookStatus == "HmacFailed"),
+                PendingCount = dtoList.Count(a => a.WebhookStatus == "Pending"),
+                TotalRevenueEgp = dtoList.Where(a => a.WebhookStatus == "Confirmed").Sum(a => a.Amount),
+                NeverArrivedTotalAmountEgp = dtoList.Where(a => a.WebhookStatus == "NeverArrived").Sum(a => a.Amount)
+            };
+
+            // Aggregate by tenant
+            var allTenants = await _context.Tenants
+                .IgnoreQueryFilters()
+                .ToListAsync();
+
+            var tenantSummaries = new List<TenantPaymentSummaryDto>();
+
+            foreach (var t in allTenants)
+            {
+                var tenantAttempts = dtoList.Where(a => a.TenantId == t.Id).ToList();
+                var confirmedList = tenantAttempts.Where(a => a.WebhookStatus == "Confirmed").ToList();
+                var neverArrivedList = tenantAttempts.Where(a => a.WebhookStatus == "NeverArrived").ToList();
+
+                if (tenantAttempts.Count > 0)
+                {
+                    tenantSummaries.Add(new TenantPaymentSummaryDto
+                    {
+                        TenantId = t.Id,
+                        TenantName = t.Name,
+                        SubscriptionPlan = t.SubscriptionPlan.ToString(),
+                        MaxActiveProjects = t.MaxActiveProjects,
+                        ConfirmedPurchasesCount = confirmedList.Count,
+                        TotalAmountSpentEgp = confirmedList.Sum(c => c.Amount),
+                        NeverArrivedAttemptsCount = neverArrivedList.Count,
+                        LastAttemptAt = tenantAttempts.Max(a => a.CreatedAt),
+                        HasNeverArrivedAlert = neverArrivedList.Count > 0
+                    });
+                }
+            }
+
+            // Order tenant summaries by HasNeverArrivedAlert desc, then TotalAmountSpent desc
+            tenantSummaries = tenantSummaries
+                .OrderByDescending(ts => ts.HasNeverArrivedAlert)
+                .ThenByDescending(ts => ts.TotalAmountSpentEgp)
+                .ToList();
+
+            var result = new AdminPaymentsResponseDto
+            {
+                Summary = summary,
+                TenantsSummary = tenantSummaries,
+                Attempts = dtoList
+            };
+
+            return Ok(new ApiResponse<AdminPaymentsResponseDto>
+            {
+                Success = true,
+                Message = "تم جلب تقرير تدقيق المدفوعات والـ Webhooks بنجاح.",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve global payments audit.");
+            return StatusCode(500, new ApiResponse<AdminPaymentsResponseDto>
+            {
+                Success = false,
+                Message = "حدث خطأ أثناء جلب تقرير تدقيق المدفوعات."
             });
         }
     }

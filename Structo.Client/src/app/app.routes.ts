@@ -115,6 +115,15 @@ export const routes: Routes = [
         path: 'pending-users',
         loadComponent: () => import('./features/dashboard/pending-users/pending-users.component').then(m => m.PendingUsersComponent),
         data: { roles: ['SuperAdmin'] }
+      },
+      {
+        path: 'admin-payments',
+        loadComponent: () => import('./features/dashboard/admin-payments/admin-payments.component').then(m => m.AdminPaymentsComponent),
+        data: { roles: ['SuperAdmin'] }
+      },
+      {
+        path: 'payment-audit',
+        redirectTo: 'admin-payments'
       }
     ]
   },

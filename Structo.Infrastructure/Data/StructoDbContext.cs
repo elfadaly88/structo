@@ -35,6 +35,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<Settlement> Settlements => Set<Settlement>();
     public DbSet<SettlementLine> SettlementLines => Set<SettlementLine>();
     public DbSet<SubscriptionTransaction> SubscriptionTransactions => Set<SubscriptionTransaction>();
+    public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,6 +52,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<SettlementLine>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SubscriptionTransaction>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
 
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -338,6 +340,38 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
 
             entity.HasIndex(e => e.TenantId);
             entity.HasIndex(e => e.Status);
+        });
+
+        modelBuilder.Entity<PaymentAttempt>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasColumnType("numeric(18,2)").IsRequired();
+            entity.Property(e => e.PlanRequested).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.PaymobOrderId).HasMaxLength(100);
+            entity.Property(e => e.SpecialReference).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.WebhookStatus).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+
+            entity.HasOne(e => e.Tenant)
+                  .WithMany()
+                  .HasForeignKey(e => e.TenantId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.LinkedTransaction)
+                  .WithMany()
+                  .HasForeignKey(e => e.LinkedTransactionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.PaymobOrderId);
+            entity.HasIndex(e => e.SpecialReference);
+            entity.HasIndex(e => e.WebhookStatus);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 

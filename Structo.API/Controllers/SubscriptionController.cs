@@ -90,6 +90,23 @@ public class SubscriptionController(
                 dto.TargetPlanId,
                 dto.ExtraProjectsCount);
 
+            // Explicitly track payment attempt before redirecting to gateway
+            var attempt = new PaymentAttempt
+            {
+                TenantId = tenant.Id,
+                UserId = user.Id,
+                Amount = checkoutResult.TotalAmountEgp,
+                PlanRequested = checkoutResult.PlanName,
+                ExtraProjectsCount = dto.ExtraProjectsCount ?? (checkoutResult.PlanName.Contains("5") ? 5 : 1),
+                PaymobOrderId = checkoutResult.OrderId,
+                SpecialReference = checkoutResult.OrderId ?? $"SUB_{tenant.Id:N}_{DateTime.UtcNow.Ticks}",
+                CreatedAt = DateTime.UtcNow,
+                WebhookStatus = "Pending"
+            };
+
+            context.PaymentAttempts.Add(attempt);
+            await context.SaveChangesAsync();
+
             return Ok(new ApiResponse<PaymobCheckoutResponseDto>
             {
                 Success = true,
@@ -248,6 +265,107 @@ public class SubscriptionController(
         {
             Success = true,
             Data = new { topups, plans = topups, vatRate = 0.0m }
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // GET /api/subscription/my-payments
+    // ─────────────────────────────────────────────────────────
+    [HttpGet("my-payments")]
+    [HttpGet("payment-history")]
+    public async Task<ActionResult<ApiResponse<MyPaymentsResponseDto>>> GetMyPayments()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "id" || c.Type == "userId" || c.Type == "sub");
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized(new ApiResponse<MyPaymentsResponseDto>
+                { Success = false, Message = "User identity missing or invalid in claims" });
+        }
+
+        var user = await context.Users
+            .IgnoreQueryFilters()
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || user.Tenant == null || user.TenantId == null)
+        {
+            return NotFound(new ApiResponse<MyPaymentsResponseDto>
+                { Success = false, Message = "Active tenant not found" });
+        }
+
+        var tenantId = user.TenantId.Value;
+        var staleThreshold = DateTime.UtcNow.AddMinutes(-15);
+
+        // Fetch payment attempts for this tenant
+        var attempts = await context.PaymentAttempts
+            .IgnoreQueryFilters()
+            .Where(pa => pa.TenantId == tenantId)
+            .Include(pa => pa.LinkedTransaction)
+            .Include(pa => pa.User)
+            .OrderByDescending(pa => pa.CreatedAt)
+            .ToListAsync();
+
+        bool hasStaleUpdates = false;
+        var dtoList = new List<PaymentAttemptDto>();
+
+        foreach (var pa in attempts)
+        {
+            var isStalePending = pa.WebhookStatus == "Pending" && pa.CreatedAt < staleThreshold;
+            if (isStalePending)
+            {
+                pa.WebhookStatus = "NeverArrived";
+                pa.ErrorMessage ??= "لم يصل إشعار الدفع من باي موب (تجاوزت المهلة 15 دقيقة)";
+                hasStaleUpdates = true;
+            }
+
+            dtoList.Add(new PaymentAttemptDto
+            {
+                Id = pa.Id,
+                TenantId = pa.TenantId,
+                TenantName = user.Tenant.Name,
+                UserId = pa.UserId,
+                UserEmail = pa.User?.Email ?? user.Email,
+                UserName = pa.User != null ? $"{pa.User.FirstName} {pa.User.LastName}".Trim() : null,
+                Amount = pa.Amount,
+                PlanRequested = pa.PlanRequested,
+                ExtraProjectsCount = pa.ExtraProjectsCount,
+                PaymobOrderId = pa.PaymobOrderId,
+                SpecialReference = pa.SpecialReference,
+                CreatedAt = pa.CreatedAt,
+                WebhookReceivedAt = pa.WebhookReceivedAt,
+                WebhookStatus = pa.WebhookStatus,
+                LinkedTransactionId = pa.LinkedTransactionId,
+                ReferenceNumber = pa.LinkedTransaction?.ReferenceNumber,
+                PaymentMethod = pa.LinkedTransaction?.PaymentMethod ?? "Paymob Card",
+                ErrorMessage = pa.ErrorMessage,
+                IsStaleUnconfirmed = pa.WebhookStatus == "NeverArrived" || pa.WebhookStatus == "HmacFailed"
+            });
+        }
+
+        if (hasStaleUpdates)
+        {
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch { /* Best-effort status persistence */ }
+        }
+
+        var response = new MyPaymentsResponseDto
+        {
+            CurrentMaxProjects = user.Tenant.MaxActiveProjects,
+            CurrentPlan = user.Tenant.SubscriptionPlan.ToString(),
+            Attempts = dtoList,
+            TotalConfirmedCount = dtoList.Count(a => a.WebhookStatus == "Confirmed"),
+            TotalNeverArrivedCount = dtoList.Count(a => a.WebhookStatus == "NeverArrived"),
+            TotalSpentEgp = dtoList.Where(a => a.WebhookStatus == "Confirmed").Sum(a => a.Amount)
+        };
+
+        return Ok(new ApiResponse<MyPaymentsResponseDto>
+        {
+            Success = true,
+            Message = "تم جلب سجل المدفوعات والـ Webhook بنجاح",
+            Data = response
         });
     }
 

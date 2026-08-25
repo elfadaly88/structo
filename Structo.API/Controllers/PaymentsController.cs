@@ -83,12 +83,40 @@ public class PaymentsController : ControllerBase
         var objNode = rootNode["obj"] ?? rootNode;
 
         // 3. Validate HMAC signature
+        var specialRef = objNode["order"]?["merchant_order_id"]?.ToString()
+            ?? objNode["order"]?["special_reference"]?.ToString()
+            ?? objNode["special_reference"]?.ToString()
+            ?? objNode["merchant_order_id"]?.ToString()
+            ?? "";
+
+        var orderIdStr = objNode["order"]?["id"]?.ToString()
+            ?? objNode["order_id"]?.ToString()
+            ?? "";
+
         if (!string.IsNullOrWhiteSpace(incomingHmac))
         {
             var isValidHmac = _paymobService.ValidateHmac(rawBody, incomingHmac);
             if (!isValidHmac)
             {
                 _logger.LogWarning("Paymob HMAC signature verification failed. Incoming HMAC: {IncomingHmac}", incomingHmac);
+                try
+                {
+                    var failedAttempt = await _context.PaymentAttempts
+                        .IgnoreQueryFilters()
+                        .FirstOrDefaultAsync(pa => (specialRef != "" && pa.SpecialReference == specialRef) || (orderIdStr != "" && pa.PaymobOrderId == orderIdStr));
+                    if (failedAttempt != null)
+                    {
+                        failedAttempt.WebhookReceivedAt = DateTime.UtcNow;
+                        failedAttempt.WebhookStatus = "HmacFailed";
+                        failedAttempt.ErrorMessage = $"HMAC signature verification failed. Incoming HMAC: {incomingHmac}";
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to log HmacFailed attempt in database.");
+                }
+
                 return Unauthorized(new { success = false, message = "HMAC verification failed" });
             }
         }
@@ -112,6 +140,20 @@ public class PaymentsController : ControllerBase
         if (!success || pending)
         {
             _logger.LogInformation("Transaction {TxnId} is not successful or still pending. No plan upgrade executed.", transactionId);
+            try
+            {
+                var matchingAttempt = await _context.PaymentAttempts
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(pa => (specialRef != "" && pa.SpecialReference == specialRef) || (orderIdStr != "" && pa.PaymobOrderId == orderIdStr));
+                if (matchingAttempt != null)
+                {
+                    matchingAttempt.WebhookReceivedAt = DateTime.UtcNow;
+                    matchingAttempt.ErrorMessage = $"Paymob callback status: Success={success}, Pending={pending}";
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch { }
+
             return Ok(new { success = true, message = "Callback received but transaction not successful/pending." });
         }
 
@@ -236,10 +278,37 @@ public class PaymentsController : ControllerBase
         _context.SubscriptionTransactions.Add(transaction);
         await _context.SaveChangesAsync();
 
+        // 10. Explicitly link and confirm matching PaymentAttempt
+        try
+        {
+            var matchingAttempt = await _context.PaymentAttempts
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(pa => (specialRef != "" && pa.SpecialReference == specialRef)
+                    || (orderIdStr != "" && pa.PaymobOrderId == orderIdStr)
+                    || (pa.TenantId == tenant.Id && pa.WebhookStatus == "Pending"));
+
+            if (matchingAttempt != null)
+            {
+                matchingAttempt.WebhookReceivedAt = DateTime.UtcNow;
+                matchingAttempt.WebhookStatus = "Confirmed";
+                matchingAttempt.LinkedTransactionId = transaction.Id;
+                matchingAttempt.ErrorMessage = null;
+                if (string.IsNullOrWhiteSpace(matchingAttempt.PaymobOrderId) && !string.IsNullOrWhiteSpace(transactionId))
+                {
+                    matchingAttempt.PaymobOrderId = transactionId;
+                }
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception paEx)
+        {
+            _logger.LogError(paEx, "Error updating PaymentAttempt status for transaction {TxnId}", transactionId);
+        }
+
         _logger.LogInformation("Successfully upgraded Tenant {TenantId} to {MaxProjects} projects. Reference: {Ref}",
             tenant.Id, tenant.MaxActiveProjects, referenceNumber);
 
-        // 10. Send notification to TenantOwner (best-effort)
+        // 11. Send notification to TenantOwner (best-effort)
         try
         {
             await _notificationEngine.RaiseSubscriptionUpgradedNotificationAsync(
