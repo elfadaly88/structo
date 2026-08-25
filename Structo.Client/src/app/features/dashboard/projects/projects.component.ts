@@ -2248,16 +2248,9 @@ export class ProjectsComponent implements OnInit {
     badge?: string;
     descriptionAr?: string;
   }): void {
-    const vat = 0;
-    const total = pkg.priceEgp;
-    this.selectedCheckoutPackage.set({
-      ...pkg,
-      vatAmount: vat,
-      totalAmount: total
-    });
     this.isUpgradeModalOpen.set(false);
-    this.isCheckoutModalOpen.set(true);
-    this.paymentSuccessData.set(null);
+    this.isCheckoutModalOpen.set(false);
+    this.router.navigate(['/dashboard/subscription']);
   }
 
   closeCheckoutModal(): void {
@@ -2267,47 +2260,8 @@ export class ProjectsComponent implements OnInit {
   }
 
   submitUpgradePayment(): void {
-    const pkg = this.selectedCheckoutPackage();
-    if (!pkg) return;
-
-    this.isProcessingPayment.set(true);
-
-    const req = pkg.extraProjectsCount
-      ? { extraProjectsCount: pkg.extraProjectsCount, paymentMethod: this.selectedPaymentMethod() }
-      : { targetPlanId: pkg.targetPlanId, paymentMethod: this.selectedPaymentMethod() };
-
-    this.tenantProfileService.upgradeSubscription(req).subscribe({
-      next: (res) => {
-        this.isProcessingPayment.set(false);
-        if (res.success && res.data) {
-          this.paymentSuccessData.set({
-            referenceNumber: res.data.referenceNumber,
-            extraProjectsAdded: res.data.extraProjectsAdded,
-            newMaxActiveProjects: res.data.newMaxActiveProjects,
-            totalAmount: res.data.totalAmount
-          });
-
-          // Refresh tenant profile state to update allowed projects limit
-          if (this.tenantProfile()) {
-            this.tenantProfile.set({
-              ...this.tenantProfile(),
-              maxActiveProjects: res.data.newMaxActiveProjects
-            });
-          }
-          this.fetchProjects();
-
-          const successMsg = `🎉 تم دفع ${res.data.totalAmount} ج.م وتفعيل المشاريع بنجاح!`;
-          this.toastService.show('نجاح / Success', successMsg, 'success');
-        } else {
-          this.toastService.show('خطأ / Error', res.message || 'فشلت عملية الدفع — يرجى المحاولة مرة أخرى.', 'error');
-        }
-      },
-      error: (err) => {
-        this.isProcessingPayment.set(false);
-        const msg = err.error?.message || 'تعذر الاتصال ببوابة الدفع. حاول مرة أخرى.';
-        this.toastService.show('خطأ / Error', msg, 'error');
-      }
-    });
+    this.isCheckoutModalOpen.set(false);
+    this.router.navigate(['/dashboard/subscription']);
   }
 
   sendReceiptWhatsApp(): void {

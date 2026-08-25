@@ -104,25 +104,5 @@ export class TenantProfileService {
   getSubscriptionPlans(): Observable<ApiResponse<SubscriptionPlansResponse>> {
     return this.http.get<ApiResponse<SubscriptionPlansResponse>>(`${this.subscriptionUrl}/plans`);
   }
-
-  /**
-   * Performs a mock plan upgrade or add-on top-up.
-   *
-   * Extensibility note:
-   *   To integrate Paymob or Stripe, replace the URL and/or add a payment token
-   *   to the request body. The backend controller is designed for this swap.
-   *
-   * @param req - { targetPlanId } for plan upgrade OR { extraProjectsCount } for add-on top-up
-   */
-  upgradeSubscription(req: SubscriptionUpgradeRequest): Observable<ApiResponse<SubscriptionUpgradeResponse>> {
-    const payload = {
-      targetPlanId: req.targetPlanId ?? null,
-      extraProjectsCount: req.extraProjectsCount ?? null,
-      paymentMethod: req.paymentMethod ?? 'TestCard',
-    };
-    return this.http.post<ApiResponse<SubscriptionUpgradeResponse>>(
-      `${this.subscriptionUrl}/upgrade-mock`,
-      payload
-    );
-  }
 }
+

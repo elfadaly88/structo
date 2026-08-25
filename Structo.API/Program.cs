@@ -530,91 +530,49 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 1"))
+        if (app.Environment.IsDevelopment())
         {
-            var t1 = new Tenant { Name = "Tenant 1", SubscriptionPlan = SubscriptionPlan.Premium, MaxActiveProjects = 50 };
-            context.Tenants.Add(t1);
-            context.SaveChanges();
-
-            var owner1 = new User
+            if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 1"))
             {
-                FirstName = "Owner",
-                LastName = "One",
-                Email = "owner1",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@123"),
-                Role = UserRole.TenantOwner,
-                TenantId = t1.Id
-            };
-            context.Users.Add(owner1);
+                var t1 = new Tenant { Name = "Tenant 1", SubscriptionPlan = SubscriptionPlan.Premium, MaxActiveProjects = 50 };
+                context.Tenants.Add(t1);
+                context.SaveChanges();
 
-            context.Projects.Add(new Project { TenantId = t1.Id, Name = "Tenant 1 Alpha Project", Description = "T1 Block", StartDate = DateTime.UtcNow });
-            context.SaveChanges();
-        }
-
-        if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 2"))
-        {
-            var t2 = new Tenant { Name = "Tenant 2", SubscriptionPlan = SubscriptionPlan.Free, MaxActiveProjects = 2 };
-            context.Tenants.Add(t2);
-            context.SaveChanges();
-
-            var owner2 = new User
-            {
-                FirstName = "Owner",
-                LastName = "Two",
-                Email = "owner2",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@123"),
-                Role = UserRole.TenantOwner,
-                TenantId = t2.Id
-            };
-            context.Users.Add(owner2);
-
-            // ── Fix Tenants with 0 MaxActiveProjects ───────────────────────
-            var zeroQuotaTenants = context.Tenants.IgnoreQueryFilters().Where(t => t.MaxActiveProjects == 0).ToList();
-            if (zeroQuotaTenants.Any())
-            {
-                foreach (var zt in zeroQuotaTenants)
+                var owner1 = new User
                 {
-                    zt.MaxActiveProjects = zt.SubscriptionPlan switch
-                    {
-                        SubscriptionPlan.Premium => 50,
-                        SubscriptionPlan.Standard => 10,
-                        _ => 2
-                    };
-                }
+                    FirstName = "Owner",
+                    LastName = "One",
+                    Email = "owner1",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@123"),
+                    Role = UserRole.TenantOwner,
+                    TenantId = t1.Id
+                };
+                context.Users.Add(owner1);
+
+                context.Projects.Add(new Project { TenantId = t1.Id, Name = "Tenant 1 Alpha Project", Description = "T1 Block", StartDate = DateTime.UtcNow });
                 context.SaveChanges();
             }
 
-            context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
-            context.SaveChanges();
-        }
-
-        try
-        {
-            var targetProj = context.Projects.IgnoreQueryFilters().FirstOrDefault(p => p.Id == Guid.Parse("436abb4b-529f-4a9a-b559-e2f5c66e071f"));
-            if (targetProj != null)
+            if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 2"))
             {
-                var targetTenantId = Guid.Parse("65ea11dc-d7cd-48fe-917c-508d1be80632");
-                if (targetProj.TenantId != targetTenantId)
+                var t2 = new Tenant { Name = "Tenant 2", SubscriptionPlan = SubscriptionPlan.Free, MaxActiveProjects = 2 };
+                context.Tenants.Add(t2);
+                context.SaveChanges();
+
+                var owner2 = new User
                 {
-                    Console.WriteLine($"[PATCH] Aligning Project {targetProj.Id} tenant ID to {targetTenantId}");
-                    targetProj.TenantId = targetTenantId;
+                    FirstName = "Owner",
+                    LastName = "Two",
+                    Email = "owner2",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@123"),
+                    Role = UserRole.TenantOwner,
+                    TenantId = t2.Id
+                };
+                context.Users.Add(owner2);
 
-                    var pools = context.ProjectCashPools.IgnoreQueryFilters().Where(p => p.ProjectId == targetProj.Id).ToList();
-                    foreach (var pool in pools) pool.TenantId = targetTenantId;
-
-                    var pettyCashes = context.PettyCashes.IgnoreQueryFilters().Where(p => p.ProjectId == targetProj.Id).ToList();
-                    foreach (var pc in pettyCashes) pc.TenantId = targetTenantId;
-
-                    var settlements = context.Settlements.IgnoreQueryFilters().Where(s => s.ProjectId == targetProj.Id).ToList();
-                    foreach (var s in settlements) s.TenantId = targetTenantId;
-
-                    context.SaveChanges();
-                }
+                context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
+                context.SaveChanges();
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[PATCH ERROR] Failed to run database alignment patch: {ex.Message}");
         }
 
         // Database Security Cleanup Routine: Remove/Sanitize existing records containing SQLi or XSS payloads

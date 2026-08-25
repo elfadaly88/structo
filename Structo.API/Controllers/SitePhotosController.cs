@@ -25,12 +25,17 @@ namespace Structo.API.Controllers;
 [Route("api/projects/{projectId}/[controller]")]
 [Route("api/projects/{projectId}/photos")]
 [Authorize(Roles = "SuperAdmin,TenantOwner,Manager,SiteEngineer,DesignEngineer")]
-public class SitePhotosController(StructoDbContext context, IProjectAccessService projectAccessService) : ControllerBase
+public class SitePhotosController(
+    StructoDbContext context, 
+    IProjectAccessService projectAccessService,
+    ICloudStorageService storageService,
+    ITenantContextAccessor tenantAccessor,
+    ILogger<SitePhotosController> logger) : ControllerBase
 {
     private string CurrentUserRole => User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
 
     /// <summary>
-    /// Upload a site gallery photo with an optional caption.
+    /// Upload a site gallery photo with an optional caption to Cloudflare R2.
     /// Creates a SitePhoto entry — receipts MUST use the dedicated receipt endpoint instead.
     /// </summary>
     [HttpPost]
@@ -48,17 +53,12 @@ public class SitePhotosController(StructoDbContext context, IProjectAccessServic
         if (!isValid)
             return BadRequest(new ApiResponse<bool> { Success = false, Message = errorMessage });
 
-        var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        Directory.CreateDirectory(uploadFolder);
-
+        var tenantId = tenantAccessor.GetCurrentTenantId() ?? context.CurrentTenantId;
         var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
-        var fileName = $"{Guid.NewGuid()}{ext}";
-        var filePath = Path.Combine(uploadFolder, fileName);
+        string customKey = $"{tenantId}/projects/{projectId}/images/{Guid.NewGuid()}{ext}";
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await dto.File.CopyToAsync(stream);
-        }
+        using var stream = dto.File.OpenReadStream();
+        string photoUrl = await storageService.UploadFileDirectAsync(stream, dto.File.FileName, dto.File.ContentType, customKey);
 
         var userIdString = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("uid");
         Guid.TryParse(userIdString, out var userId);
@@ -73,7 +73,7 @@ public class SitePhotosController(StructoDbContext context, IProjectAccessServic
         {
             ProjectId = projectId,
             UploadedByUserId = userId,
-            PhotoUrl = $"/uploads/{fileName}",
+            PhotoUrl = photoUrl,
             Caption = sanitizedCaption,
             Category = "SiteProgress",
             UploadedAt = DateTime.UtcNow
@@ -156,6 +156,18 @@ public class SitePhotosController(StructoDbContext context, IProjectAccessServic
 
         context.SitePhotos.Remove(photo);
         await context.SaveChangesAsync();
+
+        if (!string.IsNullOrEmpty(photo.PhotoUrl) && !photo.PhotoUrl.StartsWith("/uploads/"))
+        {
+            try
+            {
+                await storageService.DeleteFileAsync(photo.PhotoUrl);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to delete photo from cloud storage: {PhotoUrl}", photo.PhotoUrl);
+            }
+        }
 
         return Ok(new ApiResponse<bool> { Data = true, Message = "Photo deleted successfully", CurrentUserRole = CurrentUserRole });
     }
