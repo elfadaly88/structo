@@ -134,25 +134,6 @@ export class SubscriptionService {
         isPopular: true,
         badge: 'الأفضل قيمة وتوفيراً 🔥',
         tagColor: 'from-indigo-600 to-violet-600'
-      },
-      {
-        id: 'Enterprise',
-        nameAr: 'باقة الشركات الكبرى (Enterprise)',
-        nameEn: 'Enterprise Unlimited',
-        extraProjects: 20,
-        priceEgp: 3500,
-        periodAr: 'حلول مخصصة للشركات',
-        descriptionAr: 'للشركات والمجموعات الهندسية الكبرى ذات العمليات المتعددة والتوسعات الكبيرة.',
-        featuresAr: [
-          'إضافة (+20) مشروع إضافي فوري في الرصيد',
-          'عدد مستخدمين ومهندسين غير محدود',
-          'تقارير مالية وتدقيق متقدم ومخصص',
-          'مدير حساب مخصص ودعم هاتفي 24/7',
-          'ربط مباشر ونسخ احتياطي فوري'
-        ],
-        isPopular: false,
-        badge: 'للشركات والمكاتب الكبرى',
-        tagColor: 'from-amber-600 to-orange-500'
       }
     ];
   }

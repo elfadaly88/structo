@@ -114,7 +114,7 @@ public class PaymobService : IPaymobService
                 var intentionUrl = $"{_settings.BaseUrl.TrimEnd('/')}/v1/intention/";
                 using var request = new HttpRequestMessage(HttpMethod.Post, intentionUrl);
                 request.Headers.Add("Authorization", $"Token {_settings.SecretKey}");
-
+                var callbackEndpoint = "https://structo-production.up.railway.app/api/payments/callback";
                 var intentionPayload = new Dictionary<string, object>
                 {
                     ["amount"] = amountCents,
@@ -144,6 +144,10 @@ public class PaymobService : IPaymobService
                         ["extra_projects"] = extraProjectsCount ?? (planName.Contains("5") ? 5 : 1)
                     },
                     ["special_reference"] = specialReference
+                    ,
+    // الروابط الصريحة لـ Paymob Intention API
+                    ["redirection_url"] = callbackEndpoint,
+                    ["notification_url"] = callbackEndpoint
                 };
 
                 request.Content = new StringContent(

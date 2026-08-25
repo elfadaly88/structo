@@ -1,0 +1,1 @@
+import {E,at as rt,aN as hh,aC as S}from'./main-JLY3WOP4.js';function w(t){t||(t=E(rt));let i=new S(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(hh(i))}export{w};
