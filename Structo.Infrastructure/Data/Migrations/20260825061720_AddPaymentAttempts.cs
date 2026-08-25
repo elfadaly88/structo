@@ -87,7 +87,7 @@ namespace Structo.Infrastructure.Data.Migrations
                 table: "PaymentAttempts",
                 column: "WebhookStatus");
 
-            // One-time historical backfill for Order 594308791 (250 EGP) linked strictly to confirmed user amr.montaser.emcg@gmail.com
+            // One-time historical backfill for Order 594308791 (250 EGP) linked strictly to confirmed Tenant 1c12b0cf-8505-4d0a-8d55-617daf3f30a2 / User fd1f8821-d7ff-4627-ac7a-2144f4382bf8
             migrationBuilder.Sql(@"
                 INSERT INTO ""PaymentAttempts"" (
                     ""Id"", ""TenantId"", ""UserId"", ""Amount"", ""PlanRequested"", 
@@ -96,23 +96,20 @@ namespace Structo.Infrastructure.Data.Migrations
                 )
                 SELECT 
                     gen_random_uuid(),
-                    u.""TenantId"",
-                    u.""Id"",
+                    '1c12b0cf-8505-4d0a-8d55-617daf3f30a2'::uuid,
+                    'fd1f8821-d7ff-4627-ac7a-2144f4382bf8'::uuid,
                     250.00,
-                    '+1 Projects',
+                    '+1 Projects (Pro Top-Up)',
                     1,
                     '594308791',
-                    CONCAT('SUB_', REPLACE(u.""TenantId""::text, '-', ''), '_594308791'),
+                    'SUB_1c12b0cf85054d0a8d55617daf3f30a2_594308791',
                     NOW() - INTERVAL '6 hours',
                     NULL,
                     'NeverArrived',
-                    'Webhook callback never reached server from Paymob'
-                FROM ""Users"" u
-                WHERE LOWER(TRIM(u.""Email"")) = 'amr.montaser.emcg@gmail.com'
-                AND NOT EXISTS (
+                    'Paymob webhook callback never reached server (Order ID 594308791)'
+                WHERE NOT EXISTS (
                     SELECT 1 FROM ""PaymentAttempts"" pa WHERE pa.""PaymobOrderId"" = '594308791'
-                )
-                LIMIT 1;
+                );
             ");
         }
 

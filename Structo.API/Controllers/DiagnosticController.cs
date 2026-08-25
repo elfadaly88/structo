@@ -71,4 +71,28 @@ public class DiagnosticController : ControllerBase
             userCreatedAt = user.CreatedAt
         });
     }
+
+    /// <summary>
+    /// Temporary diagnostic endpoint to verify PaymentAttempts rows directly on live database.
+    /// Access via: /api/diagnostic/payment-attempts?tenantId=1c12b0cf-8505-4d0a-8d55-617daf3f30a2
+    /// </summary>
+    [HttpGet("payment-attempts")]
+    public async Task<IActionResult> GetPaymentAttempts([FromQuery] Guid? tenantId)
+    {
+        var targetTenantId = tenantId ?? Guid.Parse("1c12b0cf-8505-4d0a-8d55-617daf3f30a2");
+
+        var attempts = await _context.PaymentAttempts
+            .IgnoreQueryFilters()
+            .Where(pa => pa.TenantId == targetTenantId || pa.PaymobOrderId == "594308791")
+            .OrderByDescending(pa => pa.CreatedAt)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            success = true,
+            tenantId = targetTenantId,
+            attemptsCount = attempts.Count,
+            attempts
+        });
+    }
 }
