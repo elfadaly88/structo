@@ -46,12 +46,16 @@ public class PaymentsController : ControllerBase
     [HttpPost("callback")]
     public async Task<IActionResult> PaymobCallback([FromQuery] string? hmac)
     {
+        _logger.LogCritical("🔥 [PAYMOB POST WEBHOOK REACHED] Path: {Path}, ContentLength: {Len}", 
+        Request.Path, Request.ContentLength);
         string rawBody;
+        
         using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
         {
             rawBody = await reader.ReadToEndAsync();
         }
 
+        _logger.LogCritical("🔥 [PAYMOB POST RAW BODY]: {Body}", rawBody);
         if (string.IsNullOrWhiteSpace(rawBody))
         {
             _logger.LogWarning("Received empty Paymob webhook callback body.");
