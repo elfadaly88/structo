@@ -388,6 +388,58 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""Notifications"" ADD COLUMN IF NOT EXISTS ""ProjectId"" uuid NULL;
             CREATE INDEX IF NOT EXISTS ""IX_Notifications_ProjectId"" ON ""Notifications"" (""ProjectId"");
             CREATE INDEX IF NOT EXISTS ""IX_Notifications_ReceiverId"" ON ""Notifications"" (""ReceiverId"");
+
+            -- 🚀 Self-Healing Schema Guard: PaymentAttempts Table & Indexes
+            CREATE TABLE IF NOT EXISTS ""PaymentAttempts"" (
+                ""Id"" uuid NOT NULL,
+                ""TenantId"" uuid NOT NULL,
+                ""UserId"" uuid NULL,
+                ""Amount"" numeric(18,2) NOT NULL,
+                ""PlanRequested"" character varying(50) NOT NULL,
+                ""ExtraProjectsCount"" integer NOT NULL,
+                ""PaymobOrderId"" character varying(100) NULL,
+                ""SpecialReference"" character varying(100) NOT NULL,
+                ""CreatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
+                ""WebhookReceivedAt"" timestamp without time zone NULL,
+                ""WebhookStatus"" character varying(30) NOT NULL DEFAULT 'Pending',
+                ""LinkedTransactionId"" uuid NULL,
+                ""ErrorMessage"" character varying(500) NULL,
+                CONSTRAINT ""PK_PaymentAttempts"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_PaymentAttempts_SubscriptionTransactions_LinkedTransactionId"" FOREIGN KEY (""LinkedTransactionId"") REFERENCES ""SubscriptionTransactions"" (""Id"") ON DELETE SET NULL,
+                CONSTRAINT ""FK_PaymentAttempts_Tenants_TenantId"" FOREIGN KEY (""TenantId"") REFERENCES ""Tenants"" (""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_PaymentAttempts_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_CreatedAt"" ON ""PaymentAttempts"" (""CreatedAt"");
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_LinkedTransactionId"" ON ""PaymentAttempts"" (""LinkedTransactionId"");
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_PaymobOrderId"" ON ""PaymentAttempts"" (""PaymobOrderId"");
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_SpecialReference"" ON ""PaymentAttempts"" (""SpecialReference"");
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_TenantId"" ON ""PaymentAttempts"" (""TenantId"");
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_UserId"" ON ""PaymentAttempts"" (""UserId"");
+            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_WebhookStatus"" ON ""PaymentAttempts"" (""WebhookStatus"");
+
+            INSERT INTO ""PaymentAttempts"" (
+                ""Id"", ""TenantId"", ""UserId"", ""Amount"", ""PlanRequested"", 
+                ""ExtraProjectsCount"", ""PaymobOrderId"", ""SpecialReference"", 
+                ""CreatedAt"", ""WebhookReceivedAt"", ""WebhookStatus"", ""ErrorMessage""
+            )
+            SELECT 
+                gen_random_uuid(),
+                '1c12b0cf-8505-4d0a-8d55-617daf3f30a2'::uuid,
+                'fd1f8821-d7ff-4627-ac7a-2144f4382bf8'::uuid,
+                250.00,
+                '+1 Projects (Pro Top-Up)',
+                1,
+                '594308791',
+                'SUB_1c12b0cf85054d0a8d55617daf3f30a2_594308791',
+                NOW() - INTERVAL '6 hours',
+                NULL,
+                'NeverArrived',
+                'Paymob webhook callback never reached server (Order ID 594308791)'
+            WHERE EXISTS (SELECT 1 FROM ""Tenants"" WHERE ""Id"" = '1c12b0cf-8505-4d0a-8d55-617daf3f30a2'::uuid)
+              AND NOT EXISTS (
+                SELECT 1 FROM ""PaymentAttempts"" pa WHERE pa.""PaymobOrderId"" = '594308791'
+            );
         ");
         context.Database.Migrate();
 

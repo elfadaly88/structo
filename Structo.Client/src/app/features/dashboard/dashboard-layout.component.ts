@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -17,7 +18,7 @@ interface NavItem {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, NotificationBellComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, NotificationBellComponent],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col">
 
@@ -122,14 +123,14 @@ interface NavItem {
                 <div class="space-y-1 text-xs">
                   @if (authService.isTenantOwner()) {
                     <a
-                      routerLink="/dashboard/subscription"
+                      [routerLink]="['/dashboard/subscription']"
                       (click)="closeUserMenu()"
                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
                       <span>💳</span>
                       <span>الاشتراكات وتوسعة الباقة</span>
                     </a>
                     <a
-                      routerLink="/dashboard/profile"
+                      [routerLink]="['/dashboard/settings']"
                       (click)="closeUserMenu()"
                       class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
                       <span>⚙️</span>

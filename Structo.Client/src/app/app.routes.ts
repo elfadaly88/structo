@@ -89,6 +89,11 @@ export const routes: Routes = [
         data: { roles: ['TenantOwner'] }
       },
       {
+        path: 'settings',
+        loadComponent: () => import('./features/dashboard/tenant-profile/tenant-profile.component').then(m => m.TenantProfileComponent),
+        data: { roles: ['TenantOwner'] }
+      },
+      {
         path: 'subscription',
         loadComponent: () => import('./features/dashboard/subscription/subscription.component').then(m => m.SubscriptionComponent),
         data: { roles: ['TenantOwner'] }
