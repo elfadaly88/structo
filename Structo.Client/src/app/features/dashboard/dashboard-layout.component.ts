@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from '../../core/services/language.service';
@@ -18,7 +18,7 @@ interface NavItem {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, NotificationBellComponent],
+  imports: [CommonModule, RouterModule, TranslatePipe, NotificationBellComponent],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col">
 
@@ -67,11 +67,18 @@ interface NavItem {
           <!-- Notification Bell -->
           <app-notification-bell></app-notification-bell>
 
-          <!-- User Menu Dropdown Trigger Button -->
+          <!-- User Menu Dropdown Trigger Button & Popover -->
           <div class="relative shrink-0">
+            @if (isUserMenuOpen()) {
+              <div
+                (click)="closeUserMenu()"
+                class="fixed inset-0 z-40 bg-transparent cursor-default">
+              </div>
+            }
+
             <button
               (click)="toggleUserMenu()"
-              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition-all duration-200 cursor-pointer focus:outline-none"
+              class="relative z-50 flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition-all duration-200 cursor-pointer focus:outline-none"
               [class.bg-slate-800]="isUserMenuOpen()"
               [class.border-slate-700]="isUserMenuOpen()">
               <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-xs text-indigo-400 uppercase font-mono shrink-0">
@@ -123,16 +130,16 @@ interface NavItem {
                 <div class="space-y-1 text-xs">
                   @if (authService.isTenantOwner()) {
                     <a
-                      [routerLink]="['/dashboard/subscription']"
+                      routerLink="/dashboard/subscription"
                       (click)="closeUserMenu()"
-                      class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
+                      class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer">
                       <span>💳</span>
                       <span>الاشتراكات وتوسعة الباقة</span>
                     </a>
                     <a
-                      [routerLink]="['/dashboard/settings']"
+                      routerLink="/dashboard/settings"
                       (click)="closeUserMenu()"
-                      class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors">
+                      class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer">
                       <span>⚙️</span>
                       <span>إعدادات الحساب والشركة</span>
                     </a>
@@ -166,14 +173,6 @@ interface NavItem {
           <div
             (click)="closeSidebar()"
             class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-30 md:hidden animate-fade-in">
-          </div>
-        }
-
-        <!-- User Menu Backdrop to close menu on click outside -->
-        @if (isUserMenuOpen()) {
-          <div
-            (click)="closeUserMenu()"
-            class="fixed inset-0 z-40 bg-transparent">
           </div>
         }
 
