@@ -22,6 +22,9 @@ import { OfflineSyncService } from '../../../core/services/offline-sync.service'
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
 import { ProjectCloseoutService } from '../../../core/services/project-closeout.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { FinancialReportService } from '../../../core/services/financial-report.service';
+import { ProjectFullReportDto } from '../../../core/models/financial-report.models';
+import { TenantDto } from '../../../core/services/public-directory.service';
 
 
 
@@ -129,6 +132,20 @@ import { LanguageService } from '../../../core/services/language.service';
                   <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
                 </label>
               </div>
+            }
+
+            <!-- Project Report Action Button -->
+            @if (project() && canViewFinancialReports()) {
+              <button 
+                type="button"
+                id="btn-header-project-report"
+                (click)="openProjectReportModal()"
+                class="px-3 sm:px-4 py-2 sm:py-2.5 bg-sky-600/15 hover:bg-sky-600/25 active:bg-sky-600/35 text-sky-300 hover:text-white border border-sky-500/30 text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0">
+                <svg class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>تقرير المشروع / Report</span>
+              </button>
             }
 
             <!-- Primary Action Button: + إيداع دفعة مالية -->
@@ -732,6 +749,15 @@ import { LanguageService } from '../../../core/services/language.service';
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                   الإغلاق النهائي للمشروع
                   @if (!reconciliationReport()?.isFullyReconciled) { <span class="text-[10px] opacity-60">(يتطلب تصفية كاملة)</span> }
+                </button>
+              }
+              @if (canViewFinancialReports()) {
+                <button id="btn-closeout-project-report" type="button" (click)="openProjectReportModal()" [disabled]="isProjectReportLoading()"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600/15 hover:bg-sky-600/25 text-sky-300 border border-sky-500/30 text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer font-cairo shadow-sm">
+                  <svg class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>تقرير المشروع المالي الشامل / Full Report</span>
                 </button>
               }
             </div>
@@ -3396,6 +3422,485 @@ import { LanguageService } from '../../../core/services/language.service';
       </div>
     }
 
+    <!-- 📊 Project Financial Report Modal -->
+    @if (isProjectReportModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in font-cairo">
+        <div (click)="closeProjectReportModal()" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-4xl bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden z-10 font-cairo">
+          
+          <!-- 1. Fixed Modal Header -->
+          <div class="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-slate-900/80">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-bold text-white leading-tight">التقرير المالي الشامل للمشروع / Project Financial Report</h3>
+                <p class="text-xs text-slate-400 mt-0.5">مشروع: <strong class="text-slate-200">{{ project()?.name }}</strong></p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="triggerPrintProjectReport()"
+                [disabled]="isProjectReportLoading() || !projectReportData()"
+                class="px-3 sm:px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+                <span>🖨️</span>
+                <span class="hidden sm:inline">طباعة التقرير / Print</span>
+                <span class="sm:hidden">طباعة</span>
+              </button>
+              <button
+                type="button"
+                (click)="closeProjectReportModal()"
+                class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Scrollable Modal Body -->
+          <div class="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 space-y-5 custom-scrollbar font-sans">
+            <!-- Date Filter Strip -->
+            <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-3 font-cairo shadow-sm">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <span>📅</span>
+                  <span>تحديد الفترة الزمنية للتقرير / Date Range Filter</span>
+                </span>
+                <button
+                  type="button"
+                  (click)="resetReportDateFilter()"
+                  class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
+                  الفترة الكاملة / Full Period
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">من تاريخ / From Date</label>
+                  <div class="relative">
+                    <input
+                      id="reportStartDate"
+                      type="text"
+                      [value]="formatDisplayDate(reportStartDate())"
+                      (input)="onReportStartDateInput($event)"
+                      placeholder="DD/MM/YYYY"
+                      class="w-full px-3 py-2 border border-slate-700 bg-slate-900 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono pr-9">
+                    <input
+                      #reportStartDatePicker
+                      type="date"
+                      [value]="reportStartDate()"
+                      (change)="onReportStartDatePicked($event)"
+                      class="sr-only opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                      style="clip: rect(0,0,0,0);">
+                    <button
+                      type="button"
+                      (click)="openDatePicker(reportStartDatePicker)"
+                      class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-white transition-colors cursor-pointer z-20">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">إلى تاريخ / To Date</label>
+                  <div class="relative">
+                    <input
+                      id="reportEndDate"
+                      type="text"
+                      [value]="formatDisplayDate(reportEndDate())"
+                      (input)="onReportEndDateInput($event)"
+                      placeholder="DD/MM/YYYY"
+                      class="w-full px-3 py-2 border border-slate-700 bg-slate-900 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono pr-9">
+                    <input
+                      #reportEndDatePicker
+                      type="date"
+                      [value]="reportEndDate()"
+                      (change)="onReportEndDatePicked($event)"
+                      class="sr-only opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                      style="clip: rect(0,0,0,0);">
+                    <button
+                      type="button"
+                      (click)="openDatePicker(reportEndDatePicker)"
+                      class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-white transition-colors cursor-pointer z-20">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            @if (isProjectReportLoading()) {
+              <div class="py-16 flex flex-col items-center justify-center font-cairo">
+                <svg class="animate-spin h-8 w-8 text-sky-400 mb-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-xs text-slate-400 font-medium">جاري استخراج بيانات تقرير المشروع...</span>
+              </div>
+            } @else if (projectReportError()) {
+              <div class="p-6 bg-rose-500/10 border border-rose-500/30 rounded-xl text-center space-y-2 font-cairo">
+                <p class="text-xs font-bold text-rose-400">⚠️ {{ projectReportError() }}</p>
+                <button type="button" (click)="fetchProjectReport()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-200">إعادة المحاولة</button>
+              </div>
+            } @else if (projectReportData()) {
+              <!-- Project Meta Card -->
+              <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 font-cairo grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span class="text-slate-500 block">المشروع:</span>
+                  <span class="font-bold text-white">{{ projectReportData()!.project.name }}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">العميل:</span>
+                  <span class="font-bold text-slate-200">{{ projectReportData()!.project.client || '—' }}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">الميزانية:</span>
+                  <span class="font-mono font-bold text-amber-400">{{ projectReportData()!.project.budget | number:'1.2-2' }} ج.م</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">الحالة:</span>
+                  <span class="font-bold text-indigo-400">{{ projectReportData()!.project.status }}</span>
+                </div>
+              </div>
+
+              <!-- Summary Metrics Cards -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-cairo">
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <span class="text-[10px] text-slate-400 font-bold block">إجمالي المقبوضات (إيراد)</span>
+                  <span class="font-mono font-bold text-sm text-emerald-400">+{{ projectReportData()!.summary.totalIncome | number:'1.2-2' }}</span>
+                </div>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <span class="text-[10px] text-slate-400 font-bold block">إجمالي المصروفات</span>
+                  <span class="font-mono font-bold text-sm text-rose-400">-{{ projectReportData()!.summary.totalExpenses | number:'1.2-2' }}</span>
+                </div>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <span class="text-[10px] text-slate-400 font-bold block">صافي السيولة النقدية</span>
+                  <span class="font-mono font-bold text-sm" [class.text-emerald-400]="projectReportData()!.summary.netBalance >= 0" [class.text-rose-400]="projectReportData()!.summary.netBalance < 0">
+                    {{ projectReportData()!.summary.netBalance | number:'1.2-2' }}
+                  </span>
+                </div>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <span class="text-[10px] text-slate-400 font-bold block">عهد معلقة قيد التسوية</span>
+                  <span class="font-mono font-bold text-sm text-amber-400">{{ projectReportData()!.summary.totalCustodyPending | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <!-- Section: Transactions -->
+              <div class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden font-cairo">
+                <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center text-xs">
+                  <span class="font-bold text-white">📖 دفتر الحركات المالية ({{ projectReportData()!.transactions.length }} حركة)</span>
+                </div>
+                <div class="overflow-x-auto max-h-60 custom-scrollbar">
+                  <table class="w-full text-right text-xs">
+                    <thead class="bg-slate-950/70 text-slate-400 sticky top-0">
+                      <tr>
+                        <th class="p-2">التاريخ</th>
+                        <th class="p-2">النوع</th>
+                        <th class="p-2">البيان</th>
+                        <th class="p-2 text-left font-mono">المبلغ</th>
+                        <th class="p-2 text-center">طريقة الدفع</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                      @for (t of projectReportData()!.transactions; track t.id) {
+                        <tr class="hover:bg-slate-800/20">
+                          <td class="p-2 font-mono text-slate-400">{{ t.transactionDate | date:'dd/MM/yyyy' }}</td>
+                          <td class="p-2">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold" [class.bg-emerald-950]="t.type === 'Income'" [class.text-emerald-400]="t.type === 'Income'" [class.bg-rose-950]="t.type !== 'Income'" [class.text-rose-400]="t.type !== 'Income'">
+                              {{ t.type === 'Income' ? 'إيراد' : 'مصروف' }}
+                            </span>
+                          </td>
+                          <td class="p-2 text-slate-200 max-w-xs truncate">{{ t.description }}</td>
+                          <td class="p-2 text-left font-mono font-bold" [class.text-emerald-400]="t.type === 'Income'" [class.text-rose-400]="t.type !== 'Income'">
+                            {{ t.type === 'Income' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }}
+                          </td>
+                          <td class="p-2 text-center font-mono text-slate-400">{{ t.paymentMethod || '—' }}</td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد حركات مسجلة</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Section: Petty Cash -->
+              <div class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden font-cairo">
+                <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center text-xs">
+                  <span class="font-bold text-white">🧾 سجل العهد النقدية ({{ projectReportData()!.pettyCashes.length }} عهدة)</span>
+                </div>
+                <div class="overflow-x-auto max-h-60 custom-scrollbar">
+                  <table class="w-full text-right text-xs">
+                    <thead class="bg-slate-950/70 text-slate-400 sticky top-0">
+                      <tr>
+                        <th class="p-2">المستلم</th>
+                        <th class="p-2">البيان</th>
+                        <th class="p-2">التاريخ</th>
+                        <th class="p-2 text-left font-mono">المبلغ</th>
+                        <th class="p-2 text-center">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                      @for (pc of projectReportData()!.pettyCashes; track pc.id) {
+                        <tr class="hover:bg-slate-800/20">
+                          <td class="p-2 font-bold text-white">{{ pc.issuedTo }}</td>
+                          <td class="p-2 text-slate-300 max-w-xs truncate">{{ pc.reason }}</td>
+                          <td class="p-2 font-mono text-slate-400">{{ pc.issuedAt | date:'dd/MM/yyyy' }}</td>
+                          <td class="p-2 text-left font-mono font-bold text-amber-400">{{ pc.amount | number:'1.2-2' }}</td>
+                          <td class="p-2 text-center font-mono text-xs">{{ pc.status }}</td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد عهد مسجلة</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Section: Settlements -->
+              <div class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden font-cairo">
+                <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center text-xs">
+                  <span class="font-bold text-white">⚖️ سجل التسويات ({{ projectReportData()!.settlements.length }} تسوية)</span>
+                </div>
+                <div class="overflow-x-auto max-h-60 custom-scrollbar">
+                  <table class="w-full text-right text-xs">
+                    <thead class="bg-slate-950/70 text-slate-400 sticky top-0">
+                      <tr>
+                        <th class="p-2">المهندس</th>
+                        <th class="p-2">البيان</th>
+                        <th class="p-2 text-left font-mono">العهدة</th>
+                        <th class="p-2 text-left font-mono">المصروف</th>
+                        <th class="p-2 text-left font-mono">الفرق</th>
+                        <th class="p-2 text-center">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                      @for (s of projectReportData()!.settlements; track s.id) {
+                        <tr class="hover:bg-slate-800/20">
+                          <td class="p-2 font-bold text-white">{{ s.issuedTo }}</td>
+                          <td class="p-2 text-slate-300 max-w-xs truncate">{{ s.custodyReason }}</td>
+                          <td class="p-2 text-left font-mono text-slate-300">{{ s.custodyAmount | number:'1.2-2' }}</td>
+                          <td class="p-2 text-left font-mono text-amber-400 font-bold">{{ s.totalAmount | number:'1.2-2' }}</td>
+                          <td class="p-2 text-left font-mono font-bold" [class.text-emerald-400]="s.netDifference >= 0" [class.text-rose-400]="s.netDifference < 0">
+                            {{ s.netDifference | number:'1.2-2' }}
+                          </td>
+                          <td class="p-2 text-center text-xs">{{ s.status }}</td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد تسويات مسجلة</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- 3. Fixed Modal Footer -->
+          <div class="p-4 bg-[#0d1322] border-t border-slate-800 flex items-center justify-between gap-3 shrink-0 font-cairo">
+            <button
+              type="button"
+              (click)="closeProjectReportModal()"
+              class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
+              إغلاق / Close
+            </button>
+            <button
+              type="button"
+              (click)="triggerPrintProjectReport()"
+              [disabled]="isProjectReportLoading() || !projectReportData()"
+              class="px-5 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+              <span>🖨️</span>
+              <span>طباعة التقرير / Print Report</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 🖨️ Hidden Project Report Print Layout -->
+    @if (activePrintFullReport()) {
+      <div class="print-only hidden print:block p-8 bg-white text-slate-900 font-sans leading-relaxed" dir="rtl">
+        <!-- Letterhead -->
+        <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-6">
+          <div class="flex items-center gap-4">
+            @if (tenantProfile()?.logoUrl) {
+              <img [src]="tenantProfile()!.logoUrl" alt="Logo" class="h-16 w-16 object-contain rounded-lg border border-slate-300 p-1">
+            }
+            <div>
+              <h1 class="text-2xl font-black font-cairo text-slate-950">{{ tenantProfile()?.name || 'شركة المقاولات والتطوير' }}</h1>
+              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية للمشروع • منصة أُسُس / Structo Enterprise</p>
+            </div>
+          </div>
+          <div class="text-left font-cairo text-xs space-y-1">
+            <p><strong>تاريخ الاستخراج:</strong> {{ activePrintFullReport()!.generatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>النطاق الزمني:</strong> 
+              {{ activePrintFullReport()!.dateRange.isFullPeriod ? 'الفترة الكاملة للمشروع' : ((activePrintFullReport()!.dateRange.startDate | date:'dd/MM/yyyy') + ' إلى ' + (activePrintFullReport()!.dateRange.endDate | date:'dd/MM/yyyy')) }}
+            </p>
+            <p><strong>كود المشروع:</strong> <span class="font-mono">{{ activePrintFullReport()!.project.id }}</span></p>
+          </div>
+        </div>
+
+        <!-- Project Meta Grid -->
+        <div class="bg-slate-100 p-4 rounded-xl mb-6 border border-slate-300 text-xs font-cairo grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <span class="text-slate-500 block">اسم المشروع:</span>
+            <span class="font-bold text-slate-900 text-sm">{{ activePrintFullReport()!.project.name }}</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">العميل المستفيد:</span>
+            <span class="font-bold text-slate-900">{{ activePrintFullReport()!.project.client || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">الميزانية التقديرية:</span>
+            <span class="font-bold font-mono text-slate-900">{{ activePrintFullReport()!.project.budget | number:'1.2-2' }} EGP</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">حالة المشروع:</span>
+            <span class="font-bold text-slate-900">{{ activePrintFullReport()!.project.status }}</span>
+          </div>
+        </div>
+
+        <!-- Summary Totals Grid -->
+        <div class="bg-slate-50 border border-slate-300 rounded-xl p-4 mb-6">
+          <h3 class="text-xs font-bold font-cairo text-slate-700 mb-3">الملخص المالي للمشروع / Financial Summary</h3>
+          <div class="grid grid-cols-4 gap-3 text-center text-xs font-cairo">
+            <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
+              <span class="text-slate-500 block">إجمالي الإيرادات</span>
+              <span class="text-base font-bold font-mono text-emerald-700">+{{ activePrintFullReport()!.summary.totalIncome | number:'1.2-2' }} EGP</span>
+            </div>
+            <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
+              <span class="text-slate-500 block">إجمالي المصروفات</span>
+              <span class="text-base font-bold font-mono text-rose-700">-{{ activePrintFullReport()!.summary.totalExpenses | number:'1.2-2' }} EGP</span>
+            </div>
+            <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
+              <span class="text-slate-500 block">صافي السيولة النقدية</span>
+              <span class="text-base font-bold font-mono text-slate-900">{{ activePrintFullReport()!.summary.netBalance | number:'1.2-2' }} EGP</span>
+            </div>
+            <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
+              <span class="text-slate-500 block">عهد معلقة قيد التسوية</span>
+              <span class="text-base font-bold font-mono text-amber-700">{{ activePrintFullReport()!.summary.totalCustodyPending | number:'1.2-2' }} EGP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions Ledger Table -->
+        <div class="mb-6">
+          <h3 class="text-xs font-bold font-cairo text-slate-800 mb-2">دفتر العمليات المالية / Financial Ledger ({{ activePrintFullReport()!.transactions.length }} عملية)</h3>
+          <table class="w-full text-right border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b-2 border-slate-300 font-bold text-slate-700">
+                <th class="py-1.5 px-2">التاريخ</th>
+                <th class="py-1.5 px-2">النوع</th>
+                <th class="py-1.5 px-2">البيان</th>
+                <th class="py-1.5 px-2 text-left font-mono">المبلغ</th>
+                <th class="py-1.5 px-2 text-center">طريقة الدفع</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              @for (tx of activePrintFullReport()!.transactions; track tx.id) {
+                <tr>
+                  <td class="py-1.5 px-2 font-mono text-slate-600">{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                  <td class="py-1.5 px-2 font-semibold" [class.text-emerald-700]="tx.type === 'Income'" [class.text-rose-700]="tx.type !== 'Income'">
+                    {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
+                  </td>
+                  <td class="py-1.5 px-2 text-slate-800">{{ tx.description || '-' }}</td>
+                  <td class="py-1.5 px-2 text-left font-mono font-bold" [class.text-emerald-700]="tx.type === 'Income'" [class.text-rose-700]="tx.type !== 'Income'">
+                    {{ tx.type === 'Income' ? '+' : '-' }}{{ tx.amount | number:'1.2-2' }} EGP
+                  </td>
+                  <td class="py-1.5 px-2 text-center font-mono text-[11px]">{{ tx.paymentMethod || 'CASH' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="py-3 text-center text-slate-500">لا توجد عمليات مسجلة في هذه الفترة</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Petty Cash Table -->
+        <div class="mb-6">
+          <h3 class="text-xs font-bold font-cairo text-slate-800 mb-2">سجل العهد النقدية / Petty Cash Records ({{ activePrintFullReport()!.pettyCashes.length }} عهدة)</h3>
+          <table class="w-full text-right border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b-2 border-slate-300 font-bold text-slate-700">
+                <th class="py-1.5 px-2">المستلم</th>
+                <th class="py-1.5 px-2">البيان</th>
+                <th class="py-1.5 px-2">التاريخ</th>
+                <th class="py-1.5 px-2 text-left font-mono">قيمة العهدة</th>
+                <th class="py-1.5 px-2 text-center">الحالة</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              @for (pc of activePrintFullReport()!.pettyCashes; track pc.id) {
+                <tr>
+                  <td class="py-1.5 px-2 font-semibold">{{ pc.issuedTo || 'Staff' }}</td>
+                  <td class="py-1.5 px-2 text-slate-700">{{ pc.reason }}</td>
+                  <td class="py-1.5 px-2 font-mono text-slate-600">{{ pc.issuedAt | date:'dd/MM/yyyy' }}</td>
+                  <td class="py-1.5 px-2 text-left font-mono font-bold text-amber-700">{{ pc.amount | number:'1.2-2' }} EGP</td>
+                  <td class="py-1.5 px-2 text-center font-mono text-[11px]">{{ pc.status }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="py-3 text-center text-slate-500">لا توجد عهد في هذه الفترة</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Settlements Table with Line Items -->
+        <div class="mb-8">
+          <h3 class="text-xs font-bold font-cairo text-slate-800 mb-2">سجل التسويات المعتمدة / Settlements & Line Items ({{ activePrintFullReport()!.settlements.length }} تسوية)</h3>
+          <table class="w-full text-right border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b-2 border-slate-300 font-bold text-slate-700">
+                <th class="py-1.5 px-2">المهندس</th>
+                <th class="py-1.5 px-2">بيان العهدة</th>
+                <th class="py-1.5 px-2 text-left font-mono">مبلغ العهدة</th>
+                <th class="py-1.5 px-2 text-left font-mono">المصروف الفعلي</th>
+                <th class="py-1.5 px-2 text-left font-mono">الفرق</th>
+                <th class="py-1.5 px-2 text-center">الحالة</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              @for (s of activePrintFullReport()!.settlements; track s.id) {
+                <tr>
+                  <td class="py-1.5 px-2 font-semibold">{{ s.issuedTo }}</td>
+                  <td class="py-1.5 px-2 text-slate-700">{{ s.custodyReason }}</td>
+                  <td class="py-1.5 px-2 text-left font-mono">{{ s.custodyAmount | number:'1.2-2' }} EGP</td>
+                  <td class="py-1.5 px-2 text-left font-mono text-amber-700 font-bold">{{ s.totalAmount | number:'1.2-2' }} EGP</td>
+                  <td class="py-1.5 px-2 text-left font-mono font-bold" [class.text-emerald-700]="s.netDifference >= 0" [class.text-rose-700]="s.netDifference < 0">
+                    {{ s.netDifference | number:'1.2-2' }} EGP
+                  </td>
+                  <td class="py-1.5 px-2 text-center text-[11px]">{{ s.status }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="py-3 text-center text-slate-500">لا توجد تسويات في هذه الفترة</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Verification Stamp -->
+        <div class="mt-10 pt-6 border-t border-slate-300 flex justify-between items-center text-xs text-slate-500 font-cairo">
+          <div>
+            <p><strong>المراجع المالي:</strong> {{ authService.currentUser()?.name || '—' }}</p>
+            <p><strong>الصفة:</strong> {{ authService.currentUser()?.role || '—' }}</p>
+          </div>
+          <div class="text-center p-3 border-2 border-slate-400 rounded-xl bg-slate-50 min-w-[150px] font-mono font-bold text-slate-800">
+            VERIFIED FINANCIAL REPORT
+          </div>
+        </div>
+      </div>
+    }
+
     @if (profileSuccessMessage()) {
       <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-emerald-600 border border-emerald-500 text-white rounded-xl shadow-2xl font-cairo text-sm max-w-sm">
         <div class="p-1 bg-emerald-700 rounded-lg text-white shrink-0">
@@ -4006,7 +4511,7 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly financialService = inject(FinancialService);
   private readonly uploadService = inject(ImageUploadService);
   private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
+  protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly confirmService = inject(ConfirmModalService);
   private readonly profileService = inject(TenantProfileService);
@@ -4016,6 +4521,7 @@ export class ProjectDetailsComponent implements OnInit {
   private readonly userService = inject(TenantUserService);
   private readonly projectCloseoutService = inject(ProjectCloseoutService);
   private readonly toastService = inject(ToastService);
+  private readonly reportService = inject(FinancialReportService);
   protected readonly langService = inject(LanguageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -4194,6 +4700,16 @@ export class ProjectDetailsComponent implements OnInit {
   readonly isEngineer = this.authService.isEngineer;
   readonly canManageMembers = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isSuperAdmin());
   readonly canManageFinancials = computed(() => this.isTenantOwner() || this.isProjectManager() || this.isAccountant() || this.isSuperAdmin());
+  readonly canViewFinancialReports = computed(() => (this.isTenantOwner() || this.isAccountant() || this.isProjectManager()) && !this.isSuperAdmin());
+
+  readonly tenantProfile = signal<TenantDto | null>(null);
+  readonly isProjectReportModalOpen = signal(false);
+  readonly isProjectReportLoading = signal(false);
+  readonly projectReportData = signal<ProjectFullReportDto | null>(null);
+  readonly projectReportError = signal<string | null>(null);
+  readonly reportStartDate = signal<string>('');
+  readonly reportEndDate = signal<string>('');
+  readonly activePrintFullReport = signal<ProjectFullReportDto | null>(null);
 
 
   readonly projectId = this.route.snapshot.paramMap.get('id') || '';
@@ -4761,6 +5277,9 @@ export class ProjectDetailsComponent implements OnInit {
       }
       if (this.isOwnerOrAccountant()) {
         this.fetchUsersList();
+      }
+      if (this.canViewFinancialReports()) {
+        this.loadTenantProfile();
       }
 
       this.offlineSync.registerHandler('create-settlement', (payload: any) =>
@@ -6492,6 +7011,101 @@ export class ProjectDetailsComponent implements OnInit {
         fallback.classList.add('flex');
       }
     }
+  }
+
+  loadTenantProfile(): void {
+    this.profileService.getProfile().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.tenantProfile.set(res.data);
+        }
+      }
+    });
+  }
+
+  openProjectReportModal(): void {
+    this.isProjectReportModalOpen.set(true);
+    this.confirmService.toggleBodyScroll(true);
+    if (!this.projectReportData()) {
+      this.fetchProjectReport();
+    }
+  }
+
+  closeProjectReportModal(): void {
+    this.isProjectReportModalOpen.set(false);
+    this.confirmService.toggleBodyScroll(false);
+  }
+
+  fetchProjectReport(): void {
+    this.isProjectReportLoading.set(true);
+    this.projectReportError.set(null);
+
+    const sDate = this.reportStartDate() || undefined;
+    const eDate = this.reportEndDate() || undefined;
+
+    this.reportService.getProjectFullReport(this.projectId, sDate, eDate).subscribe({
+      next: (res) => {
+        this.isProjectReportLoading.set(false);
+        if (res.success && res.data) {
+          this.projectReportData.set(res.data);
+        } else {
+          this.projectReportError.set(res.message || 'فشل تحميل بيانات تقرير المشروع.');
+        }
+      },
+      error: (err) => {
+        this.isProjectReportLoading.set(false);
+        this.projectReportError.set(err.error?.message || err.message || 'حدث خطأ أثناء استخراج التقرير المالي للمشروع.');
+      }
+    });
+  }
+
+  onReportStartDatePicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.reportStartDate.set(input.value);
+    this.fetchProjectReport();
+  }
+
+  onReportEndDatePicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.reportEndDate.set(input.value);
+    this.fetchProjectReport();
+  }
+
+  onReportStartDateInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const rawVal = input.value.trim();
+    const parts = rawVal.split('/');
+    if (parts.length === 3 && parts[2].length === 4 && parts[1].length === 2 && parts[0].length === 2) {
+      const formatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      this.reportStartDate.set(formatted);
+      this.fetchProjectReport();
+    }
+  }
+
+  onReportEndDateInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const rawVal = input.value.trim();
+    const parts = rawVal.split('/');
+    if (parts.length === 3 && parts[2].length === 4 && parts[1].length === 2 && parts[0].length === 2) {
+      const formatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      this.reportEndDate.set(formatted);
+      this.fetchProjectReport();
+    }
+  }
+
+  resetReportDateFilter(): void {
+    this.reportStartDate.set('');
+    this.reportEndDate.set('');
+    this.fetchProjectReport();
+  }
+
+  triggerPrintProjectReport(): void {
+    const data = this.projectReportData();
+    if (!data) return;
+    this.activePrintFullReport.set(data);
+    setTimeout(() => {
+      window.print();
+    }, 150);
   }
 }
 

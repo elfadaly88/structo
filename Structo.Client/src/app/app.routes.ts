@@ -79,6 +79,12 @@ export const routes: Routes = [
         data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
+        path: 'reports',
+        loadComponent: () => import('./features/dashboard/reports/reports.component').then(m => m.ReportsComponent),
+        canActivate: [authGuard],
+        data: { roles: ['TenantOwner', 'Accountant'] }
+      },
+      {
         path: 'users',
         loadComponent: () => import('./features/dashboard/users/users.component').then(m => m.UsersComponent),
         data: { roles: ['TenantOwner'] }

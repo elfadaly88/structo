@@ -216,6 +216,7 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IUserService, Structo.Core.Se
 builder.Services.AddScoped<Structo.Core.Interfaces.IProjectService, Structo.Core.Services.ProjectService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IProjectAccessService, Structo.Core.Services.ProjectAccessService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialTransactionService, Structo.Core.Services.FinancialTransactionService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IFinancialReportService, Structo.Core.Services.FinancialReportService>();
 
 builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.Core.Services.SettlementService>();
