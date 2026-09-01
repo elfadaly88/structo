@@ -3424,38 +3424,36 @@ import { TenantDto } from '../../../core/services/public-directory.service';
 
     <!-- 📊 Project Financial Report Modal -->
     @if (isProjectReportModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in font-cairo">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-sm animate-fade-in font-cairo">
         <div (click)="closeProjectReportModal()" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-4xl bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden z-10 font-cairo">
+        <div class="relative w-full max-w-[95vw] xl:max-w-7xl bg-[#0d1322] border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden z-10 font-cairo">
           
           <!-- 1. Fixed Modal Header -->
-          <div class="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-slate-900/80">
+          <div class="flex items-center justify-between p-3.5 sm:p-5 border-b border-slate-800 shrink-0 bg-slate-900/90 backdrop-blur-md">
             <div class="flex items-center gap-3">
-              <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+              <div class="p-2 sm:p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div>
-                <h3 class="text-base sm:text-lg font-bold text-white leading-tight">التقرير المالي الشامل للمشروع / Project Financial Report</h3>
-                <p class="text-xs text-slate-400 mt-0.5">مشروع: <strong class="text-slate-200">{{ project()?.name }}</strong></p>
+                <h3 class="text-sm sm:text-base md:text-lg font-bold text-white leading-tight flex items-center gap-2 flex-wrap">
+                  <span>التقرير المالي الشامل للمشروع</span>
+                  <span class="text-xs text-slate-400 font-normal hidden sm:inline">/ Project Financial Report</span>
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                  <span>مشروع:</span>
+                  <strong class="text-slate-200 font-bold">{{ project()?.name }}</strong>
+                </p>
               </div>
             </div>
 
             <div class="flex items-center gap-2">
               <button
                 type="button"
-                (click)="triggerPrintProjectReport()"
-                [disabled]="isProjectReportLoading() || !projectReportData()"
-                class="px-3 sm:px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
-                <span>🖨️</span>
-                <span class="hidden sm:inline">طباعة التقرير / Print</span>
-                <span class="sm:hidden">طباعة</span>
-              </button>
-              <button
-                type="button"
                 (click)="closeProjectReportModal()"
-                class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer">
+                class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="إغلاق / Close">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -3464,19 +3462,22 @@ import { TenantDto } from '../../../core/services/public-directory.service';
           </div>
 
           <!-- 2. Scrollable Modal Body -->
-          <div class="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 space-y-5 custom-scrollbar font-sans">
+          <div class="flex-1 overflow-y-auto min-h-0 p-3 sm:p-5 md:p-6 space-y-4 custom-scrollbar font-sans">
             <!-- Date Filter Strip -->
-            <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-3 font-cairo shadow-sm">
+            <div class="bg-slate-950/80 p-3 sm:p-4 rounded-xl border border-slate-800/90 space-y-3 font-cairo shadow-sm">
               <div class="flex items-center justify-between flex-wrap gap-2">
                 <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <span>📅</span>
-                  <span>تحديد الفترة الزمنية للتقرير / Date Range Filter</span>
+                  <svg class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>تحديد النطاق الزمني للتقرير / Date Range Filter</span>
                 </span>
                 <button
                   type="button"
                   (click)="resetReportDateFilter()"
-                  class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
-                  الفترة الكاملة / Full Period
+                  class="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300 border border-amber-500/30 transition-all cursor-pointer flex items-center gap-1.5 shrink-0">
+                  <span>⚡</span>
+                  <span>الفترة الكاملة / Full Period</span>
                 </button>
               </div>
 
@@ -3490,7 +3491,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                       [value]="formatDisplayDate(reportStartDate())"
                       (input)="onReportStartDateInput($event)"
                       placeholder="DD/MM/YYYY"
-                      class="w-full px-3 py-2 border border-slate-700 bg-slate-900 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono pr-9">
+                      class="w-full px-3 py-2 border border-slate-700/80 bg-slate-900/90 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono pr-9">
                     <input
                       #reportStartDatePicker
                       type="date"
@@ -3518,7 +3519,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                       [value]="formatDisplayDate(reportEndDate())"
                       (input)="onReportEndDateInput($event)"
                       placeholder="DD/MM/YYYY"
-                      class="w-full px-3 py-2 border border-slate-700 bg-slate-900 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono pr-9">
+                      class="w-full px-3 py-2 border border-slate-700/80 bg-slate-900/90 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono pr-9">
                     <input
                       #reportEndDatePicker
                       type="date"
@@ -3540,188 +3541,414 @@ import { TenantDto } from '../../../core/services/public-directory.service';
             </div>
 
             @if (isProjectReportLoading()) {
-              <div class="py-16 flex flex-col items-center justify-center font-cairo">
-                <svg class="animate-spin h-8 w-8 text-sky-400 mb-3" fill="none" viewBox="0 0 24 24">
+              <div class="py-20 flex flex-col items-center justify-center font-cairo">
+                <svg class="animate-spin h-9 w-9 text-sky-400 mb-3" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="text-xs text-slate-400 font-medium">جاري استخراج بيانات تقرير المشروع...</span>
+                <span class="text-xs text-slate-300 font-medium">جاري استخراج وتحليل بيانات تقرير المشروع...</span>
               </div>
             } @else if (projectReportError()) {
-              <div class="p-6 bg-rose-500/10 border border-rose-500/30 rounded-xl text-center space-y-2 font-cairo">
-                <p class="text-xs font-bold text-rose-400">⚠️ {{ projectReportError() }}</p>
-                <button type="button" (click)="fetchProjectReport()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-200">إعادة المحاولة</button>
+              <div class="p-6 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-center space-y-3 font-cairo">
+                <p class="text-xs sm:text-sm font-bold text-rose-400">⚠️ {{ projectReportError() }}</p>
+                <button
+                  type="button"
+                  (click)="fetchProjectReport()"
+                  class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-all cursor-pointer">
+                  إعادة المحاولة / Retry
+                </button>
               </div>
             } @else if (projectReportData()) {
-              <!-- Project Meta Card -->
-              <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 font-cairo grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <div>
-                  <span class="text-slate-500 block">المشروع:</span>
-                  <span class="font-bold text-white">{{ projectReportData()!.project.name }}</span>
-                </div>
-                <div>
-                  <span class="text-slate-500 block">العميل:</span>
-                  <span class="font-bold text-slate-200">{{ projectReportData()!.project.client || '—' }}</span>
-                </div>
-                <div>
-                  <span class="text-slate-500 block">الميزانية:</span>
-                  <span class="font-mono font-bold text-amber-400">{{ projectReportData()!.project.budget | number:'1.2-2' }} ج.م</span>
-                </div>
-                <div>
-                  <span class="text-slate-500 block">الحالة:</span>
-                  <span class="font-bold text-indigo-400">{{ projectReportData()!.project.status }}</span>
-                </div>
-              </div>
+              <!-- Tabbed Sub-Navigation Bar -->
+              <div class="flex items-center gap-2 border-b border-slate-800/80 pb-2 overflow-x-auto custom-scrollbar shrink-0 font-cairo">
+                <button
+                  type="button"
+                  (click)="reportActiveTab.set('summary')"
+                  class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border"
+                  [class.bg-indigo-600]="reportActiveTab() === 'summary'"
+                  [class.text-white]="reportActiveTab() === 'summary'"
+                  [class.shadow-lg]="reportActiveTab() === 'summary'"
+                  [class.shadow-indigo-600\/20]="reportActiveTab() === 'summary'"
+                  [class.border-indigo-500\/40]="reportActiveTab() === 'summary'"
+                  [class.bg-slate-900\/60]="reportActiveTab() !== 'summary'"
+                  [class.text-slate-400]="reportActiveTab() !== 'summary'"
+                  [class.hover:text-slate-200]="reportActiveTab() !== 'summary'"
+                  [class.border-slate-800]="reportActiveTab() !== 'summary'">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>الملخص المالي العام / Summary</span>
+                </button>
 
-              <!-- Summary Metrics Cards -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-cairo">
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 font-bold block">إجمالي المقبوضات (إيراد)</span>
-                  <span class="font-mono font-bold text-sm text-emerald-400">+{{ projectReportData()!.summary.totalIncome | number:'1.2-2' }}</span>
-                </div>
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 font-bold block">إجمالي المصروفات</span>
-                  <span class="font-mono font-bold text-sm text-rose-400">-{{ projectReportData()!.summary.totalExpenses | number:'1.2-2' }}</span>
-                </div>
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 font-bold block">صافي السيولة النقدية</span>
-                  <span class="font-mono font-bold text-sm" [class.text-emerald-400]="projectReportData()!.summary.netBalance >= 0" [class.text-rose-400]="projectReportData()!.summary.netBalance < 0">
-                    {{ projectReportData()!.summary.netBalance | number:'1.2-2' }}
+                <button
+                  type="button"
+                  (click)="reportActiveTab.set('transactions')"
+                  class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border"
+                  [class.bg-indigo-600]="reportActiveTab() === 'transactions'"
+                  [class.text-white]="reportActiveTab() === 'transactions'"
+                  [class.shadow-lg]="reportActiveTab() === 'transactions'"
+                  [class.shadow-indigo-600\/20]="reportActiveTab() === 'transactions'"
+                  [class.border-indigo-500\/40]="reportActiveTab() === 'transactions'"
+                  [class.bg-slate-900\/60]="reportActiveTab() !== 'transactions'"
+                  [class.text-slate-400]="reportActiveTab() !== 'transactions'"
+                  [class.hover:text-slate-200]="reportActiveTab() !== 'transactions'"
+                  [class.border-slate-800]="reportActiveTab() !== 'transactions'">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>دفتر الحركات المالية / Transactions</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-950/70 border border-slate-700/60 text-slate-300">
+                    {{ projectReportData()!.transactions.length }}
                   </span>
-                </div>
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 font-bold block">عهد معلقة قيد التسوية</span>
-                  <span class="font-mono font-bold text-sm text-amber-400">{{ projectReportData()!.summary.totalCustodyPending | number:'1.2-2' }}</span>
-                </div>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="reportActiveTab.set('pettyCashes')"
+                  class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border"
+                  [class.bg-indigo-600]="reportActiveTab() === 'pettyCashes'"
+                  [class.text-white]="reportActiveTab() === 'pettyCashes'"
+                  [class.shadow-lg]="reportActiveTab() === 'pettyCashes'"
+                  [class.shadow-indigo-600\/20]="reportActiveTab() === 'pettyCashes'"
+                  [class.border-indigo-500\/40]="reportActiveTab() === 'pettyCashes'"
+                  [class.bg-slate-900\/60]="reportActiveTab() !== 'pettyCashes'"
+                  [class.text-slate-400]="reportActiveTab() !== 'pettyCashes'"
+                  [class.hover:text-slate-200]="reportActiveTab() !== 'pettyCashes'"
+                  [class.border-slate-800]="reportActiveTab() !== 'pettyCashes'">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>سجل العُهَد النقدية / Petty Cash</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-950/70 border border-slate-700/60 text-slate-300">
+                    {{ projectReportData()!.pettyCashes.length }}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="reportActiveTab.set('settlements')"
+                  class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border"
+                  [class.bg-indigo-600]="reportActiveTab() === 'settlements'"
+                  [class.text-white]="reportActiveTab() === 'settlements'"
+                  [class.shadow-lg]="reportActiveTab() === 'settlements'"
+                  [class.shadow-indigo-600\/20]="reportActiveTab() === 'settlements'"
+                  [class.border-indigo-500\/40]="reportActiveTab() === 'settlements'"
+                  [class.bg-slate-900\/60]="reportActiveTab() !== 'settlements'"
+                  [class.text-slate-400]="reportActiveTab() !== 'settlements'"
+                  [class.hover:text-slate-200]="reportActiveTab() !== 'settlements'"
+                  [class.border-slate-800]="reportActiveTab() !== 'settlements'">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                  </svg>
+                  <span>سجل التسويات / Settlements</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-950/70 border border-slate-700/60 text-slate-300">
+                    {{ projectReportData()!.settlements.length }}
+                  </span>
+                </button>
               </div>
 
-              <!-- Section: Transactions -->
-              <div class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden font-cairo">
-                <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center text-xs">
-                  <span class="font-bold text-white">📖 دفتر الحركات المالية ({{ projectReportData()!.transactions.length }} حركة)</span>
-                </div>
-                <div class="overflow-x-auto max-h-60 custom-scrollbar">
-                  <table class="w-full text-right text-xs">
-                    <thead class="bg-slate-950/70 text-slate-400 sticky top-0">
-                      <tr>
-                        <th class="p-2">التاريخ</th>
-                        <th class="p-2">النوع</th>
-                        <th class="p-2">البيان</th>
-                        <th class="p-2 text-left font-mono">المبلغ</th>
-                        <th class="p-2 text-center">طريقة الدفع</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                      @for (t of projectReportData()!.transactions; track t.id) {
-                        <tr class="hover:bg-slate-800/20">
-                          <td class="p-2 font-mono text-slate-400">{{ t.transactionDate | date:'dd/MM/yyyy' }}</td>
-                          <td class="p-2">
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold" [class.bg-emerald-950]="t.type === 'Income'" [class.text-emerald-400]="t.type === 'Income'" [class.bg-rose-950]="t.type !== 'Income'" [class.text-rose-400]="t.type !== 'Income'">
-                              {{ t.type === 'Income' ? 'إيراد' : 'مصروف' }}
-                            </span>
-                          </td>
-                          <td class="p-2 text-slate-200 max-w-xs truncate">{{ t.description }}</td>
-                          <td class="p-2 text-left font-mono font-bold" [class.text-emerald-400]="t.type === 'Income'" [class.text-rose-400]="t.type !== 'Income'">
-                            {{ t.type === 'Income' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }}
-                          </td>
-                          <td class="p-2 text-center font-mono text-slate-400">{{ t.paymentMethod || '—' }}</td>
-                        </tr>
-                      } @empty {
-                        <tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد حركات مسجلة</td></tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <!-- TAB 1: SUMMARY -->
+              @if (reportActiveTab() === 'summary') {
+                <div class="space-y-4 font-cairo animate-fade-in">
+                  <!-- Project Meta Card -->
+                  <div class="bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs shadow-sm">
+                    <div>
+                      <span class="text-slate-400 text-[11px] block font-medium">اسم المشروع / Project</span>
+                      <span class="font-bold text-white text-sm mt-0.5 block">{{ projectReportData()!.project.name }}</span>
+                    </div>
+                    <div>
+                      <span class="text-slate-400 text-[11px] block font-medium">العميل / Client</span>
+                      <span class="font-bold text-slate-200 text-sm mt-0.5 block">{{ projectReportData()!.project.client || '—' }}</span>
+                    </div>
+                    <div>
+                      <span class="text-slate-400 text-[11px] block font-medium">الميزانية التقديرية / Budget</span>
+                      <span class="font-mono font-bold text-amber-400 text-sm mt-0.5 block">{{ projectReportData()!.project.budget | number:'1.2-2' }} EGP</span>
+                    </div>
+                    <div>
+                      <span class="text-slate-400 text-[11px] block font-medium">حالة المشروع / Status</span>
+                      <span class="font-bold text-indigo-400 text-sm mt-0.5 block">{{ projectReportData()!.project.status }}</span>
+                    </div>
+                  </div>
 
-              <!-- Section: Petty Cash -->
-              <div class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden font-cairo">
-                <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center text-xs">
-                  <span class="font-bold text-white">🧾 سجل العهد النقدية ({{ projectReportData()!.pettyCashes.length }} عهدة)</span>
-                </div>
-                <div class="overflow-x-auto max-h-60 custom-scrollbar">
-                  <table class="w-full text-right text-xs">
-                    <thead class="bg-slate-950/70 text-slate-400 sticky top-0">
-                      <tr>
-                        <th class="p-2">المستلم</th>
-                        <th class="p-2">البيان</th>
-                        <th class="p-2">التاريخ</th>
-                        <th class="p-2 text-left font-mono">المبلغ</th>
-                        <th class="p-2 text-center">الحالة</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                      @for (pc of projectReportData()!.pettyCashes; track pc.id) {
-                        <tr class="hover:bg-slate-800/20">
-                          <td class="p-2 font-bold text-white">{{ pc.issuedTo }}</td>
-                          <td class="p-2 text-slate-300 max-w-xs truncate">{{ pc.reason }}</td>
-                          <td class="p-2 font-mono text-slate-400">{{ pc.issuedAt | date:'dd/MM/yyyy' }}</td>
-                          <td class="p-2 text-left font-mono font-bold text-amber-400">{{ pc.amount | number:'1.2-2' }}</td>
-                          <td class="p-2 text-center font-mono text-xs">{{ pc.status }}</td>
-                        </tr>
-                      } @empty {
-                        <tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد عهد مسجلة</td></tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                  <!-- Summary Metrics 6-Card Grid -->
+                  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 shadow-sm space-y-1">
+                      <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">إجمالي الإيرادات</span>
+                      <p class="text-sm sm:text-base font-bold font-mono text-emerald-400">+{{ projectReportData()!.summary.totalIncome | number:'1.2-2' }}</p>
+                      <span class="text-[10px] text-slate-500 block">مقبوضات المشروع</span>
+                    </div>
 
-              <!-- Section: Settlements -->
-              <div class="bg-slate-900/40 rounded-xl border border-slate-800 overflow-hidden font-cairo">
-                <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center text-xs">
-                  <span class="font-bold text-white">⚖️ سجل التسويات ({{ projectReportData()!.settlements.length }} تسوية)</span>
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 shadow-sm space-y-1">
+                      <span class="text-[10px] text-rose-400 font-bold uppercase tracking-wider block">إجمالي المصروفات</span>
+                      <p class="text-sm sm:text-base font-bold font-mono text-rose-400">-{{ projectReportData()!.summary.totalExpenses | number:'1.2-2' }}</p>
+                      <span class="text-[10px] text-slate-500 block">مصاريف مسجلة</span>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 shadow-sm space-y-1">
+                      <span class="text-[10px] text-sky-400 font-bold uppercase tracking-wider block">صافي السيولة النقدية</span>
+                      <p class="text-sm sm:text-base font-bold font-mono" [class.text-emerald-400]="projectReportData()!.summary.netBalance >= 0" [class.text-rose-400]="projectReportData()!.summary.netBalance < 0">
+                        {{ projectReportData()!.summary.netBalance | number:'1.2-2' }}
+                      </p>
+                      <span class="text-[10px] text-slate-500 block">رصيد الصندوق</span>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 shadow-sm space-y-1">
+                      <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">عهد معلقة قيد التسوية</span>
+                      <p class="text-sm sm:text-base font-bold font-mono text-amber-400">{{ projectReportData()!.summary.totalCustodyPending | number:'1.2-2' }}</p>
+                      <span class="text-[10px] text-slate-500 block">{{ projectReportData()!.summary.unsettledCustodyCount }} عهدة معلقة</span>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 shadow-sm space-y-1">
+                      <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">إجمالي العهد المصروفة</span>
+                      <p class="text-sm sm:text-base font-bold font-mono text-indigo-300">{{ projectReportData()!.summary.totalCustodyIssued | number:'1.2-2' }}</p>
+                      <span class="text-[10px] text-slate-500 block">صرفت للموقع</span>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 shadow-sm space-y-1">
+                      <span class="text-[10px] text-teal-400 font-bold uppercase tracking-wider block">عهد تم تسويتها</span>
+                      <p class="text-sm sm:text-base font-bold font-mono text-teal-300">{{ projectReportData()!.summary.totalCustodySettled | number:'1.2-2' }}</p>
+                      <span class="text-[10px] text-slate-500 block">تسويات معتمدة</span>
+                    </div>
+                  </div>
+
+                  <!-- Quick Navigation Cards to Deep Sections -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    <button
+                      type="button"
+                      (click)="reportActiveTab.set('transactions')"
+                      class="p-4 rounded-2xl bg-slate-900/40 hover:bg-slate-900/70 border border-slate-800 text-right transition-all cursor-pointer group">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-300 group-hover:text-white flex items-center gap-2">
+                          <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">📖</span>
+                          <span>الحركات المالية</span>
+                        </span>
+                        <span class="text-xs font-mono font-bold text-indigo-400">{{ projectReportData()!.transactions.length }} حركة ←</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400">استعراض كافة المقبوضات والمصروفات المسجلة بالمشروع مع طريقة الدفع.</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="reportActiveTab.set('pettyCashes')"
+                      class="p-4 rounded-2xl bg-slate-900/40 hover:bg-slate-900/70 border border-slate-800 text-right transition-all cursor-pointer group">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-300 group-hover:text-white flex items-center gap-2">
+                          <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">🧾</span>
+                          <span>العهد النقدية</span>
+                        </span>
+                        <span class="text-xs font-mono font-bold text-indigo-400">{{ projectReportData()!.pettyCashes.length }} عهدة ←</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400">تفاصيل العهد النقدية المسلمة للمهندسين والمشرفين وحالة كل عهدة.</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="reportActiveTab.set('settlements')"
+                      class="p-4 rounded-2xl bg-slate-900/40 hover:bg-slate-900/70 border border-slate-800 text-right transition-all cursor-pointer group">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-300 group-hover:text-white flex items-center gap-2">
+                          <span class="p-1.5 rounded-lg bg-sky-500/10 text-sky-400">⚖️</span>
+                          <span>سجل التسويات</span>
+                        </span>
+                        <span class="text-xs font-mono font-bold text-indigo-400">{{ projectReportData()!.settlements.length }} تسوية ←</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400">كشوف الفواتير المرفقة ومطابقة المصروف الفعلي مع المبالغ المسلمة.</p>
+                    </button>
+                  </div>
                 </div>
-                <div class="overflow-x-auto max-h-60 custom-scrollbar">
-                  <table class="w-full text-right text-xs">
-                    <thead class="bg-slate-950/70 text-slate-400 sticky top-0">
-                      <tr>
-                        <th class="p-2">المهندس</th>
-                        <th class="p-2">البيان</th>
-                        <th class="p-2 text-left font-mono">العهدة</th>
-                        <th class="p-2 text-left font-mono">المصروف</th>
-                        <th class="p-2 text-left font-mono">الفرق</th>
-                        <th class="p-2 text-center">الحالة</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                      @for (s of projectReportData()!.settlements; track s.id) {
-                        <tr class="hover:bg-slate-800/20">
-                          <td class="p-2 font-bold text-white">{{ s.issuedTo }}</td>
-                          <td class="p-2 text-slate-300 max-w-xs truncate">{{ s.custodyReason }}</td>
-                          <td class="p-2 text-left font-mono text-slate-300">{{ s.custodyAmount | number:'1.2-2' }}</td>
-                          <td class="p-2 text-left font-mono text-amber-400 font-bold">{{ s.totalAmount | number:'1.2-2' }}</td>
-                          <td class="p-2 text-left font-mono font-bold" [class.text-emerald-400]="s.netDifference >= 0" [class.text-rose-400]="s.netDifference < 0">
-                            {{ s.netDifference | number:'1.2-2' }}
-                          </td>
-                          <td class="p-2 text-center text-xs">{{ s.status }}</td>
+              }
+
+              <!-- TAB 2: TRANSACTIONS -->
+              @if (reportActiveTab() === 'transactions') {
+                <div class="bg-slate-900/30 rounded-2xl border border-slate-800/80 overflow-hidden font-cairo shadow-xl animate-fade-in">
+                  <div class="p-3.5 sm:p-4 bg-slate-900/60 border-b border-slate-800 flex justify-between items-center text-xs">
+                    <span class="font-bold text-white flex items-center gap-2">
+                      <span>📖</span>
+                      <span>دفتر الحركات المالية</span>
+                    </span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-mono text-[11px] border border-slate-700">
+                      {{ projectReportData()!.transactions.length }} حركة مسجلة
+                    </span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                      <thead class="bg-slate-950/70 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+                        <tr>
+                          <th class="p-3">التاريخ</th>
+                          <th class="p-3 text-center">النوع</th>
+                          <th class="p-3">البيان / الوصف</th>
+                          <th class="p-3 text-left font-mono">المبلغ</th>
+                          <th class="p-3 text-center">طريقة الدفع</th>
                         </tr>
-                      } @empty {
-                        <tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد تسويات مسجلة</td></tr>
-                      }
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody class="divide-y divide-slate-800/50">
+                        @for (t of projectReportData()!.transactions; track t.id) {
+                          <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-3 font-mono text-slate-400">{{ t.transactionDate | date:'dd/MM/yyyy' }}</td>
+                            <td class="p-3 text-center">
+                              <span class="px-2 py-0.5 rounded text-[10px] font-bold"
+                                    [class.bg-emerald-950\/60]="t.type === 'Income'"
+                                    [class.text-emerald-400]="t.type === 'Income'"
+                                    [class.bg-rose-950\/60]="t.type !== 'Income'"
+                                    [class.text-rose-400]="t.type !== 'Income'">
+                                {{ t.type === 'Income' ? 'إيراد' : 'مصروف' }}
+                              </span>
+                            </td>
+                            <td class="p-3 text-slate-200 break-words max-w-md">{{ t.description || '—' }}</td>
+                            <td class="p-3 text-left font-mono font-bold"
+                                [class.text-emerald-400]="t.type === 'Income'"
+                                [class.text-rose-400]="t.type !== 'Income'">
+                              {{ t.type === 'Income' ? '+' : '-' }}{{ t.amount | number:'1.2-2' }} EGP
+                            </td>
+                            <td class="p-3 text-center font-mono text-slate-400">{{ t.paymentMethod || '—' }}</td>
+                          </tr>
+                        } @empty {
+                          <tr>
+                            <td colspan="5" class="p-8 text-center text-slate-500 text-xs font-cairo">
+                              لا توجد حركات مالية مسجلة في هذا النطاق
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              }
+
+              <!-- TAB 3: PETTY CASH -->
+              @if (reportActiveTab() === 'pettyCashes') {
+                <div class="bg-slate-900/30 rounded-2xl border border-slate-800/80 overflow-hidden font-cairo shadow-xl animate-fade-in">
+                  <div class="p-3.5 sm:p-4 bg-slate-900/60 border-b border-slate-800 flex justify-between items-center text-xs">
+                    <span class="font-bold text-white flex items-center gap-2">
+                      <span>🧾</span>
+                      <span>سجل العُهَد النقدية</span>
+                    </span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-mono text-[11px] border border-slate-700">
+                      {{ projectReportData()!.pettyCashes.length }} عهدة مسجلة
+                    </span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                      <thead class="bg-slate-950/70 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+                        <tr>
+                          <th class="p-3">المستلم</th>
+                          <th class="p-3">البيان / الغرض</th>
+                          <th class="p-3">التاريخ</th>
+                          <th class="p-3 text-left font-mono">المبلغ</th>
+                          <th class="p-3 text-center">الحالة</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-800/50">
+                        @for (pc of projectReportData()!.pettyCashes; track pc.id) {
+                          <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-3 font-bold text-white">{{ pc.issuedTo || '—' }}</td>
+                            <td class="p-3 text-slate-300 break-words max-w-md">{{ pc.reason }}</td>
+                            <td class="p-3 font-mono text-slate-400">{{ pc.issuedAt | date:'dd/MM/yyyy' }}</td>
+                            <td class="p-3 text-left font-mono font-bold text-amber-400">{{ pc.amount | number:'1.2-2' }} EGP</td>
+                            <td class="p-3 text-center font-mono text-xs">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                    [class.bg-emerald-500\/15]="pc.status === 'Settled'"
+                                    [class.text-emerald-400]="pc.status === 'Settled'"
+                                    [class.bg-amber-500\/15]="pc.status === 'Pending'"
+                                    [class.text-amber-400]="pc.status === 'Pending'"
+                                    [class.bg-rose-500\/15]="pc.status === 'Rejected'"
+                                    [class.text-rose-400]="pc.status === 'Rejected'">
+                                {{ pc.status }}
+                              </span>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr>
+                            <td colspan="5" class="p-8 text-center text-slate-500 text-xs font-cairo">
+                              لا توجد عهد نقدية مسجلة في هذا النطاق
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 4: SETTLEMENTS -->
+              @if (reportActiveTab() === 'settlements') {
+                <div class="bg-slate-900/30 rounded-2xl border border-slate-800/80 overflow-hidden font-cairo shadow-xl animate-fade-in">
+                  <div class="p-3.5 sm:p-4 bg-slate-900/60 border-b border-slate-800 flex justify-between items-center text-xs">
+                    <span class="font-bold text-white flex items-center gap-2">
+                      <span>⚖️</span>
+                      <span>سجل التسويات المعتمدة</span>
+                    </span>
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-mono text-[11px] border border-slate-700">
+                      {{ projectReportData()!.settlements.length }} تسوية مسجلة
+                    </span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                      <thead class="bg-slate-950/70 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+                        <tr>
+                          <th class="p-3">المهندس / المستلم</th>
+                          <th class="p-3">بيان العهدة</th>
+                          <th class="p-3 text-left font-mono">العهدة</th>
+                          <th class="p-3 text-left font-mono">المصروف الفعلي</th>
+                          <th class="p-3 text-left font-mono">الفرق</th>
+                          <th class="p-3 text-center">الحالة</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-800/50">
+                        @for (s of projectReportData()!.settlements; track s.id) {
+                          <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="p-3 font-bold text-white">{{ s.issuedTo }}</td>
+                            <td class="p-3 text-slate-300 break-words max-w-xs">{{ s.custodyReason }}</td>
+                            <td class="p-3 text-left font-mono text-slate-300">{{ s.custodyAmount | number:'1.2-2' }}</td>
+                            <td class="p-3 text-left font-mono text-amber-400 font-bold">{{ s.totalAmount | number:'1.2-2' }}</td>
+                            <td class="p-3 text-left font-mono font-bold" [class.text-emerald-400]="s.netDifference >= 0" [class.text-rose-400]="s.netDifference < 0">
+                              {{ s.netDifference | number:'1.2-2' }}
+                            </td>
+                            <td class="p-3 text-center text-xs">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                                {{ s.status }}
+                              </span>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr>
+                            <td colspan="6" class="p-8 text-center text-slate-500 text-xs font-cairo">
+                              لا توجد تسويات مسجلة في هذا النطاق
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
             }
           </div>
 
           <!-- 3. Fixed Modal Footer -->
-          <div class="p-4 bg-[#0d1322] border-t border-slate-800 flex items-center justify-between gap-3 shrink-0 font-cairo">
+          <div class="p-3 sm:p-4 bg-[#0d1322] border-t border-slate-800 flex items-center justify-between gap-3 shrink-0 font-cairo">
             <button
               type="button"
               (click)="closeProjectReportModal()"
-              class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
-              إغلاق / Close
+              class="px-4 sm:px-5 py-2.5 text-xs font-bold rounded-xl text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700 transition-all cursor-pointer flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>إغلاق / Close</span>
             </button>
-            <button
-              type="button"
-              (click)="triggerPrintProjectReport()"
-              [disabled]="isProjectReportLoading() || !projectReportData()"
-              class="px-5 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
-              <span>🖨️</span>
-              <span>طباعة التقرير / Print Report</span>
-            </button>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                (click)="triggerPrintProjectReport()"
+                [disabled]="isProjectReportLoading() || !projectReportData()"
+                class="px-5 sm:px-6 py-2.5 text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>طباعة التقرير / Print Report</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -4710,6 +4937,7 @@ export class ProjectDetailsComponent implements OnInit {
   readonly reportStartDate = signal<string>('');
   readonly reportEndDate = signal<string>('');
   readonly activePrintFullReport = signal<ProjectFullReportDto | null>(null);
+  readonly reportActiveTab = signal<'summary' | 'transactions' | 'pettyCashes' | 'settlements'>('summary');
 
 
   readonly projectId = this.route.snapshot.paramMap.get('id') || '';
@@ -7024,6 +7252,7 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   openProjectReportModal(): void {
+    this.reportActiveTab.set('summary');
     this.isProjectReportModalOpen.set(true);
     this.confirmService.toggleBodyScroll(true);
     if (!this.projectReportData()) {
