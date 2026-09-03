@@ -16,6 +16,17 @@ public class SiteExecutionService(
     DbContext context,
     IProjectAccessService projectAccessService) : ISiteExecutionService
 {
+    private static DateTime? AsUtc(DateTime? dt)
+    {
+        if (!dt.HasValue) return null;
+        return dt.Value.Kind == DateTimeKind.Utc ? dt.Value : DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
+    }
+
+    private static DateTime AsUtc(DateTime dt)
+    {
+        return dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+    }
+
     private static string GenerateShareToken()
     {
         return Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
@@ -141,9 +152,9 @@ public class SiteExecutionService(
             Weight = t.Task.Weight,
             ProgressPercentage = t.Task.ProgressPercentage,
             Status = t.Task.Status.ToString(),
-            PlannedStartDate = t.Task.PlannedStartDate,
-            PlannedEndDate = t.Task.PlannedEndDate,
-            CompletedAt = t.Task.CompletedAt,
+            PlannedStartDate = AsUtc(t.Task.PlannedStartDate),
+            PlannedEndDate = AsUtc(t.Task.PlannedEndDate),
+            CompletedAt = AsUtc(t.Task.CompletedAt),
             EngineerNotes = t.Task.EngineerNotes,
             AttachmentUrls = t.Task.AttachmentUrls,
             TotalAllocatedExpenses = t.Items.Sum(i => i.AllocatedAmount),
@@ -265,8 +276,8 @@ public class SiteExecutionService(
             Weight = dto.Weight,
             ProgressPercentage = 0,
             Status = SiteTaskStatus.Pending,
-            PlannedStartDate = dto.PlannedStartDate,
-            PlannedEndDate = dto.PlannedEndDate
+            PlannedStartDate = AsUtc(dto.PlannedStartDate),
+            PlannedEndDate = AsUtc(dto.PlannedEndDate)
         };
 
         context.Set<SiteTask>().Add(task);
@@ -284,9 +295,9 @@ public class SiteExecutionService(
             Weight = task.Weight,
             ProgressPercentage = task.ProgressPercentage,
             Status = task.Status.ToString(),
-            PlannedStartDate = task.PlannedStartDate,
-            PlannedEndDate = task.PlannedEndDate,
-            CompletedAt = task.CompletedAt,
+            PlannedStartDate = AsUtc(task.PlannedStartDate),
+            PlannedEndDate = AsUtc(task.PlannedEndDate),
+            CompletedAt = AsUtc(task.CompletedAt),
             EngineerNotes = task.EngineerNotes,
             AttachmentUrls = task.AttachmentUrls,
             TotalAllocatedExpenses = 0,
@@ -494,8 +505,8 @@ public class SiteExecutionService(
             CityOrZone = project.CityOrZone,
             Status = project.Status.ToString(),
             WeightedOverallProgress = Math.Clamp(weightedOverallProgress, 0, 100),
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
+            StartDate = AsUtc(project.StartDate),
+            EndDate = AsUtc(project.EndDate),
             Tasks = tasks.Select(t => new PublicTaskProgressDto
             {
                 Id = t.Id,
@@ -503,9 +514,9 @@ public class SiteExecutionService(
                 Description = t.Description,
                 ProgressPercentage = t.ProgressPercentage,
                 Status = t.Status,
-                PlannedStartDate = t.PlannedStartDate,
-                PlannedEndDate = t.PlannedEndDate,
-                CompletedAt = t.CompletedAt,
+                PlannedStartDate = AsUtc(t.PlannedStartDate),
+                PlannedEndDate = AsUtc(t.PlannedEndDate),
+                CompletedAt = AsUtc(t.CompletedAt),
                 AttachmentUrls = t.AttachmentUrls
             }).ToList(),
             SitePhotos = photos

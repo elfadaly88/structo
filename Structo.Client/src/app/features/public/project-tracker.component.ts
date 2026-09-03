@@ -188,7 +188,7 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
             <div class="space-y-4">
               <div>
                 <h2 class="text-lg sm:text-xl font-bold text-white">معرض صور وتوثيق الموقع المعتمدة</h2>
-                <p class="text-xs text-slate-400 mt-0.5">لقطات حية من أرض الواقع توثق مراحل التشييد والتسليم</p>
+                
               </div>
 
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
@@ -290,13 +290,25 @@ export class ProjectTrackerComponent implements OnInit {
 
   formatSafeDate(dateStr?: string | null): string {
     if (!dateStr) return '—';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return String(dateStr).split('T')[0];
-      return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch {
-      return String(dateStr);
+    const str = String(dateStr).trim();
+    if (str.includes('/')) {
+      const parts = str.split(' ')[0].split('/');
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        return `${day}/${month}/${year}`;
+      }
+      return str.split(' ')[0];
     }
+    const d = new Date(str);
+    if (isNaN(d.getTime())) {
+      return str.split('T')[0];
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   }
 
   getMilestoneBadgeClass(status: string, pct: number): string {

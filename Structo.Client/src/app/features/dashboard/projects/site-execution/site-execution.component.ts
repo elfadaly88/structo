@@ -232,10 +232,10 @@ import {
                         </p>
                       }
                       @if (task.plannedStartDate || task.plannedEndDate) {
-                        <div class="flex items-center gap-1 mt-1 text-[10px] text-slate-500 font-mono">
-                          <span>📅 {{ formatSafeDate(task.plannedStartDate) }}</span>
+                        <div class="flex items-center gap-1 mt-1 text-[10px] text-slate-400 font-mono">
+                          <span>📅 {{ formatTaskDate(task.plannedStartDate) }}</span>
                           @if (task.plannedEndDate) {
-                            <span>← {{ formatSafeDate(task.plannedEndDate) }}</span>
+                            <span>← {{ formatTaskDate(task.plannedEndDate) }}</span>
                           }
                         </div>
                       }
@@ -1030,15 +1030,31 @@ export class SiteExecutionComponent implements OnInit {
     });
   }
 
-  formatSafeDate(dateStr?: string | null): string {
+  formatTaskDate(dateStr?: string | null): string {
     if (!dateStr) return '—';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return String(dateStr).split('T')[0];
-      return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch {
-      return String(dateStr);
+    const str = String(dateStr).trim();
+    if (str.includes('/')) {
+      const parts = str.split(' ')[0].split('/');
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        return `${day}/${month}/${year}`;
+      }
+      return str.split(' ')[0];
     }
+    const d = new Date(str);
+    if (isNaN(d.getTime())) {
+      return str.split('T')[0];
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  formatSafeDate(dateStr?: string | null): string {
+    return this.formatTaskDate(dateStr);
   }
 
   getStatusBadgeClass(status: string): string {
