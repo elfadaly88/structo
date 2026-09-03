@@ -37,6 +37,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<SubscriptionTransaction> SubscriptionTransactions => Set<SubscriptionTransaction>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<SiteTask> SiteTasks => Set<SiteTask>();
+    public DbSet<SiteTaskSettlementItem> SiteTaskSettlementItems => Set<SiteTaskSettlementItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +55,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SubscriptionTransaction>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SiteTask>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SiteTaskSettlementItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
 
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -92,14 +96,16 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.ClientName).HasMaxLength(150);
             entity.Property(e => e.Category).HasMaxLength(100);
 
-            // Closeout fields
+            // Closeout & Tracking fields
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.PublicReviewToken).HasMaxLength(64);
+            entity.Property(e => e.PublicShareToken).HasMaxLength(64);
             entity.Property(e => e.ClientReviewNotes).HasMaxLength(2000);
             entity.Property(e => e.ClientRating);
             entity.Property(e => e.IsReviewHidden).HasDefaultValue(false);
             entity.Property(e => e.PropertyType).HasConversion<string>().HasMaxLength(30);
             entity.HasIndex(e => e.PublicReviewToken).IsUnique().HasFilter($"\"{nameof(Project.PublicReviewToken)}\" IS NOT NULL");
+            entity.HasIndex(e => e.PublicShareToken).IsUnique().HasFilter($"\"{nameof(Project.PublicShareToken)}\" IS NOT NULL");
 
             entity.HasOne(e => e.Tenant)
                   .WithMany(t => t.Projects)
@@ -373,6 +379,53 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => e.WebhookStatus);
             entity.HasIndex(e => e.CreatedAt);
         });
+
+        modelBuilder.Entity<SiteTask>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(250);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.EngineerNotes).HasMaxLength(2000);
+            entity.Property(e => e.Weight).HasColumnType("numeric(18,4)").HasDefaultValue(1.0m);
+            entity.Property(e => e.ProgressPercentage).HasDefaultValue(0);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany(p => p.SiteTasks)
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.AssignedEngineerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.AssignedEngineerId);
+            entity.HasIndex(e => e.Status);
+        });
+
+        modelBuilder.Entity<SiteTaskSettlementItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AllocatedAmount).HasColumnType("numeric(18,2)");
+            entity.Property(e => e.ExpenseDescription).HasMaxLength(500);
+
+            entity.HasOne(e => e.SiteTask)
+                  .WithMany(st => st.LinkedSettlementItems)
+                  .HasForeignKey(e => e.SiteTaskId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SettlementItem)
+                  .WithMany()
+                  .HasForeignKey(e => e.SettlementItemId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.SiteTaskId);
+            entity.HasIndex(e => e.SettlementItemId);
+            entity.HasIndex(e => e.TenantId);
+        });
     }
 
     public override int SaveChanges()
@@ -413,6 +466,21 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             {
                 // نجبر السطر ياخد نفس الـ TenantId بتاع الـ Settlement الأب فوراً
                 line.TenantId = entry.Entity.TenantId;
+            }
+        }
+    }
+
+    // 3. Master-Detail TenantId sync for SiteTasks and LinkedSettlementItems
+    var siteTaskEntries = ChangeTracker.Entries<SiteTask>()
+        .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+    foreach (var entry in siteTaskEntries)
+    {
+        if (entry.Entity.LinkedSettlementItems != null && entry.Entity.LinkedSettlementItems.Any())
+        {
+            foreach (var item in entry.Entity.LinkedSettlementItems)
+            {
+                item.TenantId = entry.Entity.TenantId;
             }
         }
     }

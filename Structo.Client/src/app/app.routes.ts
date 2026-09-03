@@ -74,6 +74,11 @@ export const routes: Routes = [
         data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
+        path: 'projects/:id/site-execution',
+        loadComponent: () => import('./features/dashboard/projects/site-execution/site-execution.component').then(m => m.SiteExecutionComponent),
+        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+      },
+      {
         path: 'financials',
         loadComponent: () => import('./features/dashboard/financials/financials.component').then(m => m.FinancialsComponent),
         data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
@@ -161,6 +166,10 @@ export const routes: Routes = [
   {
     path: 'public/project-review/:token',
     loadComponent: () => import('./features/public/project-review.component').then(m => m.ProjectReviewComponent)
+  },
+  {
+    path: 'track/:shareToken',
+    loadComponent: () => import('./features/public/project-tracker.component').then(m => m.ProjectTrackerComponent)
   },
   {
     path: '**',

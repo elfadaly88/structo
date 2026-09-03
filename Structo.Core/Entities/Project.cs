@@ -29,9 +29,10 @@ public class Project : ITenantEntity
     public string ClientWhatsApp { get; set; } = string.Empty;
     public PropertyType PropertyType { get; set; } = PropertyType.Residential;
 
-    // --- Closeout fields ---
+    // --- Closeout & Tracking fields ---
     public ProjectStatus Status { get; set; } = ProjectStatus.Active;
     public string? PublicReviewToken { get; set; }
+    public string? PublicShareToken { get; set; }
     public string? ClientReviewNotes { get; set; }
     public int? ClientRating { get; set; }
     public bool IsReviewHidden { get; set; } = false;
@@ -44,5 +45,6 @@ public class Project : ITenantEntity
     public ICollection<SitePhoto> SitePhotos { get; set; } = [];
     public ICollection<Settlement> Settlements { get; set; } = [];
     public ICollection<ProjectMember> Members { get; set; } = [];
+    public ICollection<SiteTask> SiteTasks { get; set; } = [];
 }
 
