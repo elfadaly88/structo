@@ -39,151 +39,160 @@ import { TenantDto } from '../../../core/services/public-directory.service';
       <!-- Unified Project Header & KPI Container with Expand/Collapse -->
       <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl shadow-xl overflow-hidden transition-all duration-200">
         
-        <!-- Top Persistent Row (Always Visible) -->
-        <div class="p-3.5 sm:p-4.5 flex flex-wrap items-center justify-between gap-3" [class.border-b]="!isHeaderCollapsed()" [class.border-slate-800\/80]="!isHeaderCollapsed()">
+        <!-- Persistent Header Section (Always Visible) -->
+        <div class="p-3.5 sm:p-5 flex flex-col gap-3.5" [class.border-b]="!isHeaderCollapsed()" [class.border-slate-800\/80]="!isHeaderCollapsed()">
           
-          <!-- Left: Back Button, Title, Status & Quick Tags -->
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <a
-              routerLink="/dashboard/projects"
-              title="العودة إلى المشاريع"
-              class="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all duration-200 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 sm:h-5 sm:w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </a>
+          <!-- Top Row: Back Button, Title, Badges, Location, and Condensed Metric -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+            
+            <!-- Left: Back Button, Title, Status & Quick Tags -->
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <a
+                routerLink="/dashboard/projects"
+                title="العودة إلى المشاريع"
+                class="p-2 sm:p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-all duration-200 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 sm:h-5 sm:w-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </a>
 
-            <div class="min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h1 class="text-lg sm:text-2xl font-black tracking-tight text-white font-cairo truncate">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <h1 class="text-lg sm:text-2xl font-black tracking-tight text-white font-cairo truncate">
+                    @if (project()) {
+                      {{ project()!.name }}
+                    } @else if (isLoadingProject()) {
+                      <span class="text-slate-500">{{ 'DETAILS.LOADING_PROJECT' | translate }}</span>
+                    } @else {
+                      <span class="text-slate-500">{{ 'DETAILS.PROJECT_NOT_FOUND' | translate }}</span>
+                    }
+                  </h1>
                   @if (project()) {
-                    {{ project()!.name }}
-                  } @else if (isLoadingProject()) {
-                    <span class="text-slate-500">{{ 'DETAILS.LOADING_PROJECT' | translate }}</span>
-                  } @else {
-                    <span class="text-slate-500">{{ 'DETAILS.PROJECT_NOT_FOUND' | translate }}</span>
+                    @if (project()!.isActive) {
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 font-cairo whitespace-nowrap">
+                        {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
+                      </span>
+                    } @else {
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 shrink-0 font-cairo whitespace-nowrap">
+                        {{ 'PROJECTS.STATUS_CLOSED' | translate }}
+                      </span>
+                    }
                   }
-                </h1>
+                </div>
+
                 @if (project()) {
-                  @if (project()!.isActive) {
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 font-cairo">
-                      {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
-                    </span>
-                  } @else {
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 shrink-0 font-cairo">
-                      {{ 'PROJECTS.STATUS_CLOSED' | translate }}
-                    </span>
-                  }
+                  <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-400">
+                    @if (project()!.governorate) {
+                      <span class="text-indigo-400 font-cairo font-medium whitespace-nowrap">📍 {{ project()!.governorate }} @if (project()!.cityOrZone) { - {{ project()!.cityOrZone }} }</span>
+                    }
+                    @if (project()!.propertyType) {
+                      <span class="text-slate-600">•</span>
+                      <span class="text-amber-400 font-cairo font-medium whitespace-nowrap">
+                        @if (project()!.propertyType === 'Residential') { 🏠 سكني } @else { 🏢 إداري }
+                      </span>
+                    }
+                  </div>
                 }
               </div>
-
-              @if (project()) {
-                <div class="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-400">
-                  @if (project()!.governorate) {
-                    <span class="text-indigo-400 font-cairo font-medium">📍 {{ project()!.governorate }} @if (project()!.cityOrZone) { - {{ project()!.cityOrZone }} }</span>
-                  }
-                  @if (project()!.propertyType) {
-                    <span class="text-slate-600">•</span>
-                    <span class="text-amber-400 font-cairo font-medium">
-                      @if (project()!.propertyType === 'Residential') { 🏠 سكني } @else { 🏢 إداري }
-                    </span>
-                  }
-                </div>
-              }
             </div>
-          </div>
 
-          <!-- Right: Quick Condensed KPI Badge (when collapsed) + Controls + Toggle Button -->
-          <div class="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap justify-end">
-            
-            <!-- Quick Key Metric Pill when Collapsed -->
+            <!-- Condensed Metric Pill (Visible when collapsed on top row) -->
             @if (isHeaderCollapsed() && project()) {
-              @if (!isEngineer()) {
-                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
-                  <span class="text-slate-400 text-[11px] font-cairo">الرصيد:</span>
-                  <span class="font-bold tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
-                    {{ (netBalance() || 0) | number:'1.0-0' }} ج.م
-                  </span>
-                </div>
-              } @else {
-                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
-                  <span class="text-slate-400 text-[11px] font-cairo">العهدة المعلقة:</span>
-                  <span class="font-bold text-amber-400 tabular-nums">
-                    {{ (totalUnsettledPettyCash() || 0) | number:'1.0-0' }} ج.م
-                  </span>
-                </div>
-              }
-            }
-
-            <!-- Direct Public Visibility Toggle Switch (Restricted to Tenant Owner / Admin only) -->
-            @if (project() && (isTenantOwner() || isSuperAdmin())) {
-              <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl font-cairo shadow-sm">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
-                  <span class="hidden sm:inline">إظهار في البروفايل</span>
-                </span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    [checked]="isPublicPortfolio()"
-                    (change)="togglePublicVisibility($any($event.target).checked)"
-                    [disabled]="isSavingProjectSettings()"
-                    class="sr-only peer">
-                  <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
+              <div class="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                @if (!isEngineer()) {
+                  <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono whitespace-nowrap">
+                    <span class="text-slate-400 text-[11px] font-cairo">الرصيد:</span>
+                    <span class="font-bold tabular-nums" [class.text-emerald-400]="netBalance() >= 0" [class.text-rose-400]="netBalance() < 0">
+                      {{ (netBalance() || 0) | number:'1.0-0' }} ج.م
+                    </span>
+                  </div>
+                } @else {
+                  <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono whitespace-nowrap">
+                    <span class="text-slate-400 text-[11px] font-cairo">العهدة المعلقة:</span>
+                    <span class="font-bold text-amber-400 tabular-nums">
+                      {{ (totalUnsettledPettyCash() || 0) | number:'1.0-0' }} ج.م
+                    </span>
+                  </div>
+                }
               </div>
             }
+          </div>
 
-            <!-- Project Report Action Button -->
-            @if (project() && canViewFinancialReports()) {
-              <button 
+          <!-- Bottom Row: Action Buttons Bar -->
+          <div class="flex items-center flex-wrap justify-between sm:justify-end gap-2.5 pt-2.5 border-t border-slate-800/60 w-full">
+            <div class="flex items-center flex-wrap gap-2.5 shrink-0 w-full sm:w-auto justify-start sm:justify-end">
+              
+              <!-- Direct Public Visibility Toggle Switch -->
+              @if (project() && (isTenantOwner() || isSuperAdmin())) {
+                <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl font-cairo shadow-sm shrink-0 whitespace-nowrap">
+                  <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
+                    <span class="w-2 h-2 rounded-full transition-colors" [class.bg-emerald-400]="isPublicPortfolio()" [class.bg-slate-600]="!isPublicPortfolio()"></span>
+                    <span class="whitespace-nowrap">إظهار في البروفايل</span>
+                  </span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox"
+                      [checked]="isPublicPortfolio()"
+                      (change)="togglePublicVisibility($any($event.target).checked)"
+                      [disabled]="isSavingProjectSettings()"
+                      class="sr-only peer">
+                    <div class="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              }
+
+              <!-- Project Report Action Button -->
+              @if (project() && canViewFinancialReports()) {
+                <button 
+                  type="button"
+                  id="btn-header-project-report"
+                  (click)="openProjectReportModal()"
+                  class="px-3.5 sm:px-4 py-2 bg-sky-600/15 hover:bg-sky-600/25 active:bg-sky-600/35 text-sky-300 hover:text-white border border-sky-500/30 text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0 whitespace-nowrap">
+                  <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span class="whitespace-nowrap">تقرير المشروع / Report</span>
+                </button>
+              }
+
+              <!-- Site Execution Action Button -->
+              @if (project()) {
+                <a 
+                  [routerLink]="['/dashboard/projects', project()!.id, 'site-execution']"
+                  class="px-3.5 sm:px-4 py-2 bg-emerald-600/15 hover:bg-emerald-600/25 active:bg-emerald-600/35 text-emerald-300 hover:text-white border border-emerald-500/30 text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0 whitespace-nowrap">
+                  <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  <span class="whitespace-nowrap">متابعة الموقع والتنفيذ 🏗️</span>
+                </a>
+              }
+
+              <!-- Primary Action Button: + إيداع دفعة مالية -->
+              @if (project() && isOwnerOrAccountant()) {
+                <button 
+                  (click)="openInjectModal()"
+                  [disabled]="project()?.status === 'Closed'"
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
+                  <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span class="whitespace-nowrap">+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
+                </button>
+              }
+
+              <!-- 🔼/🔽 Collapse / Expand Toggle Button -->
+              <button
                 type="button"
-                id="btn-header-project-report"
-                (click)="openProjectReportModal()"
-                class="px-3 sm:px-4 py-2 sm:py-2.5 bg-sky-600/15 hover:bg-sky-600/25 active:bg-sky-600/35 text-sky-300 hover:text-white border border-sky-500/30 text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0">
-                <svg class="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                (click)="toggleHeaderCollapse()"
+                [title]="isHeaderCollapsed() ? 'إظهار الملخص المالي والبيانات' : 'طي الملخص لتوفير مساحة للشاشة'"
+                class="px-3 py-2 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-xs font-bold font-cairo flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 whitespace-nowrap">
+                <span class="whitespace-nowrap">{{ isHeaderCollapsed() ? 'عرض الملخص' : 'طي' }}</span>
+                <svg class="w-4 h-4 transition-transform duration-200 shrink-0" [class.rotate-180]="!isHeaderCollapsed()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
                 </svg>
-                <span>تقرير المشروع / Report</span>
               </button>
-            }
 
-            <!-- Site Execution Action Button -->
-            @if (project()) {
-              <a 
-                [routerLink]="['/dashboard/projects', project()!.id, 'site-execution']"
-                class="px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-600/15 hover:bg-emerald-600/25 active:bg-emerald-600/35 text-emerald-300 hover:text-white border border-emerald-500/30 text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0">
-                <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                <span>متابعة الموقع والتنفيذ 🏗️</span>
-              </a>
-            }
-
-            <!-- Primary Action Button: + إيداع دفعة مالية -->
-            @if (project() && isOwnerOrAccountant()) {
-              <button 
-                (click)="openInjectModal()"
-                [disabled]="project()?.status === 'Closed'"
-                class="px-3 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-cairo shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>+ {{ 'DETAILS.INJECT_CAPITAL' | translate }}</span>
-              </button>
-            }
-
-            <!-- 🔼/🔽 Collapse / Expand Toggle Button -->
-            <button
-              type="button"
-              (click)="toggleHeaderCollapse()"
-              [title]="isHeaderCollapsed() ? 'إظهار الملخص المالي والبيانات' : 'طي الملخص لتوفير مساحة للشاشة'"
-              class="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-xs font-bold font-cairo flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0">
-              <span class="hidden xs:inline">{{ isHeaderCollapsed() ? 'عرض الملخص' : 'طي' }}</span>
-              <svg class="w-4 h-4 transition-transform duration-200" [class.rotate-180]="!isHeaderCollapsed()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            </div>
           </div>
         </div>
 
