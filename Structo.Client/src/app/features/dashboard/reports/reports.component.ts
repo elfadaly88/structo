@@ -304,40 +304,42 @@ import { ProjectDto } from '../../../core/models/project.models';
 
           <!-- Unified Responsive Table -->
           <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs min-w-[700px]">
+            <table class="w-full text-right text-xs min-w-[850px]">
               <thead class="bg-slate-950/70 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
                 <tr>
-                  <th class="p-3.5">المشروع</th>
-                  <th class="p-3.5">التاريخ</th>
-                  <th class="p-3.5">النوع</th>
+                  <th class="p-3.5 w-44">المشروع</th>
+                  <th class="p-3.5 w-28 text-center font-mono">التاريخ</th>
+                  <th class="p-3.5 w-24 text-center">النوع</th>
                   <th class="p-3.5">البيان / الوصف</th>
-                  <th class="p-3.5 text-left font-mono">المبلغ</th>
-                  <th class="p-3.5 text-center">طريقة الدفع</th>
-                  <th class="p-3.5 text-center">الإيصال</th>
+                  <th class="p-3.5 w-32 text-left font-mono">المبلغ</th>
+                  <th class="p-3.5 w-28 text-center font-mono">طريقة الدفع</th>
+                  <th class="p-3.5 w-20 text-center">الإيصال</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50">
                 @for (tx of reportData()!.combinedTransactions; track tx.id) {
                   <tr class="hover:bg-slate-800/30 transition-colors">
-                    <td class="p-3.5 font-bold text-slate-200">
+                    <td class="p-3.5 w-44 font-bold text-slate-200">
                       <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
                         {{ tx.projectName }}
                       </span>
                     </td>
-                    <td class="p-3.5 text-slate-400 font-mono whitespace-nowrap">{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
-                    <td class="p-3.5 whitespace-nowrap">
+                    <td class="p-3.5 w-28 text-slate-400 font-mono text-center whitespace-nowrap">
+                      {{ formatTransactionDate(tx.transactionDate) }}
+                    </td>
+                    <td class="p-3.5 w-24 text-center whitespace-nowrap">
                       <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                             [ngClass]="tx.type === 'Income' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-400 border border-rose-500/20'">
                         {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
                       </span>
                     </td>
                     <td class="p-3.5 text-slate-300 max-w-xs truncate" [title]="tx.description">{{ tx.description || '—' }}</td>
-                    <td class="p-3.5 text-left font-mono font-bold whitespace-nowrap"
+                    <td class="p-3.5 w-32 text-left font-mono font-bold whitespace-nowrap"
                         [ngClass]="tx.type === 'Income' ? 'text-emerald-400' : 'text-rose-400'">
                       {{ tx.type === 'Income' ? '+' : '-' }}{{ tx.amount | number:'1.2-2' }} ج.م
                     </td>
-                    <td class="p-3.5 text-center font-mono text-[11px] text-slate-400 whitespace-nowrap">{{ tx.paymentMethod || 'نقدي' }}</td>
-                    <td class="p-3.5 text-center whitespace-nowrap">
+                    <td class="p-3.5 w-28 text-center font-mono text-[11px] text-slate-400 whitespace-nowrap">{{ tx.paymentMethod || 'نقدي' }}</td>
+                    <td class="p-3.5 w-20 text-center whitespace-nowrap">
                       @if (tx.receiptPhotoUrl) {
                         <a [href]="tx.receiptPhotoUrl" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline text-[11px]">معاينة</a>
                       } @else {
@@ -466,7 +468,7 @@ import { ProjectDto } from '../../../core/models/project.models';
               @for (tx of activePrintReport()!.combinedTransactions; track tx.id) {
                 <tr>
                   <td class="py-2 px-2 font-medium">{{ tx.projectName }}</td>
-                  <td class="py-2 px-2 font-mono text-slate-600">{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                  <td class="py-2 px-2 font-mono text-slate-600">{{ formatTransactionDate(tx.transactionDate) }}</td>
                   <td class="py-2 px-2 font-semibold" [class.text-emerald-700]="tx.type === 'Income'" [class.text-rose-700]="tx.type !== 'Income'">
                     {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
                   </td>
@@ -593,5 +595,25 @@ export class ReportsComponent implements OnInit {
     setTimeout(() => {
       window.print();
     }, 150);
+  }
+
+  formatTransactionDate(dateStr: string | Date | undefined | null): string {
+    if (!dateStr) return '—';
+    const str = String(dateStr).trim();
+    // إذا كان التاريخ يحتوي على مسافة ومكتوب بصيغة DD/MM/YYYY
+    if (str.includes('/')) {
+      return str.split(' ')[0];
+    }
+    // إذا كان ISO قياسي أو Date object
+    try {
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return str;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return str;
+    }
   }
 }
