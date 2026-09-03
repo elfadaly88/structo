@@ -47,11 +47,14 @@ export class ImageUploadService {
    * Upload a project gallery image with an optional caption.
    * Creates a SitePhoto record in the database.
    */
-  uploadProjectGallery(projectId: string, file: File, caption?: string): Observable<ApiResponse<UploadResult>> {
+  uploadProjectGallery(projectId: string, file: File, caption?: string, category?: string): Observable<ApiResponse<UploadResult>> {
     const formData = new FormData();
     formData.append('file', file);
     if (caption && caption.trim().length > 0) {
       formData.append('caption', caption.trim().substring(0, 200));
+    }
+    if (category && category.trim().length > 0) {
+      formData.append('category', category.trim());
     }
     return this.http.post<ApiResponse<UploadResult>>(`${this.apiUrl}/project-gallery/${projectId}`, formData);
   }

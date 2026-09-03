@@ -892,7 +892,7 @@ export class SiteExecutionComponent implements OnInit {
     const file = input.files[0];
     this.isUploading.set(true);
 
-    this.uploadService.uploadProjectGallery(this.projectId(), file, this.selectedTask()?.title)
+    this.uploadService.uploadProjectGallery(this.projectId(), file, this.selectedTask()?.title, 'SiteTaskAttachment')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

@@ -506,22 +506,24 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                     <div class="bg-slate-950/60 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200 shadow-xl group">
                       <!-- Project Card Cover Photo & Badges (Click Cover to Open Lightbox) -->
                       <div 
-                        (click)="proj.sitePhotos && proj.sitePhotos.length > 0 && openLightbox(proj.sitePhotos, 0, $event)"
+                        (click)="proj.publicImages && proj.publicImages.length > 0 && openLightbox(proj.publicImages, 0, $event)"
                         class="relative h-44 w-full bg-slate-900 overflow-hidden"
-                        [class.cursor-pointer]="proj.sitePhotos && proj.sitePhotos.length > 0">
-                        @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
-                          <img [src]="proj.sitePhotos[0]" (error)="onImgError($event)" alt="{{ proj.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out transform-gpu" loading="lazy">
+                        [class.cursor-pointer]="proj.publicImages && proj.publicImages.length > 0">
+                        @if (proj.publicImages && proj.publicImages.length > 0) {
+                          <img [src]="proj.publicImages[0]" (error)="onImgError($event)" alt="{{ proj.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out transform-gpu" loading="lazy">
                           <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                             <span class="px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-white text-xs font-bold font-cairo flex items-center gap-1.5 shadow-xl border border-white/20">
                               🔍 معاينة الصورة بالكامل
                             </span>
                           </div>
                         } @else {
-                          <div class="w-full h-full bg-gradient-to-br from-slate-900 to-indigo-950/40 flex flex-col items-center justify-center p-4 text-slate-600">
-                            <svg class="w-10 h-10 mb-2 opacity-40 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-4-8l-2-2m0 0l-2 2m2-2v6" />
-                            </svg>
-                            <span class="text-xs text-slate-500 font-cairo">معرض صور قيد التحديث</span>
+                          <div class="w-full h-full bg-gradient-to-br from-slate-900 via-indigo-950/30 to-slate-900 flex flex-col items-center justify-center p-4 text-slate-500 select-none">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-2 shadow-inner">
+                              <svg class="w-6 h-6 text-indigo-400 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-4-8l-2-2m0 0l-2 2m2-2v6" />
+                              </svg>
+                            </div>
+                            <span class="text-xs font-medium text-slate-400 font-cairo">مشروع معتمد</span>
                           </div>
                         }
 
@@ -543,10 +545,10 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                           }
                         </div>
 
-                        <!-- Photos Count Badge -->
-                        @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
-                          <div class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] font-bold text-slate-200 flex items-center gap-1 font-mono">
-                            📷 {{ proj.sitePhotos.length }} صور
+                        <!-- Photos Count Badge: ONLY if publicImages exist and count > 0 -->
+                        @if (proj.publicImages && proj.publicImages.length > 0) {
+                          <div class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[11px] font-bold text-slate-200 flex items-center gap-1 font-mono shadow-md">
+                            📷 {{ proj.publicImages.length }} صور
                           </div>
                         }
                       </div>
@@ -581,11 +583,11 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                         <!-- Expanded Project Details & Photos Gallery -->
                         @if (expandedProjectId() === proj.id) {
                           <div class="pt-3 border-t border-slate-800/80 space-y-3 animate-fade-in">
-                            @if (proj.sitePhotos && proj.sitePhotos.length > 0) {
+                            @if (proj.publicImages && proj.publicImages.length > 0) {
                               <div class="grid grid-cols-3 gap-2">
-                                @for (photo of proj.sitePhotos; track photo; let idx = $index) {
+                                @for (photo of proj.publicImages; track photo; let idx = $index) {
                                     <div 
-                                      (click)="openLightbox(proj.sitePhotos, idx, $event)"
+                                      (click)="openLightbox(proj.publicImages, idx, $event)"
                                       class="relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-900 cursor-pointer group/photo">
                                       <img [src]="photo" (error)="onImgError($event)" alt="" class="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-300 ease-out transform-gpu" loading="lazy">
                                       <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
@@ -596,6 +598,8 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                                   </div>
                                 }
                               </div>
+                            } @else {
+                              <p class="text-xs text-slate-500 font-cairo">لا توجد صور عامة مضافة لهذا المشروع في المعرض.</p>
                             }
                           </div>
                         }
@@ -996,11 +1000,11 @@ export class LandingPageComponent implements OnInit {
           const portfolio = res.data;
           if (portfolio.projects) {
             portfolio.projects.forEach(p => {
-              if (p.sitePhotos) {
-                p.sitePhotos = p.sitePhotos.filter(
-                  url => !url.includes('/receipts/') && !url.toLowerCase().includes('receipt') && !url.toLowerCase().includes('invoice')
-                );
-              }
+              const rawList = p.publicImages || p.sitePhotos || [];
+              p.publicImages = rawList.filter(
+                url => url && !url.includes('/receipts/') && !url.toLowerCase().includes('receipt') && !url.toLowerCase().includes('invoice')
+              );
+              p.sitePhotos = p.publicImages;
             });
           }
           this.selectedCompany.set(portfolio);
@@ -1067,6 +1071,11 @@ export class LandingPageComponent implements OnInit {
     const img = event.target as HTMLImageElement;
     if (img) {
       img.style.display = 'none';
+      const container = img.closest('.relative');
+      if (container) {
+        const badge = container.querySelector('.font-mono');
+        if (badge) (badge as HTMLElement).style.display = 'none';
+      }
       const fallback = img.nextElementSibling as HTMLElement;
       if (fallback) {
         fallback.classList.remove('hidden');

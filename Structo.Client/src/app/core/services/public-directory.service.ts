@@ -51,6 +51,9 @@ export interface PublicProjectDto {
   status?: string;
   isClosed?: boolean;
   sitePhotos: string[];
+  publicImages: string[];
+  imageUrls?: string[];
+  imagesCount?: number;
 }
 
 export interface PublicTenantPortfolioDto {

@@ -149,7 +149,8 @@ public class ImageUploadController : ControllerBase
     public async Task<ActionResult<ApiResponse<UploadResultDto>>> UploadProjectGallery(
         [FromRoute] Guid projectId,
         IFormFile file,
-        [FromForm] string? caption = null)
+        [FromForm] string? caption = null,
+        [FromForm] string? category = null)
     {
         var (isValid, errorMessage) = FileValidator.ValidateUploadedFile(file);
         if (!isValid)
@@ -186,6 +187,8 @@ public class ImageUploadController : ControllerBase
                 ? null
                 : HtmlSanitizer.Sanitize(rawCaption.Length > 200 ? rawCaption[..200] : rawCaption);
 
+            var photoCategory = !string.IsNullOrWhiteSpace(category) ? category.Trim() : "PublicGallery";
+
             var photo = new SitePhoto
             {
                 ProjectId = projectId,
@@ -193,7 +196,7 @@ public class ImageUploadController : ControllerBase
                 UploadedByUserId = userId,
                 PhotoUrl = dbUrl,
                 Caption = sanitizedCaption,
-                Category = "SiteProgress",
+                Category = photoCategory,
                 UploadedAt = DateTime.UtcNow
             };
 

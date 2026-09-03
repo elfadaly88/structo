@@ -16,19 +16,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Structo.API.Controllers;
 
-public class PublicProjectDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public DateTime StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
-    public string Category { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public bool IsClosed { get; set; }
-    public List<string> SitePhotos { get; set; } = [];
-}
-
 public class PublicTenantPortfolioDto
 {
     public Guid Id { get; set; }
@@ -42,6 +29,22 @@ public class PublicTenantPortfolioDto
     public int CompletedProjectsCount { get; set; }
     public int ActiveProjectsCount { get; set; }
     public List<PublicProjectDto> Projects { get; set; } = [];
+}
+
+public class PublicProjectDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string? Status { get; set; }
+    public bool IsClosed { get; set; }
+    public List<string> SitePhotos { get; set; } = [];
+    public List<string> PublicImages { get; set; } = [];
+    public List<string> ImageUrls { get; set; } = [];
+    public int ImagesCount { get; set; }
 }
 
 public class PublicReviewDto
@@ -204,6 +207,39 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             .Include(p => p.SitePhotos)
             .ToListAsync();
 
+        var projectIds = projects.Select(p => p.Id).ToList();
+
+        // 1. Gather all internal SiteTasks attachment URLs to strictly exclude them
+        var internalTaskAttachmentUrls = await context.Set<SiteTask>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(t => projectIds.Contains(t.ProjectId))
+            .SelectMany(t => t.AttachmentUrls)
+            .ToListAsync();
+
+        var internalAttachmentsSet = new HashSet<string>(
+            internalTaskAttachmentUrls.Where(u => !string.IsNullOrWhiteSpace(u)),
+            StringComparer.OrdinalIgnoreCase);
+
+        // 2. Gather all financial receipts and invoice URLs to strictly exclude them
+        var financialReceiptUrls = await context.FinancialTransactions
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(f => projectIds.Contains(f.ProjectId) && !string.IsNullOrWhiteSpace(f.ReceiptPhotoUrl))
+            .Select(f => f.ReceiptPhotoUrl!)
+            .ToListAsync();
+
+        var settlementReceiptUrls = await context.Set<SettlementLine>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(sl => sl.Settlement != null && projectIds.Contains(sl.Settlement.ProjectId) && !string.IsNullOrWhiteSpace(sl.InvoiceUrl))
+            .Select(sl => sl.InvoiceUrl!)
+            .ToListAsync();
+
+        var excludedReceiptsSet = new HashSet<string>(
+            financialReceiptUrls.Concat(settlementReceiptUrls).Where(u => !string.IsNullOrWhiteSpace(u)),
+            StringComparer.OrdinalIgnoreCase);
+
         var publicProjects = new List<PublicProjectDto>();
 
         foreach (var p in projects)
@@ -211,6 +247,20 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             // Only expose public portfolio projects to the public clients
             if (p.IsPublicPortfolio)
             {
+                var validPublicPhotos = p.SitePhotos
+                    .Where(sp => !string.IsNullOrWhiteSpace(sp.PhotoUrl) &&
+                                 sp.Category != "SiteTaskAttachment" &&
+                                 sp.Category != "TaskAttachment" &&
+                                 sp.Category != "Internal" &&
+                                 !sp.PhotoUrl.Contains("/receipts/", StringComparison.OrdinalIgnoreCase) &&
+                                 !sp.PhotoUrl.Contains("receipt", StringComparison.OrdinalIgnoreCase) &&
+                                 !sp.PhotoUrl.Contains("invoice", StringComparison.OrdinalIgnoreCase) &&
+                                 !internalAttachmentsSet.Contains(sp.PhotoUrl) &&
+                                 !excludedReceiptsSet.Contains(sp.PhotoUrl))
+                    .OrderByDescending(sp => sp.UploadedAt)
+                    .Select(sp => sp.PhotoUrl.Trim())
+                    .ToList();
+
                 publicProjects.Add(new PublicProjectDto
                 {
                     Id = p.Id,
@@ -221,14 +271,10 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                     Category = p.Category ?? "Other",
                     Status = p.Status.ToString(),
                     IsClosed = p.Status == ProjectStatus.Closed,
-                    SitePhotos = p.SitePhotos
-                        .Where(sp => sp.Category == "SiteProgress" &&
-                            !string.IsNullOrEmpty(sp.PhotoUrl) && 
-                            !sp.PhotoUrl.Contains("/receipts/") && 
-                            !sp.PhotoUrl.ToLower().Contains("receipt") &&
-                            !sp.PhotoUrl.ToLower().Contains("invoice"))
-                        .Select(sp => sp.PhotoUrl)
-                        .ToList()
+                    SitePhotos = validPublicPhotos,
+                    PublicImages = validPublicPhotos,
+                    ImageUrls = validPublicPhotos,
+                    ImagesCount = validPublicPhotos.Count
                 });
             }
         }
