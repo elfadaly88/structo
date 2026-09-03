@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -43,10 +43,22 @@ export class UsersComponent implements OnInit {
   private readonly translate = inject(TranslateService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly users = signal<SanitizedUser[]>([]);
   readonly isLoading = signal(false);
   readonly togglingUserId = signal<string | null>(null);
+
+  // Computeds for immediate reactive UI binding
+  readonly totalUsers = computed(() => this.users().length);
+  readonly activeUsers = computed(() => this.users().filter(u => u.isActive).length);
+  readonly activeUsersCount = computed(() => this.activeUsers());
+  readonly engineersCount = computed(() =>
+    this.users().filter(u => {
+      const r = (u.role || '').toUpperCase();
+      return r.includes('ENGINEER') || r.includes('MANAGER');
+    }).length
+  );
 
   // Add User Modal State
   readonly isUserModalOpen = signal(false);
@@ -66,19 +78,9 @@ export class UsersComponent implements OnInit {
     role: ['SiteEngineer', Validators.required]
   });
 
-
   get currentUserId(): string {
     return this.authService.currentUser()?.userId || '';
   }
-
-  readonly activeUsersCount = computed(() => this.users().filter(u => u.isActive).length);
-
-  readonly engineersCount = computed(() =>
-    this.users().filter(u => {
-      const r = (u.role || '').toUpperCase();
-      return r.includes('ENGINEER') || r.includes('MANAGER');
-    }).length
-  );
 
   ngOnInit(): void {
     this.loadUsers();
@@ -86,6 +88,8 @@ export class UsersComponent implements OnInit {
 
   loadUsers(): void {
     this.isLoading.set(true);
+    this.cdr.markForCheck();
+
     this.userService.getUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response: any) => {
         const rawData = Array.isArray(response) ? response : (response?.data || []);
@@ -120,10 +124,12 @@ export class UsersComponent implements OnInit {
 
         this.users.set(mappedUsers);
         this.isLoading.set(false);
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error fetching users:', err);
         this.isLoading.set(false);
+        this.cdr.markForCheck();
         this.toast.show('خطأ / Error', 'فشل تحميل بيانات المستخدمين.', 'error');
       }
     });
@@ -167,10 +173,12 @@ export class UsersComponent implements OnInit {
         } else {
           this.toast.show('خطأ / Error', res.message || 'فشل تحديث حالة المستخدم.', 'error');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.togglingUserId.set(null);
         this.toast.show('خطأ / Error', err.error?.message || err.message || 'فشل تحديث حالة المستخدم.', 'error');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -190,16 +198,19 @@ export class UsersComponent implements OnInit {
     this.isUserModalOpen.set(true);
 
     this.isLoadingProjects.set(true);
+    this.cdr.markForCheck();
     this.projectService.getProjects().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => {
         this.isLoadingProjects.set(false);
         const list = Array.isArray(res) ? res : (res?.data || []);
         // Only active projects can be assigned
         this.availableProjects.set(list.filter((p: ProjectDto) => p.status === 'Active' || p.isActive));
+        this.cdr.markForCheck();
       },
       error: () => {
         this.isLoadingProjects.set(false);
         this.availableProjects.set([]);
+        this.cdr.markForCheck();
       }
     });
   }
