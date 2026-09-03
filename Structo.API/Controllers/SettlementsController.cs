@@ -58,7 +58,7 @@ public class SettlementsController(
             var (approveSuccess, approveMessage) = await settlementService.ApproveSettlementAsync(projectId, settlementId, CurrentUserRole, CurrentUserId);
             if (approveSuccess)
             {
-                message = $"{message} Auto-approved: {approveMessage}";
+                message = "تم تقديم طلب التسوية بنجاح وتم الاعتماد التلقائي.";
             }
         }
 

@@ -6685,8 +6685,9 @@ export class ProjectDetailsComponent implements OnInit {
         this.isSubmittingSettlement.set(false);
         if (res.success) {
           this.confirmService.alert({
-            title: isDraft ? 'تم حفظ المسودة' : 'تم تقديم التسوية للمراجعة',
-            message: res.message || (isDraft ? 'تم حفظ مسودة التسوية بنجاح.' : 'تم تقديم طلب تسوية العهدة بنجاح للمراجعة النهائية.'),
+            title: isDraft ? 'تم حفظ المسودة' : 'تم تقديم واعتماد التسوية',
+            message: res.message || (isDraft ? 'تم حفظ مسودة التسوية بنجاح.' : 'تم تقديم طلب التسوية بنجاح وتم الاعتماد التلقائي.'),
+            buttonText: 'حسناً',
             type: 'success'
           });
           if (!isDraft) {

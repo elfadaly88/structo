@@ -24,8 +24,8 @@ export class ConfirmModalService {
   readonly confirmConfig = signal<ConfirmModalConfig>({
     title: '',
     message: '',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
+    confirmText: 'موافق',
+    cancelText: 'إلغاء',
     type: 'danger'
   });
   private confirmResolve: ((value: boolean) => void) | null = null;
@@ -35,7 +35,7 @@ export class ConfirmModalService {
   readonly alertConfig = signal<AlertModalConfig>({
     title: '',
     message: '',
-    buttonText: 'OK',
+    buttonText: 'حسناً',
     type: 'error'
   });
   private alertResolve: (() => void) | null = null;
@@ -58,9 +58,9 @@ export class ConfirmModalService {
    */
   confirm(config: ConfirmModalConfig): Promise<boolean> {
     this.confirmConfig.set({
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
-      type: 'danger',
+      confirmText: config.confirmText || 'موافق',
+      cancelText: config.cancelText || 'إلغاء',
+      type: config.type || 'danger',
       ...config
     });
     this.isConfirmOpen.set(true);
@@ -84,8 +84,8 @@ export class ConfirmModalService {
    */
   alert(config: AlertModalConfig): Promise<void> {
     this.alertConfig.set({
-      buttonText: 'OK',
-      type: 'error',
+      buttonText: config.buttonText || 'حسناً',
+      type: config.type || 'error',
       ...config
     });
     this.isAlertOpen.set(true);

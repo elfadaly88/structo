@@ -12,9 +12,9 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
         <div (click)="modal.resolveConfirm(false)" class="absolute inset-0"></div>
 
         <!-- Modal Panel -->
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div dir="rtl" class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out] text-right font-cairo">
           <div class="p-4 sm:p-6 overflow-y-auto min-h-0 w-full flex-1">
-          <!-- Icon -->
+          <!-- Icon & Title -->
           <div class="flex items-center gap-3 mb-4">
             @if (modal.confirmConfig().type === 'danger') {
               <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
@@ -35,11 +35,11 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
                 </svg>
               </div>
             }
-            <h3 class="text-lg font-bold text-white leading-tight">{{ modal.confirmConfig().title }}</h3>
+            <h3 class="text-lg font-bold text-white leading-tight flex-1">{{ modal.confirmConfig().title }}</h3>
           </div>
 
           <!-- Body -->
-          <p class="text-sm text-slate-300 leading-relaxed mb-6 pl-[52px]">
+          <p class="text-sm text-slate-300 leading-relaxed mb-6 text-right">
             {{ modal.confirmConfig().message }}
           </p>
 
@@ -48,7 +48,7 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
             <button
               (click)="modal.resolveConfirm(false)"
               class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all duration-200 cursor-pointer">
-              {{ modal.confirmConfig().cancelText }}
+              {{ modal.confirmConfig().cancelText || 'إلغاء' }}
             </button>
             <button
               (click)="modal.resolveConfirm(true)"
@@ -59,7 +59,7 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
               [class.hover:bg-amber-500]="modal.confirmConfig().type === 'warning'"
               [class.bg-indigo-600]="modal.confirmConfig().type === 'info'"
               [class.hover:bg-indigo-500]="modal.confirmConfig().type === 'info'">
-              {{ modal.confirmConfig().confirmText }}
+              {{ modal.confirmConfig().confirmText || 'موافق' }}
             </button>
           </div>
           </div>
@@ -74,9 +74,9 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
         <div (click)="modal.resolveAlert()" class="absolute inset-0"></div>
 
         <!-- Modal Panel -->
-        <div class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out]">
+        <div dir="rtl" class="relative w-full max-w-lg mx-auto max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl transition-all z-10 animate-[scaleIn_0.15s_ease-out] text-right font-cairo">
           <div class="p-4 sm:p-6 overflow-y-auto min-h-0 w-full flex-1">
-          <!-- Icon -->
+          <!-- Icon & Title -->
           <div class="flex items-center gap-3 mb-4">
             @if (modal.alertConfig().type === 'error') {
               <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
@@ -97,11 +97,11 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
                 </svg>
               </div>
             }
-            <h3 class="text-lg font-bold text-white leading-tight">{{ modal.alertConfig().title }}</h3>
+            <h3 class="text-lg font-bold text-white leading-tight flex-1">{{ modal.alertConfig().title }}</h3>
           </div>
 
           <!-- Body -->
-          <p class="text-sm text-slate-300 leading-relaxed mb-6 pl-[52px]">
+          <p class="text-sm text-slate-300 leading-relaxed mb-6 text-right">
             {{ modal.alertConfig().message }}
           </p>
 
@@ -110,7 +110,7 @@ import { ConfirmModalService } from '../../core/services/confirm-modal.service';
             <button
               (click)="modal.resolveAlert()"
               class="px-5 py-2 text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer">
-              {{ modal.alertConfig().buttonText }}
+              {{ modal.alertConfig().buttonText || 'حسناً' }}
             </button>
           </div>
           </div>

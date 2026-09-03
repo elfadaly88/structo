@@ -92,7 +92,7 @@ public class SettlementService(DbContext context, INotificationEngine notificati
             catch (Exception) { /* Notification delivery is best effort */ }
         }
 
-        var statusMessage = dto.IsDraft ? "Settlement draft saved successfully." : "Settlement request submitted for review.";
+        var statusMessage = dto.IsDraft ? "تم حفظ مسودة التسوية بنجاح." : "تم تقديم طلب التسوية بنجاح وهو قيد المراجعة.";
         return (true, statusMessage, newSettlement.Id);
     }
 
@@ -249,8 +249,8 @@ public class SettlementService(DbContext context, INotificationEngine notificati
         catch (Exception) { /* Notification delivery is best effort */ }
 
         return (true, settlement.Status == SettlementStatus.ApprovedPendingRefund 
-            ? "Settlement approved. Status set to ApprovedPendingRefund. Awaiting accountant refund confirmation."
-            : "Settlement approved successfully.");
+            ? "تم اعتماد التسوية. الحالة: في انتظار تأكيد المحاسب لاسترداد المتبقي."
+            : "تم اعتماد التسوية بنجاح.");
     }
 
     public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole)
