@@ -251,3 +251,79 @@ public class AvailableSettlementLineDto
     public string? InvoiceUrl { get; set; }
     public DateTime SubmittedAt { get; set; }
 }
+
+public class SiteDailyLogDto
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+
+    [JsonConverter(typeof(IsoDateTimeConverter))]
+    public DateTime LogDate { get; set; }
+
+    public Guid LoggedByUserId { get; set; }
+    public string LoggedByUserName { get; set; } = string.Empty;
+    public string? WeatherCondition { get; set; }
+    public int WorkforceCount { get; set; }
+    public string? WorkforceSummary { get; set; }
+    public string? MaterialsDelivered { get; set; }
+    public string? GeneralObservations { get; set; }
+
+    [JsonConverter(typeof(IsoDateTimeConverter))]
+    public DateTime CreatedAt { get; set; }
+}
+
+public class SiteDailyLogUpsertDto
+{
+    public Guid ProjectId { get; set; }
+
+    [JsonConverter(typeof(IsoDateTimeConverter))]
+    public DateTime LogDate { get; set; }
+
+    public string? WeatherCondition { get; set; }
+    public int WorkforceCount { get; set; }
+    public string? WorkforceSummary { get; set; }
+    public string? MaterialsDelivered { get; set; }
+    public string? GeneralObservations { get; set; }
+}
+
+public class SitePunchItemDto
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public Guid? SiteTaskId { get; set; }
+    public string? SiteTaskTitle { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Severity { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? SubcontractorName { get; set; }
+    public string DefectPhotoUrl { get; set; } = string.Empty;
+    public string? ResolutionPhotoUrl { get; set; }
+    public string? EngineerNotes { get; set; }
+    public Guid CreatedByUserId { get; set; }
+    public string CreatedByUserName { get; set; } = string.Empty;
+
+    [JsonConverter(typeof(IsoDateTimeConverter))]
+    public DateTime CreatedAt { get; set; }
+
+    [JsonConverter(typeof(IsoNullableDateTimeConverter))]
+    public DateTime? ResolvedAt { get; set; }
+}
+
+public class SitePunchItemCreateDto
+{
+    public Guid ProjectId { get; set; }
+    public Guid? SiteTaskId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public PunchItemSeverity Severity { get; set; } = PunchItemSeverity.Medium;
+    public string? SubcontractorName { get; set; }
+    public string DefectPhotoUrl { get; set; } = string.Empty;
+    public string? EngineerNotes { get; set; }
+}
+
+public class SitePunchItemStatusUpdateDto
+{
+    public PunchItemStatus Status { get; set; }
+    public string? ResolutionPhotoUrl { get; set; }
+    public string? EngineerNotes { get; set; }
+}
+

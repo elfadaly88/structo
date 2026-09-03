@@ -532,4 +532,327 @@ public class SiteExecutionService(
             SitePhotos = photos
         };
     }
+
+    private static (Guid UserId, string Role, bool IsOwner, bool IsManager) GetCallerContext(ClaimsPrincipal user)
+    {
+        var uidClaim = user.FindFirst("sub")?.Value 
+            ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? user.FindFirst("uid")?.Value;
+        Guid.TryParse(uidClaim, out var userId);
+
+        var roleClaim = user.FindFirst("role")?.Value 
+            ?? user.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+
+        var isOwner = string.Equals(roleClaim, "TenantOwner", StringComparison.OrdinalIgnoreCase);
+        var isManager = string.Equals(roleClaim, "Manager", StringComparison.OrdinalIgnoreCase) || isOwner;
+
+        return (userId, roleClaim, isOwner, isManager);
+    }
+
+    public async Task<List<SiteDailyLogDto>> GetDailyLogsAsync(Guid projectId, Guid tenantId)
+    {
+        var logs = await context.Set<SiteDailyLog>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(l => l.ProjectId == projectId && l.TenantId == tenantId)
+            .OrderByDescending(l => l.LogDate)
+            .ThenByDescending(l => l.CreatedAt)
+            .Select(l => new SiteDailyLogDto
+            {
+                Id = l.Id,
+                ProjectId = l.ProjectId,
+                LogDate = l.LogDate,
+                LoggedByUserId = l.LoggedByUserId,
+                LoggedByUserName = context.Set<User>()
+                    .IgnoreQueryFilters()
+                    .Where(u => u.Id == l.LoggedByUserId)
+                    .Select(u => (u.FirstName + " " + u.LastName).Trim())
+                    .FirstOrDefault() ?? "غير محدد",
+                WeatherCondition = l.WeatherCondition,
+                WorkforceCount = l.WorkforceCount,
+                WorkforceSummary = l.WorkforceSummary,
+                MaterialsDelivered = l.MaterialsDelivered,
+                GeneralObservations = l.GeneralObservations,
+                CreatedAt = l.CreatedAt
+            })
+            .ToListAsync();
+
+        return logs;
+    }
+
+    public async Task<(bool Success, string Message, SiteDailyLogDto? Log)> UpsertDailyLogAsync(
+        SiteDailyLogUpsertDto dto, 
+        Guid tenantId, 
+        ClaimsPrincipal user)
+    {
+        var (userId, role, isOwner, _) = GetCallerContext(user);
+        if (userId == Guid.Empty)
+            return (false, "هوية المستخدم غير صالحة.", null);
+
+        // Project verification
+        var project = await context.Set<Project>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == dto.ProjectId && p.TenantId == tenantId);
+
+        if (project == null)
+            return (false, "المشروع غير موجود ضمن نطاق مؤسستك.", null);
+
+        // Security check: Only assigned engineers or TenantOwner
+        var isAssigned = isOwner || await projectAccessService.IsUserAssignedToProjectAsync(userId, dto.ProjectId);
+        if (!isAssigned)
+            return (false, "غير مصرح لك بتسجيل أو تعديل اليوميات الميدانية لهذا المشروع.", null);
+
+        // Normalized date strictly as date without time in UTC
+        var normalizedDate = DateTime.SpecifyKind(dto.LogDate.Date, DateTimeKind.Utc);
+
+        var existingLog = await context.Set<SiteDailyLog>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(l => l.ProjectId == dto.ProjectId && l.TenantId == tenantId && l.LogDate == normalizedDate);
+
+        SiteDailyLog logToReturn;
+
+        if (existingLog != null)
+        {
+            // Upsert: Update existing daily log for the same date
+            existingLog.LoggedByUserId = userId;
+            existingLog.WeatherCondition = dto.WeatherCondition?.Trim();
+            existingLog.WorkforceCount = Math.Max(0, dto.WorkforceCount);
+            existingLog.WorkforceSummary = dto.WorkforceSummary?.Trim();
+            existingLog.MaterialsDelivered = dto.MaterialsDelivered?.Trim();
+            existingLog.GeneralObservations = dto.GeneralObservations?.Trim();
+            logToReturn = existingLog;
+        }
+        else
+        {
+            // Create new daily log
+            var newLog = new SiteDailyLog
+            {
+                TenantId = tenantId,
+                ProjectId = dto.ProjectId,
+                LogDate = normalizedDate,
+                LoggedByUserId = userId,
+                WeatherCondition = dto.WeatherCondition?.Trim(),
+                WorkforceCount = Math.Max(0, dto.WorkforceCount),
+                WorkforceSummary = dto.WorkforceSummary?.Trim(),
+                MaterialsDelivered = dto.MaterialsDelivered?.Trim(),
+                GeneralObservations = dto.GeneralObservations?.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+            context.Set<SiteDailyLog>().Add(newLog);
+            logToReturn = newLog;
+        }
+
+        await context.SaveChangesAsync();
+
+        var userName = await context.Set<User>()
+            .IgnoreQueryFilters()
+            .Where(u => u.Id == userId)
+            .Select(u => (u.FirstName + " " + u.LastName).Trim())
+            .FirstOrDefaultAsync() ?? "المستخدم الحالي";
+
+        var resultDto = new SiteDailyLogDto
+        {
+            Id = logToReturn.Id,
+            ProjectId = logToReturn.ProjectId,
+            LogDate = logToReturn.LogDate,
+            LoggedByUserId = logToReturn.LoggedByUserId,
+            LoggedByUserName = userName,
+            WeatherCondition = logToReturn.WeatherCondition,
+            WorkforceCount = logToReturn.WorkforceCount,
+            WorkforceSummary = logToReturn.WorkforceSummary,
+            MaterialsDelivered = logToReturn.MaterialsDelivered,
+            GeneralObservations = logToReturn.GeneralObservations,
+            CreatedAt = logToReturn.CreatedAt
+        };
+
+        var actionText = existingLog != null ? "تحديث" : "حفظ";
+        return (true, $"تم {actionText} التقرير اليومي بنجاح.", resultDto);
+    }
+
+    public async Task<List<SitePunchItemDto>> GetPunchListAsync(
+        Guid projectId, 
+        PunchItemStatus? status, 
+        Guid tenantId)
+    {
+        var query = context.Set<SitePunchItem>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(p => p.ProjectId == projectId && p.TenantId == tenantId);
+
+        if (status.HasValue)
+        {
+            query = query.Where(p => p.Status == status.Value);
+        }
+
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new SitePunchItemDto
+            {
+                Id = p.Id,
+                ProjectId = p.ProjectId,
+                SiteTaskId = p.SiteTaskId,
+                SiteTaskTitle = p.SiteTaskId != null
+                    ? context.Set<SiteTask>().IgnoreQueryFilters().Where(t => t.Id == p.SiteTaskId).Select(t => t.Title).FirstOrDefault()
+                    : null,
+                Title = p.Title,
+                Severity = p.Severity.ToString(),
+                Status = p.Status.ToString(),
+                SubcontractorName = p.SubcontractorName,
+                DefectPhotoUrl = p.DefectPhotoUrl,
+                ResolutionPhotoUrl = p.ResolutionPhotoUrl,
+                EngineerNotes = p.EngineerNotes,
+                CreatedByUserId = p.CreatedByUserId,
+                CreatedByUserName = context.Set<User>()
+                    .IgnoreQueryFilters()
+                    .Where(u => u.Id == p.CreatedByUserId)
+                    .Select(u => (u.FirstName + " " + u.LastName).Trim())
+                    .FirstOrDefault() ?? "غير محدد",
+                CreatedAt = p.CreatedAt,
+                ResolvedAt = p.ResolvedAt
+            })
+            .ToListAsync();
+
+        return items;
+    }
+
+    public async Task<(bool Success, string Message, SitePunchItemDto? Item)> CreatePunchItemAsync(
+        SitePunchItemCreateDto dto, 
+        Guid tenantId, 
+        ClaimsPrincipal user)
+    {
+        var (userId, _, isOwner, _) = GetCallerContext(user);
+        if (userId == Guid.Empty)
+            return (false, "هوية المستخدم غير صالحة.", null);
+
+        if (string.IsNullOrWhiteSpace(dto.Title))
+            return (false, "عنوان الملاحظة الفنية مطلوب.", null);
+
+        if (string.IsNullOrWhiteSpace(dto.DefectPhotoUrl))
+            return (false, "صورة العيب الفني قبل الإصلاح مطلوبة.", null);
+
+        // Project verification
+        var project = await context.Set<Project>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == dto.ProjectId && p.TenantId == tenantId);
+
+        if (project == null)
+            return (false, "المشروع غير موجود ضمن نطاق مؤسستك.", null);
+
+        // Security check: Only assigned engineers or TenantOwner
+        var isAssigned = isOwner || await projectAccessService.IsUserAssignedToProjectAsync(userId, dto.ProjectId);
+        if (!isAssigned)
+            return (false, "غير مصرح لك بتسجيل ملاحظات استلام لهذا المشروع.", null);
+
+        string? taskTitle = null;
+        if (dto.SiteTaskId.HasValue)
+        {
+            var task = await context.Set<SiteTask>()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(t => t.Id == dto.SiteTaskId.Value && t.ProjectId == dto.ProjectId && t.TenantId == tenantId);
+            if (task == null)
+                return (false, "البند التنفيذي المرتبط غير موجود بهذا المشروع.", null);
+            taskTitle = task.Title;
+        }
+
+        var punchItem = new SitePunchItem
+        {
+            TenantId = tenantId,
+            ProjectId = dto.ProjectId,
+            SiteTaskId = dto.SiteTaskId,
+            Title = dto.Title.Trim(),
+            Severity = dto.Severity,
+            Status = PunchItemStatus.Open,
+            SubcontractorName = dto.SubcontractorName?.Trim(),
+            DefectPhotoUrl = dto.DefectPhotoUrl.Trim(),
+            EngineerNotes = dto.EngineerNotes?.Trim(),
+            CreatedByUserId = userId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Set<SitePunchItem>().Add(punchItem);
+        await context.SaveChangesAsync();
+
+        var userName = await context.Set<User>()
+            .IgnoreQueryFilters()
+            .Where(u => u.Id == userId)
+            .Select(u => (u.FirstName + " " + u.LastName).Trim())
+            .FirstOrDefaultAsync() ?? "المهندس المسجل";
+
+        var resultDto = new SitePunchItemDto
+        {
+            Id = punchItem.Id,
+            ProjectId = punchItem.ProjectId,
+            SiteTaskId = punchItem.SiteTaskId,
+            SiteTaskTitle = taskTitle,
+            Title = punchItem.Title,
+            Severity = punchItem.Severity.ToString(),
+            Status = punchItem.Status.ToString(),
+            SubcontractorName = punchItem.SubcontractorName,
+            DefectPhotoUrl = punchItem.DefectPhotoUrl,
+            ResolutionPhotoUrl = punchItem.ResolutionPhotoUrl,
+            EngineerNotes = punchItem.EngineerNotes,
+            CreatedByUserId = punchItem.CreatedByUserId,
+            CreatedByUserName = userName,
+            CreatedAt = punchItem.CreatedAt,
+            ResolvedAt = null
+        };
+
+        return (true, "تم تسجيل ملاحظة الاستلام الفني بنجاح.", resultDto);
+    }
+
+    public async Task<(bool Success, string Message)> UpdatePunchItemStatusAsync(
+        Guid punchItemId, 
+        SitePunchItemStatusUpdateDto dto, 
+        Guid tenantId, 
+        ClaimsPrincipal user)
+    {
+        var (userId, role, isOwner, isManager) = GetCallerContext(user);
+        if (userId == Guid.Empty)
+            return (false, "هوية المستخدم غير صالحة.");
+
+        var punchItem = await context.Set<SitePunchItem>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == punchItemId && p.TenantId == tenantId);
+
+        if (punchItem == null)
+            return (false, "ملاحظة الاستلام الفني غير موجودة.");
+
+        var isAssigned = isOwner || await projectAccessService.IsUserAssignedToProjectAsync(userId, punchItem.ProjectId);
+        if (!isAssigned)
+            return (false, "غير مصرح لك بالوصول لهذا المشروع.");
+
+        // Strict role check:
+        // ApprovedAndClosed is strictly restricted to Manager or TenantOwner
+        if (dto.Status == PunchItemStatus.ApprovedAndClosed)
+        {
+            if (!isManager && !isOwner)
+            {
+                return (false, "اعتماد وإغلاق الملاحظة محصور بمديري المشاريع أو مالك المنشأة حصراً.");
+            }
+            punchItem.ResolvedAt = DateTime.UtcNow;
+        }
+
+        if (dto.Status == PunchItemStatus.FixedPendingReview)
+        {
+            if (!string.IsNullOrWhiteSpace(dto.ResolutionPhotoUrl))
+            {
+                punchItem.ResolutionPhotoUrl = dto.ResolutionPhotoUrl.Trim();
+            }
+        }
+
+        punchItem.Status = dto.Status;
+
+        if (!string.IsNullOrWhiteSpace(dto.ResolutionPhotoUrl))
+        {
+            punchItem.ResolutionPhotoUrl = dto.ResolutionPhotoUrl.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.EngineerNotes))
+        {
+            punchItem.EngineerNotes = dto.EngineerNotes.Trim();
+        }
+
+        await context.SaveChangesAsync();
+        return (true, "تم تحديث حالة الملاحظة بنجاح.");
+    }
 }

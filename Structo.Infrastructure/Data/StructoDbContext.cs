@@ -39,6 +39,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
     public DbSet<SiteTask> SiteTasks => Set<SiteTask>();
     public DbSet<SiteTaskSettlementItem> SiteTaskSettlementItems => Set<SiteTaskSettlementItem>();
+    public DbSet<SiteDailyLog> SiteDailyLogs => Set<SiteDailyLog>();
+    public DbSet<SitePunchItem> SitePunchItems => Set<SitePunchItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +59,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SiteTask>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SiteTaskSettlementItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SiteDailyLog>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<SitePunchItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
 
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -425,6 +429,52 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.HasIndex(e => e.SiteTaskId);
             entity.HasIndex(e => e.SettlementItemId);
             entity.HasIndex(e => e.TenantId);
+        });
+
+        modelBuilder.Entity<SiteDailyLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.WeatherCondition).HasMaxLength(100);
+            entity.Property(e => e.WorkforceSummary).HasMaxLength(1000);
+            entity.Property(e => e.MaterialsDelivered).HasMaxLength(2000);
+            entity.Property(e => e.GeneralObservations).HasMaxLength(3000);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany()
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(l => new { l.TenantId, l.ProjectId, l.LogDate }).IsUnique();
+            entity.HasIndex(l => l.TenantId);
+            entity.HasIndex(l => l.ProjectId);
+            entity.HasIndex(l => l.LogDate);
+        });
+
+        modelBuilder.Entity<SitePunchItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(250);
+            entity.Property(e => e.Severity).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.SubcontractorName).HasMaxLength(150);
+            entity.Property(e => e.DefectPhotoUrl).IsRequired().HasMaxLength(1500);
+            entity.Property(e => e.ResolutionPhotoUrl).HasMaxLength(1500);
+            entity.Property(e => e.EngineerNotes).HasMaxLength(2000);
+
+            entity.HasOne(e => e.Project)
+                  .WithMany()
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SiteTask)
+                  .WithMany()
+                  .HasForeignKey(e => e.SiteTaskId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.SiteTaskId);
+            entity.HasIndex(e => e.Status);
         });
     }
 

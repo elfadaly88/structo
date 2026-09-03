@@ -122,3 +122,65 @@ export interface PublicProjectTrackerDto {
   tasks: PublicTaskProgressDto[];
   sitePhotos: PublicSitePhotoDto[];
 }
+
+export type PunchItemSeverity = 'Low' | 'Medium' | 'Critical';
+export type PunchItemStatus = 'Open' | 'FixedPendingReview' | 'ApprovedAndClosed';
+
+export interface SiteDailyLogDto {
+  id: string;
+  projectId: string;
+  logDate: string;
+  loggedByUserId: string;
+  loggedByUserName: string;
+  weatherCondition?: string | null;
+  workforceCount: number;
+  workforceSummary?: string | null;
+  materialsDelivered?: string | null;
+  generalObservations?: string | null;
+  createdAt: string;
+}
+
+export interface SiteDailyLogUpsertDto {
+  projectId: string;
+  logDate: string;
+  weatherCondition?: string | null;
+  workforceCount: number;
+  workforceSummary?: string | null;
+  materialsDelivered?: string | null;
+  generalObservations?: string | null;
+}
+
+export interface SitePunchItemDto {
+  id: string;
+  projectId: string;
+  siteTaskId?: string | null;
+  siteTaskTitle?: string | null;
+  title: string;
+  severity: PunchItemSeverity | string;
+  status: PunchItemStatus | string;
+  subcontractorName?: string | null;
+  defectPhotoUrl: string;
+  resolutionPhotoUrl?: string | null;
+  engineerNotes?: string | null;
+  createdByUserId: string;
+  createdByUserName: string;
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface SitePunchItemCreateDto {
+  projectId: string;
+  siteTaskId?: string | null;
+  title: string;
+  severity: PunchItemSeverity;
+  subcontractorName?: string | null;
+  defectPhotoUrl: string;
+  engineerNotes?: string | null;
+}
+
+export interface SitePunchItemStatusUpdateDto {
+  status: PunchItemStatus;
+  resolutionPhotoUrl?: string | null;
+  engineerNotes?: string | null;
+}
+

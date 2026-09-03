@@ -239,4 +239,161 @@ public class SiteOperationsController(
             Data = tracker
         });
     }
+
+    [HttpGet("api/projects/{projectId}/daily-logs")]
+    [Authorize(Roles = "TenantOwner,Manager,SiteEngineer,DesignEngineer,Accountant")]
+    public async Task<ActionResult<ApiResponse<List<SiteDailyLogDto>>>> GetDailyLogs([FromRoute] Guid projectId)
+    {
+        if (!await projectAccessService.CanViewProjectAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
+        if (CurrentTenantId == Guid.Empty)
+        {
+            return Unauthorized(new ApiResponse<List<SiteDailyLogDto>>
+            {
+                Success = false,
+                Message = "Tenant ID claim missing or invalid."
+            });
+        }
+
+        var logs = await siteExecutionService.GetDailyLogsAsync(projectId, CurrentTenantId);
+        return Ok(new ApiResponse<List<SiteDailyLogDto>>
+        {
+            Success = true,
+            Data = logs
+        });
+    }
+
+    [HttpPost("api/projects/{projectId}/daily-logs")]
+    [Authorize(Roles = "TenantOwner,Manager,SiteEngineer,DesignEngineer")]
+    public async Task<ActionResult<ApiResponse<SiteDailyLogDto>>> UpsertDailyLog(
+        [FromRoute] Guid projectId, 
+        [FromBody] SiteDailyLogUpsertDto dto)
+    {
+        if (CurrentTenantId == Guid.Empty)
+        {
+            return Unauthorized(new ApiResponse<SiteDailyLogDto>
+            {
+                Success = false,
+                Message = "Tenant ID claim missing or invalid."
+            });
+        }
+
+        dto.ProjectId = projectId;
+
+        var (success, message, log) = await siteExecutionService.UpsertDailyLogAsync(dto, CurrentTenantId, User);
+        if (!success)
+        {
+            return BadRequest(new ApiResponse<SiteDailyLogDto>
+            {
+                Success = false,
+                Message = message
+            });
+        }
+
+        return Ok(new ApiResponse<SiteDailyLogDto>
+        {
+            Success = true,
+            Message = message,
+            Data = log
+        });
+    }
+
+    [HttpGet("api/projects/{projectId}/punch-list")]
+    [Authorize(Roles = "TenantOwner,Manager,SiteEngineer,DesignEngineer,Accountant")]
+    public async Task<ActionResult<ApiResponse<List<SitePunchItemDto>>>> GetPunchList(
+        [FromRoute] Guid projectId, 
+        [FromQuery] Structo.Core.Entities.PunchItemStatus? status = null)
+    {
+        if (!await projectAccessService.CanViewProjectAsync(User, projectId))
+        {
+            return Forbid();
+        }
+
+        if (CurrentTenantId == Guid.Empty)
+        {
+            return Unauthorized(new ApiResponse<List<SitePunchItemDto>>
+            {
+                Success = false,
+                Message = "Tenant ID claim missing or invalid."
+            });
+        }
+
+        var items = await siteExecutionService.GetPunchListAsync(projectId, status, CurrentTenantId);
+        return Ok(new ApiResponse<List<SitePunchItemDto>>
+        {
+            Success = true,
+            Data = items
+        });
+    }
+
+    [HttpPost("api/projects/{projectId}/punch-list")]
+    [Authorize(Roles = "TenantOwner,Manager,SiteEngineer,DesignEngineer")]
+    public async Task<ActionResult<ApiResponse<SitePunchItemDto>>> CreatePunchItem(
+        [FromRoute] Guid projectId, 
+        [FromBody] SitePunchItemCreateDto dto)
+    {
+        if (CurrentTenantId == Guid.Empty)
+        {
+            return Unauthorized(new ApiResponse<SitePunchItemDto>
+            {
+                Success = false,
+                Message = "Tenant ID claim missing or invalid."
+            });
+        }
+
+        dto.ProjectId = projectId;
+
+        var (success, message, item) = await siteExecutionService.CreatePunchItemAsync(dto, CurrentTenantId, User);
+        if (!success)
+        {
+            return BadRequest(new ApiResponse<SitePunchItemDto>
+            {
+                Success = false,
+                Message = message
+            });
+        }
+
+        return Ok(new ApiResponse<SitePunchItemDto>
+        {
+            Success = true,
+            Message = message,
+            Data = item
+        });
+    }
+
+    [HttpPatch("api/punch-list/{id}/status")]
+    [Authorize(Roles = "TenantOwner,Manager,SiteEngineer,DesignEngineer")]
+    public async Task<ActionResult<ApiResponse<bool>>> UpdatePunchItemStatus(
+        [FromRoute] Guid id, 
+        [FromBody] SitePunchItemStatusUpdateDto dto)
+    {
+        if (CurrentTenantId == Guid.Empty)
+        {
+            return Unauthorized(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Tenant ID claim missing or invalid."
+            });
+        }
+
+        var (success, message) = await siteExecutionService.UpdatePunchItemStatusAsync(id, dto, CurrentTenantId, User);
+        if (!success)
+        {
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = message
+            });
+        }
+
+        return Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Message = message,
+            Data = true
+        });
+    }
 }

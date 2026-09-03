@@ -9,6 +9,11 @@ import {
   LinkSettlementItemsDto,
   ProjectSiteTasksResponseDto,
   PublicProjectTrackerDto,
+  SiteDailyLogDto,
+  SiteDailyLogUpsertDto,
+  SitePunchItemCreateDto,
+  SitePunchItemDto,
+  SitePunchItemStatusUpdateDto,
   SiteTaskCreateDto,
   SiteTaskDto,
   SiteTaskProgressUpdateDto
@@ -54,6 +59,40 @@ export class SiteExecutionService {
   getPublicProjectTracker(shareToken: string): Observable<ApiResponse<PublicProjectTrackerDto>> {
     return this.http.get<ApiResponse<PublicProjectTrackerDto>>(
       `${this.apiUrl}/public/project-tracker/${shareToken}`
+    );
+  }
+
+  getDailyLogs(projectId: string): Observable<ApiResponse<SiteDailyLogDto[]>> {
+    return this.http.get<ApiResponse<SiteDailyLogDto[]>>(
+      `${this.apiUrl}/projects/${projectId}/daily-logs`
+    );
+  }
+
+  upsertDailyLog(projectId: string, dto: SiteDailyLogUpsertDto): Observable<ApiResponse<SiteDailyLogDto>> {
+    return this.http.post<ApiResponse<SiteDailyLogDto>>(
+      `${this.apiUrl}/projects/${projectId}/daily-logs`,
+      dto
+    );
+  }
+
+  getPunchList(projectId: string, status?: string): Observable<ApiResponse<SitePunchItemDto[]>> {
+    const url = status 
+      ? `${this.apiUrl}/projects/${projectId}/punch-list?status=${encodeURIComponent(status)}`
+      : `${this.apiUrl}/projects/${projectId}/punch-list`;
+    return this.http.get<ApiResponse<SitePunchItemDto[]>>(url);
+  }
+
+  createPunchItem(projectId: string, dto: SitePunchItemCreateDto): Observable<ApiResponse<SitePunchItemDto>> {
+    return this.http.post<ApiResponse<SitePunchItemDto>>(
+      `${this.apiUrl}/projects/${projectId}/punch-list`,
+      dto
+    );
+  }
+
+  updatePunchItemStatus(id: string, dto: SitePunchItemStatusUpdateDto): Observable<ApiResponse<boolean>> {
+    return this.http.patch<ApiResponse<boolean>>(
+      `${this.apiUrl}/punch-list/${id}/status`,
+      dto
     );
   }
 }

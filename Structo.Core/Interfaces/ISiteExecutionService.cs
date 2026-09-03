@@ -32,4 +32,27 @@ public interface ISiteExecutionService
         ClaimsPrincipal user);
     
     Task<PublicProjectTrackerDto?> GetPublicProjectTrackerAsync(string shareToken);
+
+    Task<List<SiteDailyLogDto>> GetDailyLogsAsync(Guid projectId, Guid tenantId);
+
+    Task<(bool Success, string Message, SiteDailyLogDto? Log)> UpsertDailyLogAsync(
+        SiteDailyLogUpsertDto dto, 
+        Guid tenantId, 
+        ClaimsPrincipal user);
+
+    Task<List<SitePunchItemDto>> GetPunchListAsync(
+        Guid projectId, 
+        Structo.Core.Entities.PunchItemStatus? status, 
+        Guid tenantId);
+
+    Task<(bool Success, string Message, SitePunchItemDto? Item)> CreatePunchItemAsync(
+        SitePunchItemCreateDto dto, 
+        Guid tenantId, 
+        ClaimsPrincipal user);
+
+    Task<(bool Success, string Message)> UpdatePunchItemStatusAsync(
+        Guid punchItemId, 
+        SitePunchItemStatusUpdateDto dto, 
+        Guid tenantId, 
+        ClaimsPrincipal user);
 }
