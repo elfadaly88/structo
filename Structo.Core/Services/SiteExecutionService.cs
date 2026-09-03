@@ -18,12 +18,13 @@ public class SiteExecutionService(
 {
     private static DateTime? AsUtc(DateTime? dt)
     {
-        if (!dt.HasValue) return null;
+        if (!dt.HasValue || dt.Value.Year <= 1) return null;
         return dt.Value.Kind == DateTimeKind.Utc ? dt.Value : DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
     }
 
-    private static DateTime AsUtc(DateTime dt)
+    private static DateTime? AsUtc(DateTime dt)
     {
+        if (dt.Year <= 1) return null;
         return dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
     }
 
@@ -494,6 +495,12 @@ public class SiteExecutionService(
             })
             .ToListAsync();
 
+        var completionDate = (project.Status == ProjectStatus.Closed || project.EndDate.HasValue) && project.EndDate.HasValue && project.EndDate.Value.Year > 1
+            ? AsUtc(project.EndDate)
+            : null;
+        var createdAt = project.CreatedAt.Year > 1 ? AsUtc(project.CreatedAt) : null;
+        var displayDate = completionDate ?? createdAt;
+
         // 5. Strictly Return Public DTO (NO financial data, NO budgets, NO margins)
         return new PublicProjectTrackerDto
         {
@@ -507,6 +514,9 @@ public class SiteExecutionService(
             WeightedOverallProgress = Math.Clamp(weightedOverallProgress, 0, 100),
             StartDate = AsUtc(project.StartDate),
             EndDate = AsUtc(project.EndDate),
+            CompletionDate = completionDate,
+            CreatedAt = createdAt,
+            DisplayDate = displayDate,
             Tasks = tasks.Select(t => new PublicTaskProgressDto
             {
                 Id = t.Id,

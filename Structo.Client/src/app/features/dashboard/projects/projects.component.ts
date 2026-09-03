@@ -322,7 +322,15 @@ const GOVERNORATES: GovernorateOption[] = [
                         🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
                       }
                     </td>
-                    <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">{{ proj.startDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">
+                      @if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
+                        {{ proj.startDate | date:'dd/MM/yyyy' }}
+                      } @else if (proj.createdAt && !proj.createdAt.startsWith('0001') && !proj.createdAt.startsWith('2001-01-01')) {
+                        {{ proj.createdAt | date:'dd/MM/yyyy' }}
+                      } @else {
+                        —
+                      }
+                    </td>
                   </tr>
                 } @empty {
                   <tr>
@@ -373,7 +381,15 @@ const GOVERNORATES: GovernorateOption[] = [
                 </div>
                 <div class="text-[11px] text-slate-500 font-cairo flex items-center justify-between pt-1 border-t border-slate-900">
                   <span>{{ proj.propertyType === 'Residential' ? '🏠 Residential' : '🏢 Administrative' }}</span>
-                  <span class="font-mono tabular-nums">📅 {{ proj.startDate | date:'dd/MM/yyyy' }}</span>
+                  <span class="font-mono tabular-nums">
+                    @if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
+                      📅 {{ proj.startDate | date:'dd/MM/yyyy' }}
+                    } @else if (proj.createdAt && !proj.createdAt.startsWith('0001') && !proj.createdAt.startsWith('2001-01-01')) {
+                      📅 {{ proj.createdAt | date:'dd/MM/yyyy' }}
+                    } @else {
+                      📅 —
+                    }
+                  </span>
                 </div>
               </div>
             } @empty {

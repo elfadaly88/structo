@@ -220,11 +220,20 @@ public class PublicProjectTrackerDto
     public string Status { get; set; } = string.Empty;
     public int WeightedOverallProgress { get; set; }
 
-    [JsonConverter(typeof(IsoDateTimeConverter))]
-    public DateTime StartDate { get; set; }
+    [JsonConverter(typeof(IsoNullableDateTimeConverter))]
+    public DateTime? StartDate { get; set; }
 
     [JsonConverter(typeof(IsoNullableDateTimeConverter))]
     public DateTime? EndDate { get; set; }
+
+    [JsonConverter(typeof(IsoNullableDateTimeConverter))]
+    public DateTime? CompletionDate { get; set; }
+
+    [JsonConverter(typeof(IsoNullableDateTimeConverter))]
+    public DateTime? CreatedAt { get; set; }
+
+    [JsonConverter(typeof(IsoNullableDateTimeConverter))]
+    public DateTime? DisplayDate { get; set; }
 
     public List<PublicTaskProgressDto> Tasks { get; set; } = [];
     public List<PublicSitePhotoDto> SitePhotos { get; set; } = [];

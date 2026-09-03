@@ -291,19 +291,21 @@ export class ProjectTrackerComponent implements OnInit {
   formatSafeDate(dateStr?: string | null): string {
     if (!dateStr) return '—';
     const str = String(dateStr).trim();
+    if (str.startsWith('0001') || str.startsWith('2001-01-01') || str.startsWith('01/01/0001') || str.startsWith('01/01/2001')) return '—';
     if (str.includes('/')) {
       const parts = str.split(' ')[0].split('/');
       if (parts.length === 3) {
         const day = parts[0].padStart(2, '0');
         const month = parts[1].padStart(2, '0');
         const year = parts[2];
+        if (year === '0001' || (year === '2001' && day === '01' && month === '01')) return '—';
         return `${day}/${month}/${year}`;
       }
       return str.split(' ')[0];
     }
     const d = new Date(str);
-    if (isNaN(d.getTime())) {
-      return str.split('T')[0];
+    if (isNaN(d.getTime()) || d.getFullYear() <= 1900) {
+      return '—';
     }
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');

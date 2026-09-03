@@ -2,8 +2,11 @@ export interface ProjectDto {
   id: string;
   name: string;
   description: string;
-  startDate: string;
-  endDate: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt?: string | null;
+  completionDate?: string | null;
+  displayDate?: string | null;
   isActive: boolean;
   managerId: string | null;
   status: string;

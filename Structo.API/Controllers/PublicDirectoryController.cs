@@ -36,8 +36,11 @@ public class PublicProjectDto
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public DateTime StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public DateTime? CompletionDate { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? DisplayDate { get; set; }
     public string Category { get; set; } = string.Empty;
     public string? Status { get; set; }
     public bool IsClosed { get; set; }
@@ -261,13 +264,23 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
                     .Select(sp => sp.PhotoUrl.Trim())
                     .ToList();
 
+                var completionDate = (p.Status == ProjectStatus.Closed || p.EndDate.HasValue) && p.EndDate.HasValue && p.EndDate.Value.Year > 1
+                    ? p.EndDate
+                    : (DateTime?)null;
+                var createdAt = p.CreatedAt.Year > 1 ? p.CreatedAt : (DateTime?)null;
+                var displayDate = completionDate ?? createdAt;
+                var startDate = p.StartDate.Year > 1 ? p.StartDate : (DateTime?)null;
+
                 publicProjects.Add(new PublicProjectDto
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Description = p.Description,
-                    StartDate = p.StartDate,
-                    EndDate = p.EndDate,
+                    StartDate = startDate,
+                    EndDate = p.EndDate.HasValue && p.EndDate.Value.Year > 1 ? p.EndDate : null,
+                    CompletionDate = completionDate,
+                    CreatedAt = createdAt,
+                    DisplayDate = displayDate,
                     Category = p.Category ?? "Other",
                     Status = p.Status.ToString(),
                     IsClosed = p.Status == ProjectStatus.Closed,

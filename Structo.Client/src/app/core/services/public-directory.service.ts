@@ -45,8 +45,11 @@ export interface PublicProjectDto {
   id: string;
   name: string;
   description: string;
-  startDate: string;
-  endDate: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  completionDate?: string | null;
+  createdAt?: string | null;
+  displayDate?: string | null;
   category: string;
   status?: string;
   isClosed?: boolean;

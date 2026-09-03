@@ -73,27 +73,40 @@ public class ProjectService(
         return TimeZoneInfo.ConvertTimeFromUtc(utc, egyptZone);
     }
 
-    private ProjectDto MapToDto(Project p, string? userRole = null) => new()
+    private ProjectDto MapToDto(Project p, string? userRole = null)
     {
-        Id = p.Id,
-        Name = p.Name,
-        Description = userRole == "SuperAdmin" ? string.Empty : BuildLegacyDescription(p),
-        StartDate = ToEgyptLocalTime(p.StartDate),
-        EndDate = p.EndDate.HasValue ? ToEgyptLocalTime(p.EndDate.Value) : null,
-        IsActive = p.IsActive,
-        ManagerId = p.ManagerId,
-        Status = p.Status.ToString(),
-        PublicReviewToken = p.PublicReviewToken,
-        Governorate = p.Governorate,
-        CityOrZone = p.CityOrZone,
-        SiteAddress = p.SiteAddress,
-        ClientName = p.ClientName,
-        ClientWhatsApp = p.ClientWhatsApp,
-        PropertyType = p.PropertyType.ToString(),
-        ClientReviewNotes = p.ClientReviewNotes,
-        ClientRating = p.ClientRating,
-        IsReviewHidden = p.IsReviewHidden
-    };
+        var completionDate = (p.Status == ProjectStatus.Closed || p.EndDate.HasValue) && p.EndDate.HasValue && p.EndDate.Value.Year > 1
+            ? ToEgyptLocalTime(p.EndDate.Value)
+            : (DateTime?)null;
+        var createdAt = p.CreatedAt.Year > 1 ? ToEgyptLocalTime(p.CreatedAt) : (DateTime?)null;
+        var startDate = p.StartDate.Year > 1 ? ToEgyptLocalTime(p.StartDate) : (DateTime?)null;
+        var displayDate = completionDate ?? createdAt;
+
+        return new()
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = userRole == "SuperAdmin" ? string.Empty : BuildLegacyDescription(p),
+            StartDate = startDate,
+            EndDate = p.EndDate.HasValue && p.EndDate.Value.Year > 1 ? ToEgyptLocalTime(p.EndDate.Value) : null,
+            CreatedAt = createdAt,
+            CompletionDate = completionDate,
+            DisplayDate = displayDate,
+            IsActive = p.IsActive,
+            ManagerId = p.ManagerId,
+            Status = p.Status.ToString(),
+            PublicReviewToken = p.PublicReviewToken,
+            Governorate = p.Governorate,
+            CityOrZone = p.CityOrZone,
+            SiteAddress = p.SiteAddress,
+            ClientName = p.ClientName,
+            ClientWhatsApp = p.ClientWhatsApp,
+            PropertyType = p.PropertyType.ToString(),
+            ClientReviewNotes = p.ClientReviewNotes,
+            ClientRating = p.ClientRating,
+            IsReviewHidden = p.IsReviewHidden
+        };
+    }
 
     public async Task<List<ProjectDto>> GetAllProjectsAsync(Guid? tenantIdFilter, string userRole, Guid? currentUserId = null)
     {

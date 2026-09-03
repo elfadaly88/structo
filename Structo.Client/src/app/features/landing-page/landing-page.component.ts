@@ -567,9 +567,21 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 
                         <!-- Card Footer Action Button -->
                         <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                          <span class="text-[11px] text-slate-500 font-mono">
-                            {{ proj.startDate | date:'dd/MM/yyyy' }}
-                          </span>
+                          @if (proj.displayDate && !proj.displayDate.startsWith('0001') && !proj.displayDate.startsWith('2001-01-01')) {
+                            <span class="text-xs font-mono text-slate-400">
+                              {{ proj.displayDate | date:'dd/MM/yyyy' }}
+                            </span>
+                          } @else if (proj.createdAt && !proj.createdAt.startsWith('0001') && !proj.createdAt.startsWith('2001-01-01')) {
+                            <span class="text-xs font-mono text-slate-400">
+                              {{ proj.createdAt | date:'dd/MM/yyyy' }}
+                            </span>
+                          } @else if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
+                            <span class="text-xs font-mono text-slate-400">
+                              {{ proj.startDate | date:'dd/MM/yyyy' }}
+                            </span>
+                          } @else {
+                            <span></span>
+                          }
                           <button
                             (click)="toggleProjectDetailsExpand(proj.id)"
                             class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 transition-all cursor-pointer font-cairo flex items-center gap-1.5">
