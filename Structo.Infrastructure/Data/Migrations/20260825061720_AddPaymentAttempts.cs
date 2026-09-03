@@ -107,7 +107,8 @@ namespace Structo.Infrastructure.Data.Migrations
                     NULL,
                     'NeverArrived',
                     'Paymob webhook callback never reached server (Order ID 594308791)'
-                WHERE NOT EXISTS (
+                WHERE EXISTS (SELECT 1 FROM ""Tenants"" WHERE ""Id"" = '1c12b0cf-8505-4d0a-8d55-617daf3f30a2'::uuid)
+                  AND NOT EXISTS (
                     SELECT 1 FROM ""PaymentAttempts"" pa WHERE pa.""PaymobOrderId"" = '594308791'
                 );
             ");

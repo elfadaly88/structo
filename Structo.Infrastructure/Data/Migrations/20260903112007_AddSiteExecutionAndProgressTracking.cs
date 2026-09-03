@@ -20,7 +20,7 @@ namespace Structo.Infrastructure.Data.Migrations
                 nullable: true);
 
             // 🚀 Backfill existing projects with random UUID tokens before applying unique index
-            migrationBuilder.Sql("UPDATE \"Projects\" SET \"PublicShareToken\" = gen_random_uuid() WHERE \"PublicShareToken\" IS NULL;");
+            migrationBuilder.Sql("UPDATE \"Projects\" SET \"PublicShareToken\" = gen_random_uuid()::text WHERE \"PublicShareToken\" IS NULL;");
 
             migrationBuilder.CreateTable(
                 name: "SiteTasks",
