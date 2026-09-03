@@ -306,7 +306,6 @@ public class FinancialReportService(
         var txQuery = context.Set<FinancialTransaction>()
             .IgnoreQueryFilters()
             .AsNoTracking()
-            .Include(t => t.Project)
             .Where(t => inScopeProjectIds.Contains(t.ProjectId) && t.TenantId == currentTenantId);
 
         if (startUtc.HasValue)
@@ -314,24 +313,23 @@ public class FinancialReportService(
         if (endUtc.HasValue)
             txQuery = txQuery.Where(t => t.TransactionDate <= endUtc.Value);
 
-        var dbTransactions = await txQuery
+        var combinedTransactions = await txQuery
             .OrderByDescending(t => t.TransactionDate)
+            .Select(t => new CompanyTransactionDto
+            {
+                Id = t.Id,
+                ProjectId = t.ProjectId,
+                ProjectName = t.Project != null ? t.Project.Name : string.Empty,
+                Amount = t.Amount,
+                Type = t.Type.ToString(),
+                Description = t.Description ?? string.Empty,
+                TransactionDate = t.TransactionDate,
+                PaymentDate = t.PaymentDate,
+                PaymentMethod = t.PaymentMethod != null ? t.PaymentMethod.ToString() : "نقدي",
+                ReceiptPhotoUrl = t.ReceiptPhotoUrl,
+                IsLocked = t.IsAudited || t.IsClosed || t.SettlementId.HasValue
+            })
             .ToListAsync();
-
-        var combinedTransactions = dbTransactions.Select(t => new CompanyTransactionDto
-        {
-            Id = t.Id,
-            ProjectId = t.ProjectId,
-            ProjectName = t.Project?.Name ?? string.Empty,
-            Amount = t.Amount,
-            Type = t.Type.ToString(),
-            Description = t.Description,
-            TransactionDate = t.TransactionDate,
-            PaymentDate = t.PaymentDate,
-            PaymentMethod = t.PaymentMethod?.ToString(),
-            ReceiptPhotoUrl = t.ReceiptPhotoUrl,
-            IsLocked = t.IsAudited || t.IsClosed || t.SettlementId.HasValue
-        }).ToList();
 
         // Petty Cash across in-scope projects
         var pcQuery = context.Set<PettyCash>()
@@ -364,12 +362,12 @@ public class FinancialReportService(
         var breakdowns = new List<ProjectFinancialBreakdownDto>();
         foreach (var proj in projects)
         {
-            var pIncome = dbTransactions
-                .Where(t => t.ProjectId == proj.Id && t.Type == TransactionType.Income)
+            var pIncome = combinedTransactions
+                .Where(t => t.ProjectId == proj.Id && t.Type == "Income")
                 .Sum(t => t.Amount);
 
-            var pExpenses = dbTransactions
-                .Where(t => t.ProjectId == proj.Id && (t.Type == TransactionType.Expense || t.Type == TransactionType.DirectProjectExpense))
+            var pExpenses = combinedTransactions
+                .Where(t => t.ProjectId == proj.Id && (t.Type == "Expense" || t.Type == "DirectProjectExpense"))
                 .Sum(t => t.Amount);
 
             var pOutstandingPettyCash = dbPettyCash
@@ -394,8 +392,8 @@ public class FinancialReportService(
             });
         }
 
-        var totalIncome = dbTransactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
-        var totalExpenses = dbTransactions.Where(t => t.Type == TransactionType.Expense || t.Type == TransactionType.DirectProjectExpense).Sum(t => t.Amount);
+        var totalIncome = combinedTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
+        var totalExpenses = combinedTransactions.Where(t => t.Type == "Expense" || t.Type == "DirectProjectExpense").Sum(t => t.Amount);
         var totalOutstandingPettyCash = dbPettyCash.Where(p => !p.IsSettled).Sum(p => p.Amount);
         var totalSettlements = dbSettlements.Sum(s => s.TotalAmount);
         var totalBudget = projects.Sum(p => p.Budget);

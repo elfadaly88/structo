@@ -302,9 +302,9 @@ import { ProjectDto } from '../../../core/models/project.models';
             </span>
           </div>
 
-          <!-- Desktop Table (hidden md:block) -->
-          <div class="hidden md:block overflow-x-auto">
-            <table class="w-full text-right text-xs">
+          <!-- Unified Responsive Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs min-w-[700px]">
               <thead class="bg-slate-950/70 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
                 <tr>
                   <th class="p-3.5">المشروع</th>
@@ -324,24 +324,20 @@ import { ProjectDto } from '../../../core/models/project.models';
                         {{ tx.projectName }}
                       </span>
                     </td>
-                    <td class="p-3.5 text-slate-400 font-mono">{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
-                    <td class="p-3.5">
+                    <td class="p-3.5 text-slate-400 font-mono whitespace-nowrap">{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="p-3.5 whitespace-nowrap">
                       <span class="px-2 py-0.5 rounded text-[10px] font-bold"
-                            [class.bg-emerald-950\/60]="tx.type === 'Income'"
-                            [class.text-emerald-400]="tx.type === 'Income'"
-                            [class.bg-rose-950\/60]="tx.type !== 'Income'"
-                            [class.text-rose-400]="tx.type !== 'Income'">
+                            [ngClass]="tx.type === 'Income' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-400 border border-rose-500/20'">
                         {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
                       </span>
                     </td>
                     <td class="p-3.5 text-slate-300 max-w-xs truncate" [title]="tx.description">{{ tx.description || '—' }}</td>
-                    <td class="p-3.5 text-left font-mono font-bold"
-                        [class.text-emerald-400]="tx.type === 'Income'"
-                        [class.text-rose-400]="tx.type !== 'Income'">
+                    <td class="p-3.5 text-left font-mono font-bold whitespace-nowrap"
+                        [ngClass]="tx.type === 'Income' ? 'text-emerald-400' : 'text-rose-400'">
                       {{ tx.type === 'Income' ? '+' : '-' }}{{ tx.amount | number:'1.2-2' }} ج.م
                     </td>
-                    <td class="p-3.5 text-center font-mono text-[11px] text-slate-400">{{ tx.paymentMethod || '—' }}</td>
-                    <td class="p-3.5 text-center">
+                    <td class="p-3.5 text-center font-mono text-[11px] text-slate-400 whitespace-nowrap">{{ tx.paymentMethod || 'نقدي' }}</td>
+                    <td class="p-3.5 text-center whitespace-nowrap">
                       @if (tx.receiptPhotoUrl) {
                         <a [href]="tx.receiptPhotoUrl" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline text-[11px]">معاينة</a>
                       } @else {
@@ -358,40 +354,6 @@ import { ProjectDto } from '../../../core/models/project.models';
                 }
               </tbody>
             </table>
-          </div>
-
-          <!-- Mobile Cards (block md:hidden) -->
-          <div class="block md:hidden p-3 space-y-3">
-            @for (tx of reportData()!.combinedTransactions; track tx.id) {
-              <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 space-y-2 shadow-sm">
-                <div class="flex items-center justify-between">
-                  <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold text-[11px]">
-                    {{ tx.projectName }}
-                  </span>
-                  <span class="font-mono text-xs font-bold"
-                        [class.text-emerald-400]="tx.type === 'Income'"
-                        [class.text-rose-400]="tx.type !== 'Income'">
-                    {{ tx.type === 'Income' ? '+' : '-' }}{{ tx.amount | number:'1.2-2' }} ج.م
-                  </span>
-                </div>
-
-                <p class="text-xs text-slate-200 break-words">{{ tx.description || '—' }}</p>
-
-                <div class="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-800/80">
-                  <span>{{ tx.transactionDate | date:'dd/MM/yyyy' }}</span>
-                  <div class="flex items-center gap-2">
-                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">{{ tx.paymentMethod || 'CASH' }}</span>
-                    @if (tx.receiptPhotoUrl) {
-                      <a [href]="tx.receiptPhotoUrl" target="_blank" class="text-indigo-400 underline font-bold">إيصال</a>
-                    }
-                  </div>
-                </div>
-              </div>
-            } @empty {
-              <div class="p-6 text-center text-slate-500 text-xs">
-                لا توجد عمليات مسجلة
-              </div>
-            }
           </div>
         </div>
       }
