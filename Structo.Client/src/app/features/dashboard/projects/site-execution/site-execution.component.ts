@@ -583,22 +583,36 @@ import {
                   }
                 </div>
 
-                <!-- Assigned Engineer (Strict Wall) -->
+                <!-- Assigned Engineer (Strict Wall with Owner-Operated Support) -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-300 mb-1.5">
-                    المهندس المسؤول المسند للمشروع <span class="text-rose-400">*</span>
-                  </label>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs font-bold text-slate-300">
+                      المهندس المسؤول عن التنفيذ <span class="text-rose-400">*</span>
+                    </label>
+                    @if (isOwnerSelected()) {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        👑 مالك المنشأة / مهندس التنفيذ
+                      </span>
+                    }
+                  </div>
                   <select
                     formControlName="assignedEngineerId"
-                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                    <option value="" disabled>-- اختر مهندساً مسنداً للمشروع --</option>
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo">
+                    <option value="" disabled>-- اختر مهندساً مسنداً أو المالك --</option>
                     @for (eng of engineers(); track eng.id) {
-                      <option [value]="eng.id">{{ eng.fullName }} ({{ eng.role }})</option>
+                      <option [value]="eng.id">
+                        {{ eng.fullName }} @if (eng.isOwner || eng.role === 'TenantOwner') { (مالك المنشأة / مدير تنفيذي) } @else { ({{ getRoleArabic(eng.role) }}) }
+                      </option>
                     }
                   </select>
-                  @if (engineers().length === 0) {
-                    <p class="text-amber-400 text-[10px] mt-1">
-                      ⚠️ لا يوجد مهندسون مسندون رسمياً لهذا المشروع حالياً. يرجى إسناد مهندس لفريق المشروع أولاً.
+                  @if (hasNoExternalEngineers() && engineers().length > 0) {
+                    <p class="text-indigo-300/80 text-[10px] mt-1.5 flex items-center gap-1 font-cairo">
+                      <span>💡</span>
+                      <span>المشروع يدار ذاتياً بواسطة مالك المنشأة (تم اختياره تلقائياً كمسؤول افتراضي).</span>
+                    </p>
+                  } @else if (engineers().length === 0) {
+                    <p class="text-amber-400 text-[10px] mt-1 font-cairo">
+                      ⚠️ لا يوجد مهندسون مسندون أو مالك متاح لهذا المشروع حالياً.
                     </p>
                   }
                 </div>
@@ -738,6 +752,28 @@ export class SiteExecutionComponent implements OnInit {
     return this.tasks().reduce((acc, t) => acc + (t.totalAllocatedExpenses || 0), 0);
   });
 
+  readonly hasNoExternalEngineers = computed(() => {
+    return !this.engineers().some(e => !e.isOwner && e.role !== 'TenantOwner');
+  });
+
+  isOwnerSelected(): boolean {
+    const selectedId = this.createForm.get('assignedEngineerId')?.value;
+    if (!selectedId) return false;
+    const eng = this.engineers().find(e => e.id === selectedId);
+    return !!eng && (eng.isOwner === true || eng.role === 'TenantOwner');
+  }
+
+  getRoleArabic(role: string): string {
+    const r = (role || '').toUpperCase();
+    if (r.includes('TENANTOWNER') || r.includes('OWNER')) return 'مالك المنشأة / مدير تنفيذي';
+    if (r.includes('SITEENGINEER') || r.includes('SITE_ENGINEER')) return 'مهندس موقع';
+    if (r.includes('DESIGNENGINEER') || r.includes('DESIGN_ENGINEER')) return 'مهندس تصميم';
+    if (r.includes('ENGINEER')) return 'مهندس موقع';
+    if (r.includes('MANAGER')) return 'مدير مشاريع';
+    if (r.includes('ACCOUNTANT')) return 'محاسب';
+    return role || 'عضو';
+  }
+
   private notifySuccess(msg: string): void {
     this.toast.show('نجاح العملية', msg, 'success');
   }
@@ -825,9 +861,17 @@ export class SiteExecutionComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    let defaultAssigneeId = '';
+    const engList = this.engineers();
+    if (engList.length > 0) {
+      // If external engineers exist, prefer them; otherwise select Owner
+      const externalEng = engList.find(e => !e.isOwner && e.role !== 'TenantOwner');
+      defaultAssigneeId = externalEng ? externalEng.id : engList[0].id;
+    }
+
     this.createForm.reset({
       title: '',
-      assignedEngineerId: '',
+      assignedEngineerId: defaultAssigneeId,
       weight: 1.0,
       plannedStartDate: '',
       plannedEndDate: '',

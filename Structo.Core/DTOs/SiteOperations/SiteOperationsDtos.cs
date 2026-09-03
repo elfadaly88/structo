@@ -12,6 +12,7 @@ public class AssignedEngineerDto
     public string FullName => $"{FirstName} {LastName}".Trim();
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+    public bool IsOwner { get; set; }
 }
 
 public class LinkedSettlementItemDto

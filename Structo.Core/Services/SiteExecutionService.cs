@@ -23,7 +23,7 @@ public class SiteExecutionService(
 
     public async Task<List<AssignedEngineerDto>> GetAssignedEngineersAsync(Guid projectId, Guid tenantId)
     {
-        return await context.Set<ProjectMember>()
+        var engineers = await context.Set<ProjectMember>()
             .IgnoreQueryFilters()
             .AsNoTracking()
             .Include(pm => pm.User)
@@ -34,11 +34,38 @@ public class SiteExecutionService(
                 FirstName = pm.User!.FirstName,
                 LastName = pm.User.LastName,
                 Email = pm.User.Email,
-                Role = pm.User.Role.ToString()
+                Role = pm.User.Role.ToString(),
+                IsOwner = pm.User.Role == UserRole.TenantOwner
             })
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
             .ToListAsync();
+
+        // 🚀 Owner-Operated Support: Always include TenantOwner(s) of this tenant as selectable execution leaders
+        var owners = await context.Set<User>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(u => u.TenantId == tenantId && u.Role == UserRole.TenantOwner && u.IsActive)
+            .Select(u => new AssignedEngineerDto
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                Role = "TenantOwner",
+                IsOwner = true
+            })
+            .ToListAsync();
+
+        foreach (var owner in owners)
+        {
+            if (!engineers.Any(e => e.Id == owner.Id))
+            {
+                engineers.Insert(0, owner);
+            }
+        }
+
+        return engineers;
     }
 
     public async Task<ProjectSiteTasksResponseDto> GetProjectSiteTasksAsync(Guid projectId, Guid tenantId)
@@ -205,14 +232,7 @@ public class SiteExecutionService(
         if (dto.Weight <= 0)
             return (false, "الوزن النسبي للبند يجب أن يكون أكبر من الصفر.", null);
 
-        // 1. Strict Project Assignment Wall
-        var isAssigned = await projectAccessService.IsUserAssignedToProjectAsync(dto.AssignedEngineerId, dto.ProjectId);
-        if (!isAssigned)
-        {
-            return (false, "لا يمكن إسناد المهمة لمهندس غير مسند رسمياً لهذا المشروع.", null);
-        }
-
-        // 2. Tenant Context Check
+        // 1. Tenant Context Check for Project
         var project = await context.Set<Project>()
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == dto.ProjectId && p.TenantId == tenantId);
@@ -220,12 +240,20 @@ public class SiteExecutionService(
         if (project == null)
             return (false, "المشروع غير موجود ضمن نطاق مؤسستك.", null);
 
+        // 2. Strict Project Assignment Wall (Allowed if assigned to project OR if user is TenantOwner of this tenant)
         var engineer = await context.Set<User>()
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(u => u.Id == dto.AssignedEngineerId && u.TenantId == tenantId);
+            .FirstOrDefaultAsync(u => u.Id == dto.AssignedEngineerId && u.TenantId == tenantId && u.IsActive);
 
         if (engineer == null)
-            return (false, "المهندس غير موجود أو غير نشط.", null);
+            return (false, "المهندس أو المسؤول المختار غير موجود أو غير نشط.", null);
+
+        var isOwner = engineer.Role == UserRole.TenantOwner;
+        var isAssigned = isOwner || await projectAccessService.IsUserAssignedToProjectAsync(dto.AssignedEngineerId, dto.ProjectId);
+        if (!isAssigned)
+        {
+            return (false, "لا يمكن إسناد المهمة لمهندس غير مسند رسمياً لهذا المشروع.", null);
+        }
 
         var task = new SiteTask
         {

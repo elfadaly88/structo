@@ -5,6 +5,7 @@ export interface AssignedEngineerDto {
   fullName: string;
   email: string;
   role: string;
+  isOwner?: boolean;
 }
 
 export interface LinkedSettlementItemDto {

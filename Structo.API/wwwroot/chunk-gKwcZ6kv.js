@@ -1,0 +1,1 @@
+import {E,au as rt,aQ as gh,aE as S}from'./main-CF4GHKZ3.js';function w(t){t||(t=E(rt));let i=new S(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(gh(i))}export{w};
