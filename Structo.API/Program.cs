@@ -388,7 +388,7 @@ using (var scope = app.Services.CreateScope())
                 ""PlannedEndDate"" timestamp without time zone NULL,
                 ""CompletedAt"" timestamp without time zone NULL,
                 ""EngineerNotes"" character varying(2000) NULL,
-                ""AttachmentUrls"" text[] NOT NULL DEFAULT '{}',
+                ""AttachmentUrls"" text[] NOT NULL DEFAULT ARRAY[]::text[],
                 CONSTRAINT ""PK_SiteTasks"" PRIMARY KEY (""Id""),
                 CONSTRAINT ""FK_SiteTasks_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE,
                 CONSTRAINT ""FK_SiteTasks_Users_AssignedEngineerId"" FOREIGN KEY (""AssignedEngineerId"") REFERENCES ""Users"" (""Id"") ON DELETE RESTRICT
@@ -414,6 +414,52 @@ using (var scope = app.Services.CreateScope())
             CREATE INDEX IF NOT EXISTS ""IX_SiteTaskSettlementItems_SettlementItemId"" ON ""SiteTaskSettlementItems"" (""SettlementItemId"");
             CREATE INDEX IF NOT EXISTS ""IX_SiteTaskSettlementItems_SiteTaskId"" ON ""SiteTaskSettlementItems"" (""SiteTaskId"");
             CREATE INDEX IF NOT EXISTS ""IX_SiteTaskSettlementItems_TenantId"" ON ""SiteTaskSettlementItems"" (""TenantId"");
+
+            CREATE TABLE IF NOT EXISTS ""SiteDailyLogs"" (
+                ""Id"" uuid NOT NULL,
+                ""TenantId"" uuid NOT NULL,
+                ""ProjectId"" uuid NOT NULL,
+                ""LogDate"" timestamp without time zone NOT NULL,
+                ""LoggedByUserId"" uuid NOT NULL,
+                ""WeatherCondition"" character varying(100) NULL,
+                ""WorkforceCount"" integer NOT NULL DEFAULT 0,
+                ""WorkforceSummary"" character varying(1000) NULL,
+                ""MaterialsDelivered"" character varying(2000) NULL,
+                ""GeneralObservations"" character varying(3000) NULL,
+                ""CreatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
+                CONSTRAINT ""PK_SiteDailyLogs"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_SiteDailyLogs_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_SiteDailyLogs_TenantId_ProjectId_LogDate"" ON ""SiteDailyLogs"" (""TenantId"", ""ProjectId"", ""LogDate"");
+            CREATE INDEX IF NOT EXISTS ""IX_SiteDailyLogs_ProjectId"" ON ""SiteDailyLogs"" (""ProjectId"");
+            CREATE INDEX IF NOT EXISTS ""IX_SiteDailyLogs_TenantId"" ON ""SiteDailyLogs"" (""TenantId"");
+
+            CREATE TABLE IF NOT EXISTS ""SitePunchItems"" (
+                ""Id"" uuid NOT NULL,
+                ""TenantId"" uuid NOT NULL,
+                ""ProjectId"" uuid NOT NULL,
+                ""SiteTaskId"" uuid NULL,
+                ""Title"" character varying(250) NOT NULL,
+                ""Severity"" character varying(30) NOT NULL DEFAULT 'Medium',
+                ""Status"" character varying(30) NOT NULL DEFAULT 'Open',
+                ""SubcontractorName"" character varying(150) NULL,
+                ""DefectPhotoUrl"" character varying(1500) NOT NULL,
+                ""ResolutionPhotoUrl"" character varying(1500) NULL,
+                ""EngineerNotes"" character varying(2000) NULL,
+                ""CreatedByUserId"" uuid NOT NULL,
+                ""CreatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
+                ""ResolvedAt"" timestamp without time zone NULL,
+                CONSTRAINT ""PK_SitePunchItems"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_SitePunchItems_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_SitePunchItems_SiteTasks_SiteTaskId"" FOREIGN KEY (""SiteTaskId"") REFERENCES ""SiteTasks"" (""Id"") ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_CreatedByUserId"" ON ""SitePunchItems"" (""CreatedByUserId"");
+            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_ProjectId"" ON ""SitePunchItems"" (""ProjectId"");
+            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_SiteTaskId"" ON ""SitePunchItems"" (""SiteTaskId"");
+            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_Status"" ON ""SitePunchItems"" (""Status"");
+            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_TenantId"" ON ""SitePunchItems"" (""TenantId"");
 
             CREATE TABLE IF NOT EXISTS ""ProjectMembers"" (
                 ""ProjectId"" uuid NOT NULL,
