@@ -51,7 +51,7 @@ import { Component } from '@angular/core';
               <span class="h-2 w-2 mt-1.5 rounded-full bg-amber-500"></span>
               <div>
                 <h4 class="text-sm font-semibold text-white">Daily Backup Completed with Warnings</h4>
-                <p class="text-xs text-slate-400 mt-0.5">GCS Storage sync completed. Backup file structo_backup_2026-06-21.sql generated.</p>
+                <p class="text-xs text-slate-400 mt-0.5">GCS Storage sync completed. Backup file osos_backup_2026-06-21.sql generated.</p>
               </div>
             </div>
           </div>
@@ -60,7 +60,7 @@ import { Component } from '@angular/core';
         <div class="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm flex flex-col justify-between">
           <div>
             <h3 class="text-lg font-bold text-white mb-2">Resource Monitor</h3>
-            <p class="text-sm text-slate-400 mb-6">Internal server allocations for Structo API daemon instance.</p>
+            <p class="text-sm text-slate-400 mb-6">Internal server allocations for Osos API daemon instance.</p>
             
             <div class="space-y-4">
               <div>

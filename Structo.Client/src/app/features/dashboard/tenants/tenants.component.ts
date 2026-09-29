@@ -1298,7 +1298,7 @@ export class TenantsComponent implements OnInit {
       return;
     }
 
-    const msg = `مرحباً ${tenant.name}، تم إضافة مشاريع جديدة إلى رصيد حسابكم وسداد الرسم رقم (${receipt.referenceNumber}) بمبلغ ${receipt.totalAmount} EGP لعدد +${receipt.extraProjectsAdded} مشاريع إضافية (إجمالي المتاح: ${receipt.newMaxActiveProjects} مشروع). شكراً لاستخدامكم أُسُس!`;
+    const msg = `مرحباً ${tenant.name}، تم إضافة مشاريع جديدة إلى رصيد حسابكم وسداد الرسم رقم (${receipt.referenceNumber}) بمبلغ ${receipt.totalAmount} EGP لعدد +${receipt.extraProjectsAdded} مشاريع إضافية (إجمالي المتاح: ${receipt.newMaxActiveProjects} مشروع). شكراً لاستخدامكم أسس!`;
     this.whatsAppLink.openChat(phone, msg);
     this.successMessage.set('تم فتح الواتساب لإرسال الإيصال بنجاح.');
   }

@@ -41,7 +41,7 @@ interface NominatimResult {
         <div class="relative z-10">
           <div class="flex items-center gap-3 mb-10">
             <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-10 w-auto object-contain">
-            <span class="text-2xl font-bold tracking-tight text-white font-cairo">أُسُس / Osos</span>
+            <span class="text-2xl font-bold tracking-tight text-white font-cairo">أسس / Osos</span>
           </div>
 
           <h1 class="text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-4 font-cairo">
@@ -74,7 +74,7 @@ interface NominatimResult {
         </div>
 
         <div class="relative z-10 pt-6">
-          <p class="text-[11px] text-slate-600 font-mono">© 2026 Structo Platforms Inc.</p>
+          <p class="text-[11px] text-slate-600 font-mono">© 2026 Osos</p>
         </div>
       </div>
 
@@ -997,7 +997,7 @@ export class TenantRegisterComponent implements AfterViewInit, OnDestroy {
           this.isLoading.set(false);
           if (res.success && res.data) {
             this.authService.setSession(res.data);
-            this.toastService.show('أهلاً بك في منصة أُسُس', 'تم إنشاء وتفعيل حسابك بنجاح!', 'success');
+            this.toastService.show('أهلاً بك في منصة أسس', 'تم إنشاء وتفعيل حسابك بنجاح!', 'success');
             this.router.navigate(['/dashboard']);
           } else {
             const msg = res.message || 'Registration failed.';

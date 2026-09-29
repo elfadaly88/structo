@@ -98,7 +98,7 @@ public class PaymobService : IPaymobService
             ["phone_number"] = phone,
             ["country"] = "EG",
             ["city"] = !string.IsNullOrWhiteSpace(tenant.Region) ? tenant.Region : "Cairo",
-            ["street"] = !string.IsNullOrWhiteSpace(tenant.ManualAddress) ? tenant.ManualAddress : "Structo HQ",
+            ["street"] = !string.IsNullOrWhiteSpace(tenant.ManualAddress) ? tenant.ManualAddress : "Osos HQ",
             ["building"] = "1",
             ["floor"] = "1",
             ["apartment"] = "1",
@@ -124,7 +124,7 @@ public class PaymobService : IPaymobService
                     {
                         new Dictionary<string, object>
                         {
-                            ["name"] = $"Structo {planName}",
+                            ["name"] = $"Osos {planName}",
                             ["amount"] = amountCents,
                             ["description"] = $"Subscription {planName} for {tenant.Name}",
                             ["quantity"] = 1
@@ -270,7 +270,7 @@ public class PaymobService : IPaymobService
             {
                 new
                 {
-                    name = $"Structo {planName}",
+                    name = $"Osos {planName}",
                     amount_cents = amountCents.ToString(),
                     description = $"Subscription for {tenant.Name}",
                     quantity = "1"

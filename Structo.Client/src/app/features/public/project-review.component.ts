@@ -124,7 +124,7 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
 
       <!-- Footer -->
       <div class="text-center text-xs text-slate-600 font-cairo">
-        &copy; {{ currentYear }} Structo Accounting System. All rights reserved.
+        &copy; {{ currentYear }} Osos. All rights reserved.
       </div>
 
     </div>

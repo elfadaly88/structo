@@ -979,7 +979,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 @if (selectedPaymentMethod() === 'CreditCard') {
                   <div>
                     <label class="block text-[11px] text-slate-400 font-cairo mb-1">اسم صاحب البطاقة</label>
-                    <input type="text" value="Structo Client" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 font-cairo" />
+                    <input type="text" value="Osos Client" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 font-cairo" />
                   </div>
                   <div>
                     <label class="block text-[11px] text-slate-400 font-cairo mb-1">رقم البطاقة</label>
@@ -1047,8 +1047,8 @@ const GOVERNORATES: GovernorateOption[] = [
                       💎
                     </div>
                     <div>
-                      <h4 class="font-black text-lg text-white">منصة أُسُس لحلول الإنشاءات والتطوير</h4>
-                      <span class="text-[11px] text-indigo-400 font-mono tracking-wider">STRUCTO OSOS PLATFORM · OFFICIAL INVOICING</span>
+                      <h4 class="font-black text-lg text-white">منصة أسس لحلول الإنشاءات والتطوير</h4>
+                      <span class="text-[11px] text-indigo-400 font-mono tracking-wider">OSOS PLATFORM · OFFICIAL INVOICING</span>
                     </div>
                   </div>
 
@@ -1064,7 +1064,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 p-3 rounded-xl">
                   <div>
                     <h5 class="font-black text-xs text-white">📜 إيصال سداد رسوم وتفعيل سعة المشاريع</h5>
-                    <p class="text-[10px] text-slate-400">صادر رسمياً عن منصة أُسُس لإدارة وتقنيات التطوير العقاري والهندسي.</p>
+                    <p class="text-[10px] text-slate-400">صادر رسمياً عن منصة أسس لإدارة وتقنيات التطوير العقاري والهندسي.</p>
                   </div>
                   <span class="text-[10px] font-mono text-indigo-300 bg-indigo-950 border border-indigo-500/30 px-2.5 py-1 rounded">
                     SEC-VERIFIED
@@ -1075,7 +1075,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 <div class="grid grid-cols-2 gap-3 text-xs">
                   <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
                     <span class="text-[10px] text-slate-400 block font-cairo">الطرف الأول (الجهة المصدرة):</span>
-                    <span class="font-bold text-white block font-cairo">منصة أُسُس الرقمية / Structo Inc.</span>
+                    <span class="font-bold text-white block font-cairo">منصة أسس الرقمية / Osos</span>
                     <span class="text-[10px] text-slate-400 font-mono block">support@structo.app</span>
                   </div>
 
@@ -1142,8 +1142,8 @@ const GOVERNORATES: GovernorateOption[] = [
 
                 <!-- Official Footer Disclaimer -->
                 <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-cairo">
-                  <span>🛡️ هذا الإيصال مُصدر إلكترونياً وموثق بالسجل الرقمي لمنصة أُسُس ولا يحتاج إلى توقيع يدوياً.</span>
-                  <span class="font-mono text-slate-500">Structo Platform Invoicing System</span>
+                  <span>🛡️ هذا الإيصال مُصدر إلكترونياً وموثق بالسجل الرقمي لمنصة أسس ولا يحتاج إلى توقيع يدوياً.</span>
+                  <span class="font-mono text-slate-500">Osos Platform Invoicing System</span>
                 </div>
 
               </div>
@@ -2246,12 +2246,12 @@ export class ProjectsComponent implements OnInit {
   }
 
   openWhatsAppForUser(user: UserDto): void {
-    const message = `مرحباً ${user.firstName} ${user.lastName}، هذه رسالة من Structo.`;
+    const message = `مرحباً ${user.firstName} ${user.lastName}، هذه رسالة من أسس.`;
     this.whatsappLink.openChat(user.whatsAppPhone, message);
   }
 
   contactSuperAdminForUpgrade(numProjects: number | string): void {
-    const msg = `مرحباً، أود ترقية باقة المشاريع لمنصة أُسُس لعدد ${numProjects} مشروع/مشاريع.`;
+    const msg = `مرحباً، أود ترقية باقة المشاريع لمنصة أسس لعدد ${numProjects} مشروع/مشاريع.`;
     this.whatsappLink.openChat('201004500766', msg);
   }
 
@@ -2299,7 +2299,7 @@ export class ProjectsComponent implements OnInit {
     const totalAmount = successData?.totalAmount || pkg?.totalAmount || 0;
     const addedProjects = successData?.extraProjectsAdded || pkg?.extraProjectsCount || 1;
 
-    const msg = `مرحباً ${companyName}، تم إصدار إيصال سداد رسوم اشتراك منصة أُسُس/Structo رقم (${refNo}) بمبلغ إجمالي ${totalAmount} EGP لعدد +${addedProjects} مشاريع إضافية. شكراً لاستخدامكم أُسُس!`;
+    const msg = `مرحباً ${companyName}، تم إصدار إيصال سداد رسوم اشتراك منصة أسس / Osos رقم (${refNo}) بمبلغ إجمالي ${totalAmount} EGP لعدد +${addedProjects} مشاريع إضافية. شكراً لاستخدامكم أسس!`;
 
     this.whatsappLink.openChat(tenantPhone, msg);
     this.toastService.show('نجاح / Success', 'تم فتح الواتساب لإرسال ملخص الإيصال بنجاح.', 'success');

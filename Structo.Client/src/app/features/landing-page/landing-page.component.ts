@@ -20,7 +20,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
           <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
             <span class="text-white font-extrabold text-sm">أ</span>
           </div>
-          <span class="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أُسُس / Osos</span>
+          <span class="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أسس / Osos</span>
         </div>
         <div class="flex items-center gap-2 md:gap-4">
           <a href="#marketplace" class="hidden sm:inline-block text-xs md:text-sm font-semibold text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
@@ -62,7 +62,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 
         <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight max-w-5xl leading-tight mb-8 font-cairo">
           @if (langService.currentLang() === 'ar') {
-            أُسُس | اضبط عُهد مشاريعك، وراقب مصاريف موقعك <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">في ثانية وبدون محاسب</span>
+            أسس | اضبط عُهد مشاريعك، وراقب مصاريف موقعك <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">في ثانية وبدون محاسب</span>
           } @else {
             Osos | Track your project cash & monitor site expenses <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">instantly without an accountant</span>
           }
@@ -362,7 +362,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                     </div>
 
                     <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6 line-clamp-3 font-cairo">
-                      {{ comp.companyDescription || (langService.currentLang() === 'ar' ? 'شركة مقاولات وهندسة مسجلة ومعتمدة لدى منصة أُسُس.' : 'Verified engineering and contracting firm registered on Osos.') }}
+                      {{ comp.companyDescription || (langService.currentLang() === 'ar' ? 'شركة مقاولات وهندسة مسجلة ومعتمدة لدى منصة أسس.' : 'Verified engineering and contracting firm registered on Osos.') }}
                     </p>
                   </div>
 
@@ -965,7 +965,7 @@ export class LandingPageComponent implements OnInit {
 
   onPricingAction(): void {
     if (this.pricingInfo().isCustom) {
-      const msg = `مرحباً، أود ترقية باقة المشاريع لمنصة أُسُس لعدد 10+ مشاريع.`;
+      const msg = `مرحباً، أود ترقية باقة المشاريع لمنصة أسس لعدد 10+ مشاريع.`;
       this.whatsappLink.openChat('201004500766', msg);
     } else {
       this.router.navigate(['/login']);

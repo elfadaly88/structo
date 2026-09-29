@@ -1,0 +1,1 @@
+import {E,au as ot,aQ as mh,aE as S}from'./main-P3F6XGY3.js';function w(t){t||(t=E(ot));let i=new S(e=>{if(t.destroyed){e.next();return}return t.onDestroy(e.next.bind(e))});return e=>e.pipe(mh(i))}export{w};

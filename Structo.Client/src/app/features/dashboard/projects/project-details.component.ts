@@ -3372,7 +3372,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
         <!-- Report Header -->
         <div class="text-center border-b-2 border-slate-900 pb-4 mb-6">
           <h1 class="text-2xl font-extrabold font-cairo">تقرير تسوية عهدة مشروع</h1>
-          <h2 class="text-lg font-bold text-slate-600 font-cairo mt-1">منصة أُسُس لإدارة المشاريع / Osos</h2>
+          <h2 class="text-lg font-bold text-slate-600 font-cairo mt-1">منصة أسس لإدارة المشاريع / Osos</h2>
         </div>
 
         <!-- Project & Custody details -->
@@ -3986,7 +3986,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
             }
             <div>
               <h1 class="text-2xl font-black font-cairo text-slate-950">{{ tenantProfile()?.name || 'شركة المقاولات والتطوير' }}</h1>
-              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية للمشروع • منصة أُسُس / Structo Enterprise</p>
+              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية للمشروع • منصة أسس / Osos</p>
             </div>
           </div>
           <div class="text-left font-cairo text-xs space-y-1">

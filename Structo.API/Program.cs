@@ -222,7 +222,6 @@ builder.Services.AddScoped<Structo.Core.Interfaces.ISiteExecutionService, Struct
 builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Core.Services.PettyCashService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.Core.Services.SettlementService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.ITenantCleanupService, Structo.Core.Services.TenantCleanupService>();
-builder.Services.AddHostedService<Structo.Infrastructure.Storage.TenantCleanupWorker>();
 
 // Paymob Payment Gateway Settings & Service
 builder.Services.Configure<Structo.Core.Settings.PaymobSettings>(builder.Configuration.GetSection("Paymob"));

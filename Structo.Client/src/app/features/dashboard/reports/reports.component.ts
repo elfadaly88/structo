@@ -372,7 +372,7 @@ import { ProjectDto } from '../../../core/models/project.models';
             }
             <div>
               <h1 class="text-2xl font-black font-cairo text-slate-950">{{ tenantProfile()?.name || 'شركة المقاولات والتطوير العقاري' }}</h1>
-              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية الموحد • منصة أُسُس / Structo Enterprise</p>
+              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية الموحد • منصة أسس / Osos</p>
             </div>
           </div>
           <div class="text-left font-cairo text-xs space-y-1">

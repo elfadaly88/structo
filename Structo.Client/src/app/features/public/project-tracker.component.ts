@@ -21,7 +21,7 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
             S
           </div>
           <div>
-            <span class="font-bold text-sm text-white tracking-wide">STRUCTO</span>
+            <span class="font-bold text-sm text-white tracking-wide">OSOS</span>
             <span class="text-[10px] text-indigo-400 mr-2 font-medium">بوابة متابعة العميل المباشرة</span>
           </div>
         </div>
@@ -241,7 +241,7 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
 
       <!-- Footer -->
       <footer class="relative z-10 border-t border-slate-800/80 bg-slate-950/80 px-4 py-4 text-center text-xs text-slate-500 font-mono">
-        STRUCTO Platform • نظام إدارة وتتبع تنفيذ المشاريع الميدانية
+        OSOS Platform • نظام إدارة وتتبع تنفيذ المشاريع الميدانية
       </footer>
 
     </div>

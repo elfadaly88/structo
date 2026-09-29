@@ -487,35 +487,4 @@ public class TenantCleanupService : ITenantCleanupService
                 : $"تم إلغاء الاستثناء للشركة '{tenant.Name}'. أصبحت خاضعة للمسح التلقائي عند عدم النشاط."
         };
     }
-
-    public async Task<int> RunAutomatedInactivityCleanupAsync(int inactiveDaysThreshold = 60, CancellationToken cancellationToken = default)
-    {
-        var now = DateTime.UtcNow;
-        var thresholdDate = now.AddDays(-inactiveDaysThreshold);
-
-        var candidateTenants = await _context.Set<Tenant>().IgnoreQueryFilters()
-            .Where(t => t.SubscriptionPlan == SubscriptionPlan.Free &&
-                        !t.IsCleanupExempt &&
-                        (t.Status == TenantStatus.Suspended || t.Status == TenantStatus.PendingDeletion || (t.LastActiveAt ?? t.CreatedAt) < thresholdDate))
-            .ToListAsync(cancellationToken);
-
-        int purgedCount = 0;
-        foreach (var tenant in candidateTenants)
-        {
-            try
-            {
-                var result = await PurgeTenantAsync(tenant.Id, isAutomatic: true, cancellationToken);
-                if (result.Success)
-                {
-                    purgedCount++;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[AUTO CLEANUP] Error auto-purging inactive Tenant: {TenantId}", tenant.Id);
-            }
-        }
-
-        return purgedCount;
-    }
 }

@@ -26,7 +26,7 @@ import { AuthService } from '../../../core/services/auth.service';
           🎉 تم ترقية باقة اشتراكك بنجاح!
         </h1>
         <p class="text-sm text-slate-400 mb-6 leading-relaxed">
-          تمت معالجة الدفعة عبر بوابة Paymob بنجاح، وتوسعة سعة مشاريعك في قاعدة بيانات Structo فورياً.
+          تمت معالجة الدفعة عبر بوابة Paymob بنجاح، وتوسعة سعة مشاريعك في قاعدة بيانات أسس فورياً.
         </p>
 
         <!-- Dynamic Quota Badge -->

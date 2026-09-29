@@ -37,7 +37,7 @@ interface NavItem {
 
           <a routerLink="/dashboard" class="flex items-center gap-2 sm:gap-3 cursor-pointer">
             <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-7 sm:h-9 w-auto object-contain">
-            <span class="text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block font-cairo">أُسُس / Osos</span>
+            <span class="text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent hidden sm:inline-block font-cairo">أسس / Osos</span>
           </a>
         </div>
 
