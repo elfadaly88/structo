@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Structo.Core.DTOs.Common;
 using Structo.Core.Exceptions;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Structo.API.Middleware;
 
-public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IHostEnvironment environment)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -18,8 +19,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An unhandled exception occurred for {Method} {Path}",
-                context.Request.Method, context.Request.Path);
+            // Correlation id ties the client-visible reference to the full server-side log entry
+            var correlationId = context.TraceIdentifier;
+            logger.LogError(ex, "Unhandled exception {CorrelationId} for {Method} {Path}",
+                correlationId, context.Request.Method, context.Request.Path);
 
             // If the response has already started (e.g., streaming), we cannot write headers.
             // Abort the connection to prevent a corrupt response from reaching the client.
@@ -30,13 +33,14 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
                 return;
             }
 
-            await HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context, ex, correlationId);
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private Task HandleExceptionAsync(HttpContext context, Exception exception, string correlationId)
     {
         context.Response.ContentType = "application/json";
+        context.Response.Headers["X-Correlation-Id"] = correlationId;
 
         var response = new ApiResponse<object>
         {
@@ -50,9 +54,17 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             _ => StatusCodes.Status500InternalServerError
         };
 
-        response.Message = !string.IsNullOrWhiteSpace(exception.Message)
-            ? exception.Message
-            : "An unexpected internal server error occurred.";
+        if (context.Response.StatusCode == StatusCodes.Status500InternalServerError && !environment.IsDevelopment())
+        {
+            // Never expose internal details (SQL, stack, provider messages) outside Development
+            response.Message = $"An unexpected error occurred. Reference: {correlationId}";
+        }
+        else
+        {
+            response.Message = !string.IsNullOrWhiteSpace(exception.Message)
+                ? exception.Message
+                : "An unexpected internal server error occurred.";
+        }
 
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         return context.Response.WriteAsync(JsonSerializer.Serialize(response, options));

@@ -177,8 +177,13 @@ import { PaymentAuditService, MyPaymentsResponse } from '../../../core/services/
                     class="w-full py-3 px-4 rounded-2xl bg-slate-800 text-slate-400 font-bold text-xs cursor-default flex items-center justify-center gap-2">
                     <span>باقة البداية المفعلة</span>
                   </button>
+                } @else if (!paymobEnabled()) {
+                  <div class="w-full py-3 px-4 rounded-2xl bg-slate-800/60 border border-slate-700 text-center text-xs">
+                    <p class="font-bold text-slate-200">الدفع الإلكتروني غير متاح حالياً — تواصل معنا للترقية</p>
+                    <p class="mt-1 text-slate-400">Online payment is unavailable — contact us to upgrade</p>
+                  </div>
                 } @else {
-                  <button 
+                  <button
                     (click)="onSelectPlan(plan)"
                     [disabled]="selectedPlanId() === plan.id && isCheckingOut()"
                     class="w-full py-3 px-4 rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-lg cursor-pointer active:scale-98 disabled:opacity-50"
@@ -437,6 +442,8 @@ export class SubscriptionComponent implements OnInit {
   readonly selectedPlanId = signal<string | null>(null);
   readonly isCheckingOut = this.subscriptionService.isCheckingOut;
   readonly errorMessage = signal<string | null>(null);
+  // Card payment stays hidden until the server confirms Paymob is enabled
+  readonly paymobEnabled = signal<boolean>(false);
 
   // Tabs: 'plans' | 'history'
   readonly activeTab = signal<'plans' | 'history'>('plans');
@@ -445,6 +452,7 @@ export class SubscriptionComponent implements OnInit {
 
   ngOnInit(): void {
     this.plans.set(this.subscriptionService.getAvailablePlans());
+    this.subscriptionService.isPaymobEnabled().subscribe((enabled) => this.paymobEnabled.set(enabled));
     this.loadQuota();
     this.loadPaymentHistory();
   }

@@ -10,10 +10,13 @@ using System.Threading.Tasks;
 
 namespace Structo.Infrastructure.Storage;
 
+// httpClient is a typed client from IHttpClientFactory (registered in Program.cs): pooled handlers,
+// standard certificate validation.
 public class CloudflareR2StorageService(
     IAmazonS3 s3Client,
     IOptions<CloudflareR2Settings> r2Settings,
-    ILogger<CloudflareR2StorageService> logger) : ICloudStorageService
+    ILogger<CloudflareR2StorageService> logger,
+    HttpClient httpClient) : ICloudStorageService
 {
     private readonly CloudflareR2Settings _settings = r2Settings.Value;
 
@@ -61,13 +64,6 @@ public class CloudflareR2StorageService(
         {
             logger.LogInformation("Attempting Tuned R2 Upload via native HttpClient. Bucket: {Bucket}, Key: {Key}", _settings.BucketName, key);
 
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
-                SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
-            };
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
-
             using var request = new HttpRequestMessage(HttpMethod.Put, presignedUrl);
             
             // CRITICAL FOR CLOUDFLARE SNI HANDSHAKE: Force Host header and HTTP/1.1
@@ -82,7 +78,7 @@ public class CloudflareR2StorageService(
             request.Content = new StreamContent(fileStream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
 
-            var response = await client.SendAsync(request);
+            using var response = await httpClient.SendAsync(request);
             logger.LogInformation("Tuned HttpClient R2 Upload Status: {StatusCode}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)

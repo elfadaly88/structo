@@ -796,7 +796,11 @@ public class ProjectService(
         return (true, $"Project frozen successfully. Public review token: {project.PublicReviewToken}");
     }
 
-    public async Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null, FinalCloseoutRequestDto? dto = null)
+    // Drains pools to 0, so it runs through CashPoolLedger.RunWithRetryAsync (xmin concurrency)
+    public Task<(bool Success, string Message)> FinalCloseoutAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId = null, FinalCloseoutRequestDto? dto = null) =>
+        CashPoolLedger.RunWithRetryAsync(context, () => FinalCloseoutOnceAsync(id, tenantId, userRole, changedByUserId, dto));
+
+    private async Task<(bool Success, string Message)> FinalCloseoutOnceAsync(Guid id, Guid tenantId, string userRole, Guid? changedByUserId, FinalCloseoutRequestDto? dto)
     {
         if (userRole != "TenantOwner")
             throw new UnauthorizedAccessException("Only TenantOwner can perform a final project closeout.");

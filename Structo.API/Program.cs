@@ -57,7 +57,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials()
-              .WithExposedHeaders("Retry-After"));
+              .WithExposedHeaders("Retry-After", "X-Correlation-Id"));
 });
 
 // SignalR with Keep-Alives
@@ -201,7 +201,9 @@ if (isR2Configured)
         var credentials = new Amazon.Runtime.BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
         return new Amazon.S3.AmazonS3Client(credentials, config);
     });
-    builder.Services.AddScoped<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.CloudflareR2StorageService>();
+    // Typed client: one pooled handler via IHttpClientFactory, default certificate validation
+    builder.Services.AddHttpClient<Structo.Core.Interfaces.ICloudStorageService, Structo.Infrastructure.Storage.CloudflareR2StorageService>(
+        client => client.Timeout = TimeSpan.FromSeconds(60));
     Console.WriteLine("[STARTUP] Cloud Storage: Cloudflare R2 (Production)");
 }
 else
@@ -751,13 +753,16 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 // Request Sanitization & Taint Check Middleware
 app.UseMiddleware<RequestSanitizationMiddleware>();
 
-// Swagger (always enabled for this project)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Swagger only in Development: it would map the whole API for anyone in Production
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");
-    // NO RoutePrefix = string.Empty - keep default /swagger
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Structo API v1");
+        // NO RoutePrefix = string.Empty - keep default /swagger
+    });
+}
 
 // NO HTTPS Redirection - TLS Termination at Railway Edge Proxy!
 

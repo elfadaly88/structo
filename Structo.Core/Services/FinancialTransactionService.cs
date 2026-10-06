@@ -221,9 +221,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             context.Set<ProjectCashPool>().Add(pool);
         }
 
-        pool.TotalInjected += dto.Amount;
-        pool.AvailableBalance += dto.Amount;
-
+        // The pool balance is not touched here: it is recomputed from the saved income below
         var transaction = new FinancialTransaction
         {
             Id = Guid.NewGuid(),
@@ -251,9 +249,9 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         context.Set<FinancialTransaction>().Add(transaction);
         await context.SaveChangesAsync();
 
-        // Full recompute from source records (same formula as docs/sql/reconcile_cash_pools.sql)
-        await CashPoolLedger.RecomputeAsync(context, pool);
-        await context.SaveChangesAsync();
+        // Full recompute from source records (same formula as docs/sql/reconcile_cash_pools.sql),
+        // retried on a concurrency conflict with a parallel pool change
+        await CashPoolLedger.RecomputeAndSaveAsync(context, pool.Id);
 
         return (true, "Capital injected successfully.");
     }
@@ -362,8 +360,7 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == transaction.SourceType.Value);
             if (incomePool != null)
             {
-                await CashPoolLedger.RecomputeAsync(context, incomePool);
-                await context.SaveChangesAsync();
+                await CashPoolLedger.RecomputeAndSaveAsync(context, incomePool.Id);
             }
         }
 
@@ -417,14 +414,16 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         if (incomePool != null)
         {
-            await CashPoolLedger.RecomputeAsync(context, incomePool);
-            await context.SaveChangesAsync();
+            await CashPoolLedger.RecomputeAndSaveAsync(context, incomePool.Id);
         }
 
         return (true, "Transaction deleted and pool balance corrected.");
     }
 
-    public async Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole, Guid currentUserId)
+    public Task<(bool Success, string Message)> DirectDisbursementAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole, Guid currentUserId) =>
+        CashPoolLedger.RunWithRetryAsync(context, () => DirectDisbursementOnceAsync(projectId, dto, tenantId, userRole, currentUserId));
+
+    private async Task<(bool Success, string Message)> DirectDisbursementOnceAsync(Guid projectId, DirectDisbursementDto dto, Guid tenantId, string userRole, Guid currentUserId)
     {
         if (userRole != "TenantOwner" && userRole != "Accountant")
         {

@@ -268,7 +268,11 @@ public class SettlementService(DbContext context, INotificationEngine notificati
             : "تم اعتماد التسوية بنجاح.");
     }
 
-    public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId)
+    // Returns cash to a pool, so it runs through CashPoolLedger.RunWithRetryAsync (xmin concurrency)
+    public Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId) =>
+        CashPoolLedger.RunWithRetryAsync(context, () => ConfirmRefundOnceAsync(projectId, id, userRole, resolvedByUserId));
+
+    private async Task<(bool Success, string Message)> ConfirmRefundOnceAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId)
     {
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");

@@ -14,7 +14,11 @@ namespace Structo.Core.Services;
 
 public class PettyCashService(DbContext context, ICloudStorageService storageService, INotificationEngine notificationEngine) : IPettyCashService
 {
-    public async Task<(bool Success, string Message)> CreatePettyCashAsync(Guid projectId, PettyCashCreateDto dto, Guid? tenantId, string userRole)
+    // Methods that change a pool balance run through CashPoolLedger.RunWithRetryAsync (xmin concurrency).
+    public Task<(bool Success, string Message)> CreatePettyCashAsync(Guid projectId, PettyCashCreateDto dto, Guid? tenantId, string userRole) =>
+        CashPoolLedger.RunWithRetryAsync(context, () => CreatePettyCashOnceAsync(projectId, dto, tenantId, userRole));
+
+    private async Task<(bool Success, string Message)> CreatePettyCashOnceAsync(Guid projectId, PettyCashCreateDto dto, Guid? tenantId, string userRole)
     {
         if (tenantId == null)
             return (false, "Tenant ID claim missing or invalid.");
@@ -81,7 +85,10 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
     }
 
 
-    public async Task<(bool Success, string Message)> ApprovePettyCashAsync(Guid projectId, Guid id, PettyCashApproveDto dto, string userRole)
+    public Task<(bool Success, string Message)> ApprovePettyCashAsync(Guid projectId, Guid id, PettyCashApproveDto dto, string userRole) =>
+        CashPoolLedger.RunWithRetryAsync(context, () => ApprovePettyCashOnceAsync(projectId, id, dto, userRole));
+
+    private async Task<(bool Success, string Message)> ApprovePettyCashOnceAsync(Guid projectId, Guid id, PettyCashApproveDto dto, string userRole)
     {
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
@@ -324,7 +331,10 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         return (true, "Petty cash updated successfully.");
     }
 
-    public async Task<(bool Success, string Message)> DeletePettyCashAsync(Guid projectId, Guid id, string userRole)
+    public Task<(bool Success, string Message)> DeletePettyCashAsync(Guid projectId, Guid id, string userRole) =>
+        CashPoolLedger.RunWithRetryAsync(context, () => DeletePettyCashOnceAsync(projectId, id, userRole));
+
+    private async Task<(bool Success, string Message)> DeletePettyCashOnceAsync(Guid projectId, Guid id, string userRole)
     {
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");

@@ -20,11 +20,16 @@ namespace Structo.API.Controllers;
 [Route("api/subscriptions")]
 [Authorize(Roles = "TenantOwner")]
 public class SubscriptionController(
-    StructoDbContext context, 
+    StructoDbContext context,
     Structo.Core.Interfaces.INotificationEngine notificationEngine,
-    Structo.Core.Interfaces.IPaymobService paymobService) : ControllerBase
+    Structo.Core.Interfaces.IPaymobService paymobService,
+    Microsoft.Extensions.Configuration.IConfiguration configuration) : ControllerBase
 {
     private const string NonOwnerForbiddenMessage = "ترقية الباقة والفوترة مقتصرة حصرياً على مالك المنشأة.";
+    private const string PaymentsDisabledMessage = "PAYMENTS_DISABLED: الدفع الإلكتروني غير متاح حالياً. تواصل معنا لترقية باقتك. (Online payment is currently unavailable. Contact us to upgrade.)";
+
+    // Kill switch: Payments:PaymobEnabled (env Payments__PaymobEnabled), off unless explicitly enabled
+    private bool PaymobEnabled => configuration.GetValue("Payments:PaymobEnabled", false);
 
     // ─────────────────────────────────────────────────────────
     // Pricing Table (EGP, 0% VAT)
@@ -46,6 +51,11 @@ public class SubscriptionController(
     public async Task<ActionResult<ApiResponse<PaymobCheckoutResponseDto>>> Checkout(
         [FromBody] PaymobCheckoutRequestDto dto)
     {
+        if (!PaymobEnabled)
+        {
+            return BadRequest(new ApiResponse<PaymobCheckoutResponseDto> { Success = false, Message = PaymentsDisabledMessage });
+        }
+
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "id" || c.Type == "userId" || c.Type == "sub");
         if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
         {
@@ -151,7 +161,7 @@ public class SubscriptionController(
         return Ok(new ApiResponse<object>
         {
             Success = true,
-            Data = new { topups, plans = topups, vatRate = 0.0m }
+            Data = new { topups, plans = topups, vatRate = 0.0m, paymobEnabled = PaymobEnabled }
         });
     }
 

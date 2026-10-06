@@ -26,17 +26,20 @@ public class PaymentsController : ControllerBase
     private readonly IPaymobService _paymobService;
     private readonly INotificationEngine _notificationEngine;
     private readonly ILogger<PaymentsController> _logger;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
     public PaymentsController(
         StructoDbContext context,
         IPaymobService paymobService,
         INotificationEngine notificationEngine,
-        ILogger<PaymentsController> logger)
+        ILogger<PaymentsController> logger,
+        Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _context = context;
         _paymobService = paymobService;
         _notificationEngine = notificationEngine;
         _logger = logger;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -133,6 +136,14 @@ public class PaymentsController : ControllerBase
             _logger.LogWarning("Paymob webhook received WITHOUT HMAC signature. Rejecting.");
             Console.WriteLine($"🔥 [PAYMOB Error: HMAC signature required] {DateTime.UtcNow}");
             return Unauthorized(new { success = false, message = "HMAC signature required" });
+        }
+
+        // Kill switch (Payments:PaymobEnabled, default off): acknowledge a genuine webhook but credit nothing
+        if (!_configuration.GetValue("Payments:PaymobEnabled", false))
+        {
+            _logger.LogWarning("Paymob webhook received while payments are disabled; nothing credited. Transaction {TxnId}, order {OrderId}, reference {Reference}",
+                objNode["id"]?.ToString(), orderIdStr, specialRef);
+            return Ok(new { success = false, message = "Payments are disabled; nothing was credited." });
         }
 
         // 4. Check Transaction Success

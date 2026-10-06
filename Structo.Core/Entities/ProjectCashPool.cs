@@ -1,5 +1,6 @@
 using Structo.Core.Enums;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Structo.Core.Interfaces;
@@ -25,4 +26,9 @@ public class ProjectCashPool : ITenantEntity
     public decimal AvailableBalance { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Optimistic concurrency: Npgsql maps a [Timestamp] uint to PostgreSQL's xmin system column,
+    // so a balance update fails with DbUpdateConcurrencyException if the row changed since it was read.
+    [Timestamp]
+    public uint Version { get; set; }
 }
