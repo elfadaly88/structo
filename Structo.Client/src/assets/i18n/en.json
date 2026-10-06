@@ -53,7 +53,7 @@
     "SECTION_SUBTITLE": "Scale up Osos as your business requirements expand. Start with our basic free offering.",
     "FREE_TITLE": "Free Plan",
     "FREE_DESC": "Perfect for independent operators trying out our digital ledger system.",
-    "FREE_FEAT_1": "3 Active Projects",
+    "FREE_FEAT_1": "2 Lifetime Projects Free",
     "FREE_FEAT_2": "Basic Financial Ledger",
     "FREE_FEAT_3": "1 Managed Tenant Environment",
     "FREE_CTA": "Get Started",
@@ -99,7 +99,9 @@
     "INVALID_CREDENTIALS": "Invalid email or password",
     "ACCOUNT_DEACTIVATED": "This account has been deactivated by the company administrator.",
     "ACCOUNT_PENDING_OR_INACTIVE": "Your account is pending approval or inactive.",
-    "LOGIN_SUCCESS": "Login successful"
+    "LOGIN_SUCCESS": "Login successful",
+    "RATE_LIMIT_TITLE": "Too many attempts",
+    "RATE_LIMITED": "Too many attempts. Please try again in {{time}}."
   },
   "DASHBOARD": {
     "SIDEBAR_NAV": "Navigation",

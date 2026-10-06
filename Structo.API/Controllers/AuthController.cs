@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("loginPolicy")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginDto dto)
     {
-        using var emailLease = LoginPerEmailLimiter.AttemptAcquire(dto?.Email?.Trim().ToLowerInvariant() ?? string.Empty);
+        using var emailLease = LoginPerEmailLimiter.AttemptAcquire(dto.Email?.Trim().ToLowerInvariant() ?? string.Empty);
         if (!emailLease.IsAcquired)
         {
             if (emailLease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
