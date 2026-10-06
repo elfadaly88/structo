@@ -14,8 +14,7 @@ public class JwtTokenProvider(IConfiguration configuration) : ITokenProvider
     public string GenerateToken(User user)
     {
         var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["Secret"] ?? "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
-        var key = Encoding.ASCII.GetBytes(secretKey);
+        var key = JwtSecret.GetSigningKey(configuration);
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var roleStr = user.Role.ToString();

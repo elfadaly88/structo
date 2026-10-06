@@ -1,0 +1,19 @@
+# Environment-specific config (may hold local secrets). appsettings.json stays in the image:
+# it carries non-secret settings the app needs in Production (JwtSettings:Issuer/Audience etc.)
+**/appsettings.*.json
+
+# Build outputs and dependencies (restored/built inside the image)
+**/bin
+**/obj
+**/node_modules
+Structo.Client/.angular
+
+# Repo metadata, tooling and local leftovers
+.git
+**/.vs
+.vscode
+temp_dotnet
+replace.py
+**/*.sql
+docs
+**/*.md

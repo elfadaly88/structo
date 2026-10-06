@@ -271,21 +271,8 @@ builder.Services.AddRateLimiter(options =>
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
-    ?? (jwtSettings["Secret"] == "YOUR_JWT_SECRET_KEY_PLACEHOLDER_AT_LEAST_32_BYTES_LONG" ? null : jwtSettings["Secret"]);
-
-if (string.IsNullOrWhiteSpace(secretKey))
-{
-    if (builder.Environment.IsDevelopment())
-    {
-        secretKey = "SuperSecretKeyThatShouldBeAtLeast32BytesLongForHS256ToWorkProperly!";
-    }
-    else
-    {
-        throw new InvalidOperationException("CRITICAL SECURITY ERROR: JWT_SECRET environment variable or configuration must be explicitly configured.");
-    }
-}
-var key = Encoding.ASCII.GetBytes(secretKey);
+// Same key source as JwtTokenProvider; throws at startup if missing, a placeholder, or under 32 bytes
+var key = Structo.Infrastructure.Auth.JwtSecret.GetSigningKey(builder.Configuration);
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -574,55 +561,54 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine(ex.StackTrace);
     }
 
+    // SuperAdmin seed: only when no SuperAdmin exists, and only with explicitly supplied credentials.
+    // An existing SuperAdmin is never modified. Kept outside the try below so a config error stops startup.
+    bool? superAdminExists = null;
     try
     {
-        var defaultSuperAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL") 
-            ?? builder.Configuration["SuperAdminSeed:Email"] 
-            ?? "superadmin@admin.com";
-        var defaultSuperAdminPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD") 
-            ?? builder.Configuration["SuperAdminSeed:Password"] 
-            ?? "SuperAdmin@123";
+        superAdminExists = context.Users.IgnoreQueryFilters().Any(u => u.Role == UserRole.SuperAdmin);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[SEED] Skipping SuperAdmin seed, Users table not readable: {ex.Message}");
+    }
 
-        var existingSuperAdmin = context.Users.IgnoreQueryFilters().FirstOrDefault(u => u.Role == UserRole.SuperAdmin);
-        if (existingSuperAdmin == null)
+    if (superAdminExists == false)
+    {
+        var superAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL")
+            ?? builder.Configuration["SuperAdminSeed:Email"];
+        var superAdminPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD")
+            ?? builder.Configuration["SuperAdminSeed:Password"];
+
+        if (string.IsNullOrWhiteSpace(superAdminEmail) || string.IsNullOrWhiteSpace(superAdminPassword))
         {
-            var superAdmin = new User
-            {
-                FirstName = "Super",
-                LastName = "Admin",
-                Email = defaultSuperAdminEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultSuperAdminPassword),
-                Role = UserRole.SuperAdmin,
-                IsActive = true,
-                IsApproved = true,
-                TenantId = null
-            };
-            context.Users.Add(superAdmin);
-            context.SaveChanges();
-            Console.WriteLine($"[SEED] SuperAdmin account seeded successfully: {defaultSuperAdminEmail}");
-        }
-        else
-        {
-            // Sync credentials and activate if needed
-            bool wasModified = false;
-            if (existingSuperAdmin.Email.Equals("superadmin", StringComparison.OrdinalIgnoreCase))
-            {
-                existingSuperAdmin.Email = "superadmin@admin.com";
-                wasModified = true;
-            }
-            if (!existingSuperAdmin.IsActive || !existingSuperAdmin.IsApproved)
-            {
-                existingSuperAdmin.IsActive = true;
-                existingSuperAdmin.IsApproved = true;
-                wasModified = true;
-            }
-            if (wasModified)
-            {
-                context.SaveChanges();
-                Console.WriteLine("[SEED] SuperAdmin account synchronized successfully.");
-            }
+            throw new InvalidOperationException(
+                "No SuperAdmin account exists. Set SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD " +
+                "(or SuperAdminSeed:Email and SuperAdminSeed:Password) to create one.");
         }
 
+        if (superAdminPassword.Length < 12)
+        {
+            throw new InvalidOperationException("SUPERADMIN_PASSWORD must be at least 12 characters long.");
+        }
+
+        context.Users.Add(new User
+        {
+            FirstName = "Super",
+            LastName = "Admin",
+            Email = superAdminEmail.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(superAdminPassword),
+            Role = UserRole.SuperAdmin,
+            IsActive = true,
+            IsApproved = true,
+            TenantId = null
+        });
+        context.SaveChanges();
+        Console.WriteLine($"[SEED] SuperAdmin account seeded successfully: {superAdminEmail.Trim()}");
+    }
+
+    try
+    {
         if (app.Environment.IsDevelopment())
         {
             if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 1"))

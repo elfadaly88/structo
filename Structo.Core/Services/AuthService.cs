@@ -18,8 +18,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         var usersDbSet = context.Set<User>();
         var user = await usersDbSet.IgnoreQueryFilters()
             .Include(u => u.Tenant)
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail 
-                || (u.Role == UserRole.SuperAdmin && (normalizedEmail == "superadmin" || normalizedEmail == "superadmin@admin.com") && (u.Email.ToLower() == "superadmin" || u.Email.ToLower() == "superadmin@admin.com")));
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
         {
