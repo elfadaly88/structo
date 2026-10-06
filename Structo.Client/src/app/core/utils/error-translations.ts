@@ -6,7 +6,8 @@ export const ERROR_TRANSLATIONS: Record<string, string> = {
   'INVALID_REFRESH_TOKEN': 'رمز التجديد غير صالح أو تم استخدامه سابقاً.',
   'AUTH.INVALID_REFRESH_TOKEN': 'رمز التجديد غير صالح أو تم استخدامه سابقاً.',
   'INVALID_CREDENTIALS': 'اسم المستخدم أو كلمة المرور غير صحيحة.',
-  'AUTH.INVALID_CREDENTIALS': 'اسم المستخدم أو كلمة المرور غير صحيحة.'
+  'AUTH.INVALID_CREDENTIALS': 'اسم المستخدم أو كلمة المرور غير صحيحة.',
+  'AUTH.RATE_LIMITED': 'لقد تجاوزت عدد المحاولات المسموحة. يرجى الانتظار قبل المحاولة مجدداً.'
 };
 
 /**

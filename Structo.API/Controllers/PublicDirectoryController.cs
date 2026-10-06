@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 namespace Structo.API.Controllers;
@@ -348,6 +349,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
 public class PublicProjectReviewController(IProjectService projectService) : ControllerBase
 {
     [HttpPost("review/{token}")]
+    [EnableRateLimiting("publicWritePolicy")]
     public async Task<ActionResult<ApiResponse<bool>>> SubmitReview(
         [FromRoute] string token,
         [FromBody] ClientReviewSubmitDto dto)

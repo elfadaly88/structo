@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Threading.RateLimiting;
 using Structo.API.Services;
 using Structo.Core.Entities;
 using Structo.Core.Enums;
@@ -54,7 +56,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials());
+              .AllowCredentials()
+              .WithExposedHeaders("Retry-After"));
 });
 
 // SignalR with Keep-Alives
@@ -234,18 +237,33 @@ builder.Services.AddScoped<Structo.Core.Interfaces.INotificationService, Structo
 builder.Services.AddScoped<Structo.Core.Interfaces.IOneSignalEmailService, Structo.API.Services.OneSignalEmailService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.INotificationEngine, Structo.Core.Services.NotificationEngine>();
 
-// Rate Limiting Policy
+// Client IP behind Railway: its proxy appends the real client IP as the right-most X-Forwarded-For entry.
+// ForwardLimit = 1 uses only that entry, so client-supplied values to its left are ignored.
+// Safe only while the app is reachable exclusively through Railway's proxy.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+    options.ForwardLimit = 1;
+});
+
+// Rate Limiting Policies (partitioned per client IP)
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.OnRejected = async (context, token) =>
     {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+        }
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         context.HttpContext.Response.ContentType = "application/json";
         var response = new Structo.Core.DTOs.Common.ApiResponse<object>
         {
             Success = false,
-            Message = "لقد تجاوزت عدد المحاولات المسموحة. يرجى الانتظار دقيقة قبل المحاولة مجدداً."
+            Message = "AUTH.RATE_LIMITED"
         };
         var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
         {
@@ -254,20 +272,34 @@ builder.Services.AddRateLimiter(options =>
         await context.HttpContext.Response.WriteAsync(json, token);
     };
 
-    options.AddFixedWindowLimiter("loginPolicy", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 5;
-        opt.QueueLimit = 0;
-    });
-
-    options.AddFixedWindowLimiter("registrationPolicy", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 5;
-        opt.QueueLimit = 0;
-    });
+    options.AddPolicy("loginPolicy", context => PerClientIpFixedWindow(context, permitLimit: 10, TimeSpan.FromMinutes(1)));
+    options.AddPolicy("registrationPolicy", context => PerClientIpFixedWindow(context, permitLimit: 5, TimeSpan.FromHours(1)));
+    options.AddPolicy("refreshPolicy", context => PerClientIpFixedWindow(context, permitLimit: 30, TimeSpan.FromMinutes(1)));
+    options.AddPolicy("publicWritePolicy", context => PerClientIpFixedWindow(context, permitLimit: 10, TimeSpan.FromHours(1)));
 });
+
+static RateLimitPartition<string> PerClientIpFixedWindow(HttpContext context, int permitLimit, TimeSpan window)
+{
+    var ip = context.Connection.RemoteIpAddress;
+    string key;
+    if (ip != null)
+    {
+        key = (ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip).ToString();
+    }
+    else
+    {
+        key = "unknown";
+        context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RateLimiting")
+            .LogWarning("Client IP unavailable for {Path}; using the shared 'unknown' rate-limit partition.", context.Request.Path);
+    }
+
+    return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+    {
+        PermitLimit = permitLimit,
+        Window = window,
+        QueueLimit = 0
+    });
+}
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -709,6 +741,9 @@ using (var scope = app.Services.CreateScope())
 // ------------------------------
 // 5. HTTP PIPELINE CONFIGURATION
 // ------------------------------
+
+// Resolve the real client IP/scheme first, so rate limiting and everything after it see it
+app.UseForwardedHeaders();
 
 // Exception Handling First
 app.UseMiddleware<ExceptionHandlingMiddleware>();

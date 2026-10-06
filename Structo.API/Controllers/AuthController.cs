@@ -6,6 +6,7 @@ using Structo.Core.DTOs.Common;
 using Structo.Core.Interfaces;
 using Structo.Core.Services;
 using System;
+using System.Threading.RateLimiting;
 using System.Threading.Tasks;
 
 namespace Structo.API.Controllers;
@@ -16,16 +17,34 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly ILogger<AuthController> _logger;
+
+    // Per-account limit on top of the per-IP "loginPolicy": stops one account being brute-forced
+    // from many IPs, while a lockout lasts at most one 5-minute window.
+    private static readonly PartitionedRateLimiter<string> LoginPerEmailLimiter =
+        PartitionedRateLimiter.Create<string, string>(email => RateLimitPartition.GetFixedWindowLimiter(email,
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(5), QueueLimit = 0 }));
+
     public AuthController(IAuthService authService, ILogger<AuthController> logger)
     {
         _authService = authService;
         _logger = logger;
     }
-    
+
     [HttpPost("login")]
     [EnableRateLimiting("loginPolicy")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginDto dto)
     {
+        using var emailLease = LoginPerEmailLimiter.AttemptAcquire(dto?.Email?.Trim().ToLowerInvariant() ?? string.Empty);
+        if (!emailLease.IsAcquired)
+        {
+            if (emailLease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            {
+                Response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+            }
+            return StatusCode(StatusCodes.Status429TooManyRequests,
+                new ApiResponse<LoginResponseDto> { Success = false, Message = "AUTH.RATE_LIMITED" });
+        }
+
         try
         {
             var (success, data, message) = await _authService.LoginAsync(dto);
@@ -55,6 +74,7 @@ public class AuthController : ControllerBase
     [HttpPost("refresh")]
     [HttpPost("refresh-token")]
     [AllowAnonymous]
+    [EnableRateLimiting("refreshPolicy")]
     public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Refresh([FromBody] RefreshTokenDto dto)
     {
         try

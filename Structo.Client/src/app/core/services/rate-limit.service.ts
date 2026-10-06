@@ -1,11 +1,19 @@
 import { Injectable, signal, computed } from '@angular/core';
 
+/** Formats seconds as m:ss (e.g. 4:05), so messages need no language-specific plural forms. */
+export function formatCooldown(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `${minutes}:${rest.toString().padStart(2, '0')}`;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class RateLimitService {
   readonly cooldownSeconds = signal<number>(0);
   readonly isLockedOut = computed(() => this.cooldownSeconds() > 0);
+  readonly cooldownDisplay = computed(() => formatCooldown(this.cooldownSeconds()));
 
   private timerRef: any = null;
 

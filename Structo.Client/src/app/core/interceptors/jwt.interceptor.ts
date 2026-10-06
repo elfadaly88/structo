@@ -4,8 +4,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { environment } from '../../../environments/environment';
-import { catchError, switchMap, filter, take, throwError, Observable } from 'rxjs';
+import { catchError, switchMap, filter, take, throwError, Observable, Subject, merge, map } from 'rxjs';
 import { extractApiMessage, translateErrorMessage } from '../utils/error-translations';
+
+// Fails requests that were queued behind a refresh that got rate-limited (429),
+// so they don't wait forever for a token that is not coming.
+const refreshRateLimited$ = new Subject<HttpErrorResponse>();
 
 export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
   const injector = inject(Injector);
@@ -90,6 +94,14 @@ function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, authServ
       }),
       catchError((err) => {
         authService.isRefreshingToken = false;
+
+        // Refresh was rate-limited: keep the session. rateLimitInterceptor has already shown the
+        // message and started the cooldown; the next request will try refreshing again.
+        if (err instanceof HttpErrorResponse && err.status === 429) {
+          refreshRateLimited$.next(err);
+          return throwError(() => err);
+        }
+
         authService.logout();
         const apiMsg = extractApiMessage(err) || 'REFRESH_TOKEN_EXPIRED';
         const translatedMsg = translateErrorMessage(apiMsg);
@@ -99,10 +111,18 @@ function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, authServ
       })
     );
   } else {
-    return authService.refreshTokenSubject.pipe(
-      filter((token): token is string => token !== null),
+    return merge(
+      authService.refreshTokenSubject.pipe(
+        filter((token): token is string => token !== null),
+        map((token) => ({ token, error: null as HttpErrorResponse | null }))
+      ),
+      refreshRateLimited$.pipe(map((error) => ({ token: null as string | null, error })))
+    ).pipe(
       take(1),
-      switchMap((token: string) => {
+      switchMap(({ token, error }) => {
+        if (!token) {
+          return throwError(() => error);
+        }
         return next(
           req.clone({
             setHeaders: {
