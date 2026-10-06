@@ -6031,7 +6031,7 @@ export class ProjectDetailsComponent implements OnInit {
 
       this.isUploadingSettleReceipt.set(true);
       try {
-        const uploadResult = await firstValueFrom(this.uploadService.uploadProjectGallery(this.projectId, fileToUpload));
+        const uploadResult = await firstValueFrom(this.uploadService.uploadProjectGallery(this.projectId, fileToUpload, undefined, 'Receipt'));
         if (uploadResult.success && uploadResult.data) {
           receiptPhotoUrl = uploadResult.data.url;
           this.settleForm.patchValue({ receiptPhotoUrl });
@@ -6189,7 +6189,7 @@ export class ProjectDetailsComponent implements OnInit {
     const fileToUpload = this.selectedInjectReceipt();
     if (fileToUpload) {
       try {
-        const res = await firstValueFrom(this.uploadService.uploadProjectGallery(this.projectId, fileToUpload));
+        const res = await firstValueFrom(this.uploadService.uploadProjectGallery(this.projectId, fileToUpload, undefined, 'Receipt'));
         if (res.success && res.data) {
           receiptUrl = res.data.url;
         }

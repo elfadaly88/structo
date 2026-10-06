@@ -251,18 +251,8 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         context.Set<FinancialTransaction>().Add(transaction);
         await context.SaveChangesAsync();
 
-        // Recalculate cash pool totals strictly from all income transactions and petty cash disbursements
-        var totalInjected = await context.Set<FinancialTransaction>()
-            .Where(t => t.ProjectId == projectId && t.Type == TransactionType.Income && t.SourceType == dto.SourceType)
-            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
-
-        var totalDisbursed = await context.Set<PettyCash>()
-            .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
-            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-
-        pool.TotalInjected = totalInjected;
-        pool.AvailableBalance = totalInjected - totalDisbursed;
-
+        // Full recompute from source records (same formula as docs/sql/reconcile_cash_pools.sql)
+        await CashPoolLedger.RecomputeAsync(context, pool);
         await context.SaveChangesAsync();
 
         return (true, "Capital injected successfully.");
@@ -280,12 +270,15 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             .Where(p => p.ProjectId == projectId)
             .ToListAsync();
 
-        // Ensure all pool source types exist
+        // Ensure all pool source types exist. This read path never changes balances:
+        // they are maintained by the money operations themselves (see CashPoolLedger).
+        var createdPool = false;
         foreach (var sourceType in Enum.GetValues<CashPoolSourceType>())
         {
             var pool = existingPools.FirstOrDefault(p => p.SourceType == sourceType);
             if (pool == null)
             {
+                createdPool = true;
                 pool = new ProjectCashPool
                 {
                     Id = Guid.NewGuid(),
@@ -301,22 +294,10 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             }
         }
 
-        // Dynamically aggregate ALL income transactions for each pool (SUM(Amount) WHERE SourceType = sourceType AND ProjectId = id)
-        foreach (var pool in existingPools)
+        if (createdPool)
         {
-            var totalInjected = await context.Set<FinancialTransaction>()
-                .Where(t => t.ProjectId == projectId && t.Type == TransactionType.Income && t.SourceType == pool.SourceType)
-                .SumAsync(t => (decimal?)t.Amount) ?? 0m;
-
-            var totalDisbursed = await context.Set<PettyCash>()
-                .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
-                .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-
-            pool.TotalInjected = totalInjected;
-            pool.AvailableBalance = totalInjected - totalDisbursed;
+            await context.SaveChangesAsync();
         }
-
-        await context.SaveChangesAsync();
         return existingPools;
     }
 
@@ -373,6 +354,19 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
         }
 
         await context.SaveChangesAsync();
+
+        // An edited capital injection changes the pool's income; recompute so the balance follows it
+        if (transaction.Type == TransactionType.Income && transaction.SourceType.HasValue)
+        {
+            var incomePool = await context.Set<ProjectCashPool>()
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == transaction.SourceType.Value);
+            if (incomePool != null)
+            {
+                await CashPoolLedger.RecomputeAsync(context, incomePool);
+                await context.SaveChangesAsync();
+            }
+        }
+
         return (true, "Transaction updated successfully.");
     }
 
@@ -393,24 +387,22 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
             return (false, "TRANSACTION_LOCKED: هذه المعاملة المالية مقفلة ولا يمكن حذفها.");
         }
 
+        ProjectCashPool? incomePool = null;
         if (transaction.Type == TransactionType.Income && transaction.SourceType.HasValue)
         {
-            var pool = await context.Set<ProjectCashPool>()
+            incomePool = await context.Set<ProjectCashPool>()
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.SourceType == transaction.SourceType.Value);
 
-            if (pool != null)
+            if (incomePool != null)
             {
                 var totalDisbursed = await context.Set<PettyCash>()
-                    .Where(p => p.ProjectId == projectId && p.SourcePoolId == pool.Id && p.Status != "Rejected")
+                    .Where(p => p.ProjectId == projectId && p.SourcePoolId == incomePool.Id && p.Status != "Rejected")
                     .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
-                if (totalDisbursed > 0 || pool.AvailableBalance < pool.TotalInjected)
+                if (totalDisbursed > 0 || incomePool.AvailableBalance < incomePool.TotalInjected)
                 {
                     return (false, "TRANSACTION_LOCKED: المعاملة مقفلة نظراً لوجود تسويات أو عهد مسحوبة من هذا الوعاء التمويلي.");
                 }
-
-                pool.AvailableBalance = Math.Max(0, pool.AvailableBalance - transaction.Amount);
-                pool.TotalInjected = Math.Max(0, pool.TotalInjected - transaction.Amount);
             }
         }
 
@@ -422,6 +414,12 @@ public class FinancialTransactionService(DbContext context, ICloudStorageService
 
         context.Set<FinancialTransaction>().Remove(transaction);
         await context.SaveChangesAsync();
+
+        if (incomePool != null)
+        {
+            await CashPoolLedger.RecomputeAsync(context, incomePool);
+            await context.SaveChangesAsync();
+        }
 
         return (true, "Transaction deleted and pool balance corrected.");
     }

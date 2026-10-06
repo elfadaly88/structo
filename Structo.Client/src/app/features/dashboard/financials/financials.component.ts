@@ -1533,7 +1533,7 @@ export class FinancialsComponent implements OnInit {
 
     // First upload the file if selected
     if (this.selectedFile()) {
-      this.imageUploadService.uploadProjectGallery(request.projectId, this.selectedFile()!).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      this.imageUploadService.uploadProjectGallery(request.projectId, this.selectedFile()!, undefined, 'Receipt').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           const photoUrl = res.data?.url || '';
           this.submitSettleDto(request, photoUrl);
