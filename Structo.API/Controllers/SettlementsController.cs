@@ -93,7 +93,7 @@ public class SettlementsController(
             return Forbid();
         }
 
-        var (success, message) = await settlementService.ConfirmRefundAsync(projectId, id, CurrentUserRole);
+        var (success, message) = await settlementService.ConfirmRefundAsync(projectId, id, CurrentUserRole, CurrentUserId);
 
         if (!success)
         {

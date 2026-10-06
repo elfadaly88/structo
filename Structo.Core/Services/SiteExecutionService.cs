@@ -479,11 +479,26 @@ public class SiteExecutionService(
             weightedOverallProgress = (int)Math.Round(sumWeightedProgress / totalWeight, MidpointRounding.AwayFromZero);
         }
 
-        // 4. Query Site Photos for public showcase
+        // 4. Query Site Photos for public showcase: allow-list of client-facing categories only.
+        // Receipts are uploaded through the gallery endpoint without a category (stored as "PublicGallery"),
+        // so any URL used as a financial receipt/invoice in this project is excluded as well.
+        var publicPhotoCategories = new[] { "SiteProgress", "PublicGallery" };
+        var receiptUrls = context.Set<PettyCash>().IgnoreQueryFilters()
+                .Where(p => p.ProjectId == project.Id && p.ReceiptPhotoUrl != "")
+                .Select(p => p.ReceiptPhotoUrl)
+            .Concat(context.Set<FinancialTransaction>().IgnoreQueryFilters()
+                .Where(t => t.ProjectId == project.Id && t.ReceiptPhotoUrl != null)
+                .Select(t => t.ReceiptPhotoUrl!))
+            .Concat(context.Set<SettlementLine>().IgnoreQueryFilters()
+                .Where(l => l.Settlement!.ProjectId == project.Id && l.InvoiceUrl != null)
+                .Select(l => l.InvoiceUrl!));
+
         var photos = await context.Set<SitePhoto>()
             .IgnoreQueryFilters()
             .AsNoTracking()
-            .Where(sp => sp.ProjectId == project.Id)
+            .Where(sp => sp.ProjectId == project.Id
+                && publicPhotoCategories.Contains(sp.Category)
+                && !receiptUrls.Contains(sp.PhotoUrl))
             .OrderByDescending(sp => sp.UploadedAt)
             .Take(12)
             .Select(sp => new PublicSitePhotoDto

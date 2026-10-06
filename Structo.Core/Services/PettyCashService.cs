@@ -30,6 +30,9 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         if (project.Status == ProjectStatus.FinancialFreeze || project.Status == ProjectStatus.Closed)
             return (false, $"PROJECT_FROZEN: لا يمكن تقديم طلبات جديدة. المشروع في وضع {project.Status}. يرجى مراجعة المحاسب.");
 
+        if (dto.Amount <= 0)
+            return (false, "Amount must be greater than zero.");
+
         var pettyCash = new PettyCash
         {
             ProjectId = projectId,
@@ -89,6 +92,9 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
 
         if (pettyCash.Status != "Pending")
             return (false, "Only pending petty cash requests can be approved.");
+
+        if (pettyCash.Amount <= 0)
+            return (false, "Amount must be greater than zero.");
 
         var pool = await context.Set<ProjectCashPool>().FirstOrDefaultAsync(p => p.Id == dto.SourcePoolId && p.ProjectId == projectId);
         if (pool == null || pool.TenantId != pettyCash.TenantId)
@@ -303,6 +309,13 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         if (pettyCash.IsSettled || pettyCash.Status == "Settled")
             return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
 
+        if (dto.Amount <= 0)
+            return (false, "Amount must be greater than zero.");
+
+        // Once issued, the pool has been debited by Amount; changing it would desync the pool balance.
+        if (dto.Amount != pettyCash.Amount && pettyCash.Status != "Pending" && pettyCash.Status != "Rejected")
+            return (false, "Issued advances cannot be modified. Cancel this advance and issue a new one instead.");
+
         pettyCash.Amount = dto.Amount;
         pettyCash.Reason = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Reason) ?? string.Empty;
         pettyCash.Category = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Category);
@@ -325,6 +338,12 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         if (pettyCash.IsSettled || pettyCash.Status == "Settled")
             return (false, "This financial transaction is closed and audited. It cannot be modified or deleted.");
 
+        // Spending recorded against the advance must stay traceable (the FK would also reject the delete)
+        if (await context.Set<Settlement>().AnyAsync(s => s.PettyCashId == pettyCash.Id))
+            return (false, "This advance has settlements recorded against it and cannot be deleted.");
+
+        // Only an issued advance took money from the pool, and its Amount is locked after issue,
+        // so refunding Amount returns exactly what was deducted.
         if (pettyCash.Status == "Issued" && pettyCash.SourcePoolId.HasValue)
         {
             var pool = await context.Set<ProjectCashPool>()

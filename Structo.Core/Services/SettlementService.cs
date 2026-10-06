@@ -13,6 +13,19 @@ namespace Structo.Core.Services;
 
 public class SettlementService(DbContext context, INotificationEngine notificationEngine) : ISettlementService
 {
+    // Separation of duties: an Accountant or Manager never resolves the settlement of their own custody.
+    // TenantOwners are exempt (sole owners/freelancers have no one else to approve); ResolvedByUserId still records them.
+    private static void EnsureNotResolvingOwnSettlement(Settlement settlement, string userRole, Guid resolvedByUserId)
+    {
+        if (userRole == "TenantOwner")
+            return;
+
+        if (settlement.PettyCash != null && settlement.PettyCash.IssuedToUserId == resolvedByUserId)
+        {
+            throw new UnauthorizedAccessException("Users cannot approve, reject, or confirm refunds for their own petty cash settlements.");
+        }
+    }
+
     public async Task<(bool Success, string Message, Guid SettlementId)> CreateSettlementAsync(Guid projectId, SettlementCreateDto dto, Guid tenantId, string userRole, Guid userId)
     {
         if (userRole == "SuperAdmin")
@@ -101,9 +114,9 @@ public class SettlementService(DbContext context, INotificationEngine notificati
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
-        if (userRole != "TenantOwner" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant" && userRole != "Manager")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to approve settlements.");
+            throw new UnauthorizedAccessException("Only TenantOwner, Managers and Accountants are allowed to approve settlements.");
         }
 
         var settlement = await context.Set<Settlement>()
@@ -116,6 +129,8 @@ public class SettlementService(DbContext context, INotificationEngine notificati
 
         if (settlement.Status != SettlementStatus.Pending)
             return (false, "Only pending settlements can be approved.");
+
+        EnsureNotResolvingOwnSettlement(settlement, userRole, resolvedByUserId);
 
         settlement.ResolvedAt = DateTime.UtcNow;
         settlement.ResolvedByUserId = resolvedByUserId;
@@ -253,14 +268,14 @@ public class SettlementService(DbContext context, INotificationEngine notificati
             : "تم اعتماد التسوية بنجاح.");
     }
 
-    public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole)
+    public async Task<(bool Success, string Message)> ConfirmRefundAsync(Guid projectId, Guid id, string userRole, Guid resolvedByUserId)
     {
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
-        if (userRole != "TenantOwner" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant" && userRole != "Manager")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to confirm refunds.");
+            throw new UnauthorizedAccessException("Only TenantOwner, Managers and Accountants are allowed to confirm refunds.");
         }
 
         var settlement = await context.Set<Settlement>()
@@ -272,6 +287,8 @@ public class SettlementService(DbContext context, INotificationEngine notificati
 
         if (settlement.Status != SettlementStatus.ApprovedPendingRefund)
             return (false, "Settlement is not in ApprovedPendingRefund state.");
+
+        EnsureNotResolvingOwnSettlement(settlement, userRole, resolvedByUserId);
 
         var pettyCash = settlement.PettyCash;
         if (pettyCash == null)
@@ -347,9 +364,9 @@ public class SettlementService(DbContext context, INotificationEngine notificati
         if (userRole == "SuperAdmin")
             throw new UnauthorizedAccessException("SuperAdmin is strictly blocked from accessing internal financial records.");
 
-        if (userRole != "TenantOwner" && userRole != "Accountant")
+        if (userRole != "TenantOwner" && userRole != "Accountant" && userRole != "Manager")
         {
-            throw new UnauthorizedAccessException("Only TenantOwner and Accountants are allowed to reject settlements.");
+            throw new UnauthorizedAccessException("Only TenantOwner, Managers and Accountants are allowed to reject settlements.");
         }
 
         var settlement = await context.Set<Settlement>()
@@ -361,6 +378,8 @@ public class SettlementService(DbContext context, INotificationEngine notificati
 
         if (settlement.Status != SettlementStatus.Pending)
             return (false, "Only pending settlements can be rejected.");
+
+        EnsureNotResolvingOwnSettlement(settlement, userRole, resolvedByUserId);
 
         settlement.Status = SettlementStatus.Rejected;
         settlement.ResolvedAt = DateTime.UtcNow;
