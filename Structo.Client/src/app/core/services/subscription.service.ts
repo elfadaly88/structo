@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { ApiResponse } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
 
@@ -45,6 +45,17 @@ export class SubscriptionService {
 
   readonly isCheckingOut = signal<boolean>(false);
   readonly checkoutError = signal<string | null>(null);
+
+  /**
+   * Whether online card payment (Paymob) is enabled on the server (Payments:PaymobEnabled).
+   * Treated as disabled when the server does not confirm it.
+   */
+  isPaymobEnabled(): Observable<boolean> {
+    return this.http.get<ApiResponse<{ paymobEnabled?: boolean }>>(`${this.apiUrl}/plans`).pipe(
+      map((res) => !!res.data?.paymobEnabled),
+      catchError(() => of(false))
+    );
+  }
 
   /**
    * Initiates Paymob checkout flow by requesting payment intent / checkout URL.
