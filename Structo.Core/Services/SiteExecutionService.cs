@@ -321,6 +321,11 @@ public class SiteExecutionService(
         if (task == null)
             return (false, "البند التنفيذي غير موجود.");
 
+        // Only the assigned engineer, or the owner / a Manager assigned to this project, may report progress
+        var callerId = GetCallerContext(user).UserId;
+        if (callerId != task.AssignedEngineerId && !await projectAccessService.CanManageProjectMembersAsync(user, task.ProjectId))
+            throw new UnauthorizedAccessException("غير مصرح لك بتحديث نسبة إنجاز هذا البند.");
+
         int clampedProgress = Math.Clamp(dto.ProgressPercentage, 0, 100);
         task.ProgressPercentage = clampedProgress;
 
@@ -465,8 +470,8 @@ public class SiteExecutionService(
                 Status = t.Status.ToString(),
                 t.PlannedStartDate,
                 t.PlannedEndDate,
-                t.CompletedAt,
-                t.AttachmentUrls
+                t.CompletedAt
+                // Task attachments are internal working files; never exposed on the public tracker
             })
             .ToListAsync();
 
@@ -479,27 +484,8 @@ public class SiteExecutionService(
             weightedOverallProgress = (int)Math.Round(sumWeightedProgress / totalWeight, MidpointRounding.AwayFromZero);
         }
 
-        // 4. Query Site Photos for public showcase: allow-list of client-facing categories only.
-        // Receipts are uploaded through the gallery endpoint without a category (stored as "PublicGallery"),
-        // so any URL used as a financial receipt/invoice in this project is excluded as well.
-        var publicPhotoCategories = new[] { "SiteProgress", "PublicGallery" };
-        var receiptUrls = context.Set<PettyCash>().IgnoreQueryFilters()
-                .Where(p => p.ProjectId == project.Id && p.ReceiptPhotoUrl != "")
-                .Select(p => p.ReceiptPhotoUrl)
-            .Concat(context.Set<FinancialTransaction>().IgnoreQueryFilters()
-                .Where(t => t.ProjectId == project.Id && t.ReceiptPhotoUrl != null)
-                .Select(t => t.ReceiptPhotoUrl!))
-            .Concat(context.Set<SettlementLine>().IgnoreQueryFilters()
-                .Where(l => l.Settlement!.ProjectId == project.Id && l.InvoiceUrl != null)
-                .Select(l => l.InvoiceUrl!));
-
-        var photos = await context.Set<SitePhoto>()
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(sp => sp.ProjectId == project.Id
-                && publicPhotoCategories.Contains(sp.Category)
-                && !receiptUrls.Contains(sp.PhotoUrl))
-            .OrderByDescending(sp => sp.UploadedAt)
+        // 4. Site photos for public showcase: shared public allow-list (same rule as the contractor portfolio)
+        var photos = (await PublicPhotoPolicy.GetPublicPhotosAsync(context, new[] { project.Id }))
             .Take(12)
             .Select(sp => new PublicSitePhotoDto
             {
@@ -508,7 +494,7 @@ public class SiteExecutionService(
                 Caption = sp.Caption,
                 UploadedAt = sp.UploadedAt
             })
-            .ToListAsync();
+            .ToList();
 
         var completionDate = (project.Status == ProjectStatus.Closed || project.EndDate.HasValue) && project.EndDate.HasValue && project.EndDate.Value.Year > 1
             ? AsUtc(project.EndDate)
@@ -541,8 +527,7 @@ public class SiteExecutionService(
                 Status = t.Status,
                 PlannedStartDate = AsUtc(t.PlannedStartDate),
                 PlannedEndDate = AsUtc(t.PlannedEndDate),
-                CompletedAt = AsUtc(t.CompletedAt),
-                AttachmentUrls = t.AttachmentUrls
+                CompletedAt = AsUtc(t.CompletedAt)
             }).ToList(),
             SitePhotos = photos
         };

@@ -126,8 +126,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred during tenant registration for email: {Email}", dto?.AdminEmail);
-            return StatusCode(500, new ApiResponse<LoginResponseDto> { Success = false, Message = ex.Message });
+            return StatusCode(500, new ApiResponse<LoginResponseDto> { Success = false, Message = Structo.API.Middleware.SafeErrors.Generic(HttpContext, ex) });
         }
     }
 }

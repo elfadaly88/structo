@@ -81,9 +81,9 @@ public class FinancialReportsController(
                 CurrentUserRole = CurrentUserRole
             });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Forbid(ex.Message);
+            return Forbid();
         }
     }
 

@@ -227,6 +227,11 @@ public class PettyCashService(DbContext context, ICloudStorageService storageSer
         }
 
         await context.SaveChangesAsync();
+
+        // Unused cash (ReturnAmount) goes back to the source pool: recompute it from the ledger records
+        if (pettyCash.SourcePoolId.HasValue)
+            await CashPoolLedger.RecomputeAndSaveAsync(context, pettyCash.SourcePoolId.Value);
+
         return true;
     }
 

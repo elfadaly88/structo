@@ -120,7 +120,7 @@ public class SubscriptionController(
             return BadRequest(new ApiResponse<PaymobCheckoutResponseDto>
             {
                 Success = false,
-                Message = $"فشل في تهيئة بوابة الدفع باي موب: {ex.Message}"
+                Message = $"فشل في تهيئة بوابة الدفع باي موب. {Structo.API.Middleware.SafeErrors.Generic(HttpContext, ex)}"
             });
         }
     }
@@ -240,6 +240,31 @@ public class SubscriptionController(
             }
             catch { /* Best-effort status persistence */ }
         }
+
+        // Manual top-ups (SuperAdmin upgrade, approved InstaPay request) have no Paymob attempt; list them as confirmed payments
+        var manualTopUps = await context.SubscriptionTransactions
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(t => t.TenantId == tenantId && (t.TransactionType == "ManualAdminTopUp" || t.TransactionType == "InstaPayTopUp"))
+            .ToListAsync();
+
+        dtoList.AddRange(manualTopUps.Select(t => new PaymentAttemptDto
+        {
+            Id = t.Id,
+            TenantId = t.TenantId,
+            TenantName = user.Tenant.Name,
+            Amount = t.TotalAmount,
+            PlanRequested = $"+{t.ExtraProjectsAdded} Projects",
+            ExtraProjectsCount = t.ExtraProjectsAdded,
+            SpecialReference = t.ReferenceNumber,
+            CreatedAt = t.CreatedAt,
+            WebhookReceivedAt = t.CreatedAt,
+            WebhookStatus = "Confirmed",
+            LinkedTransactionId = t.Id,
+            ReferenceNumber = t.ReferenceNumber,
+            PaymentMethod = t.TransactionType == "InstaPayTopUp" ? "InstaPay" : t.PaymentMethod
+        }));
+        dtoList = dtoList.OrderByDescending(d => d.CreatedAt).ToList();
 
         var response = new MyPaymentsResponseDto
         {

@@ -34,6 +34,12 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
 
     public async Task<(bool Success, UserDto? Data, string Message)> CreateUserAsync(UserCreateDto dto, string currentUserRole, Guid? assignedByUserId = null)
     {
+        var roleError = Structo.Core.Helpers.UserRolePolicy.ValidateAssignableRole(dto.Role, currentUserRole);
+        if (roleError != null)
+        {
+            return (false, null, roleError);
+        }
+
         var usersDbSet = context.Set<User>();
         var normalizedEmail = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Email).ToLower().Trim();
         var exists = await usersDbSet.IgnoreQueryFilters().AnyAsync(u => u.Email == normalizedEmail);
@@ -126,12 +132,13 @@ public class UserService(DbContext context, ITenantContextAccessor tenantContext
                     CreatedAt = user.CreatedAt
                 };
 
-                return (true, resultDto, "User added successfully");
+                return (true, (UserDto?)resultDto, "User added successfully");
             }
-            catch (Exception ex)
+            catch
             {
+                // Unexpected failure: roll back and let the exception middleware log it and return a generic message
                 await transaction.RollbackAsync();
-                return (false, null, $"Failed to create user: {ex.Message}");
+                throw;
             }
         });
     }

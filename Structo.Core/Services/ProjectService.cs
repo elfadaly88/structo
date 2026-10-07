@@ -919,6 +919,7 @@ public class ProjectService(
 
         var project = await context.Set<Project>()
             .IgnoreQueryFilters() // bypass tenant filter — this is a public endpoint
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.PublicReviewToken == token);
 
         if (project == null)
@@ -927,10 +928,19 @@ public class ProjectService(
         if (dto.Rating.HasValue && (dto.Rating < 1 || dto.Rating > 5))
             return (false, "Rating must be between 1 and 5.");
 
-        if (dto.Rating.HasValue) project.ClientRating = dto.Rating;
-        if (!string.IsNullOrWhiteSpace(dto.Notes)) project.ClientReviewNotes = Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Notes);
+        int? rating = dto.Rating;
+        var notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : Structo.Core.Helpers.HtmlSanitizer.Sanitize(dto.Notes);
 
-        await context.SaveChangesAsync();
+        // One review per link: the conditional update only succeeds while no review is stored (atomic against double submits)
+        var stored = await context.Set<Project>()
+            .IgnoreQueryFilters()
+            .Where(p => p.Id == project.Id && p.ClientRating == null && (p.ClientReviewNotes == null || p.ClientReviewNotes == ""))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.ClientRating, rating)
+                .SetProperty(p => p.ClientReviewNotes, notes));
+
+        if (stored == 0)
+            return (false, "تم تسجيل تقييمك مسبقاً");
 
         // Recalculate average rating for the tenant
         var ratings = await context.Set<Project>()

@@ -97,7 +97,7 @@ public class AuthService(DbContext context, ITokenProvider tokenProvider, INotif
         // Validate password complexity
         if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
         {
-            return (false, null, "Password must be at least 6 characters.");
+            return (false, null, "كلمة المرور يجب أن تكون 6 أحرف على الأقل.");
         }
 
         int passScore = 0;

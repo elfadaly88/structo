@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Structo.Core\Structo.Core.csproj" />
     <ProjectReference Include="..\Structo.Infrastructure\Structo.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Structo.Tests" />
+  </ItemGroup>
+
 </Project>

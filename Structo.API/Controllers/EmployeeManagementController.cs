@@ -57,6 +57,12 @@ namespace Structo.API.Controllers
                 });
             }
 
+            var roleError = Structo.Core.Helpers.UserRolePolicy.ValidateAssignableRole(dto.Role, CurrentUserRole);
+            if (roleError != null)
+            {
+                return BadRequest(new ApiResponse<UserDto> { Success = false, Message = roleError });
+            }
+
             var emailNormalized = dto.Email.Trim().ToLower();
             var exists = await _context.Users.IgnoreQueryFilters().AnyAsync(u => u.Email == emailNormalized);
             if (exists)

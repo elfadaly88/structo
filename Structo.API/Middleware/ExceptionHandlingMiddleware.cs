@@ -57,7 +57,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         if (context.Response.StatusCode == StatusCodes.Status500InternalServerError && !environment.IsDevelopment())
         {
             // Never expose internal details (SQL, stack, provider messages) outside Development
-            response.Message = $"An unexpected error occurred. Reference: {correlationId}";
+            response.Message = SafeErrors.Generic(context);
         }
         else
         {

@@ -195,8 +195,6 @@ public class PublicTaskProgressDto
 
     [JsonConverter(typeof(IsoNullableDateTimeConverter))]
     public DateTime? CompletedAt { get; set; }
-
-    public List<string> AttachmentUrls { get; set; } = [];
 }
 
 public class PublicSitePhotoDto

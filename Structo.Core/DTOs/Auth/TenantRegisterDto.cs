@@ -21,7 +21,7 @@ public class TenantRegisterDto
     public required string AdminEmail { get; set; }
 
     [Required]
-    [MinLength(6)]
+    [MinLength(6, ErrorMessage = "كلمة المرور يجب أن تكون 6 أحرف على الأقل.")]
     public required string Password { get; set; }
     
     public string SubscriptionPlan { get; set; } = "Free";

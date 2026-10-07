@@ -358,11 +358,10 @@ public class SuperAdminController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to execute force purge for Tenant: {TenantId}", id);
             return StatusCode(500, new ApiResponse<ForcePurgeResultDto>
             {
                 Success = false,
-                Message = $"An error occurred during tenant force purge: {ex.Message}"
+                Message = Structo.API.Middleware.SafeErrors.Generic(HttpContext, ex)
             });
         }
     }

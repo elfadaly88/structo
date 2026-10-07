@@ -6,6 +6,7 @@ using Structo.Core.DTOs.Tenants;
 using Structo.Core.Entities;
 using Structo.Core.Enums;
 using Structo.Core.Interfaces;
+using Structo.Core.Services;
 using Structo.Infrastructure.Data;
 using System;
 using System.Collections.Generic;
@@ -203,46 +204,17 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
         if (tenant == null)
             return NotFound(new ApiResponse<PublicTenantPortfolioDto> { Success = false, Message = "Company not found" });
 
-        // Retrieve projects and include uploaded site photos
         var projects = await context.Projects
             .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(p => p.TenantId == tenant.Id)
-            .Include(p => p.SitePhotos)
             .ToListAsync();
 
         var projectIds = projects.Select(p => p.Id).ToList();
 
-        // 1. Gather all internal SiteTasks attachment URLs to strictly exclude them
-        var internalTaskAttachmentUrls = await context.Set<SiteTask>()
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(t => projectIds.Contains(t.ProjectId))
-            .SelectMany(t => t.AttachmentUrls)
-            .ToListAsync();
-
-        var internalAttachmentsSet = new HashSet<string>(
-            internalTaskAttachmentUrls.Where(u => !string.IsNullOrWhiteSpace(u)),
-            StringComparer.OrdinalIgnoreCase);
-
-        // 2. Gather all financial receipts and invoice URLs to strictly exclude them
-        var financialReceiptUrls = await context.FinancialTransactions
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(f => projectIds.Contains(f.ProjectId) && !string.IsNullOrWhiteSpace(f.ReceiptPhotoUrl))
-            .Select(f => f.ReceiptPhotoUrl!)
-            .ToListAsync();
-
-        var settlementReceiptUrls = await context.Set<SettlementLine>()
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(sl => sl.Settlement != null && projectIds.Contains(sl.Settlement.ProjectId) && !string.IsNullOrWhiteSpace(sl.InvoiceUrl))
-            .Select(sl => sl.InvoiceUrl!)
-            .ToListAsync();
-
-        var excludedReceiptsSet = new HashSet<string>(
-            financialReceiptUrls.Concat(settlementReceiptUrls).Where(u => !string.IsNullOrWhiteSpace(u)),
-            StringComparer.OrdinalIgnoreCase);
+        // Same public photo rule as the client tracker (allow-list, minus receipts and task attachments)
+        var publicPhotosByProject = (await PublicPhotoPolicy.GetPublicPhotosAsync(context, projectIds))
+            .ToLookup(sp => sp.ProjectId);
 
         var publicProjects = new List<PublicProjectDto>();
 
@@ -251,17 +223,7 @@ public class PublicDirectoryController(StructoDbContext context) : ControllerBas
             // Only expose public portfolio projects to the public clients
             if (p.IsPublicPortfolio)
             {
-                var validPublicPhotos = p.SitePhotos
-                    .Where(sp => !string.IsNullOrWhiteSpace(sp.PhotoUrl) &&
-                                 sp.Category != "SiteTaskAttachment" &&
-                                 sp.Category != "TaskAttachment" &&
-                                 sp.Category != "Internal" &&
-                                 !sp.PhotoUrl.Contains("/receipts/", StringComparison.OrdinalIgnoreCase) &&
-                                 !sp.PhotoUrl.Contains("receipt", StringComparison.OrdinalIgnoreCase) &&
-                                 !sp.PhotoUrl.Contains("invoice", StringComparison.OrdinalIgnoreCase) &&
-                                 !internalAttachmentsSet.Contains(sp.PhotoUrl) &&
-                                 !excludedReceiptsSet.Contains(sp.PhotoUrl))
-                    .OrderByDescending(sp => sp.UploadedAt)
+                var validPublicPhotos = publicPhotosByProject[p.Id]
                     .Select(sp => sp.PhotoUrl.Trim())
                     .ToList();
 

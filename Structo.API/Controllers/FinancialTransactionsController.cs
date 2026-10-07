@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Structo.API.Middleware;
 using Structo.Core.DTOs.Common;
 using Structo.Core.DTOs.Transactions;
 using Structo.Core.Entities;
@@ -57,18 +58,20 @@ public class FinancialTransactionsController : ControllerBase
                 return Forbid();
             }
             var (success, message) = await _financialTransactionService.CreateTransactionAsync(projectId, dto, role);
-            return Ok(new ApiResponse<bool> { Data = success, Message = message, CurrentUserRole = role });
+            if (!success)
+            {
+                // Rejected by a business rule (budget, frozen project, not found): nothing was saved
+                return BadRequest(new ApiResponse<bool> { Success = false, Data = false, Message = message, CurrentUserRole = role });
+            }
+            return Ok(new ApiResponse<bool> { Data = true, Message = message, CurrentUserRole = role });
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database update error creating transaction for project {ProjectId}: {Details}", projectId, details);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error creating transaction for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -103,14 +106,11 @@ public class FinancialTransactionsController : ControllerBase
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database error fetching mobile transactions for project {ProjectId}: {Details}", projectId, details);
-            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error fetching mobile transactions for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<PaginatedList<FinancialTransactionMobileDto>> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -139,10 +139,9 @@ public class FinancialTransactionsController : ControllerBase
                 CurrentUserRole = role
             });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error fetching financial summary for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<ProjectFinancialSummaryDto> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<ProjectFinancialSummaryDto> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -184,14 +183,11 @@ public class FinancialTransactionsController : ControllerBase
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database error injecting capital for project {ProjectId}: {Details}", projectId, details);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error injecting capital for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -218,14 +214,11 @@ public class FinancialTransactionsController : ControllerBase
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database error fetching cash pools for project {ProjectId}: {Details}", projectId, details);
-            return BadRequest(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error fetching cash pools for project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<IEnumerable<ProjectCashPool>> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -268,14 +261,11 @@ public class FinancialTransactionsController : ControllerBase
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database error updating transaction {Id} under project {ProjectId}: {Details}", id, projectId, details);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error updating transaction {Id} under project {ProjectId}", id, projectId);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -317,14 +307,11 @@ public class FinancialTransactionsController : ControllerBase
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database error deleting transaction {Id} under project {ProjectId}: {Details}", id, projectId, details);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error deleting transaction {Id} under project {ProjectId}", id, projectId);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 
@@ -364,14 +351,11 @@ public class FinancialTransactionsController : ControllerBase
         }
         catch (DbUpdateException dbEx)
         {
-            var details = dbEx.InnerException?.Message ?? dbEx.Message;
-            _logger.LogError(dbEx, "Database error during direct disbursement under project {ProjectId}: {Details}", projectId, details);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = $"Database Error: {details}" });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, dbEx) });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            _logger.LogError(ex, "Error during performing direct disbursement under project {ProjectId}", projectId);
-            return BadRequest(new ApiResponse<bool> { Success = false, Message = ex.InnerException?.Message ?? ex.Message });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = SafeErrors.Generic(HttpContext, ex) });
         }
     }
 }

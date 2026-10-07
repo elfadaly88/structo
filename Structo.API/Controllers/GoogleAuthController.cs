@@ -13,6 +13,14 @@ public class GoogleAuthController : ControllerBase
 {
     private readonly IGoogleAuthService _googleAuthService;
 
+    private static readonly HashSet<string> AccountDeniedMessages =
+    [
+        "ACCOUNT_PENDING_APPROVAL",
+        "AUTH.ACCOUNT_DEACTIVATED",
+        "AUTH.ACCOUNT_PENDING_OR_INACTIVE",
+        "⚠️ تم تعليق حساب شركتكم مؤقتًا؛ يرجى مراجعة إدارة المنصة لتجديد الاشتراك."
+    ];
+
     public GoogleAuthController(IGoogleAuthService googleAuthService)
     {
         _googleAuthService = googleAuthService;
@@ -36,8 +44,9 @@ public class GoogleAuthController : ControllerBase
 
         if (!response.Success)
         {
-            return response.Message == "ACCOUNT_PENDING_APPROVAL" || response.Message == "ACCOUNT_DEACTIVATED" 
-                ? Unauthorized(response) 
+            // Account/tenant state denials are 401, as on password login
+            return AccountDeniedMessages.Contains(response.Message ?? string.Empty)
+                ? Unauthorized(response)
                 : BadRequest(response);
         }
 

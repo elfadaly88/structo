@@ -456,7 +456,7 @@ public class TenantCleanupService : ITenantCleanupService
                 TenantId = tenantId,
                 TenantName = tenantName,
                 Success = false,
-                Message = $"حدث خطأ أثناء تنفيذ عملية الحذف الجذري: {ex.Message}"
+                Message = "حدث خطأ أثناء تنفيذ عملية الحذف الجذري. راجع سجل الخادم."
             };
         }
     }
