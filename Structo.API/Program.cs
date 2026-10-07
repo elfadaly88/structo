@@ -228,6 +228,13 @@ builder.Services.AddScoped<Structo.Core.Interfaces.IPettyCashService, Structo.Co
 builder.Services.AddScoped<Structo.Core.Interfaces.ISettlementService, Structo.Core.Services.SettlementService>();
 builder.Services.AddScoped<Structo.Core.Interfaces.ITenantCleanupService, Structo.Core.Services.TenantCleanupService>();
 
+// Manual InstaPay payments: numbers from Payments:InstaPay (env Payments__InstaPay__Number / __WhatsAppNumber)
+var instaPaySettings = builder.Configuration.GetSection("Payments:InstaPay").Get<Structo.Core.Settings.InstaPaySettings>()
+    ?? new Structo.Core.Settings.InstaPaySettings();
+builder.Services.AddSingleton(instaPaySettings);
+builder.Services.AddScoped<Structo.Core.Interfaces.ITenantQuotaService, Structo.Core.Services.TenantQuotaService>();
+builder.Services.AddScoped<Structo.Core.Interfaces.IManualPaymentService, Structo.Core.Services.ManualPaymentService>();
+
 // Paymob Payment Gateway Settings & Service
 builder.Services.Configure<Structo.Core.Settings.PaymobSettings>(builder.Configuration.GetSection("Paymob"));
 builder.Services.AddHttpClient<Structo.Core.Interfaces.IPaymobService, Structo.Infrastructure.Services.PaymobService>();
@@ -371,6 +378,11 @@ builder.Services.AddAuthorization();
 // 3. BUILD APP
 // ------------------------------
 var app = builder.Build();
+
+if (!instaPaySettings.IsConfigured)
+{
+    app.Logger.LogWarning("InstaPay is hidden: Payments:InstaPay:Number and Payments:InstaPay:WhatsAppNumber must both be set (international format, digits only).");
+}
 
 // ------------------------------
 // 4. DATABASE INITIALIZATION

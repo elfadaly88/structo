@@ -143,6 +143,11 @@ export const routes: Routes = [
         data: { roles: ['SuperAdmin'] }
       },
       {
+        path: 'payment-requests',
+        loadComponent: () => import('./features/dashboard/payment-requests/payment-requests.component').then(m => m.PaymentRequestsComponent),
+        data: { roles: ['SuperAdmin'] }
+      },
+      {
         path: 'payment-audit',
         redirectTo: 'admin-payments'
       }

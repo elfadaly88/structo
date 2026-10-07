@@ -17,4 +17,10 @@ public interface INotificationEngine
     
     Task RaiseNewAccountRegistrationNotificationAsync(string companyName);
     Task RaiseAccountActivationNotificationAsync(Guid tenantId);
+
+    /// <summary>Notifies every SuperAdmin about a new InstaPay request, or a receipt uploaded for one.</summary>
+    Task RaiseManualPaymentSubmittedNotificationAsync(string companyName, string referenceCode, decimal amountEgp, bool receiptUploaded);
+
+    /// <summary>Notifies the tenant owner that their InstaPay request was approved or rejected.</summary>
+    Task RaiseManualPaymentResultNotificationAsync(Guid tenantId, string referenceCode, int projectsAdded, bool approved, string? rejectReason);
 }

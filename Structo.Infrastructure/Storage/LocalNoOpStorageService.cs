@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Logging;
 using Structo.Core.Interfaces;
 
@@ -37,5 +38,11 @@ public class LocalNoOpStorageService(ILogger<LocalNoOpStorageService> logger) : 
         var count = fileUrls?.Count() ?? 0;
         logger.LogWarning("[NoOp Storage] DeleteFilesAsync called for {Count} files — returning {Count} (no-op)", count, count);
         return Task.FromResult(count);
+    }
+
+    public string GetPrivateReadUrl(string key, TimeSpan validFor)
+    {
+        // Local placeholder; never a real public object
+        return $"https://local-dev-placeholder.test/{key.TrimStart('/')}?signed=local&expires={(int)validFor.TotalSeconds}";
     }
 }

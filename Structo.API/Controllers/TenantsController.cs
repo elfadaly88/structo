@@ -24,7 +24,8 @@ namespace Structo.API.Controllers;
 public class TenantsController(
     StructoDbContext context,
     IServiceScopeFactory scopeFactory,
-    ILogger<TenantsController> logger) : ControllerBase
+    ILogger<TenantsController> logger,
+    ITenantQuotaService quotaService) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<ApiResponse<Guid>>> Create([FromBody] TenantCreateDto dto)
@@ -260,35 +261,20 @@ public class TenantsController(
             });
         }
 
-        int newMaxProjects = tenant.MaxActiveProjects == -1 
-            ? -1 
-            : tenant.MaxActiveProjects + dto.ExtraProjectsCount;
-
-        tenant.MaxActiveProjects = newMaxProjects;
-
         var taxAmount = 0.0m;
         var totalAmount = dto.Amount;
         var refNumber = $"INV-ADMIN-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000)}";
 
-        var txn = new SubscriptionTransaction
-        {
-            TenantId = id,
-            TransactionType = "ManualAdminTopUp",
-            PlanName = tenant.SubscriptionPlan.ToString(),
-            ExtraProjectsAdded = dto.ExtraProjectsCount,
-            ResultingMaxProjects = newMaxProjects,
-            Amount = dto.Amount,
-            TaxAmount = taxAmount,
-            TotalAmount = totalAmount,
-            PaymentGateway = "SuperAdminManual",
-            PaymentMethod = dto.PaymentMethod ?? "Cash",
-            Status = "Paid",
-            ReferenceNumber = refNumber,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        context.SubscriptionTransactions.Add(txn);
-        await context.SaveChangesAsync();
+        // Same quota logic as InstaPay approvals (atomic increment, unlimited stays unlimited)
+        var topUp = await quotaService.InTransactionAsync(() => quotaService.AddProjectsAsync(new QuotaTopUp(
+            id,
+            dto.ExtraProjectsCount,
+            dto.Amount,
+            TransactionType: "ManualAdminTopUp",
+            PaymentGateway: "SuperAdminManual",
+            PaymentMethod: dto.PaymentMethod ?? "Cash",
+            ReferenceNumber: refNumber)));
+        var newMaxProjects = topUp!.NewMaxActiveProjects;
 
         var response = new SubscriptionUpgradeResponseDto
         {

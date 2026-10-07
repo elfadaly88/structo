@@ -459,10 +459,14 @@ public class PaymobService : IPaymobService
         string? targetPlanId,
         int? extraProjectsCount)
     {
+        // Package prices come from the shared server price list (ProjectPackages)
+        var plusOne = Structo.Core.Services.ProjectPackages.PlusOne;
+        var plusFive = Structo.Core.Services.ProjectPackages.PlusFive;
+
         if (extraProjectsCount.HasValue && extraProjectsCount.Value > 0)
         {
             var count = extraProjectsCount.Value;
-            var egp = count == 5 ? 950m : (count == 1 ? 250m : count * 200m);
+            var egp = Structo.Core.Services.ProjectPackages.ForProjects(count)?.PriceEgp ?? count * 200m;
             return ((int)(egp * 100), $"+{count} Projects", egp);
         }
 
@@ -470,13 +474,9 @@ public class PaymobService : IPaymobService
 
         if (plan.Contains("enterprise") || plan.Contains("5"))
         {
-            return (95000, "+5 Projects Package", 950m);
-        }
-        if (plan.Contains("pro") || plan.Contains("1"))
-        {
-            return (25000, "+1 Project", 250m);
+            return ((int)(plusFive.PriceEgp * 100), "+5 Projects Package", plusFive.PriceEgp);
         }
 
-        return (25000, "+1 Project", 250m);
+        return ((int)(plusOne.PriceEgp * 100), "+1 Project", plusOne.PriceEgp);
     }
 }

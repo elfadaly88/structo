@@ -4,11 +4,14 @@ import { RouterModule } from '@angular/router';
 import { SubscriptionService, SubscriptionPlanItem } from '../../../core/services/subscription.service';
 import { TenantProfileService } from '../../../core/services/tenant-profile.service';
 import { PaymentAuditService, MyPaymentsResponse } from '../../../core/services/payment-audit.service';
+import { ManualPaymentService, ManualPaymentRequest, ProjectPackageType } from '../../../core/services/manual-payment.service';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-subscription',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslatePipe, ApiDatePipe],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 lg:p-8 font-cairo" dir="rtl">
       <!-- Header Section -->
@@ -177,12 +180,27 @@ import { PaymentAuditService, MyPaymentsResponse } from '../../../core/services/
                     class="w-full py-3 px-4 rounded-2xl bg-slate-800 text-slate-400 font-bold text-xs cursor-default flex items-center justify-center gap-2">
                     <span>باقة البداية المفعلة</span>
                   </button>
-                } @else if (!paymobEnabled()) {
+                } @else {
+                  <div class="space-y-2">
+                  @if (instaPayEnabled() && packageFor(plan)) {
+                    <button
+                      (click)="startInstaPay(plan)"
+                      [disabled]="creatingForPlanId() !== null"
+                      class="w-full py-3 px-4 rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg">
+                      @if (creatingForPlanId() === plan.id) {
+                        <span>{{ 'INSTAPAY.CREATING' | translate }}</span>
+                      } @else {
+                        <span>{{ 'INSTAPAY.PAY_WITH' | translate }}</span>
+                      }
+                    </button>
+                  }
+                  @if (!paymobEnabled() && !(instaPayEnabled() && packageFor(plan))) {
                   <div class="w-full py-3 px-4 rounded-2xl bg-slate-800/60 border border-slate-700 text-center text-xs">
                     <p class="font-bold text-slate-200">الدفع الإلكتروني غير متاح حالياً — تواصل معنا للترقية</p>
                     <p class="mt-1 text-slate-400">Online payment is unavailable — contact us to upgrade</p>
                   </div>
-                } @else {
+                  }
+                  @if (paymobEnabled()) {
                   <button
                     (click)="onSelectPlan(plan)"
                     [disabled]="selectedPlanId() === plan.id && isCheckingOut()"
@@ -208,11 +226,57 @@ import { PaymentAuditService, MyPaymentsResponse } from '../../../core/services/
                       </svg>
                     }
                   </button>
+                  }
+                  </div>
                 }
               </div>
             </div>
           }
         </div>
+
+        <!-- My InstaPay payments -->
+        @if (instaPayEnabled() || manualPayments().length > 0) {
+          <div class="max-w-6xl mx-auto mt-8 bg-slate-900/60 border border-slate-800 rounded-3xl p-5">
+            <h3 class="text-sm font-bold text-white mb-4">{{ 'INSTAPAY.MY_REQUESTS' | translate }}</h3>
+            @if (manualPayments().length === 0) {
+              <p class="text-xs text-slate-400">{{ 'INSTAPAY.NO_REQUESTS' | translate }}</p>
+            } @else {
+              <div class="space-y-3">
+                @for (req of manualPayments(); track req.id) {
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-3 justify-between bg-slate-800/50 border border-slate-700/60 rounded-2xl p-4 text-xs">
+                    <div class="space-y-1">
+                      <p class="font-bold text-white">
+                        {{ ('INSTAPAY.PACKAGE_' + req.packageType) | translate }} — {{ req.amountEgp | number:'1.0-0' }} {{ 'INSTAPAY.EGP' | translate }}
+                        <span class="font-mono text-indigo-300 ms-2">{{ req.referenceCode }}</span>
+                      </p>
+                      <p class="text-slate-400">{{ req.createdAt | apiDate:'dd/MM/yyyy HH:mm' }}</p>
+                      @if (req.status === 'Rejected' && req.rejectReason) {
+                        <p class="text-rose-300">{{ 'INSTAPAY.REJECT_REASON' | translate }}: {{ req.rejectReason }}</p>
+                      }
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="px-2.5 py-1 rounded-full font-bold"
+                        [class.bg-amber-500/15]="req.status === 'Pending'" [class.text-amber-300]="req.status === 'Pending'"
+                        [class.bg-emerald-500/15]="req.status === 'Approved'" [class.text-emerald-300]="req.status === 'Approved'"
+                        [class.bg-rose-500/15]="req.status === 'Rejected'" [class.text-rose-300]="req.status === 'Rejected'"
+                        [class.bg-slate-500/15]="req.status === 'Expired'" [class.text-slate-300]="req.status === 'Expired'">
+                        {{ ('INSTAPAY.STATUS_' + req.status) | translate }}
+                      </span>
+                      @if (req.hasScreenshot) {
+                        <span class="text-emerald-300">✓ {{ 'INSTAPAY.RECEIPT_UPLOADED' | translate }}</span>
+                      }
+                      @if (req.status === 'Pending') {
+                        <button (click)="activeRequest.set(req)" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold cursor-pointer">
+                          {{ 'INSTAPAY.SHOW_DETAILS' | translate }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
       }
 
       <!-- TAB 2: Payment History & Webhook Audit Logs -->
@@ -428,6 +492,85 @@ import { PaymentAuditService, MyPaymentsResponse } from '../../../core/services/
           <span>تفعيل وتوسعة فورية للسعة</span>
         </div>
       </div>
+
+      <!-- InstaPay payment details -->
+      @if (activeRequest(); as req) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" (click)="activeRequest.set(null)">
+          <div class="w-full max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-3xl p-6 space-y-4 text-sm" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-white">{{ 'INSTAPAY.TITLE' | translate }}</h3>
+              <button (click)="activeRequest.set(null)" class="text-slate-400 hover:text-white text-xl cursor-pointer" [attr.aria-label]="'INSTAPAY.CLOSE' | translate">×</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-slate-800/60 rounded-2xl p-3">
+                <p class="text-[11px] text-slate-400">{{ 'INSTAPAY.PACKAGE' | translate }}</p>
+                <p class="font-bold text-white">{{ ('INSTAPAY.PACKAGE_' + req.packageType) | translate }}</p>
+              </div>
+              <div class="bg-slate-800/60 rounded-2xl p-3">
+                <p class="text-[11px] text-slate-400">{{ 'INSTAPAY.AMOUNT' | translate }}</p>
+                <p class="font-bold text-emerald-300">{{ req.amountEgp | number:'1.0-0' }} {{ 'INSTAPAY.EGP' | translate }}</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-800/60 rounded-2xl p-3 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[11px] text-slate-400">{{ 'INSTAPAY.NUMBER' | translate }}</p>
+                <p class="font-mono font-bold text-white" dir="ltr">{{ req.instaPayNumber }}</p>
+              </div>
+              <button (click)="copy('number', req.instaPayNumber)" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold cursor-pointer">
+                {{ (copiedField() === 'number' ? 'INSTAPAY.COPIED' : 'INSTAPAY.COPY') | translate }}
+              </button>
+            </div>
+
+            <div class="bg-slate-800/60 rounded-2xl p-3 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[11px] text-slate-400">{{ 'INSTAPAY.REFERENCE' | translate }}</p>
+                <p class="font-mono font-bold text-indigo-300 text-lg" dir="ltr">{{ req.referenceCode }}</p>
+              </div>
+              <button (click)="copy('code', req.referenceCode)" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold cursor-pointer">
+                {{ (copiedField() === 'code' ? 'INSTAPAY.COPIED' : 'INSTAPAY.COPY') | translate }}
+              </button>
+            </div>
+
+            <ol class="list-decimal ps-5 space-y-1 text-xs text-slate-300">
+              <li>{{ 'INSTAPAY.STEP_1' | translate: { amount: (req.amountEgp | number:'1.0-0') } }}</li>
+              <li>{{ 'INSTAPAY.STEP_2' | translate: { code: req.referenceCode } }}</li>
+              <li>{{ 'INSTAPAY.STEP_3' | translate }}</li>
+            </ol>
+            <p class="text-[11px] text-slate-400">{{ 'INSTAPAY.EXPIRES' | translate: { date: (req.expiresAt | apiDate:'dd/MM/yyyy HH:mm') } }}</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label class="w-full py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+                [class.opacity-50]="uploadingRequestId() === req.id">
+                <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+                  [disabled]="uploadingRequestId() === req.id" (change)="onReceiptSelected(req, $event)" />
+                @if (uploadingRequestId() === req.id) {
+                  {{ 'INSTAPAY.UPLOADING' | translate }}
+                } @else {
+                  {{ (req.hasScreenshot ? 'INSTAPAY.REPLACE_RECEIPT' : 'INSTAPAY.UPLOAD_RECEIPT') | translate }}
+                }
+              </label>
+              <a [href]="whatsAppLink(req)" target="_blank" rel="noopener"
+                class="w-full py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white">
+                {{ 'INSTAPAY.SEND_WHATSAPP' | translate }}
+              </a>
+            </div>
+
+            @if (req.hasScreenshot) {
+              <p class="text-xs text-emerald-300">
+                ✓ {{ 'INSTAPAY.RECEIPT_UPLOADED' | translate }}
+                @if (req.screenshotUrl) {
+                  — <a [href]="req.screenshotUrl" target="_blank" rel="noopener" class="underline">{{ 'INSTAPAY.VIEW_RECEIPT' | translate }}</a>
+                }
+              </p>
+            }
+            @if (receiptError()) {
+              <p class="text-xs text-rose-300">{{ receiptError() }}</p>
+            }
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -445,6 +588,17 @@ export class SubscriptionComponent implements OnInit {
   // Card payment stays hidden until the server confirms Paymob is enabled
   readonly paymobEnabled = signal<boolean>(false);
 
+  // Manual InstaPay payments (hidden unless the server has InstaPay numbers configured)
+  private readonly manualPaymentService = inject(ManualPaymentService);
+  private readonly translate = inject(TranslateService);
+  readonly instaPayEnabled = signal<boolean>(false);
+  readonly manualPayments = signal<ManualPaymentRequest[]>([]);
+  readonly activeRequest = signal<ManualPaymentRequest | null>(null);
+  readonly creatingForPlanId = signal<string | null>(null);
+  readonly uploadingRequestId = signal<string | null>(null);
+  readonly receiptError = signal<string | null>(null);
+  readonly copiedField = signal<'number' | 'code' | null>(null);
+
   // Tabs: 'plans' | 'history'
   readonly activeTab = signal<'plans' | 'history'>('plans');
   readonly myPayments = signal<MyPaymentsResponse | null>(null);
@@ -452,7 +606,11 @@ export class SubscriptionComponent implements OnInit {
 
   ngOnInit(): void {
     this.plans.set(this.subscriptionService.getAvailablePlans());
-    this.subscriptionService.isPaymobEnabled().subscribe((enabled) => this.paymobEnabled.set(enabled));
+    this.subscriptionService.getPaymentOptions().subscribe((options) => {
+      this.paymobEnabled.set(options.paymobEnabled);
+      this.instaPayEnabled.set(options.instaPayEnabled);
+    });
+    this.loadManualPayments();
     this.loadQuota();
     this.loadPaymentHistory();
   }
@@ -515,5 +673,103 @@ export class SubscriptionComponent implements OnInit {
         this.errorMessage.set(err?.error?.message || 'حدث خطأ أثناء بدء جلسة الدفع');
       }
     });
+  }
+
+  // ───────────── Manual InstaPay payments ─────────────
+
+  /** Maps a plan card to its server package; only the package type is ever sent to the API. */
+  packageFor(plan: SubscriptionPlanItem): ProjectPackageType | null {
+    if (plan.extraProjects === 1) return 'PLUS_1';
+    if (plan.extraProjects === 5) return 'PLUS_5';
+    return null;
+  }
+
+  loadManualPayments(): void {
+    this.manualPaymentService.mine().subscribe({
+      next: (res) => {
+        const list = res.data ?? [];
+        this.manualPayments.set(list);
+        const open = this.activeRequest();
+        if (open) {
+          this.activeRequest.set(list.find((r) => r.id === open.id) ?? open);
+        }
+      },
+      error: () => this.manualPayments.set([])
+    });
+  }
+
+  startInstaPay(plan: SubscriptionPlanItem): void {
+    const packageType = this.packageFor(plan);
+    if (!packageType) return;
+
+    this.errorMessage.set(null);
+    this.creatingForPlanId.set(plan.id);
+    this.manualPaymentService.create(packageType).subscribe({
+      next: (res) => {
+        this.creatingForPlanId.set(null);
+        if (res.success && res.data) {
+          this.manualPayments.update((list) => [res.data!, ...list]);
+          this.receiptError.set(null);
+          this.activeRequest.set(res.data);
+        } else {
+          this.errorMessage.set(res.message || this.translate.instant('INSTAPAY.ERROR'));
+        }
+      },
+      error: (err) => {
+        this.creatingForPlanId.set(null);
+        this.errorMessage.set(err?.error?.message || this.translate.instant('INSTAPAY.ERROR'));
+      }
+    });
+  }
+
+  onReceiptSelected(req: ManualPaymentRequest, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type) || file.size > 5 * 1024 * 1024) {
+      this.receiptError.set(this.translate.instant('INSTAPAY.FILE_INVALID'));
+      return;
+    }
+
+    this.receiptError.set(null);
+    this.uploadingRequestId.set(req.id);
+    this.manualPaymentService.uploadReceipt(req.id, file).subscribe({
+      next: (res) => {
+        this.uploadingRequestId.set(null);
+        if (res.success && res.data) {
+          const updated = res.data;
+          this.manualPayments.update((list) => list.map((r) => (r.id === updated.id ? updated : r)));
+          if (this.activeRequest()?.id === updated.id) this.activeRequest.set(updated);
+        } else {
+          this.receiptError.set(res.message || this.translate.instant('INSTAPAY.ERROR'));
+        }
+      },
+      error: (err) => {
+        this.uploadingRequestId.set(null);
+        this.receiptError.set(err?.error?.message || this.translate.instant('INSTAPAY.ERROR'));
+      }
+    });
+  }
+
+  copy(field: 'number' | 'code', value: string | null | undefined): void {
+    if (!value) return;
+    navigator.clipboard?.writeText(value).then(() => {
+      this.copiedField.set(field);
+      setTimeout(() => this.copiedField.set(null), 2000);
+    });
+  }
+
+  /** wa.me link with a prefilled message: company, package, amount and reference code. */
+  whatsAppLink(req: ManualPaymentRequest): string {
+    const message = this.translate.instant('INSTAPAY.WHATSAPP_MESSAGE', {
+      company: req.tenantName,
+      package: this.translate.instant('INSTAPAY.PACKAGE_' + req.packageType),
+      amount: req.amountEgp,
+      code: req.referenceCode
+    });
+    return `https://wa.me/${req.whatsAppNumber ?? ''}?text=${encodeURIComponent(message)}`;
   }
 }

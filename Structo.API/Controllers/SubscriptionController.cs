@@ -23,7 +23,8 @@ public class SubscriptionController(
     StructoDbContext context,
     Structo.Core.Interfaces.INotificationEngine notificationEngine,
     Structo.Core.Interfaces.IPaymobService paymobService,
-    Microsoft.Extensions.Configuration.IConfiguration configuration) : ControllerBase
+    Microsoft.Extensions.Configuration.IConfiguration configuration,
+    Structo.Core.Settings.InstaPaySettings instaPay) : ControllerBase
 {
     private const string NonOwnerForbiddenMessage = "ترقية الباقة والفوترة مقتصرة حصرياً على مالك المنشأة.";
     private const string PaymentsDisabledMessage = "PAYMENTS_DISABLED: الدفع الإلكتروني غير متاح حالياً. تواصل معنا لترقية باقتك. (Online payment is currently unavailable. Contact us to upgrade.)";
@@ -31,18 +32,8 @@ public class SubscriptionController(
     // Kill switch: Payments:PaymobEnabled (env Payments__PaymobEnabled), off unless explicitly enabled
     private bool PaymobEnabled => configuration.GetValue("Payments:PaymobEnabled", false);
 
-    // ─────────────────────────────────────────────────────────
-    // Pricing Table (EGP, 0% VAT)
-    // Base Free plan = 2 projects lifetime (automatic upon signup)
-    // Additive Top-Ups: +1 Project = 250 EGP | +5 Projects = 950 EGP
-    // ─────────────────────────────────────────────────────────
+    // Pricing (EGP, 0% VAT) lives in ProjectPackages: base Free plan = 2 projects, top-ups +1 / +5.
     private static readonly decimal VatRate = 0.0m;
-
-    private static readonly Dictionary<int, decimal> TopUpPricing = new()
-    {
-        { 1, 250m },
-        { 5, 950m },
-    };
 
     // ─────────────────────────────────────────────────────────
     // POST /api/subscription/checkout
@@ -152,16 +143,18 @@ public class SubscriptionController(
             });
         }
 
+        var plusOne = Structo.Core.Services.ProjectPackages.PlusOne;
+        var plusFive = Structo.Core.Services.ProjectPackages.PlusFive;
         var topups = new[]
         {
-            new { extra = 1, priceEgp = 250m, priceWithVat = 250m, label = "📦 إضافة مشروع واحد (+1 Project)", description = "إضافة مشروع واحد إضافي لرصيدك الحالي (Adds +1 project to your active quota)", isBestValue = false },
-            new { extra = 5, priceEgp = 950m, priceWithVat = 950m, label = "🚀 حزمة 5 مشاريع (+5 Projects Package)", description = "إضافة 5 مشاريع إضافية لرصيدك الحالي (Adds +5 projects to your active quota)", isBestValue = true }
+            new { packageType = plusOne.Type, extra = plusOne.Projects, priceEgp = plusOne.PriceEgp, priceWithVat = plusOne.PriceEgp, label = "📦 إضافة مشروع واحد (+1 Project)", description = "إضافة مشروع واحد إضافي لرصيدك الحالي (Adds +1 project to your active quota)", isBestValue = false },
+            new { packageType = plusFive.Type, extra = plusFive.Projects, priceEgp = plusFive.PriceEgp, priceWithVat = plusFive.PriceEgp, label = "🚀 حزمة 5 مشاريع (+5 Projects Package)", description = "إضافة 5 مشاريع إضافية لرصيدك الحالي (Adds +5 projects to your active quota)", isBestValue = true }
         };
 
         return Ok(new ApiResponse<object>
         {
             Success = true,
-            Data = new { topups, plans = topups, vatRate = 0.0m, paymobEnabled = PaymobEnabled }
+            Data = new { topups, plans = topups, vatRate = 0.0m, paymobEnabled = PaymobEnabled, instaPayEnabled = instaPay.IsConfigured }
         });
     }
 

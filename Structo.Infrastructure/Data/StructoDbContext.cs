@@ -36,6 +36,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<SettlementLine> SettlementLines => Set<SettlementLine>();
     public DbSet<SubscriptionTransaction> SubscriptionTransactions => Set<SubscriptionTransaction>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
+    public DbSet<ManualPaymentRequest> ManualPaymentRequests => Set<ManualPaymentRequest>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
     public DbSet<SiteTask> SiteTasks => Set<SiteTask>();
     public DbSet<SiteTaskSettlementItem> SiteTaskSettlementItems => Set<SiteTaskSettlementItem>();
@@ -61,6 +62,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<SiteTaskSettlementItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SiteDailyLog>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
         modelBuilder.Entity<SitePunchItem>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        modelBuilder.Entity<ManualPaymentRequest>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
 
 
         modelBuilder.Entity<Tenant>(entity =>
@@ -350,6 +352,26 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
 
             entity.HasIndex(e => e.TenantId);
             entity.HasIndex(e => e.Status);
+        });
+
+        modelBuilder.Entity<ManualPaymentRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PackageType).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ReferenceCode).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.ScreenshotUrl).HasMaxLength(500);
+            entity.Property(e => e.RejectReason).HasMaxLength(500);
+            entity.Property(e => e.AdminNote).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Tenant)
+                  .WithMany()
+                  .HasForeignKey(e => e.TenantId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ReferenceCode).IsUnique();
+            entity.HasIndex(e => new { e.TenantId, e.Status });
+            entity.HasIndex(e => e.CreatedAt);
         });
 
         modelBuilder.Entity<PaymentAttempt>(entity =>

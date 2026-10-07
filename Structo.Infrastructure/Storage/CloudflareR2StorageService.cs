@@ -150,4 +150,16 @@ public class CloudflareR2StorageService(
         }
         return deletedCount;
     }
+
+    public string GetPrivateReadUrl(string key, TimeSpan validFor)
+    {
+        // Signed against the S3 endpoint (not the public base URL), valid only for validFor
+        return s3Client.GetPreSignedURL(new GetPreSignedUrlRequest
+        {
+            BucketName = _settings.BucketName,
+            Key = key.TrimStart('/'),
+            Expires = DateTime.UtcNow.Add(validFor),
+            Verb = HttpVerb.GET
+        });
+    }
 }

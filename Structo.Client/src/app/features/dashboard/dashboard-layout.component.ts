@@ -334,7 +334,8 @@ export class DashboardLayoutComponent {
           { label: 'DASHBOARD.GLOBAL_OVERVIEW', route: '/dashboard/overview', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.overview) },
           { label: 'DASHBOARD.TENANTS_MGMT', route: '/dashboard/tenants', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.tenants) },
           { label: 'Pending Approvals / تفعيل الحسابات', route: '/dashboard/pending-users', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.users) },
-          { label: 'مدفوعات المنصة / Payment Audit', route: '/dashboard/admin-payments', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.paymentAudit) }
+          { label: 'مدفوعات المنصة / Payment Audit', route: '/dashboard/admin-payments', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.paymentAudit) },
+          { label: 'INSTAPAY.ADMIN_TITLE', route: '/dashboard/payment-requests', icon: this.sanitizer.bypassSecurityTrustHtml(this.icons.paymentAudit) }
         ];
       case 'TenantOwner':
         return [

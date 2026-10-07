@@ -310,6 +310,54 @@ public class NotificationEngine(
         }
     }
 
+    public async Task RaiseManualPaymentSubmittedNotificationAsync(string companyName, string referenceCode, decimal amountEgp, bool receiptUploaded)
+    {
+        var superAdminIds = await context.Set<User>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(u => u.Role == UserRole.SuperAdmin && u.IsActive)
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        var title = receiptUploaded ? "إيصال InstaPay جديد للمراجعة 🧾" : "طلب دفع InstaPay جديد 💳";
+        var message = receiptUploaded
+            ? $"رفعت شركة ({companyName}) إيصال التحويل للطلب {referenceCode} بمبلغ {amountEgp:N0} ج.م. تحقق من وصول المبلغ قبل الاعتماد."
+            : $"طلبت شركة ({companyName}) شراء مشاريع إضافية عبر InstaPay بمبلغ {amountEgp:N0} ج.م — المرجع {referenceCode}.";
+
+        foreach (var superAdminId in superAdminIds)
+        {
+            await notificationService.SendAsync(new SendNotificationDto
+            {
+                TenantId = null,
+                ReceiverId = superAdminId,
+                ProjectId = null,
+                Title = title,
+                Message = message,
+                Type = NotificationType.System,
+                DeepLink = "/dashboard/payment-requests"
+            });
+        }
+    }
+
+    public async Task RaiseManualPaymentResultNotificationAsync(Guid tenantId, string referenceCode, int projectsAdded, bool approved, string? rejectReason)
+    {
+        var ownerId = await recipientResolver.GetTenantOwnerIdAsync(tenantId);
+        if (!ownerId.HasValue) return;
+
+        await notificationService.SendAsync(new SendNotificationDto
+        {
+            TenantId = tenantId,
+            ReceiverId = ownerId.Value,
+            ProjectId = null,
+            Title = approved ? "تم اعتماد الدفع وإضافة المشاريع ✅" : "تعذر اعتماد طلب الدفع ❌",
+            Message = approved
+                ? $"تم التحقق من تحويل InstaPay ({referenceCode}) وإضافة {projectsAdded} مشروع إلى رصيدك."
+                : $"تم رفض طلب الدفع {referenceCode}. السبب: {rejectReason}",
+            Type = NotificationType.System,
+            DeepLink = "/dashboard/subscription"
+        });
+    }
+
     public async Task RaiseAccountActivationNotificationAsync(Guid tenantId)
     {
         var owner = await context.Set<User>()

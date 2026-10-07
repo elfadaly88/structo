@@ -47,13 +47,13 @@ export class SubscriptionService {
   readonly checkoutError = signal<string | null>(null);
 
   /**
-   * Whether online card payment (Paymob) is enabled on the server (Payments:PaymobEnabled).
-   * Treated as disabled when the server does not confirm it.
+   * Which payment methods the server offers: card (Payments:PaymobEnabled) and manual InstaPay
+   * (Payments:InstaPay numbers configured). Each is treated as disabled unless the server confirms it.
    */
-  isPaymobEnabled(): Observable<boolean> {
-    return this.http.get<ApiResponse<{ paymobEnabled?: boolean }>>(`${this.apiUrl}/plans`).pipe(
-      map((res) => !!res.data?.paymobEnabled),
-      catchError(() => of(false))
+  getPaymentOptions(): Observable<{ paymobEnabled: boolean; instaPayEnabled: boolean }> {
+    return this.http.get<ApiResponse<{ paymobEnabled?: boolean; instaPayEnabled?: boolean }>>(`${this.apiUrl}/plans`).pipe(
+      map((res) => ({ paymobEnabled: !!res.data?.paymobEnabled, instaPayEnabled: !!res.data?.instaPayEnabled })),
+      catchError(() => of({ paymobEnabled: false, instaPayEnabled: false }))
     );
   }
 
