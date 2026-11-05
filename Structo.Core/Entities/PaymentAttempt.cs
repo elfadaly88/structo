@@ -32,9 +32,19 @@ public class PaymentAttempt
     public int ExtraProjectsCount { get; set; } = 1;
 
     /// <summary>
-    /// Paymob Order ID or Intention ID generated during checkout
+    /// Paymob's numeric order id (the signed obj.order.id of the webhook). Unique: the webhook finds the attempt by it.
     /// </summary>
     public string? PaymobOrderId { get; set; }
+
+    /// <summary>
+    /// Package bought at checkout (ProjectPackages type, e.g. "PLUS_1"); quantity comes from here, never from the callback
+    /// </summary>
+    public string? PackageType { get; set; }
+
+    /// <summary>
+    /// Server-side price in piasters sent to Paymob; the webhook's signed amount_cents must match it exactly
+    /// </summary>
+    public long AmountCents { get; set; }
 
     /// <summary>
     /// Merchant Order ID / Special Reference sent to Paymob (e.g. SUB_{TenantId}_{ticks})

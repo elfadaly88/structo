@@ -251,6 +251,9 @@ namespace Structo.Infrastructure.Data.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<long>("AmountCents")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -263,6 +266,10 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.Property<Guid?>("LinkedTransactionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("PackageType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("PaymobOrderId")
                         .HasMaxLength(100)
@@ -298,7 +305,9 @@ namespace Structo.Infrastructure.Data.Migrations
 
                     b.HasIndex("LinkedTransactionId");
 
-                    b.HasIndex("PaymobOrderId");
+                    b.HasIndex("PaymobOrderId")
+                        .IsUnique()
+                        .HasFilter("\"PaymobOrderId\" IS NOT NULL");
 
                     b.HasIndex("SpecialReference");
 

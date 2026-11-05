@@ -83,24 +83,32 @@ public class SubscriptionController(
 
         var tenant = user.Tenant;
 
+        // Only the server price list decides what is sold: by package type, or by the package's project count
+        var package = Structo.Core.Services.ProjectPackages.Find(dto.TargetPlanId)
+            ?? Structo.Core.Services.ProjectPackages.ForProjects(dto.ExtraProjectsCount ?? 0);
+        if (package == null)
+        {
+            return BadRequest(new ApiResponse<PaymobCheckoutResponseDto> { Success = false, Message = "INVALID_PACKAGE: Unknown package." });
+        }
+
         try
         {
-            var checkoutResult = await paymobService.CreatePaymentIntentAsync(
-                tenant,
-                user,
-                dto.TargetPlanId,
-                dto.ExtraProjectsCount);
+            var checkoutResult = await paymobService.CreatePaymentIntentAsync(tenant, user, package);
+            if (string.IsNullOrWhiteSpace(checkoutResult.OrderId))
+                throw new InvalidOperationException("Paymob checkout returned no order id.");
 
-            // Explicitly track payment attempt before redirecting to gateway
+            // The webhook finds this row by Paymob's signed order id and credits only what is stored here
             var attempt = new PaymentAttempt
             {
                 TenantId = tenant.Id,
                 UserId = user.Id,
-                Amount = checkoutResult.TotalAmountEgp,
+                Amount = package.PriceEgp,
+                AmountCents = (long)(package.PriceEgp * 100),
+                PackageType = package.Type,
                 PlanRequested = checkoutResult.PlanName,
-                ExtraProjectsCount = dto.ExtraProjectsCount ?? (checkoutResult.PlanName.Contains("5") ? 5 : 1),
+                ExtraProjectsCount = package.Projects,
                 PaymobOrderId = checkoutResult.OrderId,
-                SpecialReference = checkoutResult.OrderId ?? $"SUB_{tenant.Id:N}_{DateTime.UtcNow.Ticks}",
+                SpecialReference = checkoutResult.SpecialReference,
                 CreatedAt = DateTime.UtcNow,
                 WebhookStatus = "Pending"
             };

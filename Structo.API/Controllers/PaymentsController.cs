@@ -27,19 +27,22 @@ public class PaymentsController : ControllerBase
     private readonly INotificationEngine _notificationEngine;
     private readonly ILogger<PaymentsController> _logger;
     private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
+    private readonly ITenantQuotaService _quotaService;
 
     public PaymentsController(
         StructoDbContext context,
         IPaymobService paymobService,
         INotificationEngine notificationEngine,
         ILogger<PaymentsController> logger,
-        Microsoft.Extensions.Configuration.IConfiguration configuration)
+        Microsoft.Extensions.Configuration.IConfiguration configuration,
+        ITenantQuotaService quotaService)
     {
         _context = context;
         _paymobService = paymobService;
         _notificationEngine = notificationEngine;
         _logger = logger;
         _configuration = configuration;
+        _quotaService = quotaService;
     }
 
     /// <summary>
@@ -109,24 +112,8 @@ public class PaymentsController : ControllerBase
             var isValidHmac = _paymobService.ValidateHmac(rawBody, incomingHmac);
             if (!isValidHmac)
             {
-                _logger.LogWarning("Paymob HMAC signature verification failed. Incoming HMAC: {IncomingHmac}", incomingHmac);
-                try
-                {
-                    var failedAttempt = await _context.PaymentAttempts
-                        .IgnoreQueryFilters()
-                        .FirstOrDefaultAsync(pa => (specialRef != "" && pa.SpecialReference == specialRef) || (orderIdStr != "" && pa.PaymobOrderId == orderIdStr));
-                    if (failedAttempt != null)
-                    {
-                        failedAttempt.WebhookReceivedAt = DateTime.UtcNow;
-                        failedAttempt.WebhookStatus = "HmacFailed";
-                        failedAttempt.ErrorMessage = $"HMAC signature verification failed. Incoming HMAC: {incomingHmac}";
-                        await _context.SaveChangesAsync();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to log HmacFailed attempt in database.");
-                }
+                // The body is unsigned, so nothing in it (order id, reference) may change stored data: log only
+                _logger.LogWarning("Paymob HMAC signature verification failed for claimed order {OrderId}. Nothing recorded.", orderIdStr);
 
                 return Unauthorized(new { success = false, message = "HMAC verification failed" });
             }
@@ -146,213 +133,120 @@ public class PaymentsController : ControllerBase
             return Ok(new { success = false, message = "Payments are disabled; nothing was credited." });
         }
 
-        // 4. Check Transaction Success
+        // 4. Find the checkout by Paymob's signed order id. Tenant, package and price come ONLY from this row;
+        //    unsigned fields (extras, data, merchant_order_id) are never used to decide what to credit.
+        var transactionId = objNode["id"]?.ToString() ?? "";
+        var attempt = string.IsNullOrWhiteSpace(orderIdStr)
+            ? null
+            : await _context.PaymentAttempts.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(pa => pa.PaymobOrderId == orderIdStr);
+
+        if (attempt == null)
+        {
+            _logger.LogWarning("Paymob webhook for unknown order {OrderId} (transaction {TxnId}); nothing credited.", orderIdStr, transactionId);
+            return Ok(new { success = false, message = "Unknown order; nothing was credited." });
+        }
+
         var success = objNode["success"]?.GetValue<bool>() ?? false;
         var pending = objNode["pending"]?.GetValue<bool>() ?? false;
-        var transactionId = objNode["id"]?.ToString() ?? "";
+        var refundedOrVoided = (objNode["is_refunded"]?.GetValue<bool>() ?? false) || (objNode["is_voided"]?.GetValue<bool>() ?? false);
         var amountCents = objNode["amount_cents"]?.GetValue<long>() ?? 0;
-        var amountEgp = amountCents > 0 ? (decimal)amountCents / 100m : 0m;
+        var currency = objNode["currency"]?.ToString() ?? "";
         var sourceSubType = objNode["source_data"]?["sub_type"]?.ToString() ?? "Card";
 
-        _logger.LogInformation("Paymob Webhook Transaction {TxnId}: Success={Success}, Pending={Pending}, Amount={Amount} EGP",
-            transactionId, success, pending, amountEgp);
+        _logger.LogInformation("Paymob webhook: order {OrderId}, transaction {TxnId}, success={Success}, pending={Pending}, amount_cents={AmountCents}",
+            orderIdStr, transactionId, success, pending, amountCents);
 
-        if (!success || pending)
+        if (!success || pending || refundedOrVoided)
         {
-            _logger.LogInformation("Transaction {TxnId} is not successful or still pending. No plan upgrade executed.", transactionId);
-            try
-            {
-                var matchingAttempt = await _context.PaymentAttempts
-                    .IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(pa => (specialRef != "" && pa.SpecialReference == specialRef) || (orderIdStr != "" && pa.PaymobOrderId == orderIdStr));
-                if (matchingAttempt != null)
-                {
-                    matchingAttempt.WebhookReceivedAt = DateTime.UtcNow;
-                    matchingAttempt.ErrorMessage = $"Paymob callback status: Success={success}, Pending={pending}";
-                    await _context.SaveChangesAsync();
-                }
-            }
-            catch { }
-
-            return Ok(new { success = true, message = "Callback received but transaction not successful/pending." });
+            await MarkAttemptAsync(attempt.Id, "Failed", $"Paymob transaction {transactionId}: success={success}, pending={pending}, refunded/voided={refundedOrVoided}");
+            return Ok(new { success = true, message = "Callback received; transaction not successful, nothing credited." });
         }
 
-        // 5. Extract TenantId and Plan information
-        Guid? tenantId = null;
-
-        // Try extract from data/extras
-        var tenantIdStr = objNode["data"]?["tenant_id"]?.ToString()
-            ?? objNode["extras"]?["tenant_id"]?.ToString();
-
-        if (!string.IsNullOrWhiteSpace(tenantIdStr) && Guid.TryParse(tenantIdStr, out var parsedTenantId))
+        if (attempt.AmountCents <= 0 || amountCents != attempt.AmountCents || !string.Equals(currency, "EGP", StringComparison.OrdinalIgnoreCase))
         {
-            tenantId = parsedTenantId;
+            _logger.LogWarning("Paymob amount mismatch for order {OrderId}: paid {Paid} {Currency}, expected {Expected} EGP cents. Nothing credited.",
+                orderIdStr, amountCents, currency, attempt.AmountCents);
+            await MarkAttemptAsync(attempt.Id, "AmountMismatch", $"Paid {amountCents} {currency} cents, expected {attempt.AmountCents} EGP cents (transaction {transactionId}).");
+            return Ok(new { success = false, message = "Amount does not match the order; nothing was credited." });
         }
 
-        // Fallback: extract from merchant_order_id or special_reference (e.g. SUB_{Guid}_{ticks})
-        if (!tenantId.HasValue)
-        {
-            var refCode = objNode["order"]?["merchant_order_id"]?.ToString()
-                ?? objNode["order"]?["special_reference"]?.ToString()
-                ?? objNode["special_reference"]?.ToString();
-
-            if (!string.IsNullOrWhiteSpace(refCode) && refCode.StartsWith("SUB_"))
-            {
-                var parts = refCode.Split('_');
-                if (parts.Length >= 2 && Guid.TryParse(parts[1], out var guidFromRef))
-                {
-                    tenantId = guidFromRef;
-                }
-            }
-        }
-
-        if (!tenantId.HasValue)
-        {
-            _logger.LogError("Could not extract Tenant ID from Paymob callback for transaction {TxnId}.", transactionId);
-            return Ok(new { success = false, message = "Tenant ID could not be identified." });
-        }
-
-        // 6. Fetch Tenant with IgnoreQueryFilters
-        var tenant = await _context.Tenants
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(t => t.Id == tenantId.Value);
-
-        if (tenant == null)
-        {
-            _logger.LogError("Tenant with ID {TenantId} not found during Paymob webhook processing.", tenantId);
-            return Ok(new { success = false, message = "Tenant not found" });
-        }
-
-        // 7. Check if transaction was already processed (idempotency check)
+        // 5. Credit exactly once: compare-and-set claims the attempt; the quota increment and the claim commit together,
+        //    so a duplicate or concurrent webhook for the same order finds it already claimed and credits nothing.
         var referenceNumber = $"PAYMOB-{transactionId}";
-        var existingTxn = await _context.SubscriptionTransactions
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(t => t.ReferenceNumber == referenceNumber && t.Status == "Paid");
-
-        if (existingTxn != null)
+        var now = DateTime.UtcNow;
+        var topUp = await _quotaService.InTransactionAsync(async () =>
         {
-            _logger.LogInformation("Transaction {Ref} already processed. Skipping duplicate upgrade.", referenceNumber);
+            var claimed = await _context.PaymentAttempts.IgnoreQueryFilters()
+                .Where(pa => pa.Id == attempt.Id && pa.LinkedTransactionId == null && pa.WebhookStatus != "Confirmed")
+                .ExecuteUpdateAsync(u => u
+                    .SetProperty(pa => pa.WebhookStatus, "Confirmed")
+                    .SetProperty(pa => pa.WebhookReceivedAt, now)
+                    .SetProperty(pa => pa.ErrorMessage, (string?)null));
+            if (claimed == 0)
+                return null;
+
+            var result = await _quotaService.AddProjectsAsync(new QuotaTopUp(
+                attempt.TenantId,
+                attempt.ExtraProjectsCount,
+                attempt.Amount,
+                TransactionType: "AddOnTopUp",
+                PaymentGateway: "Paymob",
+                PaymentMethod: sourceSubType,
+                ReferenceNumber: referenceNumber))
+                ?? throw new InvalidOperationException($"Tenant {attempt.TenantId} of Paymob order {orderIdStr} no longer exists.");
+
+            await _context.PaymentAttempts.IgnoreQueryFilters()
+                .Where(pa => pa.Id == attempt.Id)
+                .ExecuteUpdateAsync(u => u.SetProperty(pa => pa.LinkedTransactionId, result.TransactionId));
+            return result;
+        });
+
+        if (topUp == null)
+        {
+            _logger.LogInformation("Paymob order {OrderId} was already credited; duplicate webhook ignored.", orderIdStr);
             return Ok(new { success = true, message = "Transaction already processed." });
         }
 
-        // 8. Determine Plan Upgrade / Additive Quota
-        var planIdStr = objNode["data"]?["plan_id"]?.ToString()
-            ?? objNode["extras"]?["plan_id"]?.ToString()
-            ?? "Pro";
+        _logger.LogInformation("Paymob order {OrderId}: tenant {TenantId} +{Projects} projects (now {MaxProjects}). Reference {Ref}",
+            orderIdStr, attempt.TenantId, attempt.ExtraProjectsCount, topUp.NewMaxActiveProjects, referenceNumber);
 
-        int extraProjects = 0;
-        var extraProjectsNode = objNode["data"]?["extra_projects"] ?? objNode["extras"]?["extra_projects"];
-        if (extraProjectsNode != null && int.TryParse(extraProjectsNode.ToString(), out var parsedExtra))
-        {
-            extraProjects = parsedExtra;
-        }
-
-        if (extraProjects <= 0)
-        {
-            if (planIdStr.Contains("5") || amountEgp >= 900m)
-                extraProjects = 5;
-            else if (planIdStr.Contains("1") || amountEgp >= 200m)
-                extraProjects = 1;
-            else
-                extraProjects = 1;
-        }
-
-        if (tenant.MaxActiveProjects <= 0)
-            tenant.MaxActiveProjects = 2;
-
-        tenant.MaxActiveProjects += extraProjects;
-        
-        if (Enum.TryParse<SubscriptionPlan>(planIdStr, true, out var parsedPlan))
-        {
-            tenant.SubscriptionPlan = parsedPlan;
-        }
-        else if (planIdStr.Contains("Enterprise", StringComparison.OrdinalIgnoreCase))
-        {
-            tenant.SubscriptionPlan = SubscriptionPlan.Enterprise;
-        }
-        else
-        {
-            tenant.SubscriptionPlan = SubscriptionPlan.Pro;
-        }
-
-        tenant.Status = TenantStatus.Active;
-
-        // 9. Record SubscriptionTransaction / Invoice in DbContext
-        var transaction = new SubscriptionTransaction
-        {
-            TenantId = tenant.Id,
-            TransactionType = extraProjects > 0 ? "AddOnTopUp" : "PlanUpgrade",
-            PlanName = $"+{extraProjects} Projects ({tenant.SubscriptionPlan})",
-            ExtraProjectsAdded = extraProjects,
-            ResultingMaxProjects = tenant.MaxActiveProjects,
-            Amount = amountEgp,
-            TaxAmount = 0m,
-            TotalAmount = amountEgp,
-            PaymentGateway = "Paymob",
-            PaymentMethod = sourceSubType,
-            Status = "Paid",
-            ReferenceNumber = referenceNumber,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.SubscriptionTransactions.Add(transaction);
-        await _context.SaveChangesAsync();
-
-        // 10. Explicitly link and confirm matching PaymentAttempt
+        // 6. Notify the tenant owner (best-effort)
         try
         {
-            var matchingAttempt = await _context.PaymentAttempts
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(pa => (specialRef != "" && pa.SpecialReference == specialRef)
-                    || (orderIdStr != "" && pa.PaymobOrderId == orderIdStr)
-                    || (pa.TenantId == tenant.Id && pa.WebhookStatus == "Pending"));
-
-            if (matchingAttempt != null)
-            {
-                matchingAttempt.WebhookReceivedAt = DateTime.UtcNow;
-                matchingAttempt.WebhookStatus = "Confirmed";
-                matchingAttempt.LinkedTransactionId = transaction.Id;
-                matchingAttempt.ErrorMessage = null;
-                if (string.IsNullOrWhiteSpace(matchingAttempt.PaymobOrderId) && !string.IsNullOrWhiteSpace(transactionId))
-                {
-                    matchingAttempt.PaymobOrderId = transactionId;
-                }
-                await _context.SaveChangesAsync();
-            }
-        }
-        catch (Exception paEx)
-        {
-            _logger.LogError(paEx, "Error updating PaymentAttempt status for transaction {TxnId}", transactionId);
-        }
-
-        _logger.LogInformation("Successfully upgraded Tenant {TenantId} to {MaxProjects} projects. Reference: {Ref}",
-            tenant.Id, tenant.MaxActiveProjects, referenceNumber);
-
-        // 11. Send notification to TenantOwner (best-effort)
-        try
-        {
-            await _notificationEngine.RaiseSubscriptionUpgradedNotificationAsync(
-                tenant.Id,
-                transaction.PlanName,
-                tenant.MaxActiveProjects);
+            await _notificationEngine.RaiseSubscriptionUpgradedNotificationAsync(attempt.TenantId, $"+{attempt.ExtraProjectsCount} Projects", topUp.NewMaxActiveProjects);
         }
         catch (Exception notifEx)
         {
-            _logger.LogWarning(notifEx, "Failed to send subscription upgraded notification to Tenant {TenantId}", tenant.Id);
+            _logger.LogWarning(notifEx, "Failed to send subscription upgraded notification to Tenant {TenantId}", attempt.TenantId);
         }
 
         return Ok(new
         {
             success = true,
             message = "Subscription upgraded successfully",
-            tenantId = tenant.Id,
-            newMaxProjects = tenant.MaxActiveProjects,
+            tenantId = attempt.TenantId,
+            newMaxProjects = topUp.NewMaxActiveProjects,
             reference = referenceNumber
         });
     }
 
+    /// <summary>Records a non-crediting webhook outcome on an attempt that has not been confirmed.</summary>
+    private async Task MarkAttemptAsync(Guid attemptId, string status, string error)
+    {
+        var now = DateTime.UtcNow;
+        var message = error.Length > 500 ? error[..500] : error;
+        await _context.PaymentAttempts.IgnoreQueryFilters()
+            .Where(pa => pa.Id == attemptId && pa.WebhookStatus != "Confirmed")
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(pa => pa.WebhookStatus, status)
+                .SetProperty(pa => pa.WebhookReceivedAt, now)
+                .SetProperty(pa => pa.ErrorMessage, message));
+    }
+
     /// <summary>
-    /// Transaction Response GET Callback (For Redirections from Paymob Checkout)
+    /// Transaction Response GET Callback (For Redirections from Paymob Checkout).
+    /// The browser can forge these query parameters, so this endpoint never credits anything:
+    /// it only shows the result page. Crediting happens solely in the signed POST webhook.
     /// </summary>
     [HttpGet("paymob-callback")]
     [HttpGet("callback")]

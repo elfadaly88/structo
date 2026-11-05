@@ -66,6 +66,10 @@ public class PaymobService : IPaymobService
             ?? configuration["Paymob:IframeId"]
             ?? _settings.IframeId;
 
+        _settings.CallbackUrl = Environment.GetEnvironmentVariable("Paymob__CallbackUrl")
+            ?? configuration["Paymob:CallbackUrl"]
+            ?? _settings.CallbackUrl;
+
         if (string.IsNullOrWhiteSpace(_settings.BaseUrl))
         {
             _settings.BaseUrl = "https://accept.paymob.com";
@@ -75,11 +79,12 @@ public class PaymobService : IPaymobService
     public async Task<PaymobCheckoutResponseDto> CreatePaymentIntentAsync(
         Tenant tenant,
         User user,
-        string? targetPlanId,
-        int? extraProjectsCount)
+        Structo.Core.Services.ProjectPackages.Package package)
     {
-        // 1. Calculate Plan & Pricing
-        var (amountCents, planName, totalEgp) = CalculatePricing(targetPlanId, extraProjectsCount);
+        // 1. Price and quantity from the server price list only
+        var totalEgp = package.PriceEgp;
+        var amountCents = (int)(package.PriceEgp * 100);
+        var planName = $"+{package.Projects} Projects";
 
         var firstName = !string.IsNullOrWhiteSpace(user.FirstName) ? user.FirstName.Trim() : "Client";
         var lastName = !string.IsNullOrWhiteSpace(user.LastName) ? user.LastName.Trim() : (tenant.Name ?? "User");
@@ -114,7 +119,7 @@ public class PaymobService : IPaymobService
                 var intentionUrl = $"{_settings.BaseUrl.TrimEnd('/')}/v1/intention/";
                 using var request = new HttpRequestMessage(HttpMethod.Post, intentionUrl);
                 request.Headers.Add("Authorization", $"Token {_settings.SecretKey}");
-                var callbackEndpoint = "https://structo-production.up.railway.app/api/payments/callback";
+                var callbackEndpoint = _settings.CallbackUrl;
                 var intentionPayload = new Dictionary<string, object>
                 {
                     ["amount"] = amountCents,
@@ -137,11 +142,10 @@ public class PaymobService : IPaymobService
                         ["last_name"] = lastName,
                         ["email"] = email
                     },
+                    // Informational only: the webhook never reads extras (they are not covered by the HMAC)
                     ["extras"] = new Dictionary<string, object>
                     {
-                        ["tenant_id"] = tenant.Id.ToString(),
-                        ["plan_id"] = planName,
-                        ["extra_projects"] = extraProjectsCount ?? (planName.Contains("5") ? 5 : 1)
+                        ["package"] = package.Type
                     },
                     ["special_reference"] = specialReference
                     ,
@@ -178,6 +182,16 @@ public class PaymobService : IPaymobService
                             paymentKeysToken = keyVal.GetString();
                     }
 
+                    // Paymob's numeric order id: the signed obj.order.id of the webhook. Without it the payment could never be credited.
+                    string? paymobOrderId = null;
+                    if (root.TryGetProperty("intention_order_id", out var ioProp) && ioProp.ValueKind == JsonValueKind.Number)
+                        paymobOrderId = ioProp.GetInt64().ToString();
+                    else if (pkProp.ValueKind == JsonValueKind.Array && pkProp.GetArrayLength() > 0
+                        && pkProp[0].TryGetProperty("order_id", out var pkOrder) && pkOrder.ValueKind == JsonValueKind.Number)
+                        paymobOrderId = pkOrder.GetInt64().ToString();
+                    if (paymobOrderId == null)
+                        throw new InvalidOperationException("Paymob intention response did not include an order id.");
+
                     string checkoutUrl = string.Empty;
                     if (!string.IsNullOrWhiteSpace(clientSecret) && !string.IsNullOrWhiteSpace(_settings.PublicKey))
                     {
@@ -198,7 +212,8 @@ public class PaymobService : IPaymobService
                         CheckoutUrl = checkoutUrl,
                         ClientSecret = clientSecret,
                         PaymentToken = paymentKeysToken,
-                        OrderId = specialReference,
+                        OrderId = paymobOrderId,
+                        SpecialReference = specialReference,
                         AmountCents = amountCents,
                         Currency = "EGP",
                         PlanName = planName,
@@ -328,6 +343,7 @@ public class PaymobService : IPaymobService
             CheckoutUrl = checkoutUrl,
             PaymentToken = paymentToken,
             OrderId = orderId,
+            SpecialReference = specialReference,
             AmountCents = amountCents,
             Currency = "EGP",
             PlanName = planName,
@@ -453,30 +469,5 @@ public class PaymobService : IPaymobService
         using var hmac = new HMACSHA512(keyBytes);
         var hashBytes = hmac.ComputeHash(textBytes);
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
-    }
-
-    private static (int AmountCents, string PlanName, decimal TotalEgp) CalculatePricing(
-        string? targetPlanId,
-        int? extraProjectsCount)
-    {
-        // Package prices come from the shared server price list (ProjectPackages)
-        var plusOne = Structo.Core.Services.ProjectPackages.PlusOne;
-        var plusFive = Structo.Core.Services.ProjectPackages.PlusFive;
-
-        if (extraProjectsCount.HasValue && extraProjectsCount.Value > 0)
-        {
-            var count = extraProjectsCount.Value;
-            var egp = Structo.Core.Services.ProjectPackages.ForProjects(count)?.PriceEgp ?? count * 200m;
-            return ((int)(egp * 100), $"+{count} Projects", egp);
-        }
-
-        var plan = targetPlanId?.Trim().ToLowerInvariant() ?? "";
-
-        if (plan.Contains("enterprise") || plan.Contains("5"))
-        {
-            return ((int)(plusFive.PriceEgp * 100), "+5 Projects Package", plusFive.PriceEgp);
-        }
-
-        return ((int)(plusOne.PriceEgp * 100), "+1 Project", plusOne.PriceEgp);
     }
 }

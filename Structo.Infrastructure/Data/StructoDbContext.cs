@@ -380,6 +380,7 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(e => e.Amount).HasColumnType("numeric(18,2)").IsRequired();
             entity.Property(e => e.PlanRequested).IsRequired().HasMaxLength(50);
             entity.Property(e => e.PaymobOrderId).HasMaxLength(100);
+            entity.Property(e => e.PackageType).HasMaxLength(20);
             entity.Property(e => e.SpecialReference).IsRequired().HasMaxLength(100);
             entity.Property(e => e.WebhookStatus).IsRequired().HasMaxLength(30);
             entity.Property(e => e.ErrorMessage).HasMaxLength(500);
@@ -400,7 +401,8 @@ public class StructoDbContext : DbContext, IDataProtectionKeyContext
                   .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => e.TenantId);
-            entity.HasIndex(e => e.PaymobOrderId);
+            // One attempt per Paymob order: the webhook resolves tenant and package from this row only
+            entity.HasIndex(e => e.PaymobOrderId).IsUnique().HasFilter("\"PaymobOrderId\" IS NOT NULL");
             entity.HasIndex(e => e.SpecialReference);
             entity.HasIndex(e => e.WebhookStatus);
             entity.HasIndex(e => e.CreatedAt);

@@ -14,7 +14,10 @@ public class PaymobCheckoutResponseDto
     public string CheckoutUrl { get; set; } = string.Empty;
     public string? ClientSecret { get; set; }
     public string? PaymentToken { get; set; }
+    /// <summary>Paymob's numeric order id (matches the webhook's obj.order.id)</summary>
     public string? OrderId { get; set; }
+    /// <summary>Our merchant reference sent to Paymob (SUB_{tenant}_{ticks})</summary>
+    public string SpecialReference { get; set; } = string.Empty;
     public int AmountCents { get; set; }
     public string Currency { get; set; } = "EGP";
     public string PlanName { get; set; } = string.Empty;

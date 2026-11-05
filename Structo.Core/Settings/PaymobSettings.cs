@@ -9,4 +9,6 @@ public class PaymobSettings
     public string ApiKey { get; set; } = string.Empty;
     public string IframeId { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = "https://accept.paymob.com";
+    /// <summary>Public URL of POST/GET /api/payments/callback sent as notification_url and redirection_url</summary>
+    public string CallbackUrl { get; set; } = "https://structo-production.up.railway.app/api/payments/callback";
 }

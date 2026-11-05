@@ -8,12 +8,13 @@ public interface IPaymobService
 {
     /// <summary>
     /// Creates a payment intention / payment key with Paymob and returns checkout URL.
+    /// Price and quantity come only from the server price list (<paramref name="package"/>); the returned OrderId
+    /// is Paymob's numeric order id, which the webhook uses to find the attempt.
     /// </summary>
     Task<PaymobCheckoutResponseDto> CreatePaymentIntentAsync(
         Tenant tenant,
         User user,
-        string? targetPlanId,
-        int? extraProjectsCount);
+        Structo.Core.Services.ProjectPackages.Package package);
 
     /// <summary>
     /// Validates HMAC signature from Paymob transaction payload.
