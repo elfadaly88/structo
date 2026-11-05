@@ -8,241 +8,179 @@ import { PublicDirectoryService, TenantDto, PublicTenantPortfolioDto, PublicProj
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
+import { BrandComponent } from '../../core/components/brand.component';
 
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [ApiDatePipe, CommonModule, RouterLink, TranslatePipe, FormsModule],
+  imports: [ApiDatePipe, CommonModule, RouterLink, TranslatePipe, FormsModule, BrandComponent],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white overflow-x-hidden">
       <!-- Nav Bar -->
-      <nav class="fixed top-0 left-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <div class="h-8 w-8 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-            <span class="text-white font-extrabold text-sm">أ</span>
-          </div>
-          <span class="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-cairo">أسس / Osos</span>
-        </div>
-        <div class="flex items-center gap-2 md:gap-4">
-          <a href="#marketplace" class="hidden sm:inline-block text-xs md:text-sm font-semibold text-slate-400 hover:text-white transition-colors duration-200 font-cairo">
-            {{ 'USERS.TAB_USERS' | translate }}
+      <nav class="fixed top-0 inset-x-0 z-50 bg-slate-950/85 backdrop-blur-md border-b border-slate-900/80 pt-[env(safe-area-inset-top)]">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex justify-between items-center gap-3">
+          <a routerLink="/" class="shrink-0" aria-label="أسس Osos">
+            <app-brand size="sm" />
           </a>
-          <button 
-            (click)="langService.toggleLanguage()"
-            class="text-[10px] md:text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95">
-            {{ langService.currentLang() === 'en' ? 'عربي' : 'English' }}
-          </button>
-          @if (authService.isAuthenticated()) {
-            <span class="hidden lg:inline-block text-xs md:text-sm text-slate-400 font-medium font-cairo">
-              Welcome back, <span class="text-white font-semibold">{{ authService.currentUser()?.name }}</span>
-            </span>
-            <a routerLink="/dashboard" class="relative group overflow-hidden px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-indigo-600 text-xs md:text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-              <span class="relative z-10">Dashboard</span>
-              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </a>
-          } @else {
-            <a routerLink="/login" class="text-xs md:text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 font-cairo px-1">
-              {{ 'NAV.LOGIN' | translate }}
-            </a>
-            <button (click)="navigateToLogin()" class="relative group overflow-hidden px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-indigo-600 text-xs md:text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-cairo">
-              <span class="relative z-10">{{ 'NAV.GET_STARTED' | translate }}</span>
-              <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-400 font-cairo">
+            <a href="#features" class="hover:text-white transition-colors">{{ isAr() ? 'المميزات' : 'Features' }}</a>
+            <a href="#pricing" class="hover:text-white transition-colors">{{ isAr() ? 'الأسعار' : 'Pricing' }}</a>
+            <a href="#marketplace" class="hover:text-white transition-colors">{{ isAr() ? 'دليل الشركات' : 'Directory' }}</a>
+            <a href="#faq" class="hover:text-white transition-colors">{{ isAr() ? 'الأسئلة الشائعة' : 'FAQ' }}</a>
+          </div>
+          <div class="flex items-center gap-2 md:gap-3">
+            <button type="button" (click)="langService.toggleLanguage()"
+              class="text-xs font-semibold text-indigo-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/15 transition">
+              {{ isAr() ? 'English' : 'عربي' }}
             </button>
-          }
+            @if (authService.isAuthenticated()) {
+              <a routerLink="/dashboard" class="px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs md:text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition font-cairo">
+                {{ isAr() ? 'لوحة التحكم' : 'Dashboard' }}
+              </a>
+            } @else {
+              <a routerLink="/login" class="hidden sm:inline text-sm font-semibold text-slate-300 hover:text-white transition font-cairo px-1">{{ 'NAV.LOGIN' | translate }}</a>
+              <a routerLink="/register" class="px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs md:text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition font-cairo">
+                {{ isAr() ? 'ابدأ مجاناً' : 'Start free' }}
+              </a>
+            }
+          </div>
         </div>
       </nav>
 
-      <!-- Hero Section -->
-      <header class="relative pt-32 pb-16 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
-        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-        <div class="absolute top-1/3 left-1/3 w-[300px] h-[300px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <main>
+      <!-- Hero -->
+      <header class="relative pt-28 md:pt-36 pb-16 md:pb-24 px-4 md:px-6 max-w-7xl mx-auto text-center">
+        <div class="absolute top-24 left-1/2 -translate-x-1/2 w-[min(560px,90vw)] h-[min(560px,90vw)] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/5 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-8 animate-fade-in-down">
-          <span>{{ 'HERO.LIVE_TAG' | translate }}</span>
-        </div>
+        <p class="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-300 text-xs font-bold mb-6 font-cairo">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+          {{ isAr() ? 'مشروعين مجاناً، بدون اشتراك شهري' : 'Two projects free, no monthly subscription' }}
+        </p>
 
-        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight max-w-5xl leading-tight mb-8 font-cairo">
-          @if (langService.currentLang() === 'ar') {
-            أسس | اضبط عُهد مشاريعك، وراقب مصاريف موقعك <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">في ثانية وبدون محاسب</span>
+        <h1 class="relative text-[2rem] leading-[1.25] sm:text-5xl md:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto mb-6 font-cairo text-white">
+          @if (isAr()) {
+            اضبط عُهد مشاريعك وراقب مصاريف موقعك
+            <span class="block bg-gradient-to-l from-indigo-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">من غير إكسيل ومن غير محاسب</span>
           } @else {
-            Osos | Track your project cash & monitor site expenses <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">instantly without an accountant</span>
+            Control site cash and track every project expense
+            <span class="block bg-gradient-to-r from-indigo-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">without spreadsheets or an accountant</span>
           }
         </h1>
 
-        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed font-cairo">
-          {{ 'HERO.SUBTITLE' | translate }}
+        <p class="relative text-base md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-cairo">
+          {{ heroText() }}
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-4 mb-12">
+        <div class="relative flex flex-col sm:flex-row gap-3 justify-center max-w-sm sm:max-w-none mx-auto">
           @if (authService.isAuthenticated()) {
-            <a routerLink="/dashboard" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
-              Go to Dashboard
-              <span class="inline-block transform transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 ml-1 rtl:mr-1 rtl:ml-0">&rarr;</span>
+            <a routerLink="/dashboard" class="px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-xl shadow-indigo-600/30 transition font-cairo">
+              {{ isAr() ? 'افتح لوحة التحكم' : 'Open dashboard' }}
             </a>
           } @else {
-            <button (click)="navigateToLogin()" class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer font-cairo">
-              {{ langService.currentLang() === 'ar' ? 'ابدأ مشروعك الأول مجاناً فوراً' : 'Start Your First Project Free Now' }}
-              <span class="inline-block transform transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 ml-1 rtl:mr-1 rtl:ml-0">&rarr;</span>
-            </button>
+            <a routerLink="/register" class="px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-xl shadow-indigo-600/30 transition font-cairo">
+              {{ isAr() ? 'سجّل شركتك وابدأ مجاناً' : 'Register your company free' }}
+            </a>
           }
-          <a href="#marketplace" class="px-8 py-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 font-semibold text-slate-300 hover:text-white transition-all duration-300 font-cairo">
-            {{ 'MARKETPLACE.VIEW_PORTFOLIO' | translate }}
+          <a href="#features" class="px-8 py-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 font-bold text-slate-200 transition font-cairo">
+            {{ isAr() ? 'شوف بيعمل إيه' : 'See how it works' }}
           </a>
         </div>
 
-        <!-- Scroll Down Indicator to Marketplace -->
-        <a href="#marketplace" class="group flex flex-col items-center gap-2 cursor-pointer transition-all duration-300 hover:opacity-100 opacity-80 mt-2">
-          <span class="text-xs font-semibold text-slate-400 group-hover:text-indigo-400 font-cairo transition-colors duration-200">
-            {{ langService.currentLang() === 'ar' ? 'استكشف دليل الشركات والمشاريع المسجلة بالمنصة' : 'Explore Registered Companies & Portfolios' }}
-          </span>
-          <div class="w-9 h-9 rounded-full border border-indigo-500/30 bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/20 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-500 animate-bounce transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </div>
-        </a>
+        <ul class="relative mt-12 grid grid-cols-3 gap-2 sm:gap-4 max-w-2xl mx-auto text-center font-cairo">
+          @for (s of heroStats(); track s.label) {
+            <li class="rounded-2xl border border-slate-800/80 bg-slate-900/40 px-2 py-4">
+              <p class="text-xl sm:text-2xl font-extrabold text-white">{{ s.value }}</p>
+              <p class="text-[11px] sm:text-xs text-slate-400 mt-1 leading-snug">{{ s.label }}</p>
+            </li>
+          }
+        </ul>
       </header>
 
-      <!-- Modern 3-Card Pricing Section -->
-      <section id="pricing" class="py-20 px-6 max-w-6xl mx-auto border-t border-slate-900">
-        <!-- Section Header -->
-        <div class="text-center mb-14 max-w-3xl mx-auto">
-          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3 font-cairo text-white">
-            {{ langService.currentLang() === 'ar' ? 'خطط أسعار مرنة تناسب حجم أعمالك' : 'Transparent & Flexible Pricing' }}
+      <!-- Features -->
+      <section id="features" class="scroll-mt-20 py-16 md:py-24 px-4 md:px-6 border-t border-slate-900">
+        <div class="max-w-6xl mx-auto">
+          <div class="text-center max-w-2xl mx-auto mb-12">
+            <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 font-cairo text-white">
+              {{ isAr() ? 'كل اللي محتاجه عشان تمسك فلوس الموقع' : 'Everything you need to control site money' }}
+            </h2>
+            <p class="text-slate-400 font-cairo leading-relaxed">
+              {{ isAr() ? 'مصمم لشركات التشطيبات والديكور والمقاولات والمهندسين المستقلين في مصر.' : 'Built for finishing, interior and contracting companies and freelance engineers in Egypt.' }}
+            </p>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            @for (f of features(); track f.title) {
+              <article class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 sm:p-6 hover:border-indigo-500/40 transition">
+                <div class="h-11 w-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl mb-4" aria-hidden="true">{{ f.icon }}</div>
+                <h3 class="text-lg font-bold text-white font-cairo mb-2">{{ f.title }}</h3>
+                <p class="text-sm text-slate-400 leading-relaxed font-cairo">{{ f.text }}</p>
+              </article>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="py-16 md:py-20 px-4 md:px-6 border-t border-slate-900 bg-slate-900/20">
+        <div class="max-w-5xl mx-auto">
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-10 font-cairo text-white text-center">
+            {{ isAr() ? 'دورة العُهدة في أسس' : 'The custody cycle in Osos' }}
           </h2>
-          <p class="text-slate-400 font-cairo text-sm sm:text-base leading-relaxed">
-            {{ langService.currentLang() === 'ar' ? 'جميع الأسعار بالجنيه المصري والدفع مرة واحدة بدون أي اشتراكات شهرية متكررة.' : 'All prices in EGP with one-time payment and zero recurring monthly fees.' }}
-          </p>
+          <ol class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            @for (step of steps(); track step.title; let i = $index) {
+              <li class="relative rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+                <span class="absolute -top-3 start-5 h-7 w-7 rounded-full bg-indigo-600 text-white text-sm font-black flex items-center justify-center shadow-lg shadow-indigo-600/30">{{ i + 1 }}</span>
+                <h3 class="mt-2 font-bold text-white font-cairo">{{ step.title }}</h3>
+                <p class="mt-1.5 text-sm text-slate-400 leading-relaxed font-cairo">{{ step.text }}</p>
+              </li>
+            }
+          </ol>
         </div>
+      </section>
 
-        <!-- 3-Card Pricing Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
-
-          <!-- Card 1: Free Lifetime Plan -->
-          <div class="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-slate-700 transition-all duration-300 shadow-xl relative group">
-            <div>
-              <div class="flex items-center justify-between mb-4">
-                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">🎁 مجاناً للأبد</span>
-                <span class="text-xs font-mono text-slate-500 font-bold">0 EGP</span>
-              </div>
-              <h3 class="text-xl font-bold text-white font-cairo mb-2">الباقة المجانية / Free</h3>
-              <div class="my-4">
-                <span class="text-3xl font-extrabold text-emerald-400 font-mono">0 ج.م</span>
-                <span class="text-xs text-slate-400 font-cairo block mt-1">مجاني مدى الحياة / Free Forever</span>
-              </div>
-              <ul class="space-y-3 my-6 text-xs text-slate-300 font-cairo">
-                <li class="flex items-center gap-2">
-                  <span class="text-emerald-400 font-bold">✓</span>
-                  <span>2 مشاريع مجاناً مدى الحياة (2 Lifetime Projects)</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="text-emerald-400 font-bold">✓</span>
-                  <span>إمكانية تجربة كامل ميزات المنصة</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="text-emerald-400 font-bold">✓</span>
-                  <span>بدون أي بطاقة إئتمانية</span>
-                </li>
-              </ul>
-            </div>
-            <button 
-              (click)="onSelectPricingPlan(0)"
-              class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-md cursor-pointer block">
-              <span>ابدأ مجاناً الان / Start Free</span>
-            </button>
+      <!-- Pricing -->
+      <section id="pricing" class="scroll-mt-20 py-16 md:py-24 px-4 md:px-6 border-t border-slate-900">
+        <div class="max-w-6xl mx-auto">
+          <div class="text-center mb-12 max-w-2xl mx-auto">
+            <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 font-cairo text-white">
+              {{ isAr() ? 'أسعار واضحة بالمشروع' : 'Simple per-project pricing' }}
+            </h2>
+            <p class="text-slate-400 font-cairo leading-relaxed">
+              {{ isAr() ? 'ادفع مرة واحدة لكل مشروع إضافي، بدون اشتراك شهري. رصيد المشاريع بتاعك مدى الحياة. الدفع حالياً عن طريق InstaPay.' : 'Pay once per extra project, no monthly fees. Your project credit never expires. Payment is via InstaPay.' }}
+            </p>
           </div>
 
-          <!-- Card 2: +1 Single Project Topup -->
-          <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-xl relative group">
-            <div>
-              <div class="flex items-center justify-between mb-4">
-                <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-cairo">📦 مشروع إضافي</span>
-                <span class="text-xs font-mono text-slate-400 font-bold">250 EGP</span>
-              </div>
-              <h3 class="text-xl font-bold text-white font-cairo mb-2">مشروع إضافي / Single Project</h3>
-              <div class="my-4">
-                <span class="text-3xl font-extrabold text-white font-mono">250 ج.م</span>
-                <span class="text-xs text-slate-400 font-cairo block mt-1">دفع مرة واحدة / One-Time Payment</span>
-              </div>
-              <ul class="space-y-3 my-6 text-xs text-slate-300 font-cairo">
-                <li class="flex items-center gap-2">
-                  <span class="text-indigo-400 font-bold">✓</span>
-                  <span>إضافة مشروع 1 إضافي لرصيدك الحالي</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="text-indigo-400 font-bold">✓</span>
-                  <span>تفعيل فوري ومباشر</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="text-indigo-400 font-bold">✓</span>
-                  <span>الملكية دائمة بدون اشتراك شهري</span>
-                </li>
-              </ul>
-            </div>
-            <button 
-              (click)="onSelectPricingPlan(1)"
-              class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-lg shadow-indigo-600/30 cursor-pointer block">
-              <span>شراء مشروع إضافي / Buy Single Project</span>
-            </button>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+            @for (plan of plans(); track plan.key) {
+              <article class="relative rounded-3xl p-6 sm:p-7 flex flex-col border transition"
+                [class]="plan.highlight ? 'border-2 border-indigo-500 bg-gradient-to-b from-indigo-950/60 to-slate-900 shadow-xl shadow-indigo-500/20' : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'">
+                @if (plan.badge) {
+                  <span class="absolute -top-3 start-6 px-3 py-1 rounded-full text-[11px] font-black bg-amber-400 text-slate-950 font-cairo shadow">{{ plan.badge }}</span>
+                }
+                <h3 class="text-lg font-bold text-white font-cairo">{{ plan.name }}</h3>
+                <p class="mt-4 flex items-baseline gap-2">
+                  <span class="text-4xl font-extrabold font-sans" [class]="plan.price === 0 ? 'text-emerald-400' : 'text-white'">{{ plan.price === 0 ? (isAr() ? 'مجاناً' : 'Free') : (plan.price | number) }}</span>
+                  @if (plan.price > 0) { <span class="text-sm font-bold text-slate-400 font-cairo">{{ isAr() ? 'ج.م' : 'EGP' }}</span> }
+                  @if (plan.was) { <span class="text-sm text-slate-500 line-through font-sans">{{ plan.was | number }}</span> }
+                </p>
+                <p class="mt-1 text-xs text-slate-400 font-cairo">{{ plan.note }}</p>
+                <ul class="mt-6 mb-8 space-y-3 text-sm text-slate-300 font-cairo flex-1">
+                  @for (item of plan.items; track item) {
+                    <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold mt-0.5" aria-hidden="true">✓</span><span>{{ item }}</span></li>
+                  }
+                </ul>
+                <button type="button" (click)="onSelectPricingPlan(plan.projects)"
+                  class="w-full py-3 px-4 rounded-xl font-bold text-sm font-cairo transition"
+                  [class]="plan.highlight ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'">
+                  {{ plan.cta }}
+                </button>
+              </article>
+            }
           </div>
-
-          <!-- Card 3: +5 Projects Package (Highlighted Card) -->
-          <div class="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-amber-950/30 border-2 border-indigo-500 shadow-xl shadow-indigo-500/20 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-indigo-400 transition-all duration-300 relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-indigo-600 text-white text-[10px] font-black uppercase px-3.5 py-1 rounded-bl-2xl font-cairo shadow-md">
-              ⭐️ الأكثر مبيعاً - توفير 300 ج.م
-            </div>
-            <div class="pt-2">
-              <div class="flex items-center justify-between mb-4">
-                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 font-cairo">🚀 حزمة 5 مشاريع</span>
-                <span class="text-xs font-mono text-amber-400 font-bold">950 EGP</span>
-              </div>
-              <h3 class="text-xl font-extrabold text-white font-cairo mb-2">حزمة 5 مشاريع / +5 Projects</h3>
-              <div class="my-4">
-                <div class="flex items-baseline gap-2">
-                  <span class="text-3xl font-extrabold text-amber-400 font-mono">950 ج.م</span>
-                  <span class="text-sm text-slate-500 line-through font-mono">1,250 ج.م</span>
-                </div>
-                <span class="text-xs text-amber-300/90 font-cairo block mt-1">دفع مرة واحدة بدلاً من 1250 ج.م</span>
-              </div>
-              <ul class="space-y-3 my-6 text-xs text-slate-200 font-cairo">
-                <li class="flex items-center gap-2">
-                  <span class="text-amber-400 font-bold">✓</span>
-                  <span>إضافة 5 مشاريع كاملة لرصيدك الحالي</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="text-amber-400 font-bold">✓</span>
-                  <span>توفير 300 ج.م فوراً</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="text-amber-400 font-bold">✓</span>
-                  <span>أولوية والدعم الفني</span>
-                </li>
-              </ul>
-            </div>
-            <button 
-              (click)="onSelectPricingPlan(5)"
-              class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl font-cairo transition-all duration-200 text-center shadow-xl shadow-indigo-600/30 active:scale-[0.98] ring-2 ring-amber-500/30 cursor-pointer block">
-              <span>اشترِ الحزمة ووفر الان / Buy Package & Save</span>
-            </button>
-          </div>
-
-        </div>
-
-        <!-- Scroll Down Cue to Directory -->
-        <div class="mt-12 text-center flex flex-col items-center">
-          <a href="#marketplace" class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-slate-800 hover:border-indigo-500/40 bg-slate-900/60 hover:bg-indigo-950/30 text-xs font-bold text-slate-300 hover:text-indigo-300 transition-all duration-300 shadow-lg group cursor-pointer font-cairo">
-            <span>{{ langService.currentLang() === 'ar' ? 'تصفح قائمة الشركات والمشاريع المشتركة معنا' : 'Browse Subscribed Companies & Projects Directory' }}</span>
-            <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 animate-bounce">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </a>
         </div>
       </section>
 
       <!-- MARKETPLACE SaaS DIRECTORY -->
-      <section id="marketplace" class="py-20 px-6 border-t border-slate-900 bg-slate-900/10 relative">
+      <section id="marketplace" class="scroll-mt-20 py-16 md:py-24 px-4 md:px-6 border-t border-slate-900 bg-slate-900/10 relative">
         <div class="max-w-7xl mx-auto">
           <div class="text-center max-w-3xl mx-auto mb-12">
             <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 font-cairo">
@@ -744,9 +682,59 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
         </div>
       }
 
+      <!-- FAQ -->
+      <section id="faq" class="scroll-mt-20 py-16 md:py-24 px-4 md:px-6 border-t border-slate-900">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-8 font-cairo text-white text-center">
+            {{ isAr() ? 'الأسئلة الشائعة' : 'Frequently asked questions' }}
+          </h2>
+          <div class="space-y-3">
+            @for (q of faqs(); track q.q) {
+              <details class="group rounded-2xl border border-slate-800 bg-slate-900/40 open:border-indigo-500/40">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4 p-5 font-bold text-white font-cairo">
+                  <span>{{ q.q }}</span>
+                  <span class="text-indigo-300 transition group-open:rotate-45 text-xl leading-none" aria-hidden="true">+</span>
+                </summary>
+                <p class="px-5 pb-5 -mt-1 text-sm text-slate-400 leading-relaxed font-cairo">{{ q.a }}</p>
+              </details>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Final CTA -->
+      @if (!authService.isAuthenticated()) {
+        <section class="px-4 md:px-6 pb-20">
+          <div class="max-w-5xl mx-auto rounded-3xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/70 via-slate-900 to-slate-950 p-8 sm:p-12 text-center">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white font-cairo">{{ isAr() ? 'ابدأ أول مشروعين مجاناً النهارده' : 'Start your first two projects free today' }}</h2>
+            <p class="mt-3 text-slate-400 font-cairo">{{ isAr() ? 'التسجيل في دقيقة، ومن غير بطاقة بنكية.' : 'Sign up in a minute, no bank card needed.' }}</p>
+            <a routerLink="/register" class="mt-7 inline-block px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-xl shadow-indigo-600/30 transition font-cairo">
+              {{ isAr() ? 'سجّل شركتك مجاناً' : 'Register your company free' }}
+            </a>
+          </div>
+        </section>
+      }
+      </main>
+
       <!-- Footer -->
-      <footer class="py-12 border-t border-slate-900 text-center text-slate-600 text-sm">
-        <p>{{ 'FOOTER.COPYRIGHT' | translate }}</p>
+      <footer class="border-t border-slate-900 px-4 md:px-6 pt-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between gap-8 text-center md:text-start">
+          <div class="max-w-sm">
+            <app-brand size="sm" />
+            <p class="mt-3 text-sm text-slate-500 leading-relaxed font-cairo">
+              {{ isAr() ? 'منصة إدارة عُهد ومصاريف ومتابعة تنفيذ مشاريع التشطيبات والمقاولات.' : 'Custody, expense and site-progress management for finishing and contracting projects.' }}
+            </p>
+          </div>
+          <nav class="grid grid-cols-2 gap-x-10 gap-y-2 text-sm font-cairo" aria-label="Footer">
+            <a href="#features" class="text-slate-400 hover:text-white">{{ isAr() ? 'المميزات' : 'Features' }}</a>
+            <a routerLink="/register" class="text-slate-400 hover:text-white">{{ isAr() ? 'تسجيل شركة' : 'Register' }}</a>
+            <a href="#pricing" class="text-slate-400 hover:text-white">{{ isAr() ? 'الأسعار' : 'Pricing' }}</a>
+            <a routerLink="/login" class="text-slate-400 hover:text-white">{{ isAr() ? 'تسجيل الدخول' : 'Log in' }}</a>
+            <a href="#marketplace" class="text-slate-400 hover:text-white">{{ isAr() ? 'دليل الشركات' : 'Directory' }}</a>
+            <a href="#faq" class="text-slate-400 hover:text-white">{{ isAr() ? 'الأسئلة الشائعة' : 'FAQ' }}</a>
+          </nav>
+        </div>
+        <p class="mt-10 text-center text-xs text-slate-600 font-cairo">{{ 'FOOTER.COPYRIGHT' | translate }}</p>
       </footer>
     </div>
   `,
@@ -764,6 +752,94 @@ export class LandingPageComponent implements OnInit {
   private readonly whatsappLink = inject(WhatsAppLinkService);
   private readonly renderer = inject(Renderer2);
   private readonly document = inject(DOCUMENT);
+
+  // ----- Marketing content (Arabic first, English when the visitor switches language) -----
+  readonly isAr = computed(() => this.langService.currentLang() !== 'en');
+
+  readonly heroText = computed(() => this.isAr()
+    ? 'أسس بيربط صاحب الشركة والمحاسب ومهندس الموقع في مكان واحد: عُهدة بتتطلب وتتعتمد، وتسوية بالفواتير، ودفتر مالي لكل مشروع، ورابط يتابع منه العميل التنفيذ من غير ما يشوف أي أرقام.'
+    : 'Osos connects the owner, the accountant and the site engineer: custody requested and approved, settled with receipts, a ledger per project, and a client link that shows progress without any figures.');
+
+  readonly heroStats = computed(() => this.isAr()
+    ? [{ value: '2', label: 'مشروع مجاناً' }, { value: '0', label: 'اشتراك شهري' }, { value: '5', label: 'أدوار وصلاحيات' }]
+    : [{ value: '2', label: 'free projects' }, { value: '0', label: 'monthly fees' }, { value: '5', label: 'team roles' }]);
+
+  readonly features = computed(() => this.isAr()
+    ? [
+        { icon: '💼', title: 'العُهد والتسويات', text: 'المهندس يطلب العُهدة، وانت أو المحاسب تعتمدها من الصندوق، وبعدها يسوّيها بنود بفواتيرها ويرجّع الباقي أو ياخد فرقه.' },
+        { icon: '📒', title: 'دفتر مالي لكل مشروع', text: 'إيرادات العميل، المصروفات، صناديق المشروع، والصرف المباشر، مع رصيد صافي محدّث في أي لحظة.' },
+        { icon: '🏗️', title: 'متابعة التنفيذ', text: 'بنود أعمال بأوزان ونِسب إنجاز، يوميات الموقع، وقائمة ملاحظات الاستلام بصور قبل وبعد.' },
+        { icon: '🔗', title: 'رابط متابعة للعميل', text: 'ابعت للعميل رابط يشوف منه نسبة الإنجاز والبنود وصور الموقع، من غير أي أرقام مالية.' },
+        { icon: '📊', title: 'تقارير وإقفال المشروع', text: 'تقرير لكل مشروع وتقرير شامل للشركة، وإقفال نهائي بعد مطابقة كل العُهد والصناديق.' },
+        { icon: '👥', title: 'فريق وصلاحيات', text: 'مالك، مدير مشروع، محاسب، مهندس موقع، ومهندس تصميم، وكل واحد يشوف اللي يخصه بس.' },
+      ]
+    : [
+        { icon: '💼', title: 'Custody & settlements', text: 'Engineers request cash, you or the accountant approve it from a project pool, then they settle line by line with receipts.' },
+        { icon: '📒', title: 'A ledger per project', text: 'Client income, expenses, cash pools and direct payouts, with an always-current net balance.' },
+        { icon: '🏗️', title: 'Site execution', text: 'Weighted work items with progress, daily site logs and a punch list with before/after photos.' },
+        { icon: '🔗', title: 'Client progress link', text: 'Send clients a link to follow progress, tasks and site photos, without any financial figures.' },
+        { icon: '📊', title: 'Reports & close-out', text: 'Per-project and company-wide reports, and a final close-out after every custody and pool is reconciled.' },
+        { icon: '👥', title: 'Team & permissions', text: 'Owner, project manager, accountant, site engineer and design engineer, each seeing only what they need.' },
+      ]);
+
+  readonly steps = computed(() => this.isAr()
+    ? [
+        { title: 'طلب عُهدة', text: 'مهندس الموقع يطلب مبلغ وسببه من الموبايل.' },
+        { title: 'اعتماد وصرف', text: 'المالك أو المحاسب يعتمد ويحدد الصندوق اللي هيتخصم منه.' },
+        { title: 'تسوية بالفواتير', text: 'المهندس يسجّل البنود بفواتيرها، والسيستم يحسب الفرق.' },
+        { title: 'مراجعة وإقفال', text: 'تعتمد التسوية، والمتبقي يرجع للصندوق تلقائياً.' },
+      ]
+    : [
+        { title: 'Request', text: 'The site engineer requests an amount and a reason from their phone.' },
+        { title: 'Approve & issue', text: 'The owner or accountant approves it and picks the source pool.' },
+        { title: 'Settle with receipts', text: 'The engineer records lines with receipts; the difference is calculated.' },
+        { title: 'Review & close', text: 'Approve the settlement and any remainder returns to the pool.' },
+      ]);
+
+  readonly plans = computed(() => {
+    const ar = this.isAr();
+    return [
+      {
+        key: 'free', projects: 0, price: 0, was: 0, highlight: false, badge: '',
+        name: ar ? 'الباقة المجانية' : 'Free',
+        note: ar ? 'مجاناً مدى الحياة' : 'Free forever',
+        items: ar ? ['مشروعين مجاناً مدى الحياة', 'كل مميزات المنصة', 'بدون بطاقة بنكية'] : ['2 lifetime projects', 'Every feature included', 'No bank card needed'],
+        cta: ar ? 'ابدأ مجاناً' : 'Start free',
+      },
+      {
+        key: 'plus1', projects: 1, price: 250, was: 0, highlight: false, badge: '',
+        name: ar ? 'مشروع إضافي' : 'One extra project',
+        note: ar ? 'دفع مرة واحدة' : 'One-time payment',
+        items: ar ? ['مشروع إضافي على رصيدك', 'رصيد دائم بدون اشتراك', 'الدفع عبر InstaPay، والتفعيل بعد تأكيد التحويل'] : ['One extra project credit', 'Permanent, no subscription', 'Pay via InstaPay, activated once the transfer is confirmed'],
+        cta: ar ? 'اشترِ مشروع' : 'Buy one project',
+      },
+      {
+        key: 'plus5', projects: 5, price: 950, was: 1250, highlight: true, badge: ar ? 'الأوفر: وفّر 300 ج.م' : 'Best value: save 300 EGP',
+        name: ar ? 'حزمة 5 مشاريع' : '5-project pack',
+        note: ar ? 'دفع مرة واحدة' : 'One-time payment',
+        items: ar ? ['5 مشاريع إضافية على رصيدك', 'وفّر 300 ج.م عن الشراء منفرد', 'أولوية في الدعم الفني'] : ['5 extra project credits', 'Save 300 EGP vs single', 'Priority support'],
+        cta: ar ? 'اشترِ الحزمة' : 'Buy the pack',
+      },
+    ];
+  });
+
+  readonly faqs = computed(() => this.isAr()
+    ? [
+        { q: 'هل فيه اشتراك شهري؟', a: 'لا. أول مشروعين مجاناً، وكل مشروع إضافي بتدفعه مرة واحدة (250 ج.م للمشروع أو 950 ج.م لحزمة 5 مشاريع)، والرصيد بتاعك مدى الحياة.' },
+        { q: 'إزاي أدفع؟', a: 'حالياً الدفع عن طريق InstaPay: بتحوّل المبلغ وترفع صورة التحويل من صفحة الاشتراك، والرصيد بيتضاف لحسابك بعد مراجعة التحويل.' },
+        { q: 'هل العميل بيشوف الأرقام المالية؟', a: 'لا. رابط المتابعة اللي بتبعته للعميل بيعرض نسبة الإنجاز والبنود وصور الموقع بس، من غير أي مبالغ أو فواتير.' },
+        { q: 'ينفع لمهندس مستقل مش شركة؟', a: 'أيوه، تقدر تسجّل كمهندس مستقل أو كشركة، وتشتغل لوحدك أو تضيف فريقك بصلاحيات مختلفة.' },
+        { q: 'بيشتغل على الموبايل؟', a: 'أيوه، بيشتغل من المتصفح على الموبايل والتابلت والكمبيوتر، وتقدر تضيفه للشاشة الرئيسية كتطبيق.' },
+        { q: 'بيانات شركتي آمنة؟', a: 'كل شركة بياناتها منفصلة تماماً عن غيرها، والدخول بصلاحيات حسب دور كل مستخدم.' },
+      ]
+    : [
+        { q: 'Is there a monthly subscription?', a: 'No. Your first two projects are free, and each extra project is a one-time payment (250 EGP, or 950 EGP for five). Credits never expire.' },
+        { q: 'How do I pay?', a: 'Payment is currently via InstaPay: transfer the amount, upload the receipt from the subscription page, and credits are added after the transfer is reviewed.' },
+        { q: 'Does the client see financial figures?', a: 'No. The tracking link shows progress, tasks and site photos only, without amounts or invoices.' },
+        { q: 'Can a freelance engineer use it?', a: 'Yes. Register as a freelancer or a company, work alone or add your team with different roles.' },
+        { q: 'Does it work on mobile?', a: 'Yes, in the browser on phone, tablet and desktop, and you can add it to your home screen as an app.' },
+        { q: 'Is my company data safe?', a: 'Each company’s data is fully isolated, and access follows each user’s role.' },
+      ]);
 
   readonly companies = signal<TenantDto[]>([]);
   readonly selectedCompany = signal<PublicTenantPortfolioDto | null>(null);
@@ -975,7 +1051,7 @@ export class LandingPageComponent implements OnInit {
 
   onSelectPricingPlan(extraProjectsCount: number = 0): void {
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard/projects']);
+      this.router.navigate([extraProjectsCount > 0 ? '/dashboard/subscription' : '/dashboard/projects']);
     } else {
       if (extraProjectsCount === 0) {
         this.router.navigate(['/register']);

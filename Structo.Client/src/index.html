@@ -3,26 +3,92 @@
 
 <head>
   <meta charset="utf-8">
-  <title>أسس / Osos | إدارة عُهد ومصاريف مواقع المشاريع</title>
+  <title>أسس | برنامج إدارة عُهد ومصاريف مواقع التشطيبات والمقاولات</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="أسس (Osos): منصة لشركات التشطيبات والمقاولات والمهندسين لضبط عُهد المشاريع وتسويات المهندسين ومتابعة مصاريف الموقع لحظياً. ابدأ مشروعين مجاناً.">
-  <meta name="application-name" content="Osos">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="أسس (Osos) منصة عربية لشركات التشطيبات والمقاولات والمهندسين: اضبط عُهد مهندسي الموقع وتسوياتهم بالفواتير، وتابع مصاريف كل مشروع وتقدّم التنفيذ لحظياً. ابدأ بمشروعين مجاناً.">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="application-name" content="أسس Osos">
+  <meta name="theme-color" content="#0B0F19">
+  <meta name="color-scheme" content="dark">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="canonical" href="https://structo-production.up.railway.app/">
+
+  <!-- Open Graph / WhatsApp / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="أسس / Osos">
-  <meta property="og:title" content="أسس / Osos | اضبط عُهد مشاريعك وراقب مصاريف موقعك">
-  <meta property="og:description" content="منصة لإدارة عُهد وتسويات ومصاريف مواقع التشطيبات والمقاولات. ابدأ مشروعين مجاناً.">
+  <meta property="og:site_name" content="أسس Osos">
+  <meta property="og:url" content="https://structo-production.up.railway.app/">
+  <meta property="og:title" content="أسس | اضبط عُهد مشاريعك وراقب مصاريف موقعك">
+  <meta property="og:description" content="منصة لإدارة عُهد وتسويات ومصاريف مواقع التشطيبات والمقاولات، ومتابعة التنفيذ مع العميل. ابدأ بمشروعين مجاناً.">
+  <meta property="og:image" content="https://structo-production.up.railway.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="شعار أسس Osos">
   <meta property="og:locale" content="ar_EG">
   <meta property="og:locale:alternate" content="en_US">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="أسس / Osos">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="أسس | اضبط عُهد مشاريعك وراقب مصاريف موقعك">
   <meta name="twitter:description" content="منصة لإدارة عُهد وتسويات ومصاريف مواقع التشطيبات والمقاولات.">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="twitter:image" content="https://structo-production.up.railway.app/og-image.png">
+
+  <!-- Icons / PWA -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="أسس">
+
+  <!-- Fonts: preconnect + non-blocking stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://structo-production.up.railway.app/#org",
+        "name": "أسس Osos",
+        "alternateName": ["Osos", "أسس"],
+        "url": "https://structo-production.up.railway.app/",
+        "logo": "https://structo-production.up.railway.app/icons/icon-512.png"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "أسس Osos",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, Android",
+        "inLanguage": ["ar", "en"],
+        "description": "منصة لإدارة عُهد مهندسي الموقع وتسوياتهم ومصاريف مشاريع التشطيبات والمقاولات، مع رابط متابعة للعميل بدون أرقام مالية.",
+        "url": "https://structo-production.up.railway.app/",
+        "publisher": { "@id": "https://structo-production.up.railway.app/#org" },
+        "offers": [
+          { "@type": "Offer", "name": "الباقة المجانية: مشروعين", "price": "0", "priceCurrency": "EGP" },
+          { "@type": "Offer", "name": "مشروع إضافي", "price": "250", "priceCurrency": "EGP" },
+          { "@type": "Offer", "name": "حزمة 5 مشاريع", "price": "950", "priceCurrency": "EGP" }
+        ]
+      }
+    ]
+  }
+  </script>
+
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 
 <body>
   <app-root></app-root>
+  <noscript>
+    <h1>أسس Osos: إدارة عُهد ومصاريف مواقع التشطيبات والمقاولات</h1>
+    <p>اضبط عُهد مهندسي الموقع وتسوياتهم بالفواتير، وتابع مصاريف كل مشروع وتقدّم التنفيذ. يتطلب التطبيق تفعيل JavaScript.</p>
+  </noscript>
 </body>
 
 </html>

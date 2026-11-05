@@ -31,15 +31,18 @@ export class DashboardRedirectComponent implements OnInit {
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./features/landing-page/landing-page.component').then(m => m.LandingPageComponent)
+    loadComponent: () => import('./features/landing-page/landing-page.component').then(m => m.LandingPageComponent),
+    data: { seo: { index: true } }
   },
   {
     path: 'login',
-    loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent),
+    data: { seo: { title: 'تسجيل الدخول', description: 'سجّل الدخول إلى أسس لإدارة عُهد ومصاريف ومتابعة تنفيذ مشاريعك.', index: true } }
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/auth/tenant-register/tenant-register.component').then(m => m.TenantRegisterComponent)
+    loadComponent: () => import('./features/auth/tenant-register/tenant-register.component').then(m => m.TenantRegisterComponent),
+    data: { seo: { title: 'سجّل شركتك مجاناً', description: 'سجّل شركة التشطيبات أو المقاولات أو مكتبك الهندسي في أسس وابدأ بمشروعين مجاناً: عُهد، تسويات، مصاريف، ومتابعة تنفيذ.', index: true } }
   },
   {
     path: 'subscription',
@@ -61,63 +64,63 @@ export const routes: Routes = [
       {
         path: 'overview',
         loadComponent: () => import('./features/dashboard/overview/overview.component').then(m => m.OverviewComponent),
-        data: { roles: ['SuperAdmin'] }
+        data: { seo: { title: 'لوحة المنصة' }, roles: ['SuperAdmin'] }
       },
       {
         path: 'projects',
         loadComponent: () => import('./features/dashboard/projects/projects.component').then(m => m.ProjectsComponent),
-        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+        data: { seo: { title: 'المشاريع' }, roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'projects/:id',
         loadComponent: () => import('./features/dashboard/projects/project-details.component').then(m => m.ProjectDetailsComponent),
-        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+        data: { seo: { title: 'تفاصيل المشروع' }, roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'projects/:id/site-execution',
         loadComponent: () => import('./features/dashboard/projects/site-execution/site-execution.component').then(m => m.SiteExecutionComponent),
-        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+        data: { seo: { title: 'متابعة الموقع والتنفيذ' }, roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'financials',
         loadComponent: () => import('./features/dashboard/financials/financials.component').then(m => m.FinancialsComponent),
-        data: { roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+        data: { seo: { title: 'المركز المالي' }, roles: ['TenantOwner', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'reports',
         loadComponent: () => import('./features/dashboard/reports/reports.component').then(m => m.ReportsComponent),
         canActivate: [authGuard],
-        data: { roles: ['TenantOwner', 'Accountant'] }
+        data: { seo: { title: 'التقارير المالية' }, roles: ['TenantOwner', 'Accountant'] }
       },
       {
         path: 'users',
         loadComponent: () => import('./features/dashboard/users/users.component').then(m => m.UsersComponent),
-        data: { roles: ['TenantOwner'] }
+        data: { seo: { title: 'مستخدمو الشركة' }, roles: ['TenantOwner'] }
       },
       {
         path: 'profile',
         loadComponent: () => import('./features/dashboard/tenant-profile/tenant-profile.component').then(m => m.TenantProfileComponent),
-        data: { roles: ['TenantOwner'] }
+        data: { seo: { title: 'الملف التعريفي للشركة' }, roles: ['TenantOwner'] }
       },
       {
         path: 'settings',
         loadComponent: () => import('./features/dashboard/tenant-profile/tenant-profile.component').then(m => m.TenantProfileComponent),
-        data: { roles: ['TenantOwner'] }
+        data: { seo: { title: 'الإعدادات' }, roles: ['TenantOwner'] }
       },
       {
         path: 'subscription',
         loadComponent: () => import('./features/dashboard/subscription/subscription.component').then(m => m.SubscriptionComponent),
-        data: { roles: ['TenantOwner'] }
+        data: { seo: { title: 'الاشتراك والمشاريع الإضافية' }, roles: ['TenantOwner'] }
       },
       {
         path: 'subscription/success',
         loadComponent: () => import('./features/dashboard/subscription/subscription-success.component').then(m => m.SubscriptionSuccessComponent),
-        data: { roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+        data: { seo: { title: 'تم الدفع' }, roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'subscription/failed',
         loadComponent: () => import('./features/dashboard/subscription/subscription-failed.component').then(m => m.SubscriptionFailedComponent),
-        data: { roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
+        data: { seo: { title: 'فشل الدفع' }, roles: ['TenantOwner', 'SuperAdmin', 'Accountant', 'Manager', 'SiteEngineer', 'DesignEngineer'] }
       },
       {
         path: 'upgrade',
@@ -130,22 +133,22 @@ export const routes: Routes = [
       {
         path: 'tenants',
         loadComponent: () => import('./features/dashboard/tenants/tenants.component').then(m => m.TenantsComponent),
-        data: { roles: ['SuperAdmin'] }
+        data: { seo: { title: 'الشركات' }, roles: ['SuperAdmin'] }
       },
       {
         path: 'pending-users',
         loadComponent: () => import('./features/dashboard/pending-users/pending-users.component').then(m => m.PendingUsersComponent),
-        data: { roles: ['SuperAdmin'] }
+        data: { seo: { title: 'طلبات التسجيل' }, roles: ['SuperAdmin'] }
       },
       {
         path: 'admin-payments',
         loadComponent: () => import('./features/dashboard/admin-payments/admin-payments.component').then(m => m.AdminPaymentsComponent),
-        data: { roles: ['SuperAdmin'] }
+        data: { seo: { title: 'مراجعة المدفوعات' }, roles: ['SuperAdmin'] }
       },
       {
         path: 'payment-requests',
         loadComponent: () => import('./features/dashboard/payment-requests/payment-requests.component').then(m => m.PaymentRequestsComponent),
-        data: { roles: ['SuperAdmin'] }
+        data: { seo: { title: 'طلبات InstaPay' }, roles: ['SuperAdmin'] }
       },
       {
         path: 'payment-audit',
@@ -174,10 +177,12 @@ export const routes: Routes = [
   },
   {
     path: 'track/:shareToken',
-    loadComponent: () => import('./features/public/project-tracker.component').then(m => m.ProjectTrackerComponent)
+    loadComponent: () => import('./features/public/project-tracker.component').then(m => m.ProjectTrackerComponent),
+    data: { seo: { title: 'متابعة تنفيذ المشروع', index: false } }
   },
   {
     path: '**',
-    redirectTo: ''
+    loadComponent: () => import('./features/public/not-found.component').then(m => m.NotFoundComponent),
+    data: { seo: { title: 'الصفحة غير موجودة', index: false } }
   }
 ];

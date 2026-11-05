@@ -19,6 +19,7 @@ using Structo.Core.Validators;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.StaticFiles;
 using Structo.API.Hubs;
+using Structo.API.Seo;
 
 // 1. FIRST: Preserve JWT Claim Type Map & Configure Npgsql Timestamp Behavior - ABSOLUTELY AT THE TOP
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -558,24 +559,27 @@ if (app.Environment.IsDevelopment())
 // Static Files Configuration
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".js"] = "application/javascript";
+provider.Mappings[".webmanifest"] = "application/manifest+json";
 
 // Check: Do we have files in wwwroot/browser/?
 var angularOutputPath = Path.Combine(app.Environment.WebRootPath, "browser");
 var browserIndexPath = Path.Combine(angularOutputPath, "index.html");
 var rootIndexPath = Path.Combine(app.Environment.WebRootPath, "index.html");
 
+// Hashed bundles (main-XXXXXXXX.js, chunk-*.js, styles-*.css) never change: cache for a year.
+// Everything else (i18n json, images, icons, manifest, service workers, robots/sitemap) must update on deploy.
+var hashedAsset = new System.Text.RegularExpressions.Regex(@"-[A-Za-z0-9_]{8}\.(js|css)$", System.Text.RegularExpressions.RegexOptions.Compiled);
 Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> staticFilePrepareResponse = ctx =>
 {
-    if (ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase))
-    {
-        ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-        ctx.Context.Response.Headers["Pragma"] = "no-cache";
-        ctx.Context.Response.Headers["Expires"] = "0";
-    }
-    else
-    {
+    var name = ctx.File.Name;
+    if (hashedAsset.IsMatch(name))
         ctx.Context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
-    }
+    else if (name.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+             || name.EndsWith(".webmanifest", StringComparison.OrdinalIgnoreCase) || name.Equals("sw.js", StringComparison.OrdinalIgnoreCase)
+             || name.Equals("OneSignalSDKWorker.js", StringComparison.OrdinalIgnoreCase))
+        ctx.Context.Response.Headers["Cache-Control"] = "no-cache";
+    else
+        ctx.Context.Response.Headers["Cache-Control"] = "public, max-age=86400";
 };
 
 // Serve from correct location (prefer wwwroot/ if you manually copied files there, otherwise wwwroot/browser/)
@@ -638,29 +642,9 @@ var versionInfo = new
 app.MapGet("/api/version", () => Results.Ok(versionInfo)).AllowAnonymous();
 app.MapGet("/version", () => Results.Ok(versionInfo)).AllowAnonymous();
 
-// MAP SPA FALLBACK: Serve index.html from correct location
-Action<Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext> fallbackPrepareResponse = ctx =>
-{
-    ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-    ctx.Context.Response.Headers["Pragma"] = "no-cache";
-    ctx.Context.Response.Headers["Expires"] = "0";
-};
-
-if (File.Exists(rootIndexPath))
-{
-    app.MapFallbackToFile("index.html", new StaticFileOptions
-    {
-        OnPrepareResponse = fallbackPrepareResponse
-    });
-}
-else if (File.Exists(browserIndexPath))
-{
-    app.MapFallbackToFile("index.html", new StaticFileOptions
-    {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(angularOutputPath),
-        OnPrepareResponse = fallbackPrepareResponse
-    });
-}
+// SPA fallback: index.html for client routes, 404 for unknown paths, noindex for private pages,
+// and share previews for client tracker links
+app.MapSpaFallback(File.Exists(rootIndexPath) ? rootIndexPath : browserIndexPath);
 
 // Expose Service Provider for Global Access
 Structo.API.Program.AppServices = app.Services;

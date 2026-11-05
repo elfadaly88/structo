@@ -4,6 +4,7 @@ import { LanguageService } from './core/services/language.service';
 import { ConfirmModalComponent } from './core/components/confirm-modal.component';
 import { ToastContainerComponent } from './core/components/toast-container.component';
 import { AuthService } from './core/services/auth.service';
+import { SeoService } from './core/services/seo.service';
 
 @Component({
   selector: 'app-root',
@@ -16,9 +17,11 @@ export class App implements OnInit {
   private readonly langService = inject(LanguageService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly seo = inject(SeoService);
 
   ngOnInit(): void {
     this.langService.initLanguage();
+    this.seo.init();
   }
 
   private redirectUser(role: string): void {

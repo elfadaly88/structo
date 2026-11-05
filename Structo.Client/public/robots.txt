@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /superadmin
+Disallow: /admin
+Disallow: /track/
+Disallow: /public/project-review/
+Disallow: /api/
+
+Sitemap: https://structo-production.up.railway.app/sitemap.xml
