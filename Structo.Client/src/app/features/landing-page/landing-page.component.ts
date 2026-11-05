@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, computed, Renderer2, HostListener } from '@angular/core';
+import { ApiDatePipe } from '../../core/pipes/api-date.pipe';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -11,7 +12,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe, FormsModule],
+  imports: [ApiDatePipe, CommonModule, RouterLink, TranslatePipe, FormsModule],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white overflow-x-hidden">
       <!-- Nav Bar -->
@@ -569,15 +570,15 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                         <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                           @if (proj.displayDate && !proj.displayDate.startsWith('0001') && !proj.displayDate.startsWith('2001-01-01')) {
                             <span class="text-xs font-mono text-slate-400">
-                              {{ proj.displayDate | date:'dd/MM/yyyy' }}
+                              {{ proj.displayDate | apiDate:'dd/MM/yyyy' }}
                             </span>
                           } @else if (proj.createdAt && !proj.createdAt.startsWith('0001') && !proj.createdAt.startsWith('2001-01-01')) {
                             <span class="text-xs font-mono text-slate-400">
-                              {{ proj.createdAt | date:'dd/MM/yyyy' }}
+                              {{ proj.createdAt | apiDate:'dd/MM/yyyy' }}
                             </span>
                           } @else if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
                             <span class="text-xs font-mono text-slate-400">
-                              {{ proj.startDate | date:'dd/MM/yyyy' }}
+                              {{ proj.startDate | apiDate:'dd/MM/yyyy' }}
                             </span>
                           } @else {
                             <span></span>
@@ -721,7 +722,7 @@ import { WhatsAppLinkService } from '../../core/services/whatsapp-link.service';
                           @for (star of [1,2,3,4,5]; track star) {
                             <span class="text-base" [class.text-amber-400]="star <= rev.ratingScore" [class.text-slate-800]="star > rev.ratingScore">★</span>
                           }
-                          <span class="text-[10px] font-mono text-slate-500 ml-1">({{ rev.reviewDate | date:'dd/MM/yyyy' }})</span>
+                          <span class="text-[10px] font-mono text-slate-500 ml-1">({{ rev.reviewDate | apiDate:'dd/MM/yyyy' }})</span>
                         </div>
                       </div>
                       
@@ -866,8 +867,8 @@ export class LandingPageComponent implements OnInit {
         periodAr: 'تفعيل فوري لمدى الحياة (مجاني للأبد)',
         periodEn: 'Lifetime instant activation (Free forever)',
         isCustom: false,
-        noteAr: 'الباقة المجانية الأساسية — تتضمن مشروعين (2) نشطين مجاناً مدى الحياة.',
-        noteEn: 'Basic Free Plan — includes 2 active projects free for lifetime.'
+        noteAr: 'الباقة المجانية الأساسية — تتضمن مشروعين (2) مجاناً مدى الحياة.',
+        noteEn: 'Basic Free Plan — includes 2 lifetime projects free.'
       };
     }
 

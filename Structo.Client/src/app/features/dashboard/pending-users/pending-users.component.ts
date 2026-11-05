@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal, DestroyRef, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../../../../environments/environment';
@@ -23,7 +24,7 @@ export interface PendingUser {
 @Component({
   selector: 'app-pending-users',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, ApiDatePipe],
   template: `
     <div class="space-y-6 w-full max-w-7xl mx-auto">
       <!-- Title -->
@@ -101,7 +102,7 @@ export interface PendingUser {
                       }
                     </td>
                     <td class="py-4 px-6 font-mono text-xs tabular-nums text-slate-400">
-                      {{ user.createdAt | date: 'dd/MM/yyyy h:mm a' }}
+                      {{ user.createdAt | apiDate:'dd/MM/yyyy h:mm a' }}
                     </td>
                     <td class="py-4 px-6 text-right">
                       <button
@@ -158,7 +159,7 @@ export interface PendingUser {
                 }
 
                 <div class="text-[11px] text-slate-500 font-mono tabular-nums">
-                  📅 {{ user.createdAt | date: 'dd/MM/yyyy h:mm a' }}
+                  📅 {{ user.createdAt | apiDate:'dd/MM/yyyy h:mm a' }}
                 </div>
                 <button
                   (click)="approve(user)"

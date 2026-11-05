@@ -307,7 +307,7 @@ interface MapSearchResult {
                       @if ((tenantData()?.maxActiveProjects || 2) === -1) {
                         <span>مشاريع غير محدودة</span>
                       } @else {
-                        <span>{{ tenantData()?.maxActiveProjects || 2 }} مشاريع نشطة</span>
+                        <span>رصيد {{ tenantData()?.maxActiveProjects || 2 }} مشاريع مدى الحياة</span>
                       }
                     </span>
                   </div>

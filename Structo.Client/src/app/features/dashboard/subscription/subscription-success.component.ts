@@ -34,7 +34,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <div class="text-right">
             <span class="text-xs text-slate-400 font-bold block">سعة مشاريعك الجديدة:</span>
             <span class="text-lg font-black text-emerald-400 font-mono">
-              {{ allowedQuota() }} مشاريع نشطة
+              {{ allowedQuota() }} مشاريع (رصيد مدى الحياة)
             </span>
           </div>
           <div class="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">

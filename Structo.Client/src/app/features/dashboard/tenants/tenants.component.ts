@@ -3,7 +3,8 @@ import {
   DestroyRef, ChangeDetectorRef, NgZone
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { FormsModule } from '@angular/forms';
 import { TenantsService } from '../../../core/services/tenants.service';
 import { WhatsAppLinkService } from '../../../core/services/whatsapp-link.service';
@@ -39,7 +40,7 @@ interface ModeratedProject {
 @Component({
   selector: 'app-tenants',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe],
+  imports: [CommonModule, FormsModule, DecimalPipe, ApiDatePipe],
   template: `
     <div class="space-y-6 w-full max-w-7xl mx-auto">
       <!-- Header -->
@@ -168,7 +169,7 @@ interface ModeratedProject {
             <div class="relative flex-1 max-w-md">
               <input
                 type="text"
-                [(ngModel)]="searchQuery"
+                [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
                 (ngModelChange)="onSearchChange()"
                 placeholder="بحث باسم الشركة، الإيميل، الموقع أو المعرف ID..."
                 class="w-full pl-9 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all font-cairo" />
@@ -389,7 +390,7 @@ interface ModeratedProject {
                         </div>
                       }
                       <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
-                        آخر نشاط: {{ (tenant.lastActiveAt || tenant.createdAt) | date:'dd/MM/yyyy' }}
+                        آخر نشاط: {{ (tenant.lastActiveAt || tenant.createdAt) | apiDate:'dd/MM/yyyy' }}
                       </span>
                     </td>
 
@@ -959,7 +960,7 @@ export class TenantsComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
 
   // Filters
-  searchQuery = '';
+  readonly searchQuery = signal<string>('');
   planFilter = 'All';
   readonly statusFilter = signal<StatusFilterType>('All');
 
@@ -991,7 +992,7 @@ export class TenantsComponent implements OnInit {
   // Computed displayed tenants (supports fast client-side filtering over the paged set)
   readonly displayedTenants = computed(() => {
     let list = this.adminTenants() || [];
-    const query = (this.searchQuery || '').toLowerCase().trim();
+    const query = this.searchQuery().toLowerCase().trim();
     if (query) {
       list = list.filter(t =>
         (t?.name && t.name.toLowerCase().includes(query)) ||
@@ -1050,7 +1051,7 @@ export class TenantsComponent implements OnInit {
     const queryParams = {
       pageNumber: this.currentPage(),
       pageSize: this.pageSize,
-      search: this.searchQuery.trim() || undefined,
+      search: this.searchQuery().trim() || undefined,
       planFilter: this.planFilter !== 'All' ? this.planFilter : undefined,
       statusFilter: this.resolveStatusFilterQuery(),
       onlyInactiveOver45Days: this.statusFilter() === 'Inactive45' ? true : undefined

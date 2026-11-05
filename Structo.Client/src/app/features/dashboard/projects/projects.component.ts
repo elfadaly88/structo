@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule, DatePipe, DecimalPipe, NgClass } from '@angular/common';
+import { CommonModule, DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -63,7 +64,7 @@ const GOVERNORATES: GovernorateOption[] = [
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, TenantProfileComponent, UsersComponent, NgClass],
+  imports: [ApiDatePipe, CommonModule, ReactiveFormsModule, DecimalPipe, TranslatePipe, TenantProfileComponent, UsersComponent, NgClass],
   template: `
     <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
@@ -172,7 +173,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   </span>
                 </div>
                 <p class="text-xs text-slate-400 mt-0.5 font-cairo">
-                  المشاريع المستهلكة: <strong class="text-indigo-300 font-mono">{{ usedProjectsCount() }}</strong> من أصل <strong class="text-white font-mono">{{ allowedProjectsCount() }}</strong> متاح في باقتك الحالية.
+                  المشاريع المستهلكة: <strong class="text-indigo-300 font-mono">{{ usedProjectsCount() }}</strong> من أصل <strong class="text-white font-mono">{{ allowedProjectsCount() }}</strong> متاح في باقتك الحالية. رصيد المشاريع مدى الحياة ولا يُسترد عند إغلاق المشروع.
                 </p>
               </div>
             </div>
@@ -324,9 +325,9 @@ const GOVERNORATES: GovernorateOption[] = [
                     </td>
                     <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">
                       @if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
-                        {{ proj.startDate | date:'dd/MM/yyyy' }}
+                        {{ proj.startDate | apiDate:'dd/MM/yyyy' }}
                       } @else if (proj.createdAt && !proj.createdAt.startsWith('0001') && !proj.createdAt.startsWith('2001-01-01')) {
-                        {{ proj.createdAt | date:'dd/MM/yyyy' }}
+                        {{ proj.createdAt | apiDate:'dd/MM/yyyy' }}
                       } @else {
                         —
                       }
@@ -383,9 +384,9 @@ const GOVERNORATES: GovernorateOption[] = [
                   <span>{{ proj.propertyType === 'Residential' ? '🏠 Residential' : '🏢 Administrative' }}</span>
                   <span class="font-mono tabular-nums">
                     @if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
-                      📅 {{ proj.startDate | date:'dd/MM/yyyy' }}
+                      📅 {{ proj.startDate | apiDate:'dd/MM/yyyy' }}
                     } @else if (proj.createdAt && !proj.createdAt.startsWith('0001') && !proj.createdAt.startsWith('2001-01-01')) {
-                      📅 {{ proj.createdAt | date:'dd/MM/yyyy' }}
+                      📅 {{ proj.createdAt | apiDate:'dd/MM/yyyy' }}
                     } @else {
                       📅 —
                     }

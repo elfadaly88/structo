@@ -181,7 +181,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
                     <span>باقة البداية المفعلة</span>
                   </button>
                 } @else {
-                  <div class="space-y-2">
+                  <!-- Card (Paymob) and InstaPay side by side when both are offered for this package -->
+                  <div class="grid gap-2" [class.grid-cols-2]="paymobEnabled() && instaPayEnabled() && !!packageFor(plan)">
                   @if (instaPayEnabled() && packageFor(plan)) {
                     <button
                       (click)="startInstaPay(plan)"
@@ -219,6 +220,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       <span>جاري التحويل لبوابة الدفع...</span>
+                    } @else if (instaPayEnabled() && packageFor(plan)) {
+                      <span>الدفع بالبطاقة</span>
                     } @else {
                       <span>ترقية الباقة والدفع الآن</span>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -371,7 +374,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
                     @for (item of myPayments()!.attempts; track item.id) {
                       <tr class="hover:bg-slate-800/40 transition-colors">
                         <td class="py-3.5 px-4 text-slate-300 font-mono whitespace-nowrap">
-                          {{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}
+                          {{ item.createdAt | apiDate:'yyyy-MM-dd HH:mm' }}
                         </td>
                         <td class="py-3.5 px-4 font-bold text-white whitespace-nowrap">
                           {{ item.planRequested }}
@@ -429,7 +432,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
                     <div class="flex items-center justify-between text-xs text-slate-400">
                       <span>التاريخ:</span>
-                      <span class="font-mono text-slate-300">{{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
+                      <span class="font-mono text-slate-300">{{ item.createdAt | apiDate:'yyyy-MM-dd HH:mm' }}</span>
                     </div>
 
                     <div class="flex items-center justify-between text-xs text-slate-400">

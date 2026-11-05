@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +18,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 @Component({
   selector: 'app-financials',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, ReactiveFormsModule],
+  imports: [ApiDatePipe, CommonModule, FormsModule, TranslatePipe, ReactiveFormsModule],
   template: `
     @if (!isSuperAdmin()) {
       <div class="w-full max-w-none">
@@ -221,7 +222,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                     <!-- Middle: Date & Reason -->
                     <div class="pt-3 space-y-2">
                       <div class="flex items-center justify-between text-xs text-slate-400 font-mono tabular-nums">
-                        <span>📅 {{ (request?.issuedAt || '') | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <span>📅 {{ request?.issuedAt | apiDate:'dd/MM/yyyy HH:mm' }}</span>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
                           في الانتظار
                         </span>
@@ -293,7 +294,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                           (click)="openMyPettyCashReasonModal(request)">
                         {{ request.reason }}
                       </td>
-                      <td class="px-3 py-3 text-slate-400 font-mono text-xs whitespace-nowrap">{{ (request?.issuedAt || '') | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-3 py-3 text-slate-400 font-mono text-xs whitespace-nowrap">{{ request?.issuedAt | apiDate:'dd/MM/yyyy HH:mm' }}</td>
                       <td class="px-3 py-3 text-center whitespace-nowrap">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border font-cairo" 
                           [class.bg-emerald-500/10]="request.status === 'Settled'" 
@@ -349,7 +350,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
                             }
                             @if (request.expenseDate) {
                               <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-800 text-slate-400" title="Expense Date">
-                                {{ (request?.expenseDate || request?.issuedAt) | date:'dd/MM/yyyy' }}
+                                {{ (request?.expenseDate || request?.issuedAt) | apiDate:'dd/MM/yyyy' }}
                               </span>
                             }
                           </div>

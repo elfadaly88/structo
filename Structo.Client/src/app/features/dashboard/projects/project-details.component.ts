@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed, DestroyRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe, DecimalPipe, CommonModule } from '@angular/common';
+import { DecimalPipe, CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -32,7 +33,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
 @Component({
   selector: 'app-project-details',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, DatePipe, DecimalPipe, TranslatePipe, FormsModule],
+  imports: [ApiDatePipe, CommonModule, ReactiveFormsModule, RouterLink, DecimalPipe, TranslatePipe, FormsModule],
   template: `
     <div class="space-y-4 w-full px-3 sm:px-6 lg:px-8">
 
@@ -558,7 +559,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                       @if (member.phoneNumber) {
                         <span class="font-mono text-slate-300" dir="ltr">📞 {{ member.phoneNumber }}</span>
                       } @else {
-                        <span class="text-slate-500 font-mono text-[10px]">تاريخ الإسناد: {{ member.assignedAt | date:'dd/MM/yyyy' }}</span>
+                        <span class="text-slate-500 font-mono text-[10px]">تاريخ الإسناد: {{ member.assignedAt | apiDate:'dd/MM/yyyy' }}</span>
                       }
                     </div>
 
@@ -1067,7 +1068,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                   </div>
                 </div>
               }
-              <p class="text-[11px] text-slate-600 text-center font-cairo">آخر تدقيق: {{ reconciliationReport()!.generatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+              <p class="text-[11px] text-slate-600 text-center font-cairo">آخر تدقيق: {{ reconciliationReport()!.generatedAt | apiDate:'dd/MM/yyyy HH:mm:ss' }}</p>
             </div>
           } @else if (!isCloseoutLoading()) {
             <div class="text-center py-12 text-slate-500">
@@ -1159,7 +1160,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                       <p class="text-xs text-white font-medium truncate font-cairo mb-0.5">{{ photo.caption }}</p>
                     }
                     <div class="flex items-center justify-between text-[10px] text-slate-400">
-                      <span class="font-mono">{{ photo.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="font-mono">{{ photo.uploadedAt | apiDate:'dd/MM/yyyy HH:mm' }}</span>
                       <span class="truncate">By: {{ photo.uploadedBy || 'Owner' }}</span>
                     </div>
                   </div>
@@ -1885,7 +1886,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">التاريخ / البنود</span>
                         <div class="flex items-center justify-between mt-0.5">
                           <span class="text-xs sm:text-sm font-semibold text-slate-300 font-mono" dir="ltr">
-                            {{ (item.settlementDate || item.date || item.submittedAt || item.createdAt) | date:'dd/MM/yyyy' }}
+                            {{ (item.settlementDate || item.date || item.submittedAt || item.createdAt) | apiDate:'dd/MM/yyyy' }}
                           </span>
                           <span class="text-[11px] px-2.5 py-0.5 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-bold font-mono">
                             {{ item.lines?.length || 0 }} بنود
@@ -3383,7 +3384,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
             <p><strong>سبب العهدة / Custody Reason:</strong> {{ activePrintSettlement()!.custodyReason }}</p>
           </div>
           <div class="text-left rtl:text-right">
-            <p><strong>تاريخ التقديم / Submitted At:</strong> {{ activePrintSettlement()!.submittedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>تاريخ التقديم / Submitted At:</strong> {{ activePrintSettlement()!.submittedAt | apiDate:'dd/MM/yyyy HH:mm' }}</p>
             <p><strong>حالة التسوية / Status:</strong> {{ activePrintSettlement()!.status }}</p>
             <p><strong>رقم التسوية / ID:</strong> {{ activePrintSettlement()!.id }}</p>
           </div>
@@ -3434,7 +3435,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
         <div class="mt-12 flex justify-between items-center text-xs text-slate-400 border-t border-slate-200 pt-6">
           <div>
             <p><strong>المراجع / Approved By:</strong> {{ activePrintSettlement()!.resolvedBy || '—' }}</p>
-            <p><strong>تاريخ الاعتماد / Resolved At:</strong> {{ activePrintSettlement()!.resolvedAt ? (activePrintSettlement()!.resolvedAt | date:'dd/MM/yyyy HH:mm') : '—' }}</p>
+            <p><strong>تاريخ الاعتماد / Resolved At:</strong> {{ activePrintSettlement()!.resolvedAt | apiDate:'dd/MM/yyyy HH:mm' }}</p>
           </div>
           <div class="text-center p-3 border border-slate-300 rounded-xl bg-slate-50 min-w-[120px] text-slate-700 font-semibold font-mono">
             VERIFIED BY OSOS
@@ -3805,7 +3806,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                       <tbody class="divide-y divide-slate-800/50">
                         @for (t of projectReportData()!.transactions; track t.id) {
                           <tr class="hover:bg-slate-800/30 transition-colors">
-                            <td class="p-3 font-mono text-slate-400">{{ t.transactionDate | date:'dd/MM/yyyy' }}</td>
+                            <td class="p-3 font-mono text-slate-400">{{ t.transactionDate | apiDate:'dd/MM/yyyy' }}</td>
                             <td class="p-3 text-center">
                               <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                                     [class.bg-emerald-950\/60]="t.type === 'Income'"
@@ -3864,7 +3865,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                           <tr class="hover:bg-slate-800/30 transition-colors">
                             <td class="p-3 font-bold text-white">{{ pc.issuedTo || '—' }}</td>
                             <td class="p-3 text-slate-300 break-words max-w-md">{{ pc.reason }}</td>
-                            <td class="p-3 font-mono text-slate-400">{{ pc.issuedAt | date:'dd/MM/yyyy' }}</td>
+                            <td class="p-3 font-mono text-slate-400">{{ pc.issuedAt | apiDate:'dd/MM/yyyy' }}</td>
                             <td class="p-3 text-left font-mono font-bold text-amber-400">{{ pc.amount | number:'1.2-2' }} EGP</td>
                             <td class="p-3 text-center font-mono text-xs">
                               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
@@ -3990,9 +3991,9 @@ import { TenantDto } from '../../../core/services/public-directory.service';
             </div>
           </div>
           <div class="text-left font-cairo text-xs space-y-1">
-            <p><strong>تاريخ الاستخراج:</strong> {{ activePrintFullReport()!.generatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>تاريخ الاستخراج:</strong> {{ activePrintFullReport()!.generatedAt | apiDate:'dd/MM/yyyy HH:mm' }}</p>
             <p><strong>النطاق الزمني:</strong> 
-              {{ activePrintFullReport()!.dateRange.isFullPeriod ? 'الفترة الكاملة للمشروع' : ((activePrintFullReport()!.dateRange.startDate | date:'dd/MM/yyyy') + ' إلى ' + (activePrintFullReport()!.dateRange.endDate | date:'dd/MM/yyyy')) }}
+              {{ activePrintFullReport()!.dateRange.isFullPeriod ? 'الفترة الكاملة للمشروع' : ((activePrintFullReport()!.dateRange.startDate | apiDate:'dd/MM/yyyy') + ' إلى ' + (activePrintFullReport()!.dateRange.endDate | apiDate:'dd/MM/yyyy')) }}
             </p>
             <p><strong>كود المشروع:</strong> <span class="font-mono">{{ activePrintFullReport()!.project.id }}</span></p>
           </div>
@@ -4057,7 +4058,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
             <tbody class="divide-y divide-slate-200">
               @for (tx of activePrintFullReport()!.transactions; track tx.id) {
                 <tr>
-                  <td class="py-1.5 px-2 font-mono text-slate-600">{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                  <td class="py-1.5 px-2 font-mono text-slate-600">{{ tx.transactionDate | apiDate:'dd/MM/yyyy' }}</td>
                   <td class="py-1.5 px-2 font-semibold" [class.text-emerald-700]="tx.type === 'Income'" [class.text-rose-700]="tx.type !== 'Income'">
                     {{ tx.type === 'Income' ? 'إيراد' : 'مصروف' }}
                   </td>
@@ -4092,7 +4093,7 @@ import { TenantDto } from '../../../core/services/public-directory.service';
                 <tr>
                   <td class="py-1.5 px-2 font-semibold">{{ pc.issuedTo || 'Staff' }}</td>
                   <td class="py-1.5 px-2 text-slate-700">{{ pc.reason }}</td>
-                  <td class="py-1.5 px-2 font-mono text-slate-600">{{ pc.issuedAt | date:'dd/MM/yyyy' }}</td>
+                  <td class="py-1.5 px-2 font-mono text-slate-600">{{ pc.issuedAt | apiDate:'dd/MM/yyyy' }}</td>
                   <td class="py-1.5 px-2 text-left font-mono font-bold text-amber-700">{{ pc.amount | number:'1.2-2' }} EGP</td>
                   <td class="py-1.5 px-2 text-center font-mono text-[11px]">{{ pc.status }}</td>
                 </tr>

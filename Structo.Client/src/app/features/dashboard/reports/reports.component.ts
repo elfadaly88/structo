@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinancialReportService } from '../../../core/services/financial-report.service';
@@ -12,7 +13,7 @@ import { ProjectDto } from '../../../core/models/project.models';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ApiDatePipe, CommonModule, FormsModule],
   template: `
     <div class="space-y-6 font-cairo">
       <!-- Page Header & Top Bar -->
@@ -376,9 +377,9 @@ import { ProjectDto } from '../../../core/models/project.models';
             </div>
           </div>
           <div class="text-left font-cairo text-xs space-y-1">
-            <p><strong>تاريخ الاستخراج:</strong> {{ activePrintReport()!.generatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>تاريخ الاستخراج:</strong> {{ activePrintReport()!.generatedAt | apiDate:'dd/MM/yyyy HH:mm' }}</p>
             <p><strong>نطاق التاريخ:</strong> 
-              {{ activePrintReport()!.dateRange.isFullPeriod ? 'الفترة الكاملة (كل السجلات)' : ((activePrintReport()!.dateRange.startDate | date:'dd/MM/yyyy') + ' إلى ' + (activePrintReport()!.dateRange.endDate | date:'dd/MM/yyyy')) }}
+              {{ activePrintReport()!.dateRange.isFullPeriod ? 'الفترة الكاملة (كل السجلات)' : ((activePrintReport()!.dateRange.startDate | apiDate:'dd/MM/yyyy') + ' إلى ' + (activePrintReport()!.dateRange.endDate | apiDate:'dd/MM/yyyy')) }}
             </p>
             @if (activePrintReport()!.dateRange.filterProjectName) {
               <p><strong>المشروع المخصص:</strong> {{ activePrintReport()!.dateRange.filterProjectName }}</p>

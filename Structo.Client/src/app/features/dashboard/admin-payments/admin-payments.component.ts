@@ -2,12 +2,13 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantPaymentSummary } from '../../../core/services/payment-audit.service';
 
 @Component({
   selector: 'app-admin-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ApiDatePipe],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 lg:p-8 font-cairo" dir="rtl">
       <!-- Page Header -->
@@ -184,7 +185,7 @@ import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantP
                       }
                     </td>
                     <td class="py-3.5 px-4 text-slate-400 font-mono text-[11px] whitespace-nowrap">
-                      {{ t.lastAttemptAt ? (t.lastAttemptAt | date:'yyyy-MM-dd HH:mm') : '-' }}
+                      {{ t.lastAttemptAt | apiDate:'yyyy-MM-dd HH:mm':'-' }}
                     </td>
                   </tr>
                 }
@@ -208,7 +209,7 @@ import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantP
               <div class="relative min-w-[240px]">
                 <input
                   type="text"
-                  [(ngModel)]="searchQuery"
+                  [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
                   placeholder="بحث باسم المنشأة، البريد، رقم الطلب..."
                   class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
                 <svg class="w-4 h-4 text-slate-500 absolute start-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,7 +298,7 @@ import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantP
                   @for (item of filteredAttempts(); track item.id) {
                     <tr class="hover:bg-slate-800/40 transition-colors" [class.bg-rose-950/15]="item.webhookStatus === 'NeverArrived'">
                       <td class="py-3.5 px-4 font-mono text-slate-300 whitespace-nowrap">
-                        {{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}
+                        {{ item.createdAt | apiDate:'yyyy-MM-dd HH:mm' }}
                       </td>
                       <td class="py-3.5 px-4 whitespace-nowrap">
                         <span class="font-bold text-white block">{{ item.tenantName }}</span>
@@ -340,7 +341,7 @@ import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantP
                         }
                       </td>
                       <td class="py-3.5 px-4 font-mono text-slate-400 text-[11px] whitespace-nowrap">
-                        {{ item.webhookReceivedAt ? (item.webhookReceivedAt | date:'yyyy-MM-dd HH:mm:ss') : '—' }}
+                        {{ item.webhookReceivedAt | apiDate:'yyyy-MM-dd HH:mm:ss' }}
                       </td>
                       <td class="py-3.5 px-4 text-slate-400 text-[11px] max-w-xs truncate" [title]="item.errorMessage || ''">
                         {{ item.errorMessage || '—' }}
@@ -370,7 +371,7 @@ import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantP
 
                   <div class="flex items-center justify-between text-xs text-slate-400">
                     <span>التاريخ:</span>
-                    <span class="font-mono text-slate-300">{{ item.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
+                    <span class="font-mono text-slate-300">{{ item.createdAt | apiDate:'yyyy-MM-dd HH:mm' }}</span>
                   </div>
 
                   <div class="flex items-center justify-between text-xs text-slate-400">
@@ -420,7 +421,7 @@ export class AdminPaymentsComponent implements OnInit {
   readonly isLoading = signal<boolean>(false);
 
   // Filters
-  searchQuery = '';
+  readonly searchQuery = signal<string>('');
   readonly selectedStatusFilter = signal<string>('ALL');
 
   readonly filteredAttempts = computed<PaymentAttemptItem[]>(() => {
@@ -433,7 +434,7 @@ export class AdminPaymentsComponent implements OnInit {
       list = list.filter(a => a.webhookStatus === status);
     }
 
-    const q = this.searchQuery.trim().toLowerCase();
+    const q = this.searchQuery().trim().toLowerCase();
     if (q) {
       list = list.filter(a =>
         (a.tenantName && a.tenantName.toLowerCase().includes(q)) ||

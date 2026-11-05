@@ -1,12 +1,12 @@
 import { Component, inject, signal, HostListener } from '@angular/core';
+import { ApiDatePipe } from '../pipes/api-date.pipe';
 import { Router } from '@angular/router';
 import { NotificationService, NotificationItem } from '../services/notification.service';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-notification-bell',
   standalone: true,
-  imports: [DatePipe],
+  imports: [ApiDatePipe],
   template: `
     <!-- Bell Button -->
     <div class="relative" id="notification-bell-container">
@@ -94,7 +94,7 @@ import { DatePipe } from '@angular/common';
                   <p class="text-sm font-semibold text-slate-100 leading-snug truncate">{{ notif.title }}</p>
                   <p class="text-xs text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{{ notif.message }}</p>
                   <p class="text-[10px] text-slate-600 mt-1.5 font-medium">
-                    {{ notif.createdAt | date:'dd/MM/yyyy h:mm a' }}
+                    {{ notif.createdAt | apiDate:'dd/MM/yyyy h:mm a' }}
                   </p>
                 </div>
 
