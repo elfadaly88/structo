@@ -108,6 +108,11 @@ export const routes: Routes = [
         data: { seo: { title: 'الإعدادات' }, roles: ['TenantOwner'] }
       },
       {
+        path: 'account',
+        loadComponent: () => import('./features/dashboard/account/account.component').then(m => m.AccountComponent),
+        data: { seo: { title: 'حسابي' } }
+      },
+      {
         path: 'subscription',
         loadComponent: () => import('./features/dashboard/subscription/subscription.component').then(m => m.SubscriptionComponent),
         data: { seo: { title: 'الاشتراك والمشاريع الإضافية' }, roles: ['TenantOwner'] }

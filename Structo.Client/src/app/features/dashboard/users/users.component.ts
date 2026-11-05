@@ -1,5 +1,7 @@
 import { Component, OnInit, inject, DestroyRef, signal, computed, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
+import { AccountService } from '../../../core/services/account.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TenantUserService, UserDto, UserCreateDto } from '../../../core/services/tenant-user.service';
@@ -27,7 +29,7 @@ export interface SanitizedUser {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, ApiDatePipe],
   templateUrl: './users.component.html',
   styles: [`
     .font-cairo {
@@ -44,6 +46,55 @@ export class UsersComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly accountService = inject(AccountService);
+
+  // Owner sets a new password for an employee (e.g. one added without a password)
+  readonly passwordTarget = signal<SanitizedUser | null>(null);
+  readonly newEmployeePassword = signal('');
+  readonly isSettingPassword = signal(false);
+  readonly isPasswordStrong = computed(() => {
+    const p = this.newEmployeePassword();
+    return p.length >= 8 && /[A-Za-z\u0600-\u06FF]/.test(p) && /\d/.test(p);
+  });
+
+  openPasswordModal(user: SanitizedUser): void {
+    this.newEmployeePassword.set('');
+    this.passwordTarget.set(user);
+  }
+
+  closePasswordModal(): void {
+    this.passwordTarget.set(null);
+  }
+
+  generatePassword(): void {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const bytes = new Uint32Array(12);
+    crypto.getRandomValues(bytes);
+    let pwd = Array.from(bytes, (b) => chars[b % chars.length]).join('');
+    if (!/\d/.test(pwd)) pwd = pwd.slice(0, -1) + '7';
+    this.newEmployeePassword.set(pwd);
+  }
+
+  submitPassword(): void {
+    const target = this.passwordTarget();
+    if (!target || !this.isPasswordStrong()) return;
+    this.isSettingPassword.set(true);
+    this.accountService.setEmployeePassword(target.id, this.newEmployeePassword()).subscribe({
+      next: (res) => {
+        this.isSettingPassword.set(false);
+        if (res.success) {
+          this.toast.show('تم', `تم تعيين كلمة مرور جديدة لـ ${target.displayName}.`, 'success');
+          this.closePasswordModal();
+        } else {
+          this.toast.show('تنبيه', 'تعذر حفظ كلمة المرور. تأكد إنها 8 حروف على الأقل وفيها حرف ورقم.', 'error');
+        }
+      },
+      error: () => {
+        this.isSettingPassword.set(false);
+        this.toast.show('تنبيه', 'تعذر حفظ كلمة المرور. تأكد إنها 8 حروف على الأقل وفيها حرف ورقم.', 'error');
+      }
+    });
+  }
 
   readonly users = signal<SanitizedUser[]>([]);
   readonly isLoading = signal(false);
@@ -130,7 +181,7 @@ export class UsersComponent implements OnInit {
         console.error('Error fetching users:', err);
         this.isLoading.set(false);
         this.cdr.markForCheck();
-        this.toast.show('خطأ / Error', 'فشل تحميل بيانات المستخدمين.', 'error');
+        this.toast.show('تنبيه', 'فشل تحميل بيانات المستخدمين.', 'error');
       }
     });
   }
@@ -166,18 +217,18 @@ export class UsersComponent implements OnInit {
           );
           const nextState = !user.isActive;
           this.toast.show(
-            'نجاح / Success',
+            'تم',
             nextState ? 'تم تفعيل الحساب بنجاح.' : 'تم إيقاف الحساب بنجاح.',
             'success'
           );
         } else {
-          this.toast.show('خطأ / Error', res.message || 'فشل تحديث حالة المستخدم.', 'error');
+          this.toast.show('تنبيه', res.message || 'فشل تحديث حالة المستخدم.', 'error');
         }
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.togglingUserId.set(null);
-        this.toast.show('خطأ / Error', err.error?.message || err.message || 'فشل تحديث حالة المستخدم.', 'error');
+        this.toast.show('تنبيه', err.error?.message || err.message || 'فشل تحديث حالة المستخدم.', 'error');
         this.cdr.markForCheck();
       }
     });
@@ -259,7 +310,7 @@ export class UsersComponent implements OnInit {
       next: (response) => {
         this.isSavingUser.set(false);
         if (response.success) {
-          this.toast.show('نجاح / Success', 'تمت إضافة المستخدم وتعيين مشاريعه بنجاح.', 'success');
+          this.toast.show('تم', 'تمت إضافة المستخدم وتعيين مشاريعه بنجاح.', 'success');
           this.closeUserModal();
           this.loadUsers();
         } else {

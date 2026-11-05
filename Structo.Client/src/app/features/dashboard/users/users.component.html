@@ -35,17 +35,17 @@
   </div>
 
   <!-- Stats Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-      <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">إجمالي المستخدمين</span>
+  <div class="grid grid-cols-3 gap-2 sm:gap-4">
+    <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm min-w-0">
+      <span class="text-[11px] sm:text-xs text-slate-500 font-bold block leading-snug">إجمالي المستخدمين</span>
       <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">{{ totalUsers() }}</h3>
     </div>
-    <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-      <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">الحسابات النشطة</span>
+    <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm min-w-0">
+      <span class="text-[11px] sm:text-xs text-slate-500 font-bold block leading-snug">الحسابات النشطة</span>
       <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1 font-mono tabular-nums">{{ activeUsers() }}</h3>
     </div>
-    <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-      <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">المهندسون والمشرفون</span>
+    <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm min-w-0">
+      <span class="text-[11px] sm:text-xs text-slate-500 font-bold block leading-snug">المهندسون والمشرفون</span>
       <h3 class="text-2xl sm:text-3xl font-extrabold text-indigo-400 mt-1 font-mono tabular-nums">{{ engineersCount() }}</h3>
     </div>
   </div>
@@ -70,7 +70,7 @@
             <tr class="bg-slate-950/80 border-b border-slate-800 text-xs font-bold text-slate-400">
               <th class="py-3.5 px-4">المستخدم</th>
               <th class="py-3.5 px-4">البريد الإلكتروني</th>
-              <th class="py-3.5 px-4">الهاتف / Contact</th>
+              <th class="py-3.5 px-4">الهاتف</th>
               <th class="py-3.5 px-4">واتساب</th>
               <th class="py-3.5 px-4">الدور الوظيفي</th>
               <th class="py-3.5 px-4 text-center">الحالة</th>
@@ -90,7 +90,7 @@
                     <div>
                       <span class="font-bold text-white block">{{ user.displayName }}</span>
                       @if (user.createdAt) {
-                        <span class="text-[10px] text-slate-400 font-mono">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+                        <span class="text-[10px] text-slate-400 font-mono">{{ user.createdAt | apiDate:'dd/MM/yyyy' }}</span>
                       }
                     </div>
                   </div>
@@ -124,7 +124,13 @@
                 </td>
 
                 <!-- Actions -->
-                <td class="py-3 px-4 text-left">
+                <td class="py-3 px-4 text-left whitespace-nowrap">
+                  @if (!user.isCurrentAccount && user.role !== 'TenantOwner') {
+                    <button type="button" (click)="openPasswordModal(user)"
+                      class="me-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer">
+                      كلمة المرور
+                    </button>
+                  }
                   @if (!user.isCurrentAccount) {
                     <button type="button" (click)="toggleStatus(user)"
                       [disabled]="togglingUserId() === user.id"
@@ -193,10 +199,16 @@
 
           <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
             @if (user.createdAt) {
-              <span class="text-[10px] text-slate-500 font-mono">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+              <span class="text-[10px] text-slate-500 font-mono">{{ user.createdAt | apiDate:'dd/MM/yyyy' }}</span>
             }
             @if (!user.isCurrentAccount) {
-              <div>
+              <div class="flex items-center gap-2">
+                @if (user.role !== 'TenantOwner') {
+                  <button type="button" (click)="openPasswordModal(user)"
+                    class="px-3 py-1 rounded-lg text-xs font-semibold border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer">
+                    كلمة المرور
+                  </button>
+                }
                 <button type="button" (click)="toggleStatus(user)" [disabled]="togglingUserId() === user.id"
                   class="px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-50"
                   [ngClass]="user.isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'">
@@ -409,6 +421,32 @@
           </div>
         </form>
       </div>
+    </div>
+  }
+
+
+  <!-- SET EMPLOYEE PASSWORD MODAL -->
+  @if (passwordTarget(); as target) {
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm font-cairo" dir="rtl" role="dialog" aria-modal="true">
+      <div (click)="closePasswordModal()" class="absolute inset-0"></div>
+      <form (ngSubmit)="submitPassword()" class="relative w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+        <h3 class="text-lg font-extrabold text-white">تعيين كلمة مرور جديدة</h3>
+        <p class="mt-1 text-sm text-slate-400">لـ <strong class="text-slate-200">{{ target.displayName }}</strong>. ابعتها له بشكل آمن، ويقدر يغيرها بعد كده من صفحة "حسابي".</p>
+        <label class="block mt-5">
+          <span class="text-sm font-semibold text-slate-300">كلمة المرور الجديدة</span>
+          <input [value]="newEmployeePassword()" (input)="newEmployeePassword.set($any($event.target).value)" name="newPassword"
+            type="text" autocomplete="new-password" dir="ltr" minlength="8"
+            class="mt-1.5 w-full rounded-xl bg-slate-950/60 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none px-4 py-3 text-white font-sans">
+          <span class="mt-1 block text-xs text-slate-500">8 حروف على الأقل وفيها حرف ورقم.</span>
+        </label>
+        <button type="button" (click)="generatePassword()" class="mt-3 text-sm font-bold text-indigo-300 hover:text-indigo-200">توليد كلمة مرور قوية</button>
+        <div class="mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+          <button type="button" (click)="closePasswordModal()" class="px-5 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-bold">إلغاء</button>
+          <button type="submit" [disabled]="isSettingPassword() || !isPasswordStrong()" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold">
+            {{ isSettingPassword() ? 'جاري الحفظ…' : 'حفظ كلمة المرور' }}
+          </button>
+        </div>
+      </form>
     </div>
   }
 </div>

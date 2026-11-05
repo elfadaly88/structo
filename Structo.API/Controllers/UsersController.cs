@@ -104,6 +104,12 @@ public class UsersController(IUserService userService, StructoDbContext context,
         }
 
         user.IsActive = !user.IsActive;
+        if (!user.IsActive)
+        {
+            // A deactivated user must not renew their session from another device
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+        }
         await context.SaveChangesAsync();
 
         return Ok(new ApiResponse<bool>
