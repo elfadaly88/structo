@@ -83,7 +83,7 @@
     "SUBTITLE": "أو",
     "RETURN_HOME": "العودة إلى الصفحة الرئيسية",
     "USERNAME_LABEL": "اسم المستخدم / البريد الإلكتروني",
-    "USERNAME_PLACEHOLDER": "مثال: owner1 أو admin@example.com",
+    "USERNAME_PLACEHOLDER": "بريدك الإلكتروني",
     "USERNAME_REQ": "اسم المستخدم مطلوب.",
     "PASSWORD_LABEL": "كلمة المرور",
     "PASSWORD_REQ": "كلمة المرور مطلوبة (الحد الأدنى 6 أحرف).",

@@ -13,22 +13,20 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, RouterModule, TranslatePipe, ApiDatePipe],
   template: `
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 lg:p-8 font-cairo" dir="rtl">
+    <div class="text-slate-100 font-cairo" dir="rtl">
       <!-- Header Section -->
       <div class="max-w-7xl mx-auto mb-6 sm:mb-8">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
           <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>بوابات الدفع الإلكتروني المعتمدة - Paymob Unified Checkout</span>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
+              <span>{{ paymobEnabled() ? 'الدفع بالبطاقة أو InstaPay' : 'الدفع عبر InstaPay' }}</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              الاشتراكات وتدقيق عمليات الدفع
+              الاشتراك والمشاريع الإضافية
             </h1>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              إدارة سعة المشاريع والاطلاع الفوري على حالة وصول إشعارات الدفع (Webhook) لكل عملية.
+            <p class="text-sm text-slate-400 mt-1 leading-relaxed">
+              اشترِ مشاريع إضافية بدفعة واحدة. حوّل المبلغ عبر InstaPay وارفع صورة التحويل، والرصيد يتضاف بعد المراجعة.
             </p>
           </div>
 
@@ -80,7 +78,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
             [class.hover:text-slate-200]="activeTab() !== 'history'"
             [class.hover:bg-slate-800]="activeTab() !== 'history'">
             <span>📜</span>
-            <span>سجل المدفوعات والـ Webhook</span>
+            <span>سجل المدفوعات</span>
             @if (myPayments() && myPayments()!.totalNeverArrivedCount > 0) {
               <span class="px-1.5 py-0.2 bg-rose-500 text-white text-[10px] rounded-full font-bold animate-pulse">
                 {{ myPayments()!.totalNeverArrivedCount }}
@@ -480,19 +478,19 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
           <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span>تشفير معاملات 256-bit SSL آمن</span>
+          <span>اتصال مشفّر وآمن</span>
         </div>
         <div class="flex items-center gap-2">
           <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>دعم جميع البطاقات والمحافظ الإلكترونية</span>
+          <span>{{ paymobEnabled() ? 'بطاقات بنكية و InstaPay' : 'تحويل InstaPay' }}</span>
         </div>
         <div class="flex items-center gap-2">
           <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
-          <span>تفعيل وتوسعة فورية للسعة</span>
+          <span>رصيد دائم بدون اشتراك شهري</span>
         </div>
       </div>
 

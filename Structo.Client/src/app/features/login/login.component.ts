@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -7,23 +7,25 @@ import { RateLimitService } from '../../core/services/rate-limit.service';
 import { ToastService } from '../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../environments/environment';
+import { LanguageService } from '../../core/services/language.service';
 import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-translations';
 
+import { BrandComponent } from '../../core/components/brand.component';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, TranslatePipe, BrandComponent],
   template: `
-    <div class="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div class="min-h-dvh bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden font-cairo">
       <!-- Glow background -->
       <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div class="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-pink-500/5 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div class="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <!-- Logo -->
-        <div class="flex justify-center">
-          <img src="assets/images/default-tenant-logo.png" [alt]="'NAV.LOGO_ALT' | translate" class="h-14 w-auto object-contain">
-        </div>
+        <a routerLink="/" class="flex justify-center" aria-label="أسس Osos">
+          <app-brand size="lg" />
+        </a>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
           {{ 'LOGIN.TITLE' | translate }}
         </h2>
@@ -140,9 +142,10 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
                   </label>
                 </div>
                 <div class="text-sm">
-                  <a href="#" class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors duration-200">
+                  <button type="button" (click)="showForgotHelp.set(!showForgotHelp())" [attr.aria-expanded]="showForgotHelp()"
+                    class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors duration-200 cursor-pointer">
                     {{ 'LOGIN.FORGOT_PASSWORD' | translate }}
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -175,12 +178,24 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
             </form>
 
             <!-- Divider -->
+            @if (showForgotHelp()) {
+              <div class="mt-4 rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4 text-sm text-slate-300 leading-relaxed" role="note">
+                @if (isAr()) {
+                  <p><strong class="text-white">موظف في شركة؟</strong> اطلب من مالك الشركة يعيّن لك كلمة مرور جديدة من صفحة "مستخدمو الشركة".</p>
+                  <p class="mt-2"><strong class="text-white">مالك الشركة؟</strong> لو سجّلت بحساب جوجل ادخل بزرار جوجل تحت، أو تواصل مع دعم أسس من نفس البريد المسجّل.</p>
+                } @else {
+                  <p><strong class="text-white">Employee?</strong> Ask your company owner to set a new password from the Company users page.</p>
+                  <p class="mt-2"><strong class="text-white">Company owner?</strong> If you signed up with Google, use the Google button below, or contact Osos support from your registered email.</p>
+                }
+              </div>
+            }
+
             <div class="relative my-6">
               <div class="absolute inset-0 flex items-center" aria-hidden="true">
                 <div class="w-full border-t border-slate-800"></div>
               </div>
               <div class="relative flex justify-center text-xs">
-                <span class="px-2 bg-slate-900 text-slate-400">Or registration by / أو التسجيل بواسطة</span>
+                <span class="px-2 bg-slate-900 text-slate-400">{{ isAr() ? 'أو' : 'or' }}</span>
               </div>
             </div>
 
@@ -197,16 +212,16 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                تسجيل الدخول باستخدام جوجل
+                {{ isAr() ? 'الدخول بحساب جوجل' : 'Continue with Google' }}
               </button>
             </div>
 
             <!-- Public Registration Link -->
             <div class="mt-6 text-center">
               <p class="text-sm text-slate-400">
-                Don't have an account?
+                {{ isAr() ? 'معندكش حساب؟' : 'No account yet?' }}
                 <a routerLink="/register" class="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200">
-                  Register your tenant/company here
+                  {{ isAr() ? 'سجّل شركتك مجاناً' : 'Register your company free' }}
                 </a>
               </p>
             </div>
@@ -218,6 +233,9 @@ import { ERROR_TRANSLATIONS, extractApiMessage } from '../../core/utils/error-tr
   `,
 })
 export class LoginComponent implements OnInit {
+  readonly showForgotHelp = signal(false);
+  readonly isAr = computed(() => this.langServiceForLabels.currentLang() !== 'en');
+  private readonly langServiceForLabels = inject(LanguageService);
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   readonly rateLimitService = inject(RateLimitService);

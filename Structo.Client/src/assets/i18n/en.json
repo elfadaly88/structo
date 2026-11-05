@@ -82,7 +82,7 @@
     "SUBTITLE": "Or",
     "RETURN_HOME": "return to home page",
     "USERNAME_LABEL": "Username / Email",
-    "USERNAME_PLACEHOLDER": "e.g. owner1 or admin@example.com",
+    "USERNAME_PLACEHOLDER": "you@company.com",
     "USERNAME_REQ": "Username is required.",
     "PASSWORD_LABEL": "Password",
     "PASSWORD_REQ": "Password is required (min 6 characters).",

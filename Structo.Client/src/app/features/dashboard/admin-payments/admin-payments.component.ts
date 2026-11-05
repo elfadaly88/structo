@@ -10,7 +10,7 @@ import { PaymentAuditService, AdminPaymentsResponse, PaymentAttemptItem, TenantP
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, ApiDatePipe],
   template: `
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 lg:p-8 font-cairo" dir="rtl">
+    <div class="text-slate-100 font-cairo" dir="rtl">
       <!-- Page Header -->
       <div class="max-w-7xl mx-auto mb-6 sm:mb-8">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">

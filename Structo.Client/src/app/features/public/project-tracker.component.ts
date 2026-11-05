@@ -1,13 +1,16 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SiteExecutionService } from '../../core/services/site-execution.service';
 import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/site-execution.models';
+import { BrandComponent } from '../../core/components/brand.component';
+import { SeoService } from '../../core/services/seo.service';
+import { propertyTypeLabel } from '../../core/utils/labels';
 
 @Component({
   selector: 'app-project-tracker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink, BrandComponent],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-cairo antialiased selection:bg-indigo-500 selection:text-white">
       
@@ -15,15 +18,10 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
       <div class="fixed top-0 inset-x-0 h-96 bg-gradient-to-b from-indigo-600/10 via-slate-900/0 to-transparent pointer-events-none"></div>
 
       <!-- Top Header Bar -->
-      <header class="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-black text-sm shadow-md">
-            S
-          </div>
-          <div>
-            <span class="font-bold text-sm text-white tracking-wide">OSOS</span>
-            <span class="text-[10px] text-indigo-400 mr-2 font-medium">بوابة متابعة العميل المباشرة</span>
-          </div>
+      <header class="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md px-4 sm:px-8 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <app-brand size="sm" />
+          <span class="hidden min-[380px]:inline text-[11px] text-indigo-300 font-semibold border-s border-slate-800 ps-3">متابعة تنفيذ المشروع</span>
         </div>
 
         <div class="flex items-center gap-2 text-xs text-slate-400">
@@ -63,7 +61,7 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
               <div class="space-y-2">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                    {{ tracker()!.category || 'مشروع هندسي' }}
+                    {{ categoryText() }}
                   </span>
                   @if (tracker()!.governorate) {
                     <span class="text-xs text-slate-400 flex items-center gap-1">
@@ -92,10 +90,11 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
                   </span>
                 </div>
 
-                <div class="w-16 h-16 rounded-full bg-slate-900 border-4 border-slate-800 relative flex items-center justify-center shrink-0">
-                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
-                </div>
+                <svg viewBox="0 0 64 64" class="w-16 h-16 shrink-0 -rotate-90" role="img" [attr.aria-label]="'نسبة الإنجاز ' + progress() + '%'">
+                  <circle cx="32" cy="32" r="27" fill="none" stroke="rgb(30 41 59)" stroke-width="7" />
+                  <circle cx="32" cy="32" r="27" fill="none" stroke="rgb(52 211 153)" stroke-width="7" stroke-linecap="round"
+                    [attr.stroke-dasharray]="ringLength" [attr.stroke-dashoffset]="ringOffset()" style="transition: stroke-dashoffset .8s ease" />
+                </svg>
               </div>
             </div>
 
@@ -240,8 +239,8 @@ import { PublicProjectTrackerDto, PublicSitePhotoDto } from '../../core/models/s
       }
 
       <!-- Footer -->
-      <footer class="relative z-10 border-t border-slate-800/80 bg-slate-950/80 px-4 py-4 text-center text-xs text-slate-500 font-mono">
-        OSOS Platform • نظام إدارة وتتبع تنفيذ المشاريع الميدانية
+      <footer class="relative z-10 border-t border-slate-800/80 bg-slate-950/80 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-center text-xs text-slate-500">
+        هذه الصفحة تعرض تقدّم التنفيذ فقط، بدون أي بيانات مالية. مقدمة من <a routerLink="/" class="text-indigo-300 hover:text-indigo-200 font-bold">أسس</a>.
       </footer>
 
     </div>
@@ -255,6 +254,15 @@ export class ProjectTrackerComponent implements OnInit {
   readonly isLoading = signal<boolean>(true);
   readonly hasError = signal<boolean>(false);
   readonly previewPhoto = signal<PublicSitePhotoDto | null>(null);
+  private readonly seo = inject(SeoService);
+
+  readonly ringLength = 2 * Math.PI * 27;
+  readonly progress = computed(() => Math.max(0, Math.min(100, Math.round(this.tracker()?.weightedOverallProgress ?? 0))));
+  readonly ringOffset = computed(() => this.ringLength * (1 - this.progress() / 100));
+  readonly categoryText = computed(() => {
+    const c = this.tracker()?.category;
+    return c ? propertyTypeLabel(c) : 'مشروع';
+  });
 
   ngOnInit(): void {
     const token = this.route.snapshot.paramMap.get('shareToken');
@@ -268,6 +276,7 @@ export class ProjectTrackerComponent implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.tracker.set(res.data);
+          this.seo.update({ title: `متابعة تنفيذ: ${res.data.projectName}`, index: false });
         } else {
           this.hasError.set(true);
         }

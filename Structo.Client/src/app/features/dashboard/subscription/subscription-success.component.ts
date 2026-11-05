@@ -9,7 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-cairo" dir="rtl">
+    <div class="min-h-[70dvh] flex items-center justify-center p-4 sm:p-6 font-cairo" dir="rtl">
       <div class="max-w-md w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 text-center shadow-2xl backdrop-blur-xl relative overflow-hidden">
         <!-- Ambient Glow -->
         <div class="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>

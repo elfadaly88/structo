@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal, computed, ElementRef, ViewChild, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { ApiDatePipe } from '../../../core/pipes/api-date.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule, DecimalPipe, NgClass } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
+import { projectStatusLabel, projectStatusTone, propertyTypeLabel } from '../../../core/utils/labels';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -64,9 +65,9 @@ const GOVERNORATES: GovernorateOption[] = [
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [ApiDatePipe, CommonModule, ReactiveFormsModule, DecimalPipe, TranslatePipe, TenantProfileComponent, UsersComponent, NgClass],
+  imports: [ApiDatePipe, CommonModule, ReactiveFormsModule, DecimalPipe, TranslatePipe, TenantProfileComponent, UsersComponent],
   template: `
-    <div class="space-y-6 w-full px-4 sm:px-6 lg:px-8">
+    <div class="space-y-6 w-full">
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/60 pb-5">
         <div>
@@ -115,44 +116,6 @@ const GOVERNORATES: GovernorateOption[] = [
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      @if (isTenantOwner()) {
-        <div class="border-b border-slate-800">
-          <nav class="flex gap-8">
-            <button 
-              (click)="navigateToTab('projects')" 
-              class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
-              [class.border-indigo-500]="activeTab() === 'projects'"
-              [class.text-indigo-400]="activeTab() === 'projects'"
-              [class.border-transparent]="activeTab() !== 'projects'"
-              [class.text-slate-400]="activeTab() !== 'projects'"
-              [class.hover:text-slate-200]="activeTab() !== 'projects'">
-              {{ 'PROJECTS.PAGE_TITLE' | translate }}
-            </button>
-            <button 
-              (click)="navigateToTab('users')" 
-              class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
-              [class.border-indigo-500]="activeTab() === 'users'"
-              [class.text-indigo-400]="activeTab() === 'users'"
-              [class.border-transparent]="activeTab() !== 'users'"
-              [class.text-slate-400]="activeTab() !== 'users'"
-              [class.hover:text-slate-200]="activeTab() !== 'users'">
-              {{ 'USERS.TAB_USERS' | translate }}
-            </button>
-            <button 
-              (click)="navigateToTab('profile')" 
-              class="pb-4 text-sm font-bold border-b-2 cursor-pointer transition-all duration-200 font-cairo"
-              [class.border-indigo-500]="activeTab() === 'profile'"
-              [class.text-indigo-400]="activeTab() === 'profile'"
-              [class.border-transparent]="activeTab() !== 'profile'"
-              [class.text-slate-400]="activeTab() !== 'profile'"
-              [class.hover:text-slate-200]="activeTab() !== 'profile'">
-              {{ 'PROFILE.TAB_PROFILE' | translate }}
-            </button>
-          </nav>
-        </div>
-      }
-
       <!-- SECTION 1: PROJECTS HUB -->
       @if (activeTab() === 'projects') {
         <!-- Sleek Dark-themed Quota & Consumption Indicator -->
@@ -172,8 +135,8 @@ const GOVERNORATES: GovernorateOption[] = [
                     {{ usedProjectsCount() }} من أصل {{ allowedProjectsCount() }}
                   </span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5 font-cairo">
-                  المشاريع المستهلكة: <strong class="text-indigo-300 font-mono">{{ usedProjectsCount() }}</strong> من أصل <strong class="text-white font-mono">{{ allowedProjectsCount() }}</strong> متاح في باقتك الحالية. رصيد المشاريع مدى الحياة ولا يُسترد عند إغلاق المشروع.
+                <p class="text-xs text-slate-400 mt-0.5 font-cairo leading-relaxed">
+                  {{ isAr() ? 'رصيد المشاريع مدى الحياة، والمشروع المغلق لا يرجّع رصيده.' : 'Project credits never expire; closing a project does not return its credit.' }}
                 </p>
               </div>
             </div>
@@ -181,8 +144,8 @@ const GOVERNORATES: GovernorateOption[] = [
             <!-- Left Side (RTL End): Clean Progress Bar & Secondary Upgrade Button -->
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full lg:w-auto shrink-0">
               <div class="flex items-center justify-between sm:justify-start gap-3 bg-slate-950/60 px-3.5 py-2 rounded-xl border border-slate-800/80">
-                <span class="text-xs text-slate-400 font-mono font-medium shrink-0">
-                  {{ usedProjectsCount() }} / {{ allowedProjectsCount() }} Projects Used
+                <span class="text-xs text-slate-400 font-medium shrink-0 font-cairo">
+                  {{ usedProjectsCount() }} / {{ allowedProjectsCount() }} {{ isAr() ? 'مستخدم' : 'used' }}
                 </span>
                 <div class="w-28 sm:w-36 bg-slate-800 rounded-full h-2 overflow-hidden shrink-0">
                   <div 
@@ -200,7 +163,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>+ شراء مشاريع إضافية</span>
+                  <span>{{ isAr() ? 'شراء مشاريع إضافية' : 'Buy extra projects' }}</span>
                 </button>
               }
             </div>
@@ -208,18 +171,18 @@ const GOVERNORATES: GovernorateOption[] = [
         }
 
         <!-- Projects Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.STAT_TOTAL' | translate }}</span>
-            <h3 class="text-3xl font-extrabold text-white mt-1">{{ projects().length }}</h3>
+        <div class="grid grid-cols-3 gap-2 sm:gap-5">
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-3 sm:p-5 shadow-sm min-w-0">
+            <span class="block text-[11px] sm:text-xs text-slate-500 font-bold font-cairo leading-snug">{{ 'PROJECTS.STAT_TOTAL' | translate }}</span>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">{{ projects().length }}</h3>
           </div>
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.STAT_ACTIVE' | translate }}</span>
-            <h3 class="text-3xl font-extrabold text-indigo-400 mt-1">{{ activeProjectsCount() }}</h3>
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-3 sm:p-5 shadow-sm min-w-0">
+            <span class="block text-[11px] sm:text-xs text-slate-500 font-bold font-cairo leading-snug">{{ 'PROJECTS.STAT_ACTIVE' | translate }}</span>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-indigo-400 mt-1">{{ activeProjectsCount() }}</h3>
           </div>
-          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-sm">
-            <span class="text-xs text-slate-500 font-bold uppercase tracking-wider font-cairo">{{ 'PROJECTS.STAT_COMPLETED' | translate }}</span>
-            <h3 class="text-3xl font-extrabold text-emerald-400 mt-1">{{ completedProjectsCount() }}</h3>
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-3 sm:p-5 shadow-sm min-w-0">
+            <span class="block text-[11px] sm:text-xs text-slate-500 font-bold font-cairo leading-snug">{{ 'PROJECTS.STAT_COMPLETED' | translate }}</span>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">{{ completedProjectsCount() }}</h3>
           </div>
         </div>
 
@@ -276,7 +239,7 @@ const GOVERNORATES: GovernorateOption[] = [
                           {{ proj.name }}
                         </div>
                         @if (proj.isPublicPortfolio) {
-                          <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Public</span>
+                          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-cairo">{{ isAr() ? 'في البروفايل' : 'Public' }}</span>
                         }
                       </div>
                       <span class="block text-xs font-normal text-slate-500 mt-0.5 max-w-xs truncate font-cairo">
@@ -290,39 +253,9 @@ const GOVERNORATES: GovernorateOption[] = [
                       </td>
                     }
                     <td class="px-6 py-4 text-center">
-                      @if (proj.status === 'Active') {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">
-                          {{ 'PROJECTS.STATUS.ACTIVE' | translate }}
-                        </span>
-                      } @else if (proj.status === 'Delayed') {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
-                          {{ 'PROJECTS.STATUS.DELAYED' | translate }}
-                        </span>
-                      } @else if (proj.status === 'PendingActivation') {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
-                          قيد التفعيل / Pending
-                        </span>
-                      } @else if (proj.status === 'FinancialFreeze') {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">
-                          {{ langService.currentLang() === 'ar' ? 'مجمّد' : 'Frozen' }}
-                        </span>
-                      } @else if (proj.status === 'Closed') {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
-                          {{ langService.currentLang() === 'ar' ? 'مغلق' : 'Closed' }}
-                        </span>
-                      } @else {
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-slate-800 text-slate-400 border border-slate-700 font-cairo">
-                          {{ 'PROJECTS.STATUS.COMPLETED' | translate }}
-                        </span>
-                      }
+                      <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border font-cairo whitespace-nowrap" [class]="statusClass(proj.status)">{{ statusText(proj.status) }}</span>
                     </td>
-                    <td class="px-6 py-4 text-center font-cairo text-xs font-semibold">
-                      @if (proj.propertyType === 'Residential') {
-                        🏠 {{ langService.currentLang() === 'ar' ? 'سكني' : 'Residential' }}
-                      } @else {
-                        🏢 {{ langService.currentLang() === 'ar' ? 'إداري' : 'Administrative' }}
-                      }
-                    </td>
+                    <td class="px-6 py-4 text-center font-cairo text-xs font-semibold text-slate-300">{{ typeText(proj.propertyType) }}</td>
                     <td class="px-6 py-4 text-slate-400 font-mono tabular-nums">
                       @if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
                         {{ proj.startDate | apiDate:'dd/MM/yyyy' }}
@@ -353,26 +286,16 @@ const GOVERNORATES: GovernorateOption[] = [
             @for (proj of projects(); track proj.id) {
               <div 
                 (click)="viewDetails(proj.id)"
-                class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 shadow-md cursor-pointer hover:border-indigo-500/50 transition-all"
+                class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-md cursor-pointer hover:border-indigo-500/50 active:scale-[0.99] transition-all"
                 [class.opacity-60]="proj.status === 'PendingActivation'">
                 <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-                  <div class="font-bold text-white flex items-center gap-1.5 font-cairo">
+                  <div class="font-bold text-white flex items-center gap-1.5 font-cairo min-w-0">
                     @if (proj.status === 'PendingActivation') {
                       <span class="text-amber-500">🔒</span>
                     }
-                    {{ proj.name }}
+                    <span class="truncate">{{ proj.name }}</span>
                   </div>
-                  @if (proj.status === 'Active') {
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-cairo">Active</span>
-                  } @else if (proj.status === 'PendingActivation') {
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">Pending</span>
-                  } @else if (proj.status === 'FinancialFreeze') {
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 font-cairo">Frozen</span>
-                  } @else if (proj.status === 'Closed') {
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 font-cairo">Closed</span>
-                  } @else {
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 font-cairo">{{ proj.status }}</span>
-                  }
+                  <span class="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold border font-cairo" [class]="statusClass(proj.status)">{{ statusText(proj.status) }}</span>
                 </div>
                 <div class="text-xs text-slate-400 font-cairo flex items-center justify-between">
                   <span>👤 {{ proj.client }}</span>
@@ -381,7 +304,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   }
                 </div>
                 <div class="text-[11px] text-slate-500 font-cairo flex items-center justify-between pt-1 border-t border-slate-900">
-                  <span>{{ proj.propertyType === 'Residential' ? '🏠 Residential' : '🏢 Administrative' }}</span>
+                  <span>{{ typeText(proj.propertyType) }}</span>
                   <span class="font-mono tabular-nums">
                     @if (proj.startDate && !proj.startDate.startsWith('0001') && !proj.startDate.startsWith('2001-01-01')) {
                       📅 {{ proj.startDate | apiDate:'dd/MM/yyyy' }}
@@ -413,27 +336,6 @@ const GOVERNORATES: GovernorateOption[] = [
         <app-tenant-profile></app-tenant-profile>
       }
     </div>
-
-    <!-- Sticky Mobile Action Bar for TenantOwner -->
-    @if (isTenantOwner()) {
-      <div class="md:hidden fixed bottom-0 left-0 right-0 p-3 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 z-30 flex items-center justify-around gap-2 shadow-2xl">
-        @if (activeTab() === 'projects') {
-          <button
-            (click)="openProjectModal()"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold font-cairo text-sm shadow-lg shadow-indigo-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            ➕ {{ 'PROJECTS.NEW_PROJECT' | translate }}
-          </button>
-        } @else if (activeTab() === 'users') {
-          <button
-            (click)="openUserModal()"
-            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold font-cairo text-sm shadow-lg shadow-indigo-600/30 active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            ➕ {{ 'USERS.NEW_USER' | translate }}
-          </button>
-        }
-      </div>
-    }
 
     <!-- MODAL 1: CREATE PROJECT (Tabbed Layout) -->
     @if (isProjectModalOpen()) {
@@ -1383,6 +1285,25 @@ export class ProjectsComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   @ViewChild('profileMapContainer') profileMapContainer?: ElementRef<HTMLDivElement>;
   readonly activeTab = signal<'projects' | 'users' | 'profile'>('projects');
+
+  readonly isAr = computed(() => this.langService.currentLang() !== 'en');
+  statusText(status: string | null | undefined): string {
+    if (status === 'PendingActivation') return this.isAr() ? 'قيد التفعيل' : 'Pending';
+    if (status === 'Delayed') return this.isAr() ? 'متأخر' : 'Delayed';
+    return projectStatusLabel(status, this.isAr() ? 'ar' : 'en');
+  }
+  statusClass(status: string | null | undefined): string {
+    if (status === 'PendingActivation' || status === 'Delayed') return 'bg-amber-500/10 text-amber-300 border-amber-500/25';
+    return ({
+      success: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25',
+      warning: 'bg-amber-500/10 text-amber-300 border-amber-500/25',
+      info: 'bg-sky-500/10 text-sky-300 border-sky-500/25',
+      muted: 'bg-slate-800 text-slate-300 border-slate-700',
+    } as const)[projectStatusTone(status)];
+  }
+  typeText(type: string | null | undefined): string {
+    return propertyTypeLabel(type || 'Residential', this.isAr() ? 'ar' : 'en');
+  }
   readonly togglingUserId = signal<string | null>(null);
   readonly currentUserId = computed(() => this.authService.currentUser()?.userId || '');
 

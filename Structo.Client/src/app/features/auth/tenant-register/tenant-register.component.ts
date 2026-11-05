@@ -22,10 +22,11 @@ interface NominatimResult {
   display_name: string;
 }
 
+import { BrandComponent } from '../../../core/components/brand.component';
 @Component({
   selector: 'app-tenant-register',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule, BrandComponent],
   encapsulation: ViewEncapsulation.None,
   template: `
     <div class="min-h-screen bg-slate-950 flex flex-col md:flex-row font-sans selection:bg-indigo-500 selection:text-white">
@@ -39,10 +40,9 @@ interface NominatimResult {
         </div>
 
         <div class="relative z-10">
-          <div class="flex items-center gap-3 mb-10">
-            <img src="assets/images/default-tenant-logo.png" alt="Osos Logo" class="h-10 w-auto object-contain">
-            <span class="text-2xl font-bold tracking-tight text-white font-cairo">أسس / Osos</span>
-          </div>
+          <a routerLink="/" class="inline-flex mb-10" aria-label="أسس Osos">
+            <app-brand size="lg" />
+          </a>
 
           <h1 class="text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-4 font-cairo">
             منظومة التسجيل الآمنة والذكية
