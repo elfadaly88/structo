@@ -390,221 +390,43 @@ if (!instaPaySettings.IsConfigured)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
+    var startupLogger = app.Logger;
+
+    // EF migrations are the only schema path. If they fail, stop: running on a half-built schema corrupts data.
     try
     {
-        // 🚀 Self-Healing Schema Guard for Production Deployment
-        context.Database.ExecuteSqlRaw(@"
-            ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsAudited"" boolean NOT NULL DEFAULT false;
-            ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""IsClosed"" boolean NOT NULL DEFAULT false;
-            ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""LastActiveAt"" timestamp with time zone NULL;
-            ALTER TABLE ""Tenants"" ADD COLUMN IF NOT EXISTS ""IsCleanupExempt"" boolean NOT NULL DEFAULT false;
-            ALTER TABLE ""SettlementLines"" ADD COLUMN IF NOT EXISTS ""IsBillableToClient"" boolean NOT NULL DEFAULT true;
-            ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" character varying(50) NOT NULL DEFAULT 'SiteProgress';
-
-            -- 🚀 Self-Healing: Projects.PublicShareToken & SiteExecution tables
-            ALTER TABLE ""Projects"" ADD COLUMN IF NOT EXISTS ""PublicShareToken"" character varying(64) NULL;
-            UPDATE ""Projects"" SET ""PublicShareToken"" = gen_random_uuid()::text WHERE ""PublicShareToken"" IS NULL;
-            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Projects_PublicShareToken"" ON ""Projects"" (""PublicShareToken"") WHERE ""PublicShareToken"" IS NOT NULL;
-
-            CREATE TABLE IF NOT EXISTS ""SiteTasks"" (
-                ""Id"" uuid NOT NULL,
-                ""TenantId"" uuid NOT NULL,
-                ""ProjectId"" uuid NOT NULL,
-                ""AssignedEngineerId"" uuid NOT NULL,
-                ""Title"" character varying(250) NOT NULL,
-                ""Description"" character varying(2000) NULL,
-                ""Weight"" numeric(18,4) NOT NULL DEFAULT 1.0,
-                ""ProgressPercentage"" integer NOT NULL DEFAULT 0,
-                ""Status"" character varying(30) NOT NULL DEFAULT 'Pending',
-                ""PlannedStartDate"" timestamp without time zone NULL,
-                ""PlannedEndDate"" timestamp without time zone NULL,
-                ""CompletedAt"" timestamp without time zone NULL,
-                ""EngineerNotes"" character varying(2000) NULL,
-                ""AttachmentUrls"" text[] NOT NULL DEFAULT ARRAY[]::text[],
-                CONSTRAINT ""PK_SiteTasks"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_SiteTasks_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE,
-                CONSTRAINT ""FK_SiteTasks_Users_AssignedEngineerId"" FOREIGN KEY (""AssignedEngineerId"") REFERENCES ""Users"" (""Id"") ON DELETE RESTRICT
-            );
-
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTasks_AssignedEngineerId"" ON ""SiteTasks"" (""AssignedEngineerId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTasks_ProjectId"" ON ""SiteTasks"" (""ProjectId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTasks_Status"" ON ""SiteTasks"" (""Status"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTasks_TenantId"" ON ""SiteTasks"" (""TenantId"");
-
-            CREATE TABLE IF NOT EXISTS ""SiteTaskSettlementItems"" (
-                ""Id"" uuid NOT NULL,
-                ""TenantId"" uuid NOT NULL,
-                ""SiteTaskId"" uuid NOT NULL,
-                ""SettlementItemId"" uuid NOT NULL,
-                ""AllocatedAmount"" numeric(18,2) NOT NULL,
-                ""ExpenseDescription"" character varying(500) NULL,
-                CONSTRAINT ""PK_SiteTaskSettlementItems"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_SiteTaskSettlementItems_SettlementLines_SettlementItemId"" FOREIGN KEY (""SettlementItemId"") REFERENCES ""SettlementLines"" (""Id"") ON DELETE RESTRICT,
-                CONSTRAINT ""FK_SiteTaskSettlementItems_SiteTasks_SiteTaskId"" FOREIGN KEY (""SiteTaskId"") REFERENCES ""SiteTasks"" (""Id"") ON DELETE CASCADE
-            );
-
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTaskSettlementItems_SettlementItemId"" ON ""SiteTaskSettlementItems"" (""SettlementItemId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTaskSettlementItems_SiteTaskId"" ON ""SiteTaskSettlementItems"" (""SiteTaskId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteTaskSettlementItems_TenantId"" ON ""SiteTaskSettlementItems"" (""TenantId"");
-
-            CREATE TABLE IF NOT EXISTS ""SiteDailyLogs"" (
-                ""Id"" uuid NOT NULL,
-                ""TenantId"" uuid NOT NULL,
-                ""ProjectId"" uuid NOT NULL,
-                ""LogDate"" timestamp without time zone NOT NULL,
-                ""LoggedByUserId"" uuid NOT NULL,
-                ""WeatherCondition"" character varying(100) NULL,
-                ""WorkforceCount"" integer NOT NULL DEFAULT 0,
-                ""WorkforceSummary"" character varying(1000) NULL,
-                ""MaterialsDelivered"" character varying(2000) NULL,
-                ""GeneralObservations"" character varying(3000) NULL,
-                ""CreatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-                CONSTRAINT ""PK_SiteDailyLogs"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_SiteDailyLogs_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE
-            );
-
-            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_SiteDailyLogs_TenantId_ProjectId_LogDate"" ON ""SiteDailyLogs"" (""TenantId"", ""ProjectId"", ""LogDate"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteDailyLogs_ProjectId"" ON ""SiteDailyLogs"" (""ProjectId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SiteDailyLogs_TenantId"" ON ""SiteDailyLogs"" (""TenantId"");
-
-            CREATE TABLE IF NOT EXISTS ""SitePunchItems"" (
-                ""Id"" uuid NOT NULL,
-                ""TenantId"" uuid NOT NULL,
-                ""ProjectId"" uuid NOT NULL,
-                ""SiteTaskId"" uuid NULL,
-                ""Title"" character varying(250) NOT NULL,
-                ""Severity"" character varying(30) NOT NULL DEFAULT 'Medium',
-                ""Status"" character varying(30) NOT NULL DEFAULT 'Open',
-                ""SubcontractorName"" character varying(150) NULL,
-                ""DefectPhotoUrl"" character varying(1500) NOT NULL,
-                ""ResolutionPhotoUrl"" character varying(1500) NULL,
-                ""EngineerNotes"" character varying(2000) NULL,
-                ""CreatedByUserId"" uuid NOT NULL,
-                ""CreatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-                ""ResolvedAt"" timestamp without time zone NULL,
-                CONSTRAINT ""PK_SitePunchItems"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_SitePunchItems_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE,
-                CONSTRAINT ""FK_SitePunchItems_SiteTasks_SiteTaskId"" FOREIGN KEY (""SiteTaskId"") REFERENCES ""SiteTasks"" (""Id"") ON DELETE SET NULL
-            );
-
-            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_CreatedByUserId"" ON ""SitePunchItems"" (""CreatedByUserId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_ProjectId"" ON ""SitePunchItems"" (""ProjectId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_SiteTaskId"" ON ""SitePunchItems"" (""SiteTaskId"");
-            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_Status"" ON ""SitePunchItems"" (""Status"");
-            CREATE INDEX IF NOT EXISTS ""IX_SitePunchItems_TenantId"" ON ""SitePunchItems"" (""TenantId"");
-
-            CREATE TABLE IF NOT EXISTS ""ProjectMembers"" (
-                ""ProjectId"" uuid NOT NULL,
-                ""UserId"" uuid NOT NULL,
-                ""AssignedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-                ""AssignedByUserId"" uuid NULL,
-                ""TenantId"" uuid NOT NULL,
-                CONSTRAINT ""PK_ProjectMembers"" PRIMARY KEY (""ProjectId"", ""UserId""),
-                CONSTRAINT ""FK_ProjectMembers_Projects_ProjectId"" FOREIGN KEY (""ProjectId"") REFERENCES ""Projects"" (""Id"") ON DELETE CASCADE,
-                CONSTRAINT ""FK_ProjectMembers_Tenants_TenantId"" FOREIGN KEY (""TenantId"") REFERENCES ""Tenants"" (""Id"") ON DELETE RESTRICT,
-                CONSTRAINT ""FK_ProjectMembers_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
-            );
-
-            CREATE INDEX IF NOT EXISTS ""IX_ProjectMembers_TenantId"" ON ""ProjectMembers"" (""TenantId"");
-            CREATE INDEX IF NOT EXISTS ""IX_ProjectMembers_UserId"" ON ""ProjectMembers"" (""UserId"");
-
-            -- Backup snapshot of Notifications before schema alteration / migration
-            CREATE TABLE IF NOT EXISTS ""Notifications_Backup_20260815"" AS SELECT * FROM ""Notifications"";
-
-            ALTER TABLE ""Notifications"" ADD COLUMN IF NOT EXISTS ""ProjectId"" uuid NULL;
-            CREATE INDEX IF NOT EXISTS ""IX_Notifications_ProjectId"" ON ""Notifications"" (""ProjectId"");
-            CREATE INDEX IF NOT EXISTS ""IX_Notifications_ReceiverId"" ON ""Notifications"" (""ReceiverId"");
-
-            -- 🚀 Self-Healing Schema Guard: PaymentAttempts Table & Indexes
-            CREATE TABLE IF NOT EXISTS ""PaymentAttempts"" (
-                ""Id"" uuid NOT NULL,
-                ""TenantId"" uuid NOT NULL,
-                ""UserId"" uuid NULL,
-                ""Amount"" numeric(18,2) NOT NULL,
-                ""PlanRequested"" character varying(50) NOT NULL,
-                ""ExtraProjectsCount"" integer NOT NULL,
-                ""PaymobOrderId"" character varying(100) NULL,
-                ""SpecialReference"" character varying(100) NOT NULL,
-                ""CreatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-                ""WebhookReceivedAt"" timestamp without time zone NULL,
-                ""WebhookStatus"" character varying(30) NOT NULL DEFAULT 'Pending',
-                ""LinkedTransactionId"" uuid NULL,
-                ""ErrorMessage"" character varying(500) NULL,
-                CONSTRAINT ""PK_PaymentAttempts"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_PaymentAttempts_SubscriptionTransactions_LinkedTransactionId"" FOREIGN KEY (""LinkedTransactionId"") REFERENCES ""SubscriptionTransactions"" (""Id"") ON DELETE SET NULL,
-                CONSTRAINT ""FK_PaymentAttempts_Tenants_TenantId"" FOREIGN KEY (""TenantId"") REFERENCES ""Tenants"" (""Id"") ON DELETE RESTRICT,
-                CONSTRAINT ""FK_PaymentAttempts_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE SET NULL
-            );
-
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_CreatedAt"" ON ""PaymentAttempts"" (""CreatedAt"");
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_LinkedTransactionId"" ON ""PaymentAttempts"" (""LinkedTransactionId"");
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_PaymobOrderId"" ON ""PaymentAttempts"" (""PaymobOrderId"");
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_SpecialReference"" ON ""PaymentAttempts"" (""SpecialReference"");
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_TenantId"" ON ""PaymentAttempts"" (""TenantId"");
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_UserId"" ON ""PaymentAttempts"" (""UserId"");
-            CREATE INDEX IF NOT EXISTS ""IX_PaymentAttempts_WebhookStatus"" ON ""PaymentAttempts"" (""WebhookStatus"");
-
-            INSERT INTO ""PaymentAttempts"" (
-                ""Id"", ""TenantId"", ""UserId"", ""Amount"", ""PlanRequested"", 
-                ""ExtraProjectsCount"", ""PaymobOrderId"", ""SpecialReference"", 
-                ""CreatedAt"", ""WebhookReceivedAt"", ""WebhookStatus"", ""ErrorMessage""
-            )
-            SELECT 
-                gen_random_uuid(),
-                '1c12b0cf-8505-4d0a-8d55-617daf3f30a2'::uuid,
-                'fd1f8821-d7ff-4627-ac7a-2144f4382bf8'::uuid,
-                250.00,
-                '+1 Projects (Pro Top-Up)',
-                1,
-                '594308791',
-                'SUB_1c12b0cf85054d0a8d55617daf3f30a2_594308791',
-                NOW() - INTERVAL '6 hours',
-                NULL,
-                'NeverArrived',
-                'Paymob webhook callback never reached server (Order ID 594308791)'
-            WHERE EXISTS (SELECT 1 FROM ""Tenants"" WHERE ""Id"" = '1c12b0cf-8505-4d0a-8d55-617daf3f30a2'::uuid)
-              AND NOT EXISTS (
-                SELECT 1 FROM ""PaymentAttempts"" pa WHERE pa.""PaymobOrderId"" = '594308791'
-            );
-        ");
         context.Database.Migrate();
-
-        // 🚀 Safe Backfill for Transactions with Empty/Default Dates
-        try
-        {
-            context.Database.ExecuteSqlRaw(@"
-                ALTER TABLE ""FinancialTransactions"" ADD COLUMN IF NOT EXISTS ""CreatedAt"" timestamp with time zone DEFAULT NOW();
-            ");
-
-            context.Database.ExecuteSqlRaw(@"
-                UPDATE ""FinancialTransactions""
-                SET ""TransactionDate"" = COALESCE(
-                    NULLIF(""CreatedAt"", '0001-01-01 00:00:00+00'::timestamptz),
-                    NULLIF(""PaymentDate"", '0001-01-01 00:00:00'::timestamp),
-                    (SELECT s.""SubmittedAt"" FROM ""Settlements"" s WHERE s.""Id"" = ""FinancialTransactions"".""SettlementId"" LIMIT 1),
-                    NOW()
-                )
-                WHERE ""TransactionDate"" IS NULL 
-                   OR ""TransactionDate"" <= '0001-01-02 00:00:00+00'::timestamptz
-                   OR ""TransactionDate"" <= '1970-01-01 00:00:00';
-
-                UPDATE ""FinancialTransactions""
-                SET ""PaymentDate"" = ""TransactionDate""
-                WHERE ""PaymentDate"" IS NULL 
-                   OR ""PaymentDate"" <= '0001-01-02 00:00:00+00'::timestamptz
-                   OR ""PaymentDate"" <= '1970-01-01 00:00:00';
-            ");
-            Console.WriteLine("[Startup] FinancialTransactions dates backfilled successfully.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Migration date backfill warning: {ex.Message}");
-        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database migration/backfill failed: {ex.Message}");
-        Console.WriteLine(ex.StackTrace);
+        startupLogger.LogCritical(ex, "Database migration failed; the application will not start.");
+        throw;
+    }
+
+    // Data fix for old rows with empty/default transaction dates (idempotent)
+    try
+    {
+        context.Database.ExecuteSqlRaw(@"
+            UPDATE ""FinancialTransactions""
+            SET ""TransactionDate"" = COALESCE(
+                NULLIF(""PaymentDate"", '0001-01-01 00:00:00'::timestamp),
+                (SELECT s.""SubmittedAt"" FROM ""Settlements"" s WHERE s.""Id"" = ""FinancialTransactions"".""SettlementId"" LIMIT 1),
+                NOW()
+            )
+            WHERE ""TransactionDate"" IS NULL
+               OR ""TransactionDate"" <= '0001-01-02 00:00:00+00'::timestamptz
+               OR ""TransactionDate"" <= '1970-01-01 00:00:00';
+
+            UPDATE ""FinancialTransactions""
+            SET ""PaymentDate"" = ""TransactionDate""
+            WHERE ""PaymentDate"" IS NULL
+               OR ""PaymentDate"" <= '0001-01-02 00:00:00+00'::timestamptz
+               OR ""PaymentDate"" <= '1970-01-01 00:00:00';
+        ");
+    }
+    catch (Exception ex)
+    {
+        startupLogger.LogWarning(ex, "FinancialTransactions date backfill skipped.");
     }
 
     // SuperAdmin seed: only when no SuperAdmin exists, and only with explicitly supplied credentials.
@@ -616,7 +438,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[SEED] Skipping SuperAdmin seed, Users table not readable: {ex.Message}");
+        startupLogger.LogWarning(ex, "Skipping SuperAdmin seed: Users table not readable.");
     }
 
     if (superAdminExists == false)
@@ -650,56 +472,11 @@ using (var scope = app.Services.CreateScope())
             TenantId = null
         });
         context.SaveChanges();
-        Console.WriteLine($"[SEED] SuperAdmin account seeded successfully: {superAdminEmail.Trim()}");
+        startupLogger.LogInformation("SuperAdmin account seeded: {Email}", superAdminEmail.Trim());
     }
 
     try
     {
-        if (app.Environment.IsDevelopment())
-        {
-            if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 1"))
-            {
-                var t1 = new Tenant { Name = "Tenant 1", SubscriptionPlan = SubscriptionPlan.Premium, MaxActiveProjects = 50 };
-                context.Tenants.Add(t1);
-                context.SaveChanges();
-
-                var owner1 = new User
-                {
-                    FirstName = "Owner",
-                    LastName = "One",
-                    Email = "owner1",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@123"),
-                    Role = UserRole.TenantOwner,
-                    TenantId = t1.Id
-                };
-                context.Users.Add(owner1);
-
-                context.Projects.Add(new Project { TenantId = t1.Id, Name = "Tenant 1 Alpha Project", Description = "T1 Block", StartDate = DateTime.UtcNow });
-                context.SaveChanges();
-            }
-
-            if (!context.Tenants.IgnoreQueryFilters().Any(t => t.Name == "Tenant 2"))
-            {
-                var t2 = new Tenant { Name = "Tenant 2", SubscriptionPlan = SubscriptionPlan.Free, MaxActiveProjects = 2 };
-                context.Tenants.Add(t2);
-                context.SaveChanges();
-
-                var owner2 = new User
-                {
-                    FirstName = "Owner",
-                    LastName = "Two",
-                    Email = "owner2",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@123"),
-                    Role = UserRole.TenantOwner,
-                    TenantId = t2.Id
-                };
-                context.Users.Add(owner2);
-
-                context.Projects.Add(new Project { TenantId = t2.Id, Name = "Tenant 2 Beta Project", Description = "T2 Block", StartDate = DateTime.UtcNow });
-                context.SaveChanges();
-            }
-        }
-
         // Database Security Cleanup Routine: Remove/Sanitize existing records containing SQLi or XSS payloads
         try
         {
@@ -713,7 +490,7 @@ using (var scope = app.Services.CreateScope())
 
             foreach (var user in dirtyUsers)
             {
-                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing user record {user.Id}");
+                startupLogger.LogWarning("Sanitizing user record {UserId}", user.Id);
                 user.FirstName = taintRegex.Replace(user.FirstName, "").Trim();
                 user.LastName = taintRegex.Replace(user.LastName, "").Trim();
             }
@@ -724,7 +501,7 @@ using (var scope = app.Services.CreateScope())
 
             foreach (var tenant in dirtyTenants)
             {
-                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing tenant record {tenant.Id}");
+                startupLogger.LogWarning("Sanitizing tenant record {TenantId}", tenant.Id);
                 tenant.Name = taintRegex.Replace(tenant.Name, "").Trim();
             }
 
@@ -734,19 +511,19 @@ using (var scope = app.Services.CreateScope())
 
             foreach (var proj in dirtyProjects)
             {
-                Console.WriteLine($"[SECURITY CLEANUP] Sanitizing project record {proj.Id}");
+                startupLogger.LogWarning("Sanitizing project record {ProjectId}", proj.Id);
                 proj.Name = taintRegex.Replace(proj.Name, "").Trim();
             }
 
             if (dirtyUsers.Any() || dirtyTenants.Any() || dirtyProjects.Any())
             {
                 context.SaveChanges();
-                Console.WriteLine("[SECURITY CLEANUP] Tainted records sanitized successfully.");
+                startupLogger.LogInformation("Tainted records sanitized.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[SECURITY CLEANUP ERROR] Failed to run database cleanup: {ex.Message}");
+            startupLogger.LogError(ex, "Database security cleanup failed.");
         }
     }
     catch { /* Ignore if table doesn't exist yet */ }
@@ -899,7 +676,7 @@ if (!string.IsNullOrEmpty(port))
     Console.WriteLine($"[Startup] Dynamically binding to PORT={port}");
 }
 
-// 🛡️ Automatic Database Migration & Photo Sanitation Audit on Startup (Railway / Cloud Deployment)
+// Photo classification audit on startup (receipts are never public)
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<StructoDbContext>();
@@ -907,12 +684,7 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        // 1. Ensure Category column exists
-        dbContext.Database.ExecuteSqlRaw(@"
-            ALTER TABLE ""SitePhotos"" ADD COLUMN IF NOT EXISTS ""Category"" VARCHAR(50) DEFAULT 'SiteProgress';
-        ");
-
-        // 2. Perform safe Update
+        // Receipts and invoices must never be shown as public/site photos: reclassify any that slipped through
         int receiptRows = dbContext.Database.ExecuteSqlRaw(@"
             UPDATE ""SitePhotos""
             SET ""Category"" = 'Receipt'

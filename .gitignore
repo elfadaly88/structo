@@ -488,3 +488,10 @@ $RECYCLE.BIN/
 
 appsettings.Development.json
 **/appsettings.Development.json
+# Angular build output (Docker builds the client into wwwroot)
+Structo.API/wwwroot/
+
+# Local .NET CLI caches
+.dotnet/
+.dotnet_home/
+temp_dotnet/

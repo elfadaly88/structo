@@ -52,11 +52,7 @@ public class PaymentsController : ControllerBase
     [HttpPost("callback")]
     public async Task<IActionResult> PaymobCallback([FromQuery] string? hmac)
     {
-        Console.WriteLine("========================================");
-    Console.WriteLine($"🔥 [PAYMOB POST HIT AT {DateTime.UtcNow}]");
-    Console.WriteLine("========================================");
-        // _logger.LogCritical("🔥 [PAYMOB POST WEBHOOK REACHED] Path: {Path}, ContentLength: {Len}", 
-        // Request.Path, Request.ContentLength);
+        _logger.LogInformation("Paymob webhook received ({Length} bytes)", Request.ContentLength);
         string rawBody;
         
         using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
@@ -121,7 +117,6 @@ public class PaymentsController : ControllerBase
         else
         {
             _logger.LogWarning("Paymob webhook received WITHOUT HMAC signature. Rejecting.");
-            Console.WriteLine($"🔥 [PAYMOB Error: HMAC signature required] {DateTime.UtcNow}");
             return Unauthorized(new { success = false, message = "HMAC signature required" });
         }
 
