@@ -16,11 +16,14 @@ Access to Project Operations = Tenant Membership + Global Role + (Implicit Owner
 | Role | Global Scope | Project Assignment Required? | Capabilities on Assigned Projects |
 |---|---|---|---|
 | **`TenantOwner`** | All projects in Tenant | **No** (Implicit company-wide access) | Full management, financial control, project closeout, assign/remove members, update budgets. |
-| **`Manager` (`ProjectManager`)** | Assigned projects only | **Yes** (in `ProjectMembers`) | Field and financial management on assigned projects, member management (add/remove), petty cash, settlements. |
-| **`Accountant`** | Assigned projects only | **Yes** (in `ProjectMembers`) | Financial ledger, payments, transactions, petty cash approval/settlements on assigned projects. |
+| **`Manager` (`ProjectManager`)** | Assigned projects only | **Yes** (in `ProjectMembers`) | Field and financial management on assigned projects, member management (add/remove), custody (petty cash) approve/reject, settlement approve/reject, refund confirmation. |
+| **`Accountant`** | Assigned projects only | **Yes** (in `ProjectMembers`) | Financial ledger, payments, transactions, custody (petty cash) approve/reject, settlement approve/reject, refund confirmation on assigned projects. |
 | **`SiteEngineer`** | Assigned projects only | **Yes** (in `ProjectMembers`) | Field petty cash requests, settlement receipts, site photos on assigned projects. |
 | **`DesignEngineer`** | Assigned projects only | **Yes** (in `ProjectMembers`) | Project specs, site photos, reference BOQ access on assigned projects. |
 | **`SuperAdmin`** | Cross-tenant platform level | **N/A** (No tenant membership) | Platform health, tenant subscription quota auditing. Strictly blocked from financial transactions and employee PII/member rosters. |
+
+### Financial approval scoping (custody and settlements)
+Custody approval and settlement approval/rejection/refund confirmation share one gate: the controller calls `CanManageProjectFinancialsAsync` (TenantOwner of the tenant, or a `Manager`/`Accountant` assigned to the project), and the service looks the record up by `Id` **and** the route `projectId`, so a user assigned to project A cannot act on project B's records.
 
 ---
 
