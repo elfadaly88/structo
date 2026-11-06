@@ -25,7 +25,7 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
             </svg>
           </div>
           <h2 class="text-2xl font-extrabold tracking-tight text-white font-cairo">
-            تقييم المشروع / Project Evaluation
+            تقييم المشروع
           </h2>
           <p class="text-sm text-slate-400 font-cairo max-w-sm mx-auto">
             ملاحظاتكم تساعدنا على تطوير جودة الخدمة والمشاريع المستدامة.
@@ -46,7 +46,7 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
             </div>
             <div class="pt-4">
               <a routerLink="/" class="inline-flex items-center justify-center px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all font-cairo">
-                الرجوع للرئيسية / Home
+                الرجوع للرئيسية
               </a>
             </div>
           </div>
@@ -57,7 +57,7 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
             <!-- Rating Star Selector -->
             <div class="space-y-2">
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo">
-                التقييم العام / Star Rating <span class="text-red-400">*</span>
+                التقييم العام <span class="text-red-400">*</span>
               </label>
               
               <div class="flex items-center gap-3 justify-center py-3 bg-slate-950/40 rounded-2xl border border-slate-800">
@@ -75,14 +75,14 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
                 }
               </div>
               @if (reviewForm.get('rating')?.touched && reviewForm.get('rating')?.invalid) {
-                <p class="text-[11px] text-rose-400 font-cairo text-center">يرجى اختيار التقييم بالنجوم / Rating is required</p>
+                <p class="text-[11px] text-rose-400 font-cairo text-center">يرجى اختيار التقييم بالنجوم</p>
               }
             </div>
 
             <!-- Notes TextArea -->
             <div class="space-y-2">
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 font-cairo">
-                تعليقاتك وملاحظاتك / Review Notes <span class="text-red-400">*</span>
+                تعليقاتك وملاحظاتك <span class="text-red-400">*</span>
               </label>
               <textarea
                 formControlName="notes"
@@ -90,7 +90,7 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
                 placeholder="أضف تعليقاتك حول أداء العمل، الجودة، والتواصل..."
                 class="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-2xl p-4 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-cairo resize-none"></textarea>
               @if (reviewForm.get('notes')?.touched && reviewForm.get('notes')?.invalid) {
-                <p class="text-[11px] text-rose-400 font-cairo">التعليق مطلوب ولا يقل عن 10 أحرف / Notes must be at least 10 characters</p>
+                <p class="text-[11px] text-rose-400 font-cairo">التعليق مطلوب ولا يقل عن 10 أحرف</p>
               }
             </div>
 
@@ -113,7 +113,7 @@ import { ProjectCloseoutService } from '../../core/services/project-closeout.ser
                 </svg>
                 <span>جاري الإرسال...</span>
               } @else {
-                <span>إرسال التقييم / Submit Review</span>
+                <span>إرسال التقييم</span>
               }
             </button>
 

@@ -627,13 +627,13 @@ import { BrandComponent } from '../../core/components/brand.component';
             <!-- Modal Header -->
             <div class="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-5 py-4 backdrop-blur-sm flex items-center justify-between">
               <div>
-                <span class="text-[10px] font-bold text-amber-400 tracking-wider uppercase font-cairo">سجل تقييمات العملاء / Client Reviews Ledger</span>
+                <span class="text-[10px] font-bold text-amber-400 tracking-wider uppercase font-cairo">سجل تقييمات العملاء</span>
                 <h3 class="text-base font-bold text-white font-cairo mt-1">تقييمات شركة: {{ reviewsModalTenantName() }}</h3>
               </div>
               <button
                 (click)="closeReviewsModal()"
                 class="px-3 py-1.5 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-850 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
-                إغلاق / Close
+                إغلاق
               </button>
             </div>
 

@@ -49,7 +49,7 @@ interface ModeratedProject {
           <div class="flex items-center gap-2">
             <span class="text-2xl">🛡️</span>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-cairo">
-              لوحة التحكم المركزية للسوبر أدمن / Super Admin Lifecycle Hub
+              لوحة التحكم المركزية للسوبر أدمن
             </h1>
           </div>
           <p class="text-xs sm:text-sm text-slate-400 mt-1 font-cairo">
@@ -64,7 +64,7 @@ interface ModeratedProject {
           <svg class="w-4 h-4" [class.animate-spin]="isLoading()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>تحديث البيانات / Refresh</span>
+          <span>تحديث البيانات</span>
         </button>
       </div>
 
@@ -73,7 +73,7 @@ interface ModeratedProject {
         <!-- Card 1: Total Tenants -->
         <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/20 flex flex-col justify-between">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo">إجمالي الشركات / Total Tenants</span>
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo">إجمالي الشركات</span>
             <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 text-sm">🏢</span>
           </div>
           <div class="mt-3">
@@ -91,7 +91,7 @@ interface ModeratedProject {
         <!-- Card 2: Active Free vs Pro -->
         <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/20 flex flex-col justify-between">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo">الباقات / Plans Distribution</span>
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo">الباقات</span>
             <span class="p-2 rounded-xl bg-purple-500/10 text-purple-400 text-sm">💎</span>
           </div>
           <div class="mt-3">
@@ -128,7 +128,7 @@ interface ModeratedProject {
         <!-- Card 4: Cloud Storage Purging Stats -->
         <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/20 flex flex-col justify-between">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo">سعة التخزين / Storage Footprint</span>
+            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider font-cairo">سعة التخزين</span>
             <span class="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 text-sm">💾</span>
           </div>
           <div class="mt-3">
@@ -184,7 +184,7 @@ interface ModeratedProject {
                 [(ngModel)]="planFilter"
                 (ngModelChange)="onFilterChange()"
                 class="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 font-cairo focus:outline-none focus:border-indigo-500">
-                <option value="All">جميع الباقات / All Plans</option>
+                <option value="All">جميع الباقات</option>
                 <option value="Free">باقة مجانية (Free)</option>
                 <option value="Standard">باقة قياسية (Standard)</option>
                 <option value="Premium">باقة احترافية (Premium)</option>
@@ -213,7 +213,7 @@ interface ModeratedProject {
               [class.text-slate-400]="statusFilter() !== 'All'"
               [class.border]="statusFilter() !== 'All'"
               [class.border-slate-800]="statusFilter() !== 'All'">
-              الكل / All
+              الكل
             </button>
 
             <button
@@ -298,13 +298,13 @@ interface ModeratedProject {
             <table class="w-full text-left rtl:text-right border-collapse">
               <thead>
                 <tr class="border-b border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider font-cairo bg-slate-950/40">
-                  <th class="px-4 py-3.5">الشركة والمشرف / Tenant</th>
-                  <th class="px-4 py-3.5">الباقة / Plan</th>
-                  <th class="px-4 py-3.5">الحالة / Status</th>
-                  <th class="px-4 py-3.5">النشاط / Inactivity</th>
-                  <th class="px-4 py-3.5">التخزين / Storage</th>
-                  <th class="px-4 py-3.5 text-center">الاستثناء / Exemption</th>
-                  <th class="px-4 py-3.5 text-center">العمليات / Actions</th>
+                  <th class="px-4 py-3.5">الشركة والمشرف</th>
+                  <th class="px-4 py-3.5">الباقة</th>
+                  <th class="px-4 py-3.5">الحالة</th>
+                  <th class="px-4 py-3.5">النشاط</th>
+                  <th class="px-4 py-3.5">التخزين</th>
+                  <th class="px-4 py-3.5 text-center">الاستثناء</th>
+                  <th class="px-4 py-3.5 text-center">العمليات</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-850 text-slate-300 text-xs">
@@ -435,7 +435,7 @@ interface ModeratedProject {
                           (click)="inspectAdminTenant(tenant)"
                           title="فحص بروفايل الشركة والسجل"
                           class="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-850 text-indigo-400 border border-indigo-900/40 rounded-xl text-[10px] font-bold font-cairo transition-all active:scale-95 cursor-pointer">
-                          فحص / Inspect
+                          فحص
                         </button>
 
                         <!-- Upgrade Manual -->
@@ -506,7 +506,7 @@ interface ModeratedProject {
                 <!-- Info Grid -->
                 <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80">
                   <div>
-                    <span class="text-slate-500 text-[10px] block">الحالة / Status</span>
+                    <span class="text-slate-500 text-[10px] block">الحالة</span>
                     <span class="font-bold text-xs"
                           [class.text-emerald-400]="tenant.status === 'Active'"
                           [class.text-amber-400]="tenant.status === 'Suspended'"
@@ -515,15 +515,15 @@ interface ModeratedProject {
                     </span>
                   </div>
                   <div>
-                    <span class="text-slate-500 text-[10px] block">التخزين / Storage</span>
+                    <span class="text-slate-500 text-[10px] block">التخزين</span>
                     <span class="font-mono font-bold text-cyan-300 text-xs">{{ (tenant.storageFootprintMb ?? 0) | number:'1.1-2' }} MB</span>
                   </div>
                   <div>
-                    <span class="text-slate-500 text-[10px] block">المشاريع / Users</span>
+                    <span class="text-slate-500 text-[10px] block">المشاريع</span>
                     <span class="text-slate-300 font-mono text-xs">{{ tenant.totalProjects ?? 0 }} P · {{ tenant.totalUsers ?? 0 }} U</span>
                   </div>
                   <div>
-                    <span class="text-slate-500 text-[10px] block">النشاط / Inactivity</span>
+                    <span class="text-slate-500 text-[10px] block">النشاط</span>
                     <span class="text-xs" [class.text-amber-400]="(tenant.daysInactive ?? 0) >= 45" [class.text-slate-400]="(tenant.daysInactive ?? 0) < 45">
                       {{ tenant.daysInactive ?? 0 }} يوم
                     </span>
@@ -587,7 +587,7 @@ interface ModeratedProject {
                 (click)="prevPage()"
                 [disabled]="currentPage() <= 1"
                 class="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-850 hover:text-white transition-all cursor-pointer">
-                السابق / Prev
+                السابق
               </button>
               <span class="px-2 font-mono text-slate-300">
                 {{ currentPage() }} / {{ totalPages() || 1 }}
@@ -596,7 +596,7 @@ interface ModeratedProject {
                 (click)="nextPage()"
                 [disabled]="currentPage() >= totalPages()"
                 class="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-850 hover:text-white transition-all cursor-pointer">
-                التالي / Next
+                التالي
               </button>
             </div>
           </div>
@@ -659,7 +659,7 @@ interface ModeratedProject {
                   <button
                     (click)="closeForcePurgeModal()"
                     class="w-full mt-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
-                    إغلاق وتحديث القائمة / Close
+                    إغلاق وتحديث القائمة
                   </button>
                 </div>
               } @else {
@@ -710,7 +710,7 @@ interface ModeratedProject {
                     (click)="closeForcePurgeModal()"
                     [disabled]="isPurging()"
                     class="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-850 font-bold text-xs transition-all cursor-pointer">
-                    إلغاء التراجع / Cancel
+                    إلغاء التراجع
                   </button>
 
                   <button
@@ -747,7 +747,7 @@ interface ModeratedProject {
               <button
                 (click)="closeInspector()"
                 class="self-start md:self-auto w-full md:w-auto px-3 py-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors duration-150 text-xs font-bold font-cairo cursor-pointer">
-                إغلاق التفاصيل / Close
+                إغلاق التفاصيل
               </button>
             </div>
 
@@ -762,7 +762,7 @@ interface ModeratedProject {
                   <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-4">
                     <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
                       <div>
-                        <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">بيانات التسجيل / Registration Data</span>
+                        <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">بيانات التسجيل</span>
                         <h4 class="text-lg font-bold text-white font-cairo mt-1">ملف العميل الأساسي</h4>
                       </div>
                       <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/25 text-[10px]">{{ tenant.status }}</span>
@@ -778,7 +778,7 @@ interface ModeratedProject {
                         <div class="mt-1 text-slate-200 font-mono break-all">{{ tenant.adminEmail || 'N/A' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">المحافظة / Location</div>
+                        <div class="text-slate-500 uppercase tracking-wider font-bold font-cairo">المحافظة</div>
                         <div class="mt-1 text-slate-200 font-semibold">{{ tenant.location || tenant.region || 'غير محدد' }}</div>
                       </div>
                       <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
@@ -793,7 +793,7 @@ interface ModeratedProject {
                     <div class="bg-slate-950/55 border border-slate-800 rounded-2xl p-5 space-y-4">
                       <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
                         <div>
-                          <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">الإحصائيات والسعة / Audit Metrics</span>
+                          <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase font-cairo">الإحصائيات والسعة</span>
                           <h4 class="text-lg font-bold text-white font-cairo mt-1">سجل الأداء والتخزين</h4>
                         </div>
                       </div>
@@ -816,7 +816,7 @@ interface ModeratedProject {
 
                         <div class="bg-slate-950/40 border border-slate-850 rounded-xl p-4.5 space-y-2">
                           <div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-400 font-cairo font-bold">💾 السعة التخزينية المستخدمة / Storage Metrics</span>
+                            <span class="text-slate-400 font-cairo font-bold">💾 السعة التخزينية المستخدمة</span>
                             <span class="font-mono text-indigo-400 font-bold">{{ auditProfile().storageUsedMb }} MB</span>
                           </div>
                         </div>

@@ -112,7 +112,7 @@ import { NotificationService, NotificationItem } from '../services/notification.
               <button
                 (click)="clearAll()"
                 class="w-full py-1.5 text-center text-xs font-semibold text-rose-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg transition-all cursor-pointer">
-                Clear All / مسح الكل
+                مسح الكل
               </button>
             </div>
           }

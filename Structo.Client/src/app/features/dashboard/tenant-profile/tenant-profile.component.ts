@@ -84,7 +84,7 @@ interface MapSearchResult {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              تغيير صورة الغلاف / Change Banner
+              تغيير صورة الغلاف
             </span>
           </button>
           <input #bannerFileInput type="file" class="hidden" (change)="onBannerFileSelected($event)" accept="image/*">
@@ -92,7 +92,7 @@ interface MapSearchResult {
           @if (isUploadingBanner()) {
             <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
               <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-              <span class="text-xs text-indigo-300 font-cairo font-bold">جاري الرفع... / Uploading...</span>
+              <span class="text-xs text-indigo-300 font-cairo font-bold">جاري الرفع...</span>
             </div>
           }
         </div>
@@ -231,7 +231,7 @@ interface MapSearchResult {
             <div>
               <h3 class="text-sm font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                بيانات الشركة والحساب الأساسية / Company & Account Details
+                بيانات الشركة والحساب الأساسية
               </h3>
               <p class="text-[11px] text-slate-400">إدارة معلومات الكيان، اسم المؤسسة والاتصال الأساسي</p>
             </div>
@@ -241,7 +241,7 @@ interface MapSearchResult {
             <!-- Company Name -->
             <div>
               <label for="prof-name" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                اسم الشركة / Company Name <span class="text-rose-400">*</span>
+                اسم الشركة <span class="text-rose-400">*</span>
               </label>
               <input id="prof-name" type="text" formControlName="name" placeholder="أدخل اسم الشركة"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all">
@@ -250,7 +250,7 @@ interface MapSearchResult {
             <!-- Admin Email (Readonly) -->
             <div>
               <label for="prof-email" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-                البريد الإلكتروني للآدمن / Admin Email
+                البريد الإلكتروني للآدمن
               </label>
               <input id="prof-email" type="email" [value]="tenantData()?.adminEmail || auth.currentUser()?.email || 'N/A'" readonly disabled
                 class="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-slate-400 text-xs cursor-not-allowed">
@@ -261,7 +261,7 @@ interface MapSearchResult {
             <!-- Personal Phone -->
             <div>
               <label for="prof-personal-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                رقم الهاتف الشخصي / Personal Phone
+                رقم الهاتف الشخصي
               </label>
               <input id="prof-personal-phone" type="tel" formControlName="personalPhone" maxlength="11" placeholder="01xxxxxxxxx"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -270,7 +270,7 @@ interface MapSearchResult {
             <!-- WhatsApp Phone -->
             <div>
               <label for="prof-whatsapp-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                رقم الواتساب / WhatsApp Phone
+                رقم الواتساب
               </label>
               <input id="prof-whatsapp-phone" type="tel" formControlName="whatsAppPhone" maxlength="11" placeholder="01xxxxxxxxx"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -293,7 +293,7 @@ interface MapSearchResult {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/>
                       </svg>
                     </div>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">الاشتراك الحالي / Subscription</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">الاشتراك الحالي</span>
                   </div>
                   <div class="flex items-baseline gap-2">
                     <span class="text-2xl font-black text-white">{{ tenantData()?.subscriptionPlan || 'Free' }}</span>
@@ -322,7 +322,7 @@ interface MapSearchResult {
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
                       </svg>
-                      ترقية الباقة / Upgrade Plan
+                      ترقية الباقة
                     </button>
                   }
                   <!-- Add Extra Projects Button -->
@@ -352,7 +352,7 @@ interface MapSearchResult {
           <!-- Company Description -->
           <div>
             <label for="prof-desc" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-              وصف الشركة والنشاط / Company Description
+              وصف الشركة والنشاط
             </label>
             <textarea id="prof-desc" formControlName="companyDescription" rows="3" placeholder="نبذة مختصرة عن نشاط الشركة وخدماتها..."
               class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all resize-none"></textarea>
@@ -373,7 +373,7 @@ interface MapSearchResult {
             <div>
               <h3 class="text-sm font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                البيانات القانونية والوثائق / Legal Information & Documents
+                البيانات القانونية والوثائق
               </h3>
               <p class="text-[11px] text-slate-400">تحديث المحافظة والمستندات الرسمية والسجلات</p>
             </div>
@@ -383,11 +383,11 @@ interface MapSearchResult {
             <!-- Governorate Dropdown (Strict Binding Fix) -->
             <div>
               <label for="prof-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                المحافظة / Governorate <span class="text-rose-400">*</span>
+                المحافظة <span class="text-rose-400">*</span>
               </label>
               <select id="prof-gov" formControlName="governorateId"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-                <option value="">-- اختر المحافظة / Select Governorate --</option>
+                <option value="">-- اختر المحافظة</option>
                 @for (gov of governorates; track gov.id) {
                   <option [value]="gov.id">{{ gov.label }}</option>
                 }
@@ -397,7 +397,7 @@ interface MapSearchResult {
             <!-- Commercial Register -->
             <div>
               <label for="prof-cr" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                رقم السجل التجاري / Commercial Register
+                رقم السجل التجاري
               </label>
               <input id="prof-cr" type="text" formControlName="commercialRegister" placeholder="مثال: 102030"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -408,7 +408,7 @@ interface MapSearchResult {
             <!-- Tax Card -->
             <div>
               <label for="prof-tax" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                البطاقة الضريبية / Tax Card
+                البطاقة الضريبية
               </label>
               <input id="prof-tax" type="text" formControlName="taxCard" placeholder="مثال: 334-556-789"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -417,7 +417,7 @@ interface MapSearchResult {
             <!-- National ID -->
             <div>
               <label for="prof-nat" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                الرقم القومي للمالك / National ID
+                الرقم القومي للمالك
               </label>
               <input id="prof-nat" type="text" formControlName="nationalId" maxlength="14" placeholder="14 رقم قومي"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -426,7 +426,7 @@ interface MapSearchResult {
             <!-- Syndicate ID -->
             <div>
               <label for="prof-syn" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-                رقم كارنيه النقابة / Syndicate ID
+                رقم كارنيه النقابة
               </label>
               <input id="prof-syn" type="text" formControlName="syndicateId" placeholder="رقم القيد النقابي"
                 class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -448,7 +448,7 @@ interface MapSearchResult {
             <div>
               <h3 class="text-sm font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                الموقع والجغرافيا / Location & Geolocation
+                الموقع والجغرافيا
               </h3>
               <p class="text-[11px] text-slate-400">تحديد العنوان الدقيق وموقع المكاتب والفروع عبر الخريطة</p>
             </div>
@@ -457,7 +457,7 @@ interface MapSearchResult {
           <!-- Manual Address Field -->
           <div>
             <label for="prof-address" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-              العنوان التفصيلي / Manual Address
+              العنوان التفصيلي
             </label>
             <input id="prof-address" type="text" formControlName="manualAddress" placeholder="اسم الشارع، المبنى، رقم الدور، الحي..."
               class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all">
@@ -467,7 +467,7 @@ interface MapSearchResult {
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                تحديد الموقع على الخريطة / Drop Pin Map Selector
+                تحديد الموقع على الخريطة
               </label>
               @if (profileForm.get('latitude')?.value && profileForm.get('longitude')?.value) {
                 <span class="text-[11px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
@@ -513,7 +513,7 @@ interface MapSearchResult {
           <!-- Map Location URL -->
           <div>
             <label for="prof-map-url" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
-              رابط خرائط جوجل (اختر اختياري) / Google Maps Link
+              رابط خرائط جوجل (اختر اختياري)
             </label>
             <input id="prof-map-url" type="url" formControlName="mapLocationUrl" placeholder="https://maps.google.com/..."
               class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">

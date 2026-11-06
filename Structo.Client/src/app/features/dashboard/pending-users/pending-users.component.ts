@@ -31,7 +31,7 @@ export interface PendingUser {
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/60 pb-5">
         <div>
           <h1 class="text-3xl font-extrabold tracking-tight text-white font-cairo">
-            ⏳ المستخدمون المعلقون / Pending Approvals
+            ⏳ المستخدمون المعلقون
           </h1>
           <p class="text-sm text-slate-400 mt-1 font-cairo">تفعيل حسابات ملاك الشركات الجدد والتحقق من خطط اشتراكاتهم قبل منحهم حق الوصول للمنصة.</p>
         </div>
@@ -40,7 +40,7 @@ export interface PendingUser {
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 shadow-lg shadow-indigo-500/5">
-          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">بانتظار التفعيل / Awaiting Approval</span>
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block font-cairo">بانتظار التفعيل</span>
           <h3 class="text-3xl font-extrabold text-white mt-1 font-mono tabular-nums">{{ pendingUsers().length }}</h3>
         </div>
       </div>
@@ -52,11 +52,11 @@ export interface PendingUser {
           <table class="w-full text-left border-collapse font-cairo">
             <thead>
               <tr class="border-b border-slate-800 bg-slate-950/40 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                <th class="py-4 px-6">المستخدم / User Details</th>
-                <th class="py-4 px-6">الشركة / Company Details</th>
-                <th class="py-4 px-6">خطة الاشتراك / Plan</th>
-                <th class="py-4 px-6">تاريخ التسجيل / Created At</th>
-                <th class="py-4 px-6 text-right">الإجراءات / Actions</th>
+                <th class="py-4 px-6">المستخدم</th>
+                <th class="py-4 px-6">الشركة</th>
+                <th class="py-4 px-6">خطة الاشتراك</th>
+                <th class="py-4 px-6">تاريخ التسجيل</th>
+                <th class="py-4 px-6 text-right">الإجراءات</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 text-slate-300 text-sm">
@@ -69,7 +69,7 @@ export interface PendingUser {
               } @else if (pendingUsers().length === 0) {
                 <tr>
                   <td colspan="5" class="py-12 text-center text-slate-500 font-semibold font-cairo">
-                    لا يوجد مستخدمون بانتظار التفعيل حالياً / No pending users awaiting approval.
+                    لا يوجد مستخدمون بانتظار التفعيل حالياً
                   </td>
                 </tr>
               } @else {
@@ -128,7 +128,7 @@ export interface PendingUser {
             </div>
           } @else if (pendingUsers().length === 0) {
             <div class="py-12 text-center text-slate-500 font-semibold">
-              لا يوجد مستخدمون بانتظار التفعيل حالياً / No pending users awaiting approval.
+              لا يوجد مستخدمون بانتظار التفعيل حالياً
             </div>
           } @else {
             @for (user of pendingUsers(); track user.id) {

@@ -434,7 +434,7 @@ const GOVERNORATES: GovernorateOption[] = [
                       class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
                       placeholder="e.g. برج العاصمة الإدارية الجديدة">
                     @if (isProjectFieldInvalid('name')) {
-                      <p class="text-[10px] text-rose-400 mt-1 font-cairo">اسم المشروع مطلوب / Project Name is required.</p>
+                      <p class="text-[10px] text-rose-400 mt-1 font-cairo">اسم المشروع مطلوب</p>
                     }
                   </div>
 
@@ -450,7 +450,7 @@ const GOVERNORATES: GovernorateOption[] = [
                         class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
                         placeholder="e.g. شركة أوراسكوم للانشاءات">
                       @if (isProjectFieldInvalid('client')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">اسم العميل مطلوب / Client Name is required.</p>
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">اسم العميل مطلوب</p>
                       }
                     </div>
 
@@ -465,7 +465,7 @@ const GOVERNORATES: GovernorateOption[] = [
                         class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200"
                         placeholder="e.g. 15000000">
                       @if (isProjectFieldInvalid('budget')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">الميزانية مطلوبة برقم صحيح / Budget is required.</p>
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">الميزانية مطلوبة برقم صحيح</p>
                       }
                     </div>
                   </div>
@@ -481,7 +481,7 @@ const GOVERNORATES: GovernorateOption[] = [
                         formControlName="startDate"
                         class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
                       @if (isProjectFieldInvalid('startDate')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">تاريخ البدء مطلوب / Start Date is required.</p>
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">تاريخ البدء مطلوب</p>
                       }
                     </div>
                     <div>
@@ -504,39 +504,39 @@ const GOVERNORATES: GovernorateOption[] = [
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label for="proj-gov" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
-                        المحافظة / Governorate <span class="text-red-400">*</span>
+                        المحافظة <span class="text-red-400">*</span>
                       </label>
                       <select
                         id="proj-gov"
                         formControlName="governorate"
                         class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
                         <option value="" disabled selected>-- اختر المحافظة --</option>
-                        <option value="Cairo">Cairo / القاهرة</option>
-                        <option value="Giza">Giza / الجيزة</option>
-                        <option value="Alexandria">Alexandria / الإسكندرية</option>
-                        <option value="Qalyubia">Qalyubia / القليوبية</option>
-                        <option value="Gharbia">Gharbia / الغربية</option>
-                        <option value="Dakahlia">Dakahlia / الدقهلية</option>
-                        <option value="Sharqia">Sharqia / الشرقية</option>
-                        <option value="Monufia">Monufia / المنوفية</option>
-                        <option value="Beheira">Beheira / البحيرة</option>
-                        <option value="Kafr El Sheikh">Kafr El Sheikh / كفر الشيخ</option>
-                        <option value="Damietta">Damietta / دمياط</option>
-                        <option value="Port Said">Port Said / بورسعيد</option>
-                        <option value="Ismailia">Ismailia / الإسماعيلية</option>
-                        <option value="Suez">Suez / السويس</option>
-                        <option value="Aswan">Aswan / أسوان</option>
-                        <option value="Luxor">Luxor / الأقصر</option>
-                        <option value="Red Sea">Red Sea / البحر الأحمر</option>
-                        <option value="Matrouh">Matrouh / مطروح</option>
+                        <option value="Cairo">القاهرة</option>
+                        <option value="Giza">الجيزة</option>
+                        <option value="Alexandria">الإسكندرية</option>
+                        <option value="Qalyubia">القليوبية</option>
+                        <option value="Gharbia">الغربية</option>
+                        <option value="Dakahlia">الدقهلية</option>
+                        <option value="Sharqia">الشرقية</option>
+                        <option value="Monufia">المنوفية</option>
+                        <option value="Beheira">البحيرة</option>
+                        <option value="Kafr El Sheikh">كفر الشيخ</option>
+                        <option value="Damietta">دمياط</option>
+                        <option value="Port Said">بورسعيد</option>
+                        <option value="Ismailia">الإسماعيلية</option>
+                        <option value="Suez">السويس</option>
+                        <option value="Aswan">أسوان</option>
+                        <option value="Luxor">الأقصر</option>
+                        <option value="Red Sea">البحر الأحمر</option>
+                        <option value="Matrouh">مطروح</option>
                       </select>
                       @if (isProjectFieldInvalid('governorate')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">المحافظة مطلوبة / Governorate is required.</p>
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">المحافظة مطلوبة</p>
                       }
                     </div>
                     <div>
                       <label for="proj-city" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
-                        المدينة أو المنطقة / City or Zone <span class="text-red-400">*</span>
+                        المدينة أو المنطقة <span class="text-red-400">*</span>
                       </label>
                       <input
                         id="proj-city"
@@ -545,14 +545,14 @@ const GOVERNORATES: GovernorateOption[] = [
                         placeholder="e.g. التجمع الخامس"
                         class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
                       @if (isProjectFieldInvalid('cityOrZone')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">المنطقة مطلوبة / Zone is required.</p>
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">المنطقة مطلوبة</p>
                       }
                     </div>
                   </div>
 
                   <div>
                     <label for="proj-address" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
-                      العنوان التفصيلي / Physical Site Address <span class="text-red-400">*</span>
+                      العنوان التفصيلي <span class="text-red-400">*</span>
                     </label>
                     <input
                       id="proj-address"
@@ -561,23 +561,23 @@ const GOVERNORATES: GovernorateOption[] = [
                       placeholder="e.g. شارع التسعين الشمالي، قطعة 44"
                       class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
                     @if (isProjectFieldInvalid('siteAddress')) {
-                      <p class="text-[10px] text-rose-400 mt-1 font-cairo">العنوان مطلوب / Address is required.</p>
+                      <p class="text-[10px] text-rose-400 mt-1 font-cairo">العنوان مطلوب</p>
                     }
                   </div>
 
                   <div>
                     <label for="proj-cat" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
-                      تصنيف المشروع / Project Classification <span class="text-red-400">*</span>
+                      تصنيف المشروع <span class="text-red-400">*</span>
                     </label>
                     <select
                       id="proj-cat"
                       formControlName="category"
                       class="w-full px-3 py-2.5 border border-slate-700 bg-slate-950 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all duration-200">
-                      <option value="Residential">Residential / سكني</option>
-                      <option value="Commercial">Commercial / تجاري</option>
-                      <option value="Administrative">Administrative / إداري</option>
-                      <option value="Industrial">Industrial / صناعي</option>
-                      <option value="Other">Other / أخرى</option>
+                      <option value="Residential">سكني</option>
+                      <option value="Commercial">تجاري</option>
+                      <option value="Administrative">إداري</option>
+                      <option value="Industrial">صناعي</option>
+                      <option value="Other">أخرى</option>
                     </select>
                   </div>
                 </div>
@@ -589,7 +589,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label for="proj-client-wh" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 font-cairo">
-                        رقم واتساب العميل / Client WhatsApp <span class="text-red-400">*</span>
+                        رقم واتساب العميل <span class="text-red-400">*</span>
                       </label>
                       <input
                         id="proj-client-wh"
@@ -598,7 +598,7 @@ const GOVERNORATES: GovernorateOption[] = [
                         placeholder="e.g. +201012345678"
                         class="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all">
                       @if (isProjectFieldInvalid('clientWhatsApp')) {
-                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">رقم واتساب العميل مطلوب بصيغة صحيحة / Invalid WhatsApp number.</p>
+                        <p class="text-[10px] text-rose-400 mt-1 font-cairo">رقم واتساب العميل مطلوب بصيغة صحيحة</p>
                       }
                     </div>
 
@@ -707,8 +707,8 @@ const GOVERNORATES: GovernorateOption[] = [
                 </svg>
               </div>
               <div>
-                <h3 class="text-xl font-black text-white font-cairo tracking-wide">شراء سعة مشاريع إضافية / Buy Project Quota</h3>
-                <p class="text-xs text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري / All prices in EGP</p>
+                <h3 class="text-xl font-black text-white font-cairo tracking-wide">شراء سعة مشاريع إضافية</h3>
+                <p class="text-xs text-slate-400 font-cairo mt-0.5">جميع الأسعار بالجنيه المصري</p>
               </div>
             </div>
             <button 
@@ -749,7 +749,7 @@ const GOVERNORATES: GovernorateOption[] = [
               <!-- Card 2: +5 Projects Package (950 EGP - Best Value) -->
               <div class="p-5 bg-gradient-to-br from-indigo-950/40 via-slate-950 to-amber-950/20 border-2 border-amber-500/70 rounded-2xl flex flex-col justify-between hover:border-amber-400 transition-all duration-200 shadow-xl shadow-amber-500/10 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl font-cairo shadow-md">
-                  ⭐️ الأفضل توفيراً / Best Value
+                  ⭐️ الأفضل توفيراً
                 </div>
                 <div class="pt-2">
                   <div class="flex items-center justify-between mb-3">
@@ -809,7 +809,7 @@ const GOVERNORATES: GovernorateOption[] = [
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-lg font-bold text-white font-cairo">إتمام الشراء والتفعيل / Checkout</h3>
+                  <h3 class="text-lg font-bold text-white font-cairo">إتمام الشراء والتفعيل</h3>
                   <p class="text-xs text-slate-400 font-cairo mt-0.5">تفعيل فوري لمشاريعك عبر بوابة الدفع</p>
                 </div>
               </div>
@@ -832,18 +832,18 @@ const GOVERNORATES: GovernorateOption[] = [
                   <span class="font-mono text-indigo-400">{{ selectedCheckoutPackage()?.priceEgp | number }} EGP</span>
                 </div>
                 <div class="flex items-center justify-between text-xs text-slate-400 font-cairo">
-                  <span>الرسوم والمصاريف / Fees</span>
+                  <span>الرسوم والمصاريف</span>
                   <span class="font-mono">0 EGP</span>
                 </div>
                 <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-base font-black text-emerald-400 font-cairo">
-                  <span>الإجمالي الكلي / Total</span>
+                  <span>الإجمالي الكلي</span>
                   <span class="font-mono text-lg">{{ selectedCheckoutPackage()?.totalAmount | number }} EGP</span>
                 </div>
               </div>
 
               <!-- Payment Method Selector -->
               <div>
-                <label class="block text-xs font-bold text-slate-300 font-cairo mb-2">اختر طريقة الدفع / Payment Method</label>
+                <label class="block text-xs font-bold text-slate-300 font-cairo mb-2">اختر طريقة الدفع</label>
                 <div class="grid grid-cols-3 gap-2">
                   <button 
                     type="button"
@@ -957,7 +957,7 @@ const GOVERNORATES: GovernorateOption[] = [
 
                   <div class="text-left font-mono">
                     <span class="px-3 py-1 text-xs font-bold text-emerald-300 bg-emerald-950/90 border border-emerald-500/40 rounded-lg inline-block mb-1">
-                      ✓ إيصال مدفوع ومكتمل / PAID
+                      ✓ إيصال مدفوع ومكتمل
                     </span>
                     <p class="text-[10px] text-slate-400">رقم الإيصال: <strong class="text-amber-400 font-mono">{{ paymentSuccessData()?.referenceNumber || 'TXN-SUCCESS' }}</strong></p>
                   </div>
@@ -978,7 +978,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 <div class="grid grid-cols-2 gap-3 text-xs">
                   <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
                     <span class="text-[10px] text-slate-400 block font-cairo">الطرف الأول (الجهة المصدرة):</span>
-                    <span class="font-bold text-white block font-cairo">منصة أسس الرقمية / Osos</span>
+                    <span class="font-bold text-white block font-cairo">منصة أسس الرقمية</span>
                     <span class="text-[10px] text-slate-400 font-mono block">support@structo.app</span>
                   </div>
 
@@ -1062,7 +1062,7 @@ const GOVERNORATES: GovernorateOption[] = [
                 <button 
                   (click)="printReceipt()"
                   class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                  <span>🖨️ طباعة الإيصال / Print PDF</span>
+                  <span>🖨️ طباعة الإيصال</span>
                 </button>
               </div>
 

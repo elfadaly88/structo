@@ -57,7 +57,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
                 <svg class="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
               </div>
               <div>
-                <h3 class="text-white font-bold text-xs font-cairo">عزل صارم للمستأجرين / Multi-Tenant Security</h3>
+                <h3 class="text-white font-bold text-xs font-cairo">عزل صارم للمستأجرين</h3>
                 <p class="text-slate-500 text-xs">بيانات شركتك معزولة بأمان تام باستخدام أحدث معايير JWT.</p>
               </div>
             </div>
@@ -66,7 +66,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
                 <svg class="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
               </div>
               <div>
-                <h3 class="text-white font-bold text-xs font-cairo">تحقق جغرافي دقيق / Precise Geo-Tagging</h3>
+                <h3 class="text-white font-bold text-xs font-cairo">تحقق جغرافي دقيق</h3>
                 <p class="text-slate-500 text-xs">تحديد موقعك الفعلي على الخريطة لحفظ بيانتك القانونية الرسمية.</p>
               </div>
             </div>
@@ -102,7 +102,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
             <div class="mb-6">
               <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h2 class="text-xl sm:text-2xl font-extrabold text-white font-cairo tracking-tight">تسجيل شركة جديدة / Company Registration</h2>
+                  <h2 class="text-xl sm:text-2xl font-extrabold text-white font-cairo tracking-tight">تسجيل شركة جديدة</h2>
                   <p class="text-slate-400 text-xs font-cairo mt-1">الخطوة {{ currentStep() }} من 3 - استكمل البيانات المطلوبة أدناه</p>
                 </div>
                 <span class="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded-full shadow-sm">
@@ -228,7 +228,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
                   <!-- Password & Strength Meter -->
                   <div>
                     <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                      كلمة المرور / Password <span class="text-rose-400">*</span>
+                      كلمة المرور <span class="text-rose-400">*</span>
                     </label>
                     <div class="relative">
                       <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" autocomplete="new-password"
@@ -287,43 +287,43 @@ import { BrandComponent } from '../../../core/components/brand.component';
                     <!-- Account Type -->
                     <div>
                       <label for="accountType" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        نوع الحساب / Account Type <span class="text-rose-400">*</span>
+                        نوع الحساب <span class="text-rose-400">*</span>
                       </label>
                       <select id="accountType" formControlName="accountType"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
-                        <option value="Company">Company / شركة أو مؤسسة</option>
-                        <option value="Freelancer">Freelancer / مستقل أو مهندس حر</option>
+                        <option value="Company">شركة أو مؤسسة</option>
+                        <option value="Freelancer">مستقل أو مهندس حر</option>
                       </select>
                     </div>
 
                     <!-- Governorate Location -->
                     <div>
                       <label for="location" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        المحافظة / Location <span class="text-rose-400">*</span>
+                        المحافظة <span class="text-rose-400">*</span>
                       </label>
                       <select id="location" formControlName="location"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
                         [class.border-rose-500]="isFieldInvalid('location')"
                         [class.border-slate-800]="!isFieldInvalid('location')">
                         <option value="" disabled selected>-- اختر المحافظة --</option>
-                        <option value="Cairo">Cairo / القاهرة</option>
-                        <option value="Giza">Giza / الجيزة</option>
-                        <option value="Alexandria">Alexandria / الإسكندرية</option>
-                        <option value="Qalyubia">Qalyubia / القليوبية</option>
-                        <option value="Gharbia">Gharbia / الغربية</option>
-                        <option value="Dakahlia">Dakahlia / الدقهلية</option>
-                        <option value="Sharqia">Sharqia / الشرقية</option>
-                        <option value="Monufia">Monufia / المنوفية</option>
-                        <option value="Beheira">Beheira / البحيرة</option>
-                        <option value="Kafr El Sheikh">Kafr El Sheikh / كفر الشيخ</option>
-                        <option value="Damietta">Damietta / دمياط</option>
-                        <option value="Port Said">Port Said / بورسعيد</option>
-                        <option value="Ismailia">Ismailia / الإسماعيلية</option>
-                        <option value="Suez">Suez / السويس</option>
-                        <option value="Aswan">Aswan / أسوان</option>
-                        <option value="Luxor">Luxor / الأقصر</option>
-                        <option value="Red Sea">Red Sea / البحر الأحمر</option>
-                        <option value="Matrouh">Matrouh / مطروح</option>
+                        <option value="Cairo">القاهرة</option>
+                        <option value="Giza">الجيزة</option>
+                        <option value="Alexandria">الإسكندرية</option>
+                        <option value="Qalyubia">القليوبية</option>
+                        <option value="Gharbia">الغربية</option>
+                        <option value="Dakahlia">الدقهلية</option>
+                        <option value="Sharqia">الشرقية</option>
+                        <option value="Monufia">المنوفية</option>
+                        <option value="Beheira">البحيرة</option>
+                        <option value="Kafr El Sheikh">كفر الشيخ</option>
+                        <option value="Damietta">دمياط</option>
+                        <option value="Port Said">بورسعيد</option>
+                        <option value="Ismailia">الإسماعيلية</option>
+                        <option value="Suez">السويس</option>
+                        <option value="Aswan">أسوان</option>
+                        <option value="Luxor">الأقصر</option>
+                        <option value="Red Sea">البحر الأحمر</option>
+                        <option value="Matrouh">مطروح</option>
                       </select>
                       @if (isFieldInvalid('location')) {
                         <p class="text-[11px] text-rose-400 mt-1 font-medium font-cairo">⚠️ اختار المحافظة مطلوب لتحديد بيئة الحساب.</p>
@@ -335,7 +335,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label for="personalPhone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        رقم الهاتف الشخصي / Personal Phone
+                        رقم الهاتف الشخصي
                       </label>
                       <input id="personalPhone" type="tel" formControlName="personalPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
@@ -346,7 +346,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
                     </div>
                     <div>
                       <label for="whatsAppPhone" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                        رقم الواتساب / WhatsApp Phone
+                        رقم الواتساب
                       </label>
                       <input id="whatsAppPhone" type="tel" formControlName="whatsAppPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx"
                         class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans"
@@ -362,14 +362,14 @@ import { BrandComponent } from '../../../core/components/brand.component';
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div>
                         <label for="commercialRegister" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                          رقم السجل التجاري / Commercial Register
+                          رقم السجل التجاري
                         </label>
                         <input id="commercialRegister" type="text" formControlName="commercialRegister" placeholder="رقم السجل التجاري الرسمي"
                           class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
                       </div>
                       <div>
                         <label for="taxCard" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                          الرقم الضريبي / Tax Card
+                          الرقم الضريبي
                         </label>
                         <input id="taxCard" type="text" formControlName="taxCard" placeholder="رقم البطاقة الضريبية"
                           class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -382,14 +382,14 @@ import { BrandComponent } from '../../../core/components/brand.component';
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div>
                         <label for="nationalId" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                          الرقم القومي (14 رقم) / National ID
+                          الرقم القومي (14 رقم)
                         </label>
                         <input id="nationalId" type="text" formControlName="nationalId" placeholder="14 رقم قومي"
                           class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
                       </div>
                       <div>
                         <label for="syndicateId" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                          رقم عضوية النقابة / Syndicate ID
+                          رقم عضوية النقابة
                         </label>
                         <input id="syndicateId" type="text" formControlName="syndicateId" placeholder="رقم القيد بنقابة المهندسين"
                           class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
@@ -409,14 +409,14 @@ import { BrandComponent } from '../../../core/components/brand.component';
                   <!-- Physical Address & Map Launcher -->
                   <div>
                     <label for="manualAddress" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1 font-cairo">
-                      العنوان الفعلي المقر الرئيسي / Physical Address
+                      العنوان الفعلي المقر الرئيسي
                     </label>
                     <div class="flex gap-2">
                       <input id="manualAddress" type="text" formControlName="manualAddress" placeholder="أدخل العنوان التفصيلي أو حدد من الخريطة"
                         class="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-sans">
                       <button type="button" (click)="openMapModal()"
                         class="px-4 py-2.5 bg-indigo-950/60 text-indigo-300 border border-indigo-800/40 hover:bg-indigo-900/50 transition-all rounded-xl text-xs font-bold font-cairo shrink-0 cursor-pointer flex items-center gap-1.5 shadow-md">
-                        📍 الخريطة / Map
+                        📍 الخريطة
                       </button>
                     </div>
                     @if (registerForm.get('latitude')?.value) {
@@ -462,7 +462,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
                 @if (currentStep() > 1) {
                   <button type="button" (click)="prevStep()"
                     class="px-5 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all font-cairo cursor-pointer">
-                    السابق / Back
+                    السابق
                   </button>
                 } @else {
                   <div></div>
@@ -520,7 +520,7 @@ import { BrandComponent } from '../../../core/components/brand.component';
         <div class="relative z-10 w-full max-w-2xl mx-auto my-auto p-4 md:p-6 max-h-[92vh] flex flex-col bg-slate-950 border border-slate-900 rounded-xl overflow-hidden shadow-2xl font-cairo">
           <!-- Header -->
           <div class="p-4 border-b border-slate-900 flex justify-between items-center">
-            <h3 class="text-sm font-bold text-white">تحديد الموقع الجغرافي / Drop Pin on Map</h3>
+            <h3 class="text-sm font-bold text-white">تحديد الموقع الجغرافي</h3>
             <button type="button" (click)="closeMapModal()" class="text-slate-500 hover:text-white">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -576,11 +576,11 @@ import { BrandComponent } from '../../../core/components/brand.component';
           <div class="flex flex-col-reverse md:flex-row justify-end gap-3 w-full p-4 border-t border-slate-900 bg-slate-950/80">
             <button type="button" (click)="closeMapModal()"
               class="w-full md:w-auto px-4 py-2 border border-slate-800 text-slate-400 hover:text-white rounded-lg transition-all text-xs">
-              إلغاء / Cancel
+              إلغاء
             </button>
             <button type="button" (click)="confirmPinDrop()"
               class="w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/15 text-xs">
-              إسقاط الدبوس / Drop Pin & Confirm
+              إسقاط الدبوس
             </button>
           </div>
         </div>

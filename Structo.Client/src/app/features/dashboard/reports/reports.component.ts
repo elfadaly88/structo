@@ -24,7 +24,7 @@ import { ProjectDto } from '../../../core/models/project.models';
               📊
             </div>
             <div>
-              <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">التقارير المالية الموحدة / Financial Reports</h1>
+              <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">التقارير المالية الموحدة</h1>
               <p class="text-xs text-slate-400 mt-0.5">تقرير مالي رقابي شامل لكافة المشاريع والعمليات المعتمدة للشركة</p>
             </div>
           </div>
@@ -39,7 +39,7 @@ import { ProjectDto } from '../../../core/models/project.models';
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            <span>طباعة التقرير / Print Report</span>
+            <span>طباعة التقرير</span>
           </button>
         </div>
       </div>
@@ -49,7 +49,7 @@ import { ProjectDto } from '../../../core/models/project.models';
         <div class="flex items-center justify-between flex-wrap gap-2">
           <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <span>🔍</span>
-            <span>تصفية وتحديد النطاق الزمني / Report Filters</span>
+            <span>تصفية وتحديد النطاق الزمني</span>
           </span>
 
           <div class="flex items-center gap-2">
@@ -62,7 +62,7 @@ import { ProjectDto } from '../../../core/models/project.models';
               type="button"
               (click)="resetToFullPeriod()"
               class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
-              الفترة الكاملة / Full Period
+              الفترة الكاملة
             </button>
           </div>
         </div>
@@ -70,7 +70,7 @@ import { ProjectDto } from '../../../core/models/project.models';
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Start Date -->
           <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-400">من تاريخ / From Date</label>
+            <label class="block text-[11px] font-bold text-slate-400">من تاريخ</label>
             <div class="relative">
               <input
                 type="date"
@@ -82,7 +82,7 @@ import { ProjectDto } from '../../../core/models/project.models';
 
           <!-- End Date -->
           <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-400">إلى تاريخ / To Date</label>
+            <label class="block text-[11px] font-bold text-slate-400">إلى تاريخ</label>
             <div class="relative">
               <input
                 type="date"
@@ -94,12 +94,12 @@ import { ProjectDto } from '../../../core/models/project.models';
 
           <!-- Project Filter Dropdown -->
           <div class="space-y-1 sm:col-span-2 lg:col-span-2">
-            <label class="block text-[11px] font-bold text-slate-400">تخصيص المشروع (اختياري) / Specific Project</label>
+            <label class="block text-[11px] font-bold text-slate-400">تخصيص المشروع (اختياري)</label>
             <select
               [ngModel]="selectedProjectId()"
               (ngModelChange)="onProjectFilterChange($event)"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-medium text-slate-200 focus:outline-none focus:border-indigo-500 font-cairo cursor-pointer">
-              <option value="">جميع المشاريع المتاحة في النطاق / All In-Scope Projects</option>
+              <option value="">جميع المشاريع المتاحة في النطاق</option>
               @for (proj of projectsList(); track proj.id) {
                 <option [value]="proj.id">{{ proj.name }}</option>
               }
@@ -124,7 +124,7 @@ import { ProjectDto } from '../../../core/models/project.models';
             type="button"
             (click)="loadReport()"
             class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">
-            إعادة المحاولة / Retry
+            إعادة المحاولة
           </button>
         </div>
       } @else if (reportData()) {
@@ -180,7 +180,7 @@ import { ProjectDto } from '../../../core/models/project.models';
           <div class="p-4 sm:p-5 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-lg">🏗️</span>
-              <h2 class="text-sm sm:text-base font-bold text-white">التحليل المالي حسب المشروع / Project Breakdown</h2>
+              <h2 class="text-sm sm:text-base font-bold text-white">التحليل المالي حسب المشروع</h2>
             </div>
             <span class="text-xs font-mono text-slate-400 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60">
               {{ reportData()!.projectBreakdowns.length }} مشاريع
@@ -296,7 +296,7 @@ import { ProjectDto } from '../../../core/models/project.models';
           <div class="p-4 sm:p-5 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-lg">📖</span>
-              <h2 class="text-sm sm:text-base font-bold text-white">دفتر العمليات المالية الموحد / Combined Ledger</h2>
+              <h2 class="text-sm sm:text-base font-bold text-white">دفتر العمليات المالية الموحد</h2>
             </div>
             <span class="text-xs font-mono text-slate-400 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60">
               {{ reportData()!.combinedTransactions.length }} عملية
@@ -373,7 +373,7 @@ import { ProjectDto } from '../../../core/models/project.models';
             }
             <div>
               <h1 class="text-2xl font-black font-cairo text-slate-950">{{ tenantProfile()?.name || 'شركة المقاولات والتطوير العقاري' }}</h1>
-              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية الموحد • منصة أسس / Osos</p>
+              <p class="text-xs text-slate-600 font-cairo">تقرير الإدارة المالية الموحد • منصة أسس</p>
             </div>
           </div>
           <div class="text-left font-cairo text-xs space-y-1">
@@ -389,7 +389,7 @@ import { ProjectDto } from '../../../core/models/project.models';
 
         <!-- KPI Totals Summary Table -->
         <div class="bg-slate-50 border border-slate-300 rounded-xl p-4 mb-6">
-          <h2 class="text-sm font-bold font-cairo text-slate-800 mb-3">الملخص المالي العام / Financial Summary</h2>
+          <h2 class="text-sm font-bold font-cairo text-slate-800 mb-3">الملخص المالي العام</h2>
           <div class="grid grid-cols-3 gap-4 text-center text-xs">
             <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
               <span class="text-slate-500 block">إجمالي الإيرادات</span>
@@ -420,7 +420,7 @@ import { ProjectDto } from '../../../core/models/project.models';
 
         <!-- Project Breakdown Section -->
         <div class="mb-6">
-          <h2 class="text-sm font-bold font-cairo text-slate-800 mb-2">تفصيل المشاريع / Project Breakdown</h2>
+          <h2 class="text-sm font-bold font-cairo text-slate-800 mb-2">تفصيل المشاريع</h2>
           <table class="w-full text-right border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100 border-b-2 border-slate-300 font-bold text-slate-700">
@@ -453,7 +453,7 @@ import { ProjectDto } from '../../../core/models/project.models';
 
         <!-- Combined Ledger Section -->
         <div class="mb-8">
-          <h2 class="text-sm font-bold font-cairo text-slate-800 mb-2">دفتر العمليات المالية الموحد / Combined Ledger</h2>
+          <h2 class="text-sm font-bold font-cairo text-slate-800 mb-2">دفتر العمليات المالية الموحد</h2>
           <table class="w-full text-right border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100 border-b-2 border-slate-300 font-bold text-slate-700">

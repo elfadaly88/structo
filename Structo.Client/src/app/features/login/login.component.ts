@@ -44,7 +44,7 @@ import { BrandComponent } from '../../core/components/brand.component';
           @if (registrationPending()) {
             <div class="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-6 text-slate-200 text-center font-cairo shadow-lg shadow-indigo-500/5 space-y-4">
               <div class="text-4xl">⏳</div>
-              <h3 class="text-lg font-bold text-white">تسجيل ناجح وبانتظار التفعيل / Successfully Registered</h3>
+              <h3 class="text-lg font-bold text-white">تسجيل ناجح وبانتظار التفعيل</h3>
               <p class="text-sm text-slate-300 leading-relaxed font-semibold">
                 Successfully registered via Google! Your account is currently pending SuperAdmin approval. You will receive an email notification once activated.
               </p>
